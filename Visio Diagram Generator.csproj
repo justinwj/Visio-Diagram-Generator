@@ -1,4 +1,4 @@
-﻿<Project ToolsVersion="17.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="17.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <!--
     This section defines project-level properties.
@@ -185,6 +185,7 @@
     can be found.
   -->
   <ItemGroup>
+    <Compile Include="obj\Debug\.NETFramework,Version=v4.8.AssemblyAttributes.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -197,6 +198,36 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <None Include=".github" />
+    <None Include=".gitkeep" />
+    <None Include="build\.gitkeep" />
+    <None Include="build\build.ps1" />
+    <None Include="build\release.ps1" />
+    <None Include="CHANGELOG.md" />
+    <None Include="CONTRIBUTING.md" />
+    <None Include="Directory.Build.props" />
+    <None Include="Directory.Build.targets\.gitkeep" />
+    <None Include="docs\.gitkeep" />
+    <None Include="docs\API.md" />
+    <None Include="docs\Architecture.md" />
+    <None Include="docs\Design.md" />
+    <None Include="docs\ExcelAddIn.md" />
+    <None Include="docs\Extensibility_Plugins.md" />
+    <None Include="docs\GettingStarted.md" />
+    <None Include="docs\VisioAddIn.md" />
+    <None Include="global.json" />
+    <None Include="installers\.gitkeep" />
+    <None Include="installers\ExcelAddIn\.gitkeep" />
+    <None Include="installers\ExcelAddIn\ClickOnce\.gitkeep" />
+    <None Include="installers\ExcelAddIn\MSI\.gitkeep" />
+    <None Include="installers\VisioAddIn\.gitkeep" />
+    <None Include="installers\VisioAddIn\ClickOnce\.gitkeep" />
+    <None Include="installers\VisioAddIn\MSI\.gitkeep" />
+    <None Include="LICENSE" />
+    <None Include="NuGet.config" />
+    <None Include="obj\Debug\DesignTimeResolveAssemblyReferencesInput.cache" />
+    <None Include="obj\Debug\Visio Diagram Generator.csproj.AssemblyReference.cache" />
+    <None Include="plugins\.gitkeep" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -205,9 +236,73 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
+    <Compile Include="src\VDG.ExcelAddIn\Interop\ExcelConfigResolver.cs" />
+    <Compile Include="src\VDG.ExcelAddIn\Interop\VisioInterop.cs" />
+    <Compile Include="src\VDG.ExcelAddIn\Properties\AssemblyInfo.cs" />
+    <Compile Include="src\VDG.ExcelAddIn\Ribbon\Ribbon.cs" />
+    <Compile Include="src\VDG.ExcelAddIn\Ribbon\Ribbon.Designer.cs" />
+    <Compile Include="src\VDG.ExcelAddIn\ThisAddIn.cs" />
+    <Compile Include="src\VDG.ExcelAddIn\ThisAddIn.Designer.cs">
+      <DependentUpon>ThisAddIn.cs</DependentUpon>
+    </Compile>
+    <Compile Include="src\VDG.VisioAddIn\Properties\AssemblyInfo.cs" />
+    <Compile Include="src\VDG.VisioAddIn\Ribbon\Ribbon.cs" />
+    <Compile Include="src\VDG.VisioAddIn\Ribbon\Ribbon.Designer.cs" />
+    <Compile Include="src\VDG.VisioAddIn\ThisAddIn.cs" />
+    <Compile Include="src\VDG.VisioAddIn\ThisAddIn.Designer.cs">
+      <DependentUpon>ThisAddIn.cs</DependentUpon>
+    </Compile>
+    <Compile Include="src\VisioDiagramGenerator.PluginHost\IPlugin.cs" />
+    <Compile Include="src\VisioDiagramGenerator.PluginHost\PluginHost.cs" />
+    <Compile Include="src\VisioDiagramGenerator.PluginHost\PluginLoader.cs" />
+    <Compile Include="src\VisioDiagramGenerator.PluginHost\SamplePlugins\SamplePlugin.cs" />
     <Compile Include="ThisAddIn.cs">
       <SubType>Code</SubType>
     </Compile>
+    <None Include="README.md" />
+    <None Include="scripts\.gitkeep" />
+    <None Include="scripts\build.bat" />
+    <None Include="scripts\consolidateForChatGPT.fsx" />
+    <None Include="scripts\exportForChatGPT.bat" />
+    <None Include="scripts\release.bat" />
+    <None Include="scripts\runGenerator.bat" />
+    <None Include="shared\.gitkeep" />
+    <None Include="shared\Config\.gitkeep" />
+    <None Include="shared\Config\diagramConfig.schema.json" />
+    <None Include="shared\Config\samples\.gitkeep" />
+    <None Include="shared\Config\samples\diagramConfig.sample.json" />
+    <None Include="shared\Resources\.gitkeep" />
+    <None Include="shared\Resources\icons\.gitkeep" />
+    <None Include="shared\Resources\Ribbon\.gitkeep" />
+    <None Include="shared\Templates\.gitkeep" />
+    <None Include="shared\Templates\default.vstx" />
+    <None Include="shared\Templates\network_stencil.vssx" />
+    <None Include="shared\Templates\stencilTemplates.vssx" />
+    <None Include="src\.gitkeep" />
+    <None Include="src\VDG.Core" />
+    <None Include="src\VDG.ExcelAddIn\.gitkeep" />
+    <None Include="src\VDG.ExcelAddIn\App.config" />
+    <None Include="src\VDG.ExcelAddIn\ThisAddIn.manifest\.gitkeep" />
+    <None Include="src\VDG.ExcelAddIn\VDG.ExcelAddIn.csproj" />
+    <None Include="src\VDG.VisioAddIn\.gitkeep" />
+    <None Include="src\VDG.VisioAddIn\App.config" />
+    <None Include="src\VDG.VisioAddIn\ThisAddIn.manifest\.gitkeep" />
+    <None Include="src\VDG.VisioAddIn\VDG.VisioAddIn.csproj" />
+    <None Include="src\VisioDiagramGenerator.Algorithms\.gitkeep" />
+    <None Include="src\VisioDiagramGenerator.Algorithms\AST.fs" />
+    <None Include="src\VisioDiagramGenerator.Algorithms\DataModels.fs" />
+    <None Include="src\VisioDiagramGenerator.Algorithms\LayoutAlgorithms.fs" />
+    <None Include="src\VisioDiagramGenerator.Algorithms\Parsers.fs" />
+    <None Include="src\VisioDiagramGenerator.Algorithms\Transformations.fs" />
+    <None Include="src\VisioDiagramGenerator.Algorithms\VisioDiagramGenerator.Algorithms.fsproj" />
+    <None Include="src\VisioDiagramGenerator.CliFs" />
+    <None Include="tests\.gitkeep" />
+    <None Include="tests\VDG.Core.Tests" />
+    <None Include="tests\VDG.ExcelAddIn.Tests" />
+    <None Include="tests\VDG.VisioAddIn.Tests" />
+    <None Include="tests\VisioDiagramGenerator.Algorithms.Tests" />
+    <None Include="tests\VisioDiagramGenerator.CliFs.Tests" />
+    <None Include="tests\VisioDiagramGenerator.Tests" />
     <None Include="ThisAddIn.Designer.xml">
       <DependentUpon>ThisAddIn.cs</DependentUpon>
     </None>
@@ -215,10 +310,31 @@
       <DependentUpon>ThisAddIn.Designer.xml</DependentUpon>
     </Compile>
     <AppDesigner Include="Properties\" />
+    <None Include="Visio Diagram Generator_TemporaryKey.pfx" />
+    <None Include="Visio_Diagram_Generator.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include=".gitattributes" />
+    <Content Include=".gitignore" />
+    <Content Include="shared\Resources\icons\icon16.png" />
+    <Content Include="shared\Resources\icons\icon32.png" />
+    <Content Include="shared\Resources\Ribbon\CommonRibbon.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="bin\Debug\" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignManifests>true</SignManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestKeyFile>Visio Diagram Generator_TemporaryKey.pfx</ManifestKeyFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestCertificateThumbprint>A8DA5E140D4A1F29DDEE6DC74A7FB5246FF76C81</ManifestCertificateThumbprint>
   </PropertyGroup>
   <!-- Include the build rules for a C# project. -->
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

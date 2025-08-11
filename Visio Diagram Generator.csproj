@@ -311,7 +311,6 @@
     </Compile>
     <AppDesigner Include="Properties\" />
     <None Include="Visio Diagram Generator_TemporaryKey.pfx" />
-    <None Include="Visio_Diagram_Generator.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Content Include=".gitattributes" />

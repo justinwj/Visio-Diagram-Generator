@@ -5,6 +5,8 @@ VisualStudioVersion = 17.14.36401.2
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Visio Diagram Generator", "Visio Diagram Generator.csproj", "{93206992-33B9-4C68-8444-B3BF6802109C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VDG.Core.Contracts", "src\VDG.Core.Contracts\src\VDG.Core.Contracts\VDG.Core.Contracts.csproj", "{CD74C640-B04A-D140-5EFB-0B88865261A8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{93206992-33B9-4C68-8444-B3BF6802109C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{93206992-33B9-4C68-8444-B3BF6802109C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{93206992-33B9-4C68-8444-B3BF6802109C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CD74C640-B04A-D140-5EFB-0B88865261A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CD74C640-B04A-D140-5EFB-0B88865261A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CD74C640-B04A-D140-5EFB-0B88865261A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CD74C640-B04A-D140-5EFB-0B88865261A8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

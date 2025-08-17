@@ -5,7 +5,5 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>VDG.Core.Contracts</AssemblyName>
     <RootNamespace>VDG.Core.Contracts</RootNamespace>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>1591</NoWarn>
   </PropertyGroup>
 </Project>

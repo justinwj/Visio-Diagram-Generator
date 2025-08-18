@@ -1,0 +1,446 @@
+<Project ToolsVersion="17.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <!--
+    This section defines project-level properties.
+
+    AssemblyName
+      Name of the output assembly.
+    Configuration
+      Specifies a default value for debug.
+    OutputType
+      Must be "Library" for VSTO.
+    Platform
+      Specifies what CPU the output of this project can run on.
+    NoStandardLibraries
+      Set to "false" for VSTO.
+    RootNamespace
+      In C#, this specifies the namespace given to new files. In VB, all objects are
+      wrapped in this namespace at runtime.
+  -->
+<!-- Normalize outputs so Debug/Release don’t clash -->
+<PropertyGroup>
+  <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
+  <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+  <OutputPath>bin\$(Configuration)\</OutputPath>
+
+  <!-- We keep Properties\AssemblyInfo.cs (needed for VSTO: Guid, ComVisible, etc.),
+  so stop the SDK from auto-generating duplicate assembly attributes -->
+  <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+</PropertyGroup>
+
+<!-- Do NOT compile generated files or other projects/tests under the solution root -->
+<ItemGroup>
+  <!-- Never compile anything from obj -->
+  <Compile Remove="obj\**\*.cs" />
+  <None Remove="obj\**\*" />
+  <EmbeddedResource Remove="obj\**\*" />
+
+  <!-- Exclude test code and other projects’ code from the add-in build -->
+  <Compile Remove="tests\**\*.cs" />
+  <Compile Remove="src\VDG.Core\**\*.cs" />
+  <Compile Remove="src\VDG.Core.Contracts\**\*.cs" />
+</ItemGroup>
+
+  <PropertyGroup>
+    <ProjectTypeGuids>{BAA0C2D2-18E2-41B9-852F-F413020CAA33};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{93206992-33B9-4C68-8444-B3BF6802109C}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <NoStandardLibraries>false</NoStandardLibraries>
+    <RootNamespace>Visio_Diagram_Generator</RootNamespace>
+    <AssemblyName>Visio Diagram Generator</AssemblyName>
+    <LoadBehavior>3</LoadBehavior>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <DefineConstants>VSTO40;UseOfficeInterop</DefineConstants>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <BootstrapperComponentsLocation>HomeSite</BootstrapperComponentsLocation>
+    <ResolveComReferenceSilent>true</ResolveComReferenceSilent>
+  </PropertyGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.VSTORuntime.4.0">
+      <Visible>False</Visible>
+      <ProductName>Microsoft Visual Studio 2010 Tools for Office Runtime %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <PropertyGroup>
+    <!--
+      OfficeApplication
+        Add-in host application
+    -->
+    <OfficeApplication>Excel</OfficeApplication>
+  </PropertyGroup>
+  <!--
+    This section defines properties that are set when the "Debug" configuration is selected.
+
+    DebugSymbols
+      If "true", create symbols (.pdb). If "false", do not create symbols.
+    DefineConstants
+      Constants defined for the preprocessor.
+    EnableUnmanagedDebugging
+      If "true", starting the debugger will attach both managed and unmanaged debuggers.
+    Optimize
+      If "true", optimize the build output. If "false", do not optimize.
+    OutputPath
+      Output path of project relative to the project file.
+    WarningLevel
+      Warning level for the compiler.
+  -->
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+    <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <!--
+    This section defines properties that are set when the "Release" configuration is selected.
+
+    DebugSymbols
+      If "true", create symbols (.pdb). If "false", do not create symbols.
+    DefineConstants
+      Constants defined for the preprocessor.
+    EnableUnmanagedDebugging
+      If "true", starting the debugger will attach both managed and unmanaged debuggers.
+    Optimize
+      If "true", optimize the build output. If "false", do not optimize.
+    OutputPath
+      Output path of project relative to the project file.
+    WarningLevel
+      Warning level for the compiler.
+  -->
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+
+  <!--
+    This section specifies references for the project.
+  -->
+  <ItemGroup>
+    <Reference Include="Accessibility" />
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Office.Tools.v4.0.Framework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Tools.Applications.Runtime, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.Office.Tools, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.Office.Tools.Common, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.Office.Tools.Excel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Office.Tools.Common.v4.0.Utilities, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <Private>True</Private>
+    </Reference>
+  </ItemGroup>
+  <Choose>
+    <When Condition="$([System.String]::Copy(&quot;;$(DefineConstants);&quot;).ToLower().Contains(';useofficeinterop;')) or $([System.String]::Copy(&quot;,$(DefineConstants),&quot;).ToLower().Contains(',useofficeinterop,'))">
+      <ItemGroup>
+        <Reference Include="Office, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c">
+          <Private>False</Private>
+          <EmbedInteropTypes>true</EmbedInteropTypes>
+        </Reference>
+        <Reference Include="Microsoft.Office.Interop.Excel, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c">
+          <Private>False</Private>
+          <EmbedInteropTypes>true</EmbedInteropTypes>
+        </Reference>
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <COMReference Include="Microsoft.Office.Core">
+          <Guid>{2DF8D04C-5BFA-101B-BDE5-00AA0044DE52}</Guid>
+          <VersionMajor>2</VersionMajor>
+          <VersionMinor>7</VersionMinor>
+          <Lcid>0</Lcid>
+          <WrapperTool>tlbimp</WrapperTool>
+          <Isolated>False</Isolated>
+          <EmbedInteropTypes>true</EmbedInteropTypes>
+        </COMReference>
+        <COMReference Include="Microsoft.Office.Interop.Excel">
+          <Guid>{00020813-0000-0000-C000-000000000046}</Guid>
+          <VersionMajor>1</VersionMajor>
+          <VersionMinor>8</VersionMinor>
+          <Lcid>0</Lcid>
+          <WrapperTool>tlbimp</WrapperTool>
+          <Isolated>False</Isolated>
+          <EmbedInteropTypes>true</EmbedInteropTypes>
+        </COMReference>
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
+  <ItemGroup>
+    <Reference Include="stdole, Version=7.0.3300.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <!--
+    This section defines the user source files that are part of the project.
+     
+    A "Compile" element specifies a source file to compile.
+    An "EmbeddedResource" element specifies an .resx file for embedded resources.
+    A "None" element specifies a file that is not to be passed to the compiler (for instance, 
+    a text file or XML file).
+    The "AppDesigner" element specifies the directory where the application properties files
+    can be found.
+  -->
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <EmbeddedResource Include="src\VDG_Excel_Add-in\Properties\Resources.resx" />
+    <None Include=".github" />
+    <None Include=".gitkeep" />
+    <None Include="build\.gitkeep" />
+    <None Include="build\build.ps1" />
+    <None Include="build\release.ps1" />
+    <None Include="CHANGELOG.md" />
+    <None Include="CONTRIBUTING.md" />
+    <None Include="Directory.Build.props" />
+    <None Include="Directory.Build.targets\.gitkeep" />
+    <None Include="docs\.gitkeep" />
+    <None Include="docs\API.md" />
+    <None Include="docs\Architecture.md" />
+    <None Include="docs\Design.md" />
+    <None Include="docs\ExcelAddIn.md" />
+    <None Include="docs\Extensibility_Plugins.md" />
+    <None Include="docs\GettingStarted.md" />
+    <None Include="docs\VisioAddIn.md" />
+    <None Include="installers\.gitkeep" />
+    <None Include="installers\ExcelAddIn\.gitkeep" />
+    <None Include="installers\ExcelAddIn\ClickOnce\.gitkeep" />
+    <None Include="installers\ExcelAddIn\MSI\.gitkeep" />
+    <None Include="installers\VisioAddIn\.gitkeep" />
+    <None Include="installers\VisioAddIn\ClickOnce\.gitkeep" />
+    <None Include="installers\VisioAddIn\MSI\.gitkeep" />
+    <None Include="LICENSE" />
+    <None Include="NuGet.config" />
+    <None Include="obj\Debug\DesignTimeResolveAssemblyReferencesInput.cache" />
+    <None Include="obj\Debug\Visio Diagram Generator.csproj.AssemblyReference.cache" />
+    <None Include="obj\Release\Visio Diagram Generator.csproj.AssemblyReference.cache" />
+    <None Include="plugins\.gitkeep" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+    <Compile Include="src\VDG.Core.Contracts\Builder\DiagramBuilder.cs" />
+    <Compile Include="src\VDG.Core.Contracts\Drawing\DrawCommand.cs" />
+    <Compile Include="src\VDG.Core.Contracts\Drawing\DrawConnector.cs" />
+    <Compile Include="src\VDG.Core.Contracts\Drawing\DrawShape.cs" />
+    <Compile Include="src\VDG.Core.Contracts\Drawing\SetText.cs" />
+    <Compile Include="src\VDG.Core.Contracts\GlobalUsings.cs" />
+    <Compile Include="src\VDG.Core.Contracts\Layouts\EdgeRoute.cs" />
+    <Compile Include="src\VDG.Core.Contracts\Layouts\ILayoutEngine.cs" />
+    <Compile Include="src\VDG.Core.Contracts\Layouts\LayoutOptions.cs" />
+    <Compile Include="src\VDG.Core.Contracts\Layouts\LayoutResult.cs" />
+    <Compile Include="src\VDG.Core.Contracts\Layouts\NodeLayout.cs" />
+    <Compile Include="src\VDG.Core.Contracts\Logging\ConsoleLogger.cs" />
+    <Compile Include="src\VDG.Core.Contracts\Logging\ILogger.cs" />
+    <Compile Include="src\VDG.Core.Contracts\Logging\LogLevel.cs" />
+    <Compile Include="src\VDG.Core.Contracts\Logging\NullLogger.cs" />
+    <Compile Include="src\VDG.Core.Contracts\Models\Bounds.cs" />
+    <Compile Include="src\VDG.Core.Contracts\Models\DiagramModel.cs" />
+    <Compile Include="src\VDG.Core.Contracts\Models\Edge.cs" />
+    <Compile Include="src\VDG.Core.Contracts\Models\Node.cs" />
+    <Compile Include="src\VDG.Core.Contracts\Models\Point.cs" />
+    <Compile Include="src\VDG.Core.Contracts\Models\ShapeDescriptor.cs" />
+    <Compile Include="src\VDG.Core.Contracts\Models\ShapeStyle.cs" />
+    <Compile Include="src\VDG.Core.Contracts\Models\Size.cs" />
+    <Compile Include="src\VDG.Core.Contracts\Pipeline\DiagramPipeline.cs" />
+    <Compile Include="src\VDG.Core.Contracts\Pipeline\IPipelineStep.cs" />
+    <Compile Include="src\VDG.Core.Contracts\Pipeline\PipelineContext.cs" />
+    <Compile Include="src\VDG.Core.Contracts\Pipeline\Steps.Placeholders.cs" />
+    <Compile Include="src\VDG.Core.Contracts\Providers\IDrawingSurface.cs" />
+    <Compile Include="src\VDG.Core.Contracts\Providers\IModelProvider.cs" />
+    <Compile Include="src\VDG.Core.Contracts\Providers\ISettingsProvider.cs" />
+    <Compile Include="src\VDG.Core.Contracts\Providers\IShapeCatalog.cs" />
+    <Compile Include="src\VDG.Core.Contracts\Safety\ComSafety.cs" />
+    <Compile Include="src\VDG.Core\AssemblyMarker.cs" />
+    <Compile Include="src\VDG.Core\InternalsVisibleTo.cs" />
+    <Compile Include="src\VDG.VisioAddIn\Properties\AssemblyInfo.cs" />
+    <Compile Include="src\VDG.VisioAddIn\Ribbon\Ribbon.cs" />
+    <Compile Include="src\VDG.VisioAddIn\Ribbon\Ribbon.Designer.cs" />
+    <Compile Include="src\VDG.VisioAddIn\ThisAddIn.cs" />
+    <Compile Include="src\VDG.VisioAddIn\ThisAddIn.Designer.cs">
+      <DependentUpon>ThisAddIn.cs</DependentUpon>
+    </Compile>
+    <Compile Include="src\VDG_Excel_Add-in\Interop\ExcelConfigResolver.cs" />
+    <Compile Include="src\VDG_Excel_Add-in\Interop\VisioInterop.cs" />
+    <Compile Include="src\VDG_Excel_Add-in\obj\Debug\.NETFramework,Version=v4.8.AssemblyAttributes.cs" />
+    <Compile Include="src\VDG_Excel_Add-in\obj\Release\.NETFramework,Version=v4.8.AssemblyAttributes.cs" />
+    <Compile Include="src\VDG_Excel_Add-in\Properties\AssemblyInfo.cs" />
+    <Compile Include="src\VDG_Excel_Add-in\Properties\Resources.Designer.cs" />
+    <Compile Include="src\VDG_Excel_Add-in\Properties\Settings.Designer.cs" />
+    <Compile Include="src\VDG_Excel_Add-in\Ribbon\Ribbon.cs" />
+    <Compile Include="src\VDG_Excel_Add-in\Ribbon\Ribbon.Designer.cs">
+      <DependentUpon>Ribbon.cs</DependentUpon>
+    </Compile>
+    <Compile Include="src\VDG_Excel_Add-in\ThisAddIn.cs" />
+    <Compile Include="src\VDG_Excel_Add-in\ThisAddIn.Designer.cs">
+      <DependentUpon>ThisAddIn.cs</DependentUpon>
+    </Compile>
+    <Compile Include="src\VisioDiagramGenerator.PluginHost\IPlugin.cs" />
+    <Compile Include="src\VisioDiagramGenerator.PluginHost\PluginHost.cs" />
+    <Compile Include="src\VisioDiagramGenerator.PluginHost\PluginLoader.cs" />
+    <Compile Include="src\VisioDiagramGenerator.PluginHost\SamplePlugins\SamplePlugin.cs" />
+    <Compile Include="tests\ContractsShapeTests.cs" />
+    <Compile Include="tests\DiagramBuilderContractsTests.cs" />
+    <Compile Include="tests\ModelsTests.cs" />
+    <Compile Include="tests\UtilitiesContractsTests.cs" />
+    <Compile Include="tests\VDG.Core.Tests\BuildGate.cs" />
+    <Compile Include="ThisAddIn.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <None Include="README.md" />
+    <None Include="scripts\.gitkeep" />
+    <None Include="scripts\build.bat" />
+    <None Include="scripts\consolidateForChatGPT.fsx" />
+    <None Include="scripts\exportForChatGPT.bat" />
+    <None Include="scripts\release.bat" />
+    <None Include="scripts\runGenerator.bat" />
+    <None Include="shared\.gitkeep" />
+    <None Include="shared\Config\.gitkeep" />
+    <None Include="shared\Config\diagramConfig.schema.json" />
+    <None Include="shared\Config\samples\.gitkeep" />
+    <None Include="shared\Config\samples\diagramConfig.sample.json" />
+    <None Include="shared\Resources\.gitkeep" />
+    <None Include="shared\Resources\icons\.gitkeep" />
+    <None Include="shared\Resources\Ribbon\.gitkeep" />
+    <None Include="shared\Templates\.gitkeep" />
+    <None Include="shared\Templates\default.vstx" />
+    <None Include="shared\Templates\network_stencil.vssx" />
+    <None Include="shared\Templates\stencilTemplates.vssx" />
+    <None Include="src\.gitkeep" />
+    <None Include="src\VDG.Core\VDG.Core.csproj" />
+    <None Include="src\VDG.Core.Contracts\VDG.Core.Contracts.csproj" />
+    <None Include="src\VDG.VisioAddIn\.gitkeep" />
+    <None Include="src\VDG.VisioAddIn\App.config" />
+    <None Include="src\VDG.VisioAddIn\ThisAddIn.manifest\.gitkeep" />
+    <None Include="src\VDG.VisioAddIn\VDG.VisioAddIn.csproj" />
+    <None Include="src\VDG_Excel_Add-in\Interop\.gitkeep" />
+    <None Include="src\VDG_Excel_Add-in\obj\Debug\DesignTimeResolveAssemblyReferencesInput.cache" />
+    <None Include="src\VDG_Excel_Add-in\obj\Debug\ExcelAddIn1.csproj.AssemblyReference.cache" />
+    <None Include="src\VDG_Excel_Add-in\obj\Debug\VDG_Excel_Add-in.csproj.AssemblyReference.cache" />
+    <None Include="src\VDG_Excel_Add-in\obj\Release\ExcelAddIn1.csproj.AssemblyReference.cache" />
+    <None Include="src\VDG_Excel_Add-in\obj\Release\VDG_Excel_Add-in.csproj.AssemblyReference.cache" />
+    <None Include="src\VDG_Excel_Add-in\Properties\Settings.settings" />
+    <None Include="src\VDG_Excel_Add-in\Ribbon\.gitkeep" />
+    <None Include="src\VDG_Excel_Add-in\ThisAddIn.manifest\.gitkeep" />
+    <None Include="src\VDG_Excel_Add-in\VDG_Excel_Add-in.csproj" />
+    <None Include="src\VisioDiagramGenerator.Algorithms\.gitkeep" />
+    <None Include="src\VisioDiagramGenerator.Algorithms\AST.fs" />
+    <None Include="src\VisioDiagramGenerator.Algorithms\DataModels.fs" />
+    <None Include="src\VisioDiagramGenerator.Algorithms\LayoutAlgorithms.fs" />
+    <None Include="src\VisioDiagramGenerator.Algorithms\Parsers.fs" />
+    <None Include="src\VisioDiagramGenerator.Algorithms\Transformations.fs" />
+    <None Include="src\VisioDiagramGenerator.Algorithms\VisioDiagramGenerator.Algorithms.fsproj" />
+    <None Include="src\VisioDiagramGenerator.CliFs" />
+    <None Include="src\VisioDiagramGenerator.PluginHost\.gitkeep" />
+    <None Include="src\VisioDiagramGenerator.PluginHost\VisioDiagramGenerator.PluginHost.csproj" />
+    <None Include="tests\.gitkeep" />
+    <None Include="tests\run-tests.ps1" />
+    <None Include="tests\smoke.ps1" />
+    <None Include="tests\VDG.Core.Tests\VDG.Core.Tests.csproj" />
+    <None Include="tests\VDG_Excel_Add-In.Tests" />
+    <None Include="tests\VDG.VisioAddIn.Tests" />
+    <None Include="tests\VisioDiagramGenerator.Algorithms.Tests" />
+    <None Include="tests\VisioDiagramGenerator.CliFs.Tests" />
+    <None Include="tests\VisioDiagramGenerator.Tests" />
+    <None Include="ThisAddIn.Designer.xml">
+      <DependentUpon>ThisAddIn.cs</DependentUpon>
+    </None>
+    <Compile Include="ThisAddIn.Designer.cs">
+      <DependentUpon>ThisAddIn.Designer.xml</DependentUpon>
+    </Compile>
+    <AppDesigner Include="Properties\" />
+    <None Include="Visio Diagram Generator_TemporaryKey.pfx" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include=".gitattributes" />
+    <Content Include=".gitignore" />
+    <Content Include="shared\Resources\icons\icon16.png" />
+    <Content Include="shared\Resources\icons\icon32.png" />
+    <Content Include="shared\Resources\Ribbon\CommonRibbon.xml" />
+    <Content Include="src\VDG_Excel_Add-in\Ribbon\Ribbon.xml" />
+    <Content Include="src\VDG_Excel_Add-in\ThisAddIn.Designer.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="bin\Debug\" />
+    <Folder Include="bin\Release\" />
+    <Folder Include="src\VDG_Excel_Add-in\bin\Debug\" />
+    <Folder Include="src\VDG_Excel_Add-in\bin\Release\" />
+    <Folder Include="src\VDG_Excel_Add-in\obj\Debug\TempPE\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="src\VDG.Core\VDG.Core.csproj">
+      <Project>{f7701742-6b62-4805-86ab-9111be09b67c}</Project>
+      <Name>VDG.Core</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignManifests>true</SignManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestKeyFile>Visio Diagram Generator_TemporaryKey.pfx</ManifestKeyFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestCertificateThumbprint>A8DA5E140D4A1F29DDEE6DC74A7FB5246FF76C81</ManifestCertificateThumbprint>
+  </PropertyGroup>
+  <!-- Include the build rules for a C# project. -->
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- Include additional build rules for an Office application add-in. -->
+  <Import Project="$(VSToolsPath)\OfficeTools\Microsoft.VisualStudio.Tools.Office.targets" Condition="'$(VSToolsPath)' != ''" />
+  <!-- This section defines VSTO properties that describe the host-changeable project properties. -->
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{BAA0C2D2-18E2-41B9-852F-F413020CAA33}">
+        <ProjectProperties HostName="Excel" HostPackage="{29A7B9D7-A7F1-4328-8EF0-6B2D1A56B2C1}" OfficeVersion="15.0" VstxVersion="4.0" ApplicationType="Excel" Language="cs" TemplatesPath="" DebugInfoExeName="#Software\Microsoft\Office\16.0\Excel\InstallRoot\Path#excel.exe" DebugInfoCommandLine="/x" AddItemTemplatesGuid="{51063C3A-E220-4D12-8922-BDA915ACD783}" />
+        <Host Name="Excel" GeneratedCodeNamespace="Visio_Diagram_Generator" IconIndex="0">
+          <HostItem Name="ThisAddIn" Code="ThisAddIn.cs" CanonicalName="AddIn" CanActivate="false" IconIndex="1" Blueprint="ThisAddIn.Designer.xml" GeneratedCode="ThisAddIn.Designer.cs" />
+        </Host>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>

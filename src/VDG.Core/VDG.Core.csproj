@@ -1,16 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <!-- was netstandard2.1 -->
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
-    <!-- only meaningful on .NET 6+ -->
-    <AssemblyName>VDG.Core.Contracts</AssemblyName>
-    <!-- avoid name collision -->
+    <AssemblyName>VDG.Core</AssemblyName>
     <RootNamespace>VDG.Core</RootNamespace>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 </Project>
-
 
 

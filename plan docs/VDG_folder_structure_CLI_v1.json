@@ -1,0 +1,170 @@
+{
+  "VisioDiagramGenerator": {
+    ".editorconfig": null,
+    ".gitattributes": null,
+    ".gitignore": null,
+    "README.md": null,
+    "CONTRIBUTING.md": null,
+    "CHANGELOG.md": null,
+    "LICENSE": null,
+    "global.json": null,
+    "NuGet.config": null,
+    "Directory.Build.props": null,
+    "Directory.Build.targets": null,
+    "VisioDiagramGenerator.sln": null,
+    ".github": {
+      "workflows": {
+        "ci.yml": null
+      }
+    },
+    "docs": {
+      "Architecture.md": null,
+      "Design.md": null,
+      "GettingStarted.md": null,
+      "API.md": null,
+      "CLI.md": null,
+      "Migration_CLI.md": null
+    },
+    "scripts": {
+      "build.bat": null,
+      "release.bat": null,
+      "exportForChatGPT.bat": null,
+      "runGenerator.bat": null,
+      "consolidateForChatGPT.fsx": null,
+      "Convert-ToCLI.ps1": null
+    },
+    "build": {
+      "build.ps1": null,
+      "release.ps1": null
+    },
+    "shared": {
+      "Resources": {
+        "icons": {
+          "icon16.png": null,
+          "icon32.png": null
+        }
+      },
+      "Templates": {
+        "default.vstx": null,
+        "network_stencil.vssx": null,
+        "stencilTemplates.vssx": null
+      },
+      "Config": {
+        "diagramConfig.schema.json": null,
+        "samples": {
+          "diagramConfig.sample.json": null
+        }
+      }
+    },
+    "src": {
+      "VDG.Core": {
+        "VDG.Core.csproj": null,
+        "Models": {
+          "CallSite.cs": null,
+          "MasterMeta.cs": null,
+          "DiagramItem.cs": null,
+          "DiagramConnection.cs": null,
+          "DiagramConfig.cs": null
+        },
+        "Providers": {
+          "IMapProvider.cs": null,
+          "CallSiteMapProvider.cs": null,
+          "ProcMapProvider.cs": null,
+          "MasterMetaProvider.cs": null,
+          "VBAMapProvider.cs": null,
+          "CSMapProvider.cs": null
+        },
+        "Layouts": {
+          "ILayoutAlgorithm.cs": null,
+          "VerticalLayoutAlgorithm.cs": null,
+          "GridLayoutAlgorithm.cs": null,
+          "CircularLayoutAlgorithm.cs": null
+        },
+        "Core": {
+          "DiagramBuilder.cs": null,
+          "DiagramGenerator.cs": null,
+          "Pipeline.cs": null,
+          "Interop": {
+            "VisioService.cs": null,
+            "ComObjectExtensions.cs": null
+          },
+          "Utilities": {
+            "RegexCallScanner.cs": null,
+            "LoggingExtensions.cs": null
+          }
+        },
+        "Export": {
+          "DiagramExporter.cs": null,
+          "ExportFormat.cs": null
+        },
+        "Preview": {
+          "LivePreviewService.cs": null
+        }
+      },
+      "VisioDiagramGenerator.Algorithms": {
+        "VisioDiagramGenerator.Algorithms.fsproj": null,
+        "AST.fs": null,
+        "Parsers.fs": null,
+        "Transformations.fs": null,
+        "LayoutAlgorithms.fs": null,
+        "DataModels.fs": null
+      },
+      "VisioDiagramGenerator.CliFs": {
+        "VisioDiagramGenerator.CliFs.fsproj": null,
+        "Program.fs": null,
+        "ArgParser.fs": null,
+        "GenerateCommand.fs": null,
+        "ExportCommand.fs": null,
+        "Utilities": {
+          "CliLogger.fs": null,
+          "FileBundler.fs": null
+        }
+      }
+    },
+    "tests": {
+      "VDG.Core.Tests": {
+        "VDG.Core.Tests.csproj": null
+      },
+      "VisioDiagramGenerator.Algorithms.Tests": {
+        "VisioDiagramGenerator.Algorithms.Tests.fsproj": null
+      },
+      "VisioDiagramGenerator.CliFs.Tests": {
+        "VisioDiagramGenerator.CliFs.Tests.fsproj": null,
+        "CliTests.fs": null
+      }
+    },
+    "backlog": {
+      "VisioDiagramGenerator.PluginHost": {
+        "VisioDiagramGenerator.PluginHost.csproj": null,
+        "PluginHost.cs": null,
+        "PluginLoader.cs": null,
+        "IPlugin.cs": null,
+        "SamplePlugins": {
+          "SamplePlugin.cs": null
+        }
+      },
+      "installers": {
+        "ExcelAddIn": {
+          "NOTE.txt": null
+        },
+        "VisioAddIn": {
+          "NOTE.txt": null
+        }
+      },
+      "addins_legacy": {
+        "VDG.ExcelAddIn": {
+          "NOTE.txt": null
+        },
+        "VDG.VisioAddIn": {
+          "NOTE.txt": null
+        },
+        "VDG.ExcelAddIn.Tests": {
+          "NOTE.txt": null
+        },
+        "VDG.VisioAddIn.Tests": {
+          "NOTE.txt": null
+        }
+      }
+    }
+  }
+}

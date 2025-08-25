@@ -1,0 +1,235 @@
+' Project: Visio Diagram Generator (VDG)
+' Purpose: High‑level pseudocode skeleton – UPDATED per comprehensive‑critique.txt
+' Language‑agnostic VB‑style pseudocode illustrating strong typing, error handling,
+' immutable models, COM safety, and test‑friendly boundaries.
+'
+' Each module corresponds to a source file in the repository.
+' Replace guide‑post comments with production code.
+
+Option Explicit On
+
+' =============================================================================
+' 1. Configuration & Validation
+' =============================================================================
+Module DiagramConfig
+    Public Property Layout As String = "grid"
+    Public Property ExportFormat As String = ExportFormat.Png
+    Public Property PageWidth As Double = 8.5   ' inches
+    Public Property PageHeight As Double = 11.0
+    Public Property Version As Integer = 1
+End Module
+
+Module ConfigLoader
+    Function LoadConfig(path As String) As DiagramConfig
+        Try
+            Dim json As String = File.ReadAllText(path)
+            Dim cfg As DiagramConfig = Json.Deserialize(Of DiagramConfig)(json)
+            Return ValidateConfig(cfg)
+        Catch ex As Exception
+            Logging.LogError($"Config load failed: {ex.Message}")
+            Throw
+        End Try
+    End Function
+
+    Private Function ValidateConfig(cfg As DiagramConfig) As DiagramConfig
+        If String.IsNullOrWhiteSpace(cfg.Layout) Then cfg.Layout = "grid"
+        If cfg.PageWidth <= 0 OrElse cfg.PageHeight <= 0 Then
+            Throw New ArgumentException("Page size must be positive.")
+        End If
+        Return cfg
+    End Function
+End Module
+
+' =============================================================================
+' 2. Domain Models (Immutable Records)
+' =============================================================================
+Public Class DiagramItem
+    Public ReadOnly Property Id As String
+    Public ReadOnly Property TypeName As String
+    Public ReadOnly Property Label As String
+    Public ReadOnly Property X As Double
+    Public ReadOnly Property Y As Double
+    Public Sub New(id$, typeName$, label$, x#, y#)
+        Me.Id = id : Me.TypeName = typeName : Me.Label = label : Me.X = x : Me.Y = y
+    End Sub
+End Class
+
+Public Class DiagramConnection
+    Public ReadOnly Property SourceId As String
+    Public ReadOnly Property TargetId As String
+    Public ReadOnly Property ConnectorType As String
+    Public Sub New(src$, trg$, connType$)
+        SourceId = src : TargetId = trg : ConnectorType = connType
+    End Sub
+End Class
+
+' =============================================================================
+' 3. Utilities
+' =============================================================================
+Module Logging
+    Sub LogInfo(msg$) : Console.WriteLine($"[INFO] {DateTime.Now:u} {msg}") : End Sub
+    Sub LogError(msg$) : Console.WriteLine($"[ERR ] {DateTime.Now:u} {msg}") : End Sub
+End Module
+
+Module ComSafety
+    <Extension>
+    Sub SafeRelease(Of T)(ByRef comObj As T)
+        Try
+            If comObj IsNot Nothing AndAlso Marshal.IsComObject(comObj) Then
+                Marshal.FinalReleaseComObject(comObj)
+            End If
+        Finally
+            comObj = Nothing
+        End Try
+    End Sub
+End Module
+
+' =============================================================================
+' 4. Providers (Strongly‑Typed Interfaces)
+' =============================================================================
+Public Interface IMapProvider
+    Function GetItems() As IReadOnlyList(Of DiagramItem)
+    Function GetConnections() As IReadOnlyList(Of DiagramConnection)
+End Interface
+
+' Example provider with exception safety
+Public Class CallSiteMapProvider : Implements IMapProvider
+    Public Function GetItems() As IReadOnlyList(Of DiagramItem) Implements IMapProvider.GetItems
+        Dim items = New List(Of DiagramItem)
+        Try
+            For Each cs In RegexCallScanner.ScanProject()
+                items.Add(New DiagramItem(Guid.NewGuid().ToString(), "CallSite", $"{cs.Caller}->{cs.Callee}", 0, 0))
+            Next
+        Catch ex As Exception
+            Logging.LogError($"CallSite provider failed: {ex.Message}")
+        End Try
+        Return items
+    End Function
+
+    Public Function GetConnections() As IReadOnlyList(Of DiagramConnection) Implements IMapProvider.GetConnections
+        Return New List(Of DiagramConnection)() ' Build connections here
+    End Function
+End Class
+
+' =============================================================================
+' 5. Layout Algorithms (Functional Style)
+' =============================================================================
+Public Interface ILayoutAlgorithm
+    Function Compute(items As IReadOnlyList(Of DiagramItem),
+                     conns As IReadOnlyList(Of DiagramConnection)) As IReadOnlyList(Of DiagramItem)
+End Interface
+
+Public Class GridLayoutAlgorithm : Implements ILayoutAlgorithm
+    Public Function Compute(items As IReadOnlyList(Of DiagramItem),
+                            conns As IReadOnlyList(Of DiagramConnection)) As IReadOnlyList(Of DiagramItem) _
+                            Implements ILayoutAlgorithm.Compute
+        Dim result = New List(Of DiagramItem)
+        Dim cols = Math.Ceiling(Math.Sqrt(items.Count))
+        For i = 0 To items.Count - 1
+            Dim row = i \ cols
+            Dim col = i Mod cols
+            Dim itm = items(i)
+            result.Add(New DiagramItem(itm.Id, itm.TypeName, itm.Label, col * 2, row * 2))
+        Next
+        Return result
+    End Function
+End Class
+
+' =============================================================================
+' 6. VisioService (COM Interop Encapsulated)
+' =============================================================================
+Public Interface IVisioService : Inherits IDisposable
+    Function DrawShape(master$, x#, y#, label$) As String
+    Sub DrawConnector(srcId$, trgId$, connType$)
+End Interface
+
+Public Class VisioServiceImpl : Implements IVisioService
+    Private ReadOnly _app As Visio.Application
+    Private ReadOnly _page As Visio.Page
+    Public Sub New()
+        _app = New Visio.Application()
+        _page = _app.ActivePage
+    End Sub
+    Public Function DrawShape(master$, x#, y#, label$) As String Implements IVisioService.DrawShape
+        ' Implementation placeholder
+        Return Guid.NewGuid().ToString()
+    End Function
+    Public Sub DrawConnector(srcId$, trgId$, connType$) Implements IVisioService.DrawConnector
+        ' Implementation placeholder
+    End Sub
+    Public Sub Dispose() Implements IDisposable.Dispose
+        _page.SafeRelease()
+        _app.Quit() : _app.SafeRelease()
+    End Sub
+End Class
+
+' =============================================================================
+' 7. Pipeline (Pure Core Orchestration)
+' =============================================================================
+Public Class Pipeline
+    Private ReadOnly _providers As IReadOnlyList(Of IMapProvider)
+    Private ReadOnly _layout As ILayoutAlgorithm
+    Public Sub New(providers As IReadOnlyList(Of IMapProvider), layoutAlg As ILayoutAlgorithm)
+        _providers = providers : _layout = layoutAlg
+    End Sub
+    Public Function BuildCommands() As IReadOnlyList(Of DrawCommand)
+        Dim allItems = _providers.SelectMany(Function(p) p.GetItems()).ToList()
+        Dim allConns = _providers.SelectMany(Function(p) p.GetConnections()).ToList()
+        Dim positioned = _layout.Compute(allItems, allConns)
+        Return CommandFactory.From(positioned, allConns)
+    End Function
+End Class
+
+Public Class DrawCommand
+    Public ReadOnly Property Kind As String
+    Public ReadOnly Property Data As Object
+    Public Sub New(kind$, data As Object)
+        Me.Kind = kind : Me.Data = data
+    End Sub
+End Class
+
+Module CommandFactory
+    Function From(items As IReadOnlyList(Of DiagramItem),
+                  conns As IReadOnlyList(Of DiagramConnection)) As IReadOnlyList(Of DrawCommand)
+        Return items.Select(Function(i) New DrawCommand("shape", i)).Concat(
+               conns.Select(Function(c) New DrawCommand("connector", c))).ToList()
+    End Function
+End Module
+
+' =============================================================================
+' 8. DiagramBuilder (Executes Commands against Visio)
+' =============================================================================
+Public Class DiagramBuilder
+    Private ReadOnly _visio As IVisioService
+    Public Sub New(vs As IVisioService) : _visio = vs : End Sub
+
+    Public Sub Execute(cmds As IReadOnlyList(Of DrawCommand))
+        For Each cmd In cmds
+            Select Case cmd.Kind
+                Case "shape"
+                    Dim itm = CType(cmd.Data, DiagramItem)
+                    _visio.DrawShape(ShapeMapping.GetMaster(itm.TypeName), itm.X, itm.Y, itm.Label)
+                Case "connector"
+                    Dim cn = CType(cmd.Data, DiagramConnection)
+                    _visio.DrawConnector(cn.SourceId, cn.TargetId, cn.ConnectorType)
+            End Select
+        Next
+    End Sub
+End Class
+
+' =============================================================================
+' 9. Top‑Level Generation Entry
+' =============================================================================
+Module DiagramGenerator
+    Sub Run(cfgPath$, sourceRoot$, outputFile$)
+        Dim cfg = ConfigLoader.LoadConfig(cfgPath)
+        Dim providers = {New CallSiteMapProvider()}.ToList()
+        Dim pipeline = New Pipeline(providers, New GridLayoutAlgorithm())
+        Dim cmds = pipeline.BuildCommands()
+        Using vs As New VisioServiceImpl()
+            Dim builder = New DiagramBuilder(vs)
+            builder.Execute(cmds)
+            ' Export via Visio API...
+        End Using
+    End Sub
+End Module

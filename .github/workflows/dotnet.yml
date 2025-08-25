@@ -1,0 +1,23 @@
+name: .NET CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          # If you have global.json, this picks it up automatically
+          global-json-file: global.json
+      - name: Restore
+        run: dotnet restore Visio-Diagram-Generator.sln
+      - name: Build
+        run: dotnet build Visio-Diagram-Generator.sln -c Release -v minimal --no-restore
+      - name: Test
+        run: dotnet test Visio-Diagram-Generator.sln -c Release -v minimal --no-build --collect "XPlat Code Coverage"

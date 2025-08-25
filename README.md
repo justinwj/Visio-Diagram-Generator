@@ -1,3 +1,6 @@
+![.NET CI](https://github.com/justinwj/Visio-Diagram-Generator/actions/workflows/dotnet.yml/badge.svg)
+
+
 # VDG.Core.Contracts (compile-first)
 
 Core contracts and compile-ready stubs for the **Visio Diagram Generator**:
@@ -6,7 +9,7 @@ Core contracts and compile-ready stubs for the **Visio Diagram Generator**:
 - **Providers** *(interfaces)*: `IModelProvider`, `IDrawingSurface`, `IShapeCatalog`, `ISettingsProvider`.
 - **Layouts** *(interfaces & DTOs)*: `ILayoutEngine`, `LayoutOptions`, `LayoutResult`, `NodeLayout`, `EdgeRoute`.
 - **Pipeline**: `IPipelineStep`, `PipelineContext`, `DiagramPipeline`, placeholder steps (`ValidateModel`, `RunLayout`, `Render`).
-- **DiagramBuilder**: high-level façade to run the default pipeline.
+- **DiagramBuilder**: high-level faï¿½ade to run the default pipeline.
 - **Drawing**: command base & examples (`DrawCommand`, `DrawShape`, `DrawConnector`, `SetText`).
 - **Logging**: minimal `ILogger`, `LogLevel`, `NullLogger`, `ConsoleLogger`.
 - **ComSafety**: `ComSafety` helpers for safe COM disposal with `Marshal.FinalReleaseComObject`.

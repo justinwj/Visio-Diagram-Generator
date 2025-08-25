@@ -1,23 +1,45 @@
 name: .NET CI
-
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  push: { branches: [ main ] }
+  pull_request: { branches: [ main ] }
 
 jobs:
   build-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-dotnet@v4
         with:
-          # If you have global.json, this picks it up automatically
           global-json-file: global.json
+
+      - name: Cache NuGet
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.sln', 'global.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
       - name: Restore
         run: dotnet restore Visio-Diagram-Generator.sln
+
+      - name: Install dotnet-format
+        run: dotnet tool install -g dotnet-format && echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+
+      - name: Verify formatting
+        run: dotnet format --verify-no-changes
+
       - name: Build
         run: dotnet build Visio-Diagram-Generator.sln -c Release -v minimal --no-restore
-      - name: Test
+
+      - name: Test (with coverage)
         run: dotnet test Visio-Diagram-Generator.sln -c Release -v minimal --no-build --collect "XPlat Code Coverage"
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: |
+            **/TestResults/**/*.xml
+            **/TestResults/**/*.cobertura.xml

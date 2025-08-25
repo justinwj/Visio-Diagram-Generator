@@ -1,8 +1,11 @@
 <Project>
   <PropertyGroup>
-    <!-- Keep this minimal; add real settings later -->
+    <TargetFramework Condition="'$(TargetFramework)'==''">net8.0</TargetFramework>
     <Nullable>enable</Nullable>
-    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 </Project>
 
+
+
+s

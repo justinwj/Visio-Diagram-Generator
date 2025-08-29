@@ -5,10 +5,8 @@ using VDG.VisioRuntime.Rendering;
 namespace VDG.VisioRuntime.SampleCli
 {
     /// <summary>
-    /// A simple command‑line entry point demonstrating how to use
-    /// VisioStaHost with VisioJsonRenderer.  It accepts a JSON file and
-    /// optionally an output .vsdx file.  All drawing operations are
-    /// marshalled onto a dedicated STA thread.
+    /// Simple CLI entry point: renders a diagram from JSON; optionally saves .vsdx.
+    /// All Visio automation runs on a dedicated STA thread.
     /// </summary>
     internal static class Program
     {
@@ -17,7 +15,7 @@ namespace VDG.VisioRuntime.SampleCli
         {
             if (args.Length == 0)
             {
-                Console.WriteLine("Usage: dotnet run -- <diagram.json> [out.vsdx]");
+                Console.WriteLine("Usage: VDG.VisioRuntime <diagram.json> [out.vsdx]");
                 return;
             }
 
@@ -27,13 +25,14 @@ namespace VDG.VisioRuntime.SampleCli
             using var host = new VisioStaHost(visible: true);
 
             // Render diagram on STA
-            host.Invoke(svc => VisioJsonRenderer.RenderFile(svc, jsonPath));
+            host.Invoke(svc => VisioJsonRenderer.RenderJsonFromFile(svc, jsonPath));
 
-            // Optionally save
-            if (vsdxPath != null)
+            // Optionally save (.vsdx extension normalized)
+            if (!string.IsNullOrWhiteSpace(vsdxPath))
             {
-                host.Invoke(svc => svc.SaveAsVsdx(vsdxPath));
-                Console.WriteLine($"Saved diagram to {vsdxPath}");
+                var outPath = System.IO.Path.ChangeExtension(vsdxPath, ".vsdx");
+                host.Invoke(svc => svc.SaveAsVsdx(outPath));
+                Console.WriteLine($"Saved diagram to {outPath}");
             }
         }
     }

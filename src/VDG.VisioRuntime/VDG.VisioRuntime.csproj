@@ -1,66 +1,32 @@
-<Project DefaultTargets="Build" ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props"
-          Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
-
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition="'$(Configuration)'==''">Debug</Configuration>
-    <Platform     Condition="'$(Platform)'==''">AnyCPU</Platform>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-    <OutputType>Exe</OutputType>        <!-- change to Library if no Program.Main -->
+    <TargetFramework>net48</TargetFramework>
+    <OutputType>Exe</OutputType>   <!-- or Library if no Program.Main -->
+    <Platforms>x86;x64</Platforms>
     <RootNamespace>VDG.VisioRuntime</RootNamespace>
     <AssemblyName>VDG.VisioRuntime</AssemblyName>
-    <Prefer32Bit>false</Prefer32Bit>
+    <Nullable>enable</Nullable>
+    <!-- Make NuGet treat this as SDK-style PackageReference -->
+    <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
 
-  <!-- x64 -->
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <PlatformTarget>x64</PlatformTarget>
-    <OutputPath>bin\x64\Debug\</OutputPath>
-    <BaseIntermediateOutputPath>obj\x64\</BaseIntermediateOutputPath>
-    <IntermediateOutputPath>obj\x64\Debug\</IntermediateOutputPath>
-    <DebugSymbols>true</DebugSymbols><DebugType>full</DebugType>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <PlatformTarget>x64</PlatformTarget>
-    <OutputPath>bin\x64\Release\</OutputPath>
-    <BaseIntermediateOutputPath>obj\x64\</BaseIntermediateOutputPath>
-    <IntermediateOutputPath>obj\x64\Release\</IntermediateOutputPath>
-    <Optimize>true</Optimize><DebugType>pdbonly</DebugType>
+  <!-- Resolve VISLIB.DLL automatically unless overridden -->
+  <PropertyGroup>
+    <VISIO_LIB_PATH Condition="'$(VISIO_LIB_PATH)'=='' and '$(Platform)'=='x64'">
+      C:\Program Files\Microsoft Office\root\Office16\VISLIB.DLL
+    </VISIO_LIB_PATH>
+    <VISIO_LIB_PATH Condition="'$(VISIO_LIB_PATH)'=='' and '$(Platform)'=='x86'">
+      C:\Program Files (x86)\Microsoft Office\root\Office16\VISLIB.DLL
+    </VISIO_LIB_PATH>
   </PropertyGroup>
 
-  <!-- x86 -->
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
-    <PlatformTarget>x86</PlatformTarget>
-    <OutputPath>bin\x86\Debug\</OutputPath>
-    <BaseIntermediateOutputPath>obj\x86\</BaseIntermediateOutputPath>
-    <IntermediateOutputPath>obj\x86\Debug\</IntermediateOutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
-    <PlatformTarget>x86</PlatformTarget>
-    <OutputPath>bin\x86\Release\</OutputPath>
-    <BaseIntermediateOutputPath>obj\x86\</BaseIntermediateOutputPath>
-    <IntermediateOutputPath>obj\x86\Release\</IntermediateOutputPath>
-    <Optimize>true</Optimize>
-  </PropertyGroup>
-
-  <!-- Auto-pick VISLIB.DLL unless caller passes VISIO_LIB_PATH -->
-  <PropertyGroup Condition="'$(VISIO_LIB_PATH)'=='' and '$(PlatformTarget)'=='x64'">
-    <VISIO_LIB_PATH>C:\Program Files\Microsoft Office\root\Office16\VISLIB.DLL</VISIO_LIB_PATH>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(VISIO_LIB_PATH)'=='' and '$(PlatformTarget)'=='x86'">
-    <VISIO_LIB_PATH>C:\Program Files (x86)\Microsoft Office\root\Office16\VISLIB.DLL</VISIO_LIB_PATH>
-  </PropertyGroup>
-
+  <!-- COM interop via file path; requires MSBuild.exe (ResolveComReference) -->
   <ItemGroup>
-    <Compile Include="**\*.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
+  <Reference Include="Microsoft.CSharp" />
+  <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <COMFileReference Include="$(VISIO_LIB_PATH)">
       <WrapperTool>tlbimp</WrapperTool>
       <EmbedInteropTypes>true</EmbedInteropTypes>
-    </COMFileReference>
+    </COMFileReference>    
   </ItemGroup>
-
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

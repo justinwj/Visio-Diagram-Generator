@@ -11,32 +11,31 @@ using Visio = Microsoft.Office.Interop.Visio;
 namespace VDG.VisioRuntime.Services
 {
     /// <summary>
-    /// Drop-in replacement for the VisioService.  This implementation fixes
-    /// stencil caching, ensures dynamic connectors work without loading the
-    /// connectors stencil, saves the correct drawing document, and keeps
-    /// stencils from stealing the ActiveDocument.
+    /// Concrete implementation of IVisioService backed by Visio COM automation.
+    /// Fixes stencil caching, prevents stencils from stealing ActiveDocument,
+    /// ensures a document/page exists, uses ConnectorTool for dynamic connectors,
+    /// and always saves the actual drawing (not a stencil).
     /// </summary>
     public sealed class VisioService : IVisioService
     {
         private Visio.Application _app;
         private bool _ownsApp;
 
-        // Cache opened stencils (case‑insensitive key)
+        // Cache opened stencils (case-insensitive)
         private readonly Dictionary<string, Visio.Document> _stencilCache =
-            new(StringComparer.OrdinalIgnoreCase);
+            new Dictionary<string, Visio.Document>(StringComparer.OrdinalIgnoreCase);
 
         public void AttachOrCreateVisio(bool visible = true)
         {
-            if (_app != null) return;
+            if (_app != null) { _app.Visible = visible; return; }
+
             try
             {
-                // Attach to existing instance if present
                 _app = (Visio.Application)Marshal.GetActiveObject("Visio.Application");
                 _ownsApp = false;
             }
             catch
             {
-                // Otherwise create a new instance
                 _app = new Visio.Application();
                 _ownsApp = true;
             }
@@ -47,7 +46,6 @@ namespace VDG.VisioRuntime.Services
         public void EnsureDocumentAndPage()
         {
             var app = _app ?? throw new InvalidOperationException("Visio not attached. Call AttachOrCreateVisio first.");
-
             Visio.Documents docs = null;
             Visio.Document doc = null;
             Visio.Pages pages = null;
@@ -56,16 +54,21 @@ namespace VDG.VisioRuntime.Services
             try
             {
                 docs = app.Documents;
-                // Ensure there is at least one drawing document
-                doc = app.Documents.Count == 0 ? docs.Add("") : (app.ActiveDocument ?? docs.Add(""));
+
+                // Ensure a drawing document exists
+                doc = (app.ActiveDocument != null)
+                    ? app.ActiveDocument
+                    : docs.Add("");
+
                 pages = doc.Pages;
 
-                // Ensure there is an active page
+                // Ensure an active page exists and is selected
                 page = app.ActivePage;
                 if (page == null)
                 {
                     page = pages.Count > 0 ? pages[1] : pages.Add();
-                    if (app.ActiveWindow != null) app.ActiveWindow.Page = page;
+                    if (app.ActiveWindow != null)
+                        app.ActiveWindow.Page = page;
                 }
             }
             finally
@@ -144,6 +147,7 @@ namespace VDG.VisioRuntime.Services
                 from = shapes.get_ItemFromID(fromShapeId);
                 to = shapes.get_ItemFromID(toShapeId);
 
+                // Use the Connector Tool data object; no connectors stencil required
                 var dataObj = app.ConnectorToolDataObject;
                 connector = page.Drop(dataObj, 0, 0);
 
@@ -167,6 +171,7 @@ namespace VDG.VisioRuntime.Services
                         break;
                     case ConnectorKind.RightAngle:
                     default:
+                        // Default Visio routing is right-angle; nothing to do
                         break;
                 }
 
@@ -316,10 +321,16 @@ namespace VDG.VisioRuntime.Services
             try
             {
                 docs = app.Documents;
-                page = app.ActivePage;
-                if (page != null) drawDoc = page.Document;
 
-                // Fallback: first drawing document in the collection
+                // Use the doc of the active page only if it's a drawing doc
+                page = app.ActivePage;
+                if (page != null && page.Document != null &&
+                    page.Document.Type == (short)Visio.VisDocTypes.visDocTypeDrawing)
+                {
+                    drawDoc = page.Document;
+                }
+
+                // Fallback: first open drawing document
                 if (drawDoc == null)
                 {
                     foreach (Visio.Document d in docs)
@@ -389,6 +400,7 @@ namespace VDG.VisioRuntime.Services
             GC.WaitForPendingFinalizers();
         }
 
+        // Not currently used but handy if you prefer name resolution yourself.
         private static string ResolveStencilPath(Visio.Application app, string nameOrPath)
         {
             if (File.Exists(nameOrPath)) return Path.GetFullPath(nameOrPath);

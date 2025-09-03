@@ -193,29 +193,40 @@ namespace VDG.VisioRuntime.Services
             }
         }
 
-        public void LoadStencil(string nameOrPath)
+public void LoadStencil(string path)
+{
+    if (string.IsNullOrWhiteSpace(path))
+        throw new ArgumentNullException(nameof(path));
+
+    try
+    {
+        string resolved = path;
+
+        if (System.IO.Path.IsPathRooted(path))
         {
-            if (string.IsNullOrWhiteSpace(nameOrPath))
-                throw new ArgumentNullException(nameof(nameOrPath));
-
-            var app = _app ?? throw new InvalidOperationException("Visio not attached.");
-            if (_stencilCache.ContainsKey(nameOrPath)) return;
-
-            string full = ResolveStencilPath(app, nameOrPath);
-
-            Visio.Document stencil = null;
-            try
-            {
-                short flags = (short)(Visio.VisOpenSaveArgs.visOpenDocked | Visio.VisOpenSaveArgs.visOpenRO);
-                stencil = app.Documents.OpenEx(full, flags);
-                _stencilCache[nameOrPath] = stencil;
-            }
-            catch
-            {
-                if (stencil != null) Com.Release(ref stencil);
-                throw;
-            }
+            if (!System.IO.File.Exists(path))
+                throw new FileNotFoundException($"Stencil file not found at '{path}'.");
         }
+        else
+        {
+            // Fallback: just use input. We’ll let Visio resolve it.
+            resolved = path;
+        }
+
+        // Try to open it; Visio will search its stencil paths for known names
+        _app.Documents.OpenEx(
+            resolved,
+            (short)Visio.VisOpenSaveArgs.visOpenDocked
+        );
+
+        Console.WriteLine($"[INFO] Loaded stencil: {resolved}");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[WARN] Failed to load stencil '{path}': {ex.Message}");
+    }
+}
+
 
         public int DropMaster(string stencilNameOrPath, string masterName,
                               double xIn, double yIn, double? wIn = null, double? hIn = null, string text = null)

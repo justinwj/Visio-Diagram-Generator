@@ -1,8 +1,8 @@
 {
   "stencils": ["BASIC_U.VSSX"],
   "nodes": [
-    { "id": "A", "text": "Start", "master": "Rounded Rectangle", "x": 3.0, "y": 7.0, "w": 2.2, "h": 1.1 },
-    { "id": "B", "text": "Next",  "master": "Rectangle",         "x": 6.0, "y": 7.0, "w": 2.2, "h": 1.1 }
+    { "id": "A", "text": "Start", "master": "Rounded Rectangle", "x": 3.0, "y": 7.0 },
+    { "id": "B", "text": "Next",  "master": "Rectangle",         "x": 6.0, "y": 7.0 }
   ],
   "edges": [
     { "from": "A", "to": "B", "label": "flow" }

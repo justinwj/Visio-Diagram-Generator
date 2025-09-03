@@ -1,13 +1,10 @@
 using System;
+using System.IO;
 using VDG.VisioRuntime.Infrastructure;
 using VDG.VisioRuntime.Rendering;
 
 namespace VDG.VisioRuntime.SampleCli
 {
-    /// <summary>
-    /// Simple CLI entry point: renders a diagram from JSON; optionally saves .vsdx.
-    /// All Visio automation runs on a dedicated STA thread.
-    /// </summary>
     internal static class Program
     {
         [STAThread]
@@ -16,23 +13,32 @@ namespace VDG.VisioRuntime.SampleCli
             if (args.Length == 0)
             {
                 Console.WriteLine("Usage: VDG.VisioRuntime <diagram.json> [out.vsdx]");
-                return;
+                Environment.Exit(1);
             }
 
-            string jsonPath = args[0];
-            string? vsdxPath = args.Length > 1 ? args[1] : null;
+            var jsonPath = args[0];
+            var vsdxArg  = args.Length > 1 ? args[1] : null;
+
+            // Normalize + validate JSON path
+            var jsonFull = Path.GetFullPath(jsonPath);
+            if (!File.Exists(jsonFull))
+            {
+                Console.Error.WriteLine($"JSON not found: {jsonFull}");
+                Environment.Exit(2);
+            }
 
             using var host = new VisioStaHost(visible: true);
 
-            // Render diagram on STA
-            host.Invoke(svc => VisioJsonRenderer.RenderJsonFromFile(svc, jsonPath));
+            // Ensure there's a document and page, then render
+            host.Invoke(svc => svc.EnsureDocumentAndPage());
+            host.Invoke(svc => VisioJsonRenderer.RenderJsonFromFile(svc, jsonFull));
 
-            // Optionally save (.vsdx extension normalized)
-            if (!string.IsNullOrWhiteSpace(vsdxPath))
+            // Optionally save — normalize to absolute path using the CLI's CWD
+            if (!string.IsNullOrWhiteSpace(vsdxArg))
             {
-                var outPath = System.IO.Path.ChangeExtension(vsdxPath, ".vsdx");
-                host.Invoke(svc => svc.SaveAsVsdx(outPath));
-                Console.WriteLine($"Saved diagram to {outPath}");
+                var outFull = Path.GetFullPath(Path.ChangeExtension(vsdxArg, ".vsdx"));
+                host.Invoke(svc => svc.SaveAsVsdx(outFull));
+                Console.WriteLine($"Saved diagram to {outFull}");
             }
         }
     }

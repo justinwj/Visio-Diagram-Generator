@@ -198,79 +198,73 @@ public void LoadStencil(string path)
     if (string.IsNullOrWhiteSpace(path))
         throw new ArgumentNullException(nameof(path));
 
+    // No-op if we've already loaded (case-insensitive cache)
+    if (_stencilCache.ContainsKey(path))
+    {
+        Console.WriteLine($"[INFO] Stencil already loaded: {path}");
+        return;
+    }
+
+    // Let Visio resolve well-known names (e.g., BASIC_U.VSSX), but validate rooted paths
+    string resolved = path;
+    if (System.IO.Path.IsPathRooted(path) && !System.IO.File.Exists(path))
+        throw new FileNotFoundException($"Stencil file not found at '{path}'.");
+
     try
     {
-        string resolved = path;
-
-        if (System.IO.Path.IsPathRooted(path))
-        {
-            if (!System.IO.File.Exists(path))
-                throw new FileNotFoundException($"Stencil file not found at '{path}'.");
-        }
-        else
-        {
-            // Fallback: just use input. We’ll let Visio resolve it.
-            resolved = path;
-        }
-
-        // Try to open it; Visio will search its stencil paths for known names
-        _app.Documents.OpenEx(
+        // Open hidden & read-only so it doesn't become ActiveDocument
+        var doc = _app.Documents.OpenEx(
             resolved,
-            (short)Visio.VisOpenSaveArgs.visOpenDocked
+            (short)(Visio.VisOpenSaveArgs.visOpenHidden | Visio.VisOpenSaveArgs.visOpenRO)
         );
 
+        _stencilCache[path] = doc;  // cache for DropMaster()
         Console.WriteLine($"[INFO] Loaded stencil: {resolved}");
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"[WARN] Failed to load stencil '{path}': {ex.Message}");
+        throw new InvalidOperationException(
+            $"Failed to load stencil '{path}' (resolved '{resolved}').", ex);
     }
 }
 
-
-        public int DropMaster(string stencilNameOrPath, string masterName,
-                              double xIn, double yIn, double? wIn = null, double? hIn = null, string text = null)
+public int DropMaster(string stencilNameOrPath, string masterName,
+                        double xIn, double yIn, double? wIn = null, double? hIn = null, string text = null)
+{
+    var app = _app ?? throw new InvalidOperationException("Visio not attached.");
+    if (string.IsNullOrWhiteSpace(stencilNameOrPath)) throw new ArgumentNullException(nameof(stencilNameOrPath));
+    if (string.IsNullOrWhiteSpace(masterName))        throw new ArgumentNullException(nameof(masterName));
+    Visio.Page page = null;
+    Visio.Document stencil = null;
+    Visio.Master master = null;
+    Visio.Shape shape = null;
+    Visio.Cell width = null, height = nul
+    try
+    {
+        page = app.ActivePage ?? throw new InvalidOperationException("No active page. Call EnsureDocumentAndPage() first."
+        if (!_stencilCache.TryGetValue(stencilNameOrPath, out stencil))
         {
-            var app = _app ?? throw new InvalidOperationException("Visio not attached.");
-            if (string.IsNullOrWhiteSpace(stencilNameOrPath)) throw new ArgumentNullException(nameof(stencilNameOrPath));
-            if (string.IsNullOrWhiteSpace(masterName))        throw new ArgumentNullException(nameof(masterName));
-
-            Visio.Page page = null;
-            Visio.Document stencil = null;
-            Visio.Master master = null;
-            Visio.Shape shape = null;
-            Visio.Cell width = null, height = null;
-
-            try
-            {
-                page = app.ActivePage ?? throw new InvalidOperationException("No active page. Call EnsureDocumentAndPage() first.");
-
-                if (!_stencilCache.TryGetValue(stencilNameOrPath, out stencil))
-                {
-                    LoadStencil(stencilNameOrPath);
-                    stencil = _stencilCache[stencilNameOrPath];
-                }
-
-                master = stencil.Masters.get_ItemU(masterName);
-                shape  = page.Drop(master, xIn, yIn);
-
-                if (wIn.HasValue)
-                {
-                    width = shape.get_CellsU("Width");
-                    width.ResultIU = wIn.Value;
-                }
-                if (hIn.HasValue)
-                {
-                    height = shape.get_CellsU("Height");
-                    height.ResultIU = hIn.Value;
-                }
-                if (!string.IsNullOrWhiteSpace(text))
-                {
-                    shape.Text = text;
-                }
-
+            LoadStencil(stencilNameOrPath);
+            stencil = _stencilCache[stencilNameOrPath];
+    
+        master = stencil.Masters.get_ItemU(masterName);
+        shape  = page.Drop(master, xIn, yIn
+        if (wIn.HasValue)
+        {
+            width = shape.get_CellsU("Width");
+            width.ResultIU = wIn.Value;
+        }
+        if (hIn.HasValue)
+        {
+            height = shape.get_CellsU("Height");
+            height.ResultIU = hIn.Value;
+        }
+        if (!string.IsNullOrWhiteSpace(text))
+        {
+            shape.Text = text;
+    
                 return shape.ID;
-            }
+        }
             finally
             {
                 Com.Release(ref height);
@@ -282,67 +276,79 @@ public void LoadStencil(string path)
             }
         }
 
-        public void SetShapeText(int shapeId, string text)
+ public void SetShapeText(int shapeId, string text)
+ {
+     var app = _app ?? throw new InvalidOperationException("Visio not attached.");
+     Visio.Page page = null;
+     Visio.Shapes shapes = null;
+     Visio.Shape shape = null
+     try
+     {
+         page = app.ActivePage ?? throw new InvalidOperationException("No active page.");
+         shapes = page.Shapes;
+         shape  = shapes.get_ItemFromID(shapeId);
+         shape.Text = text ?? string.Empty;
+     }
+     finally
+     {
+         Com.Release(ref shape);
+         Com.Release(ref shapes);
+         Com.Release(ref page);
+     }
+ }
+
+// src/VDG.VisioRuntime/Services/VisioService.cs
+public void SaveAsVsdx(string fullPath)
+{
+    var app = _app ?? throw new InvalidOperationException("Visio not attached.");
+    if (string.IsNullOrWhiteSpace(fullPath)) throw new ArgumentNullException(nameof(fullPath));
+
+    string path = System.IO.Path.GetFullPath(System.IO.Path.ChangeExtension(fullPath, ".vsdx"));
+    string dir  = System.IO.Path.GetDirectoryName(path);
+    if (!string.IsNullOrEmpty(dir) && !System.IO.Directory.Exists(dir))
+        System.IO.Directory.CreateDirectory(dir);
+
+    Visio.Documents docs = null;
+    Visio.Page page = null;
+    Visio.Document drawDoc = null;
+
+    try
+    {
+        docs = app.Documents;
+
+        // Prefer the document that owns the active page (that’s the drawing)
+        page = app.ActivePage;
+        if (page != null) drawDoc = page.Document;
+
+        // Fallback: first drawing document in the collection
+        if (drawDoc == null)
         {
-            var app = _app ?? throw new InvalidOperationException("Visio not attached.");
-            Visio.Page page = null;
-            Visio.Shapes shapes = null;
-            Visio.Shape shape = null;
-
-            try
+            foreach (Visio.Document d in docs)
             {
-                page = app.ActivePage ?? throw new InvalidOperationException("No active page.");
-                shapes = page.Shapes;
-                shape  = shapes.get_ItemFromID(shapeId);
-                shape.Text = text ?? string.Empty;
-            }
-            finally
-            {
-                Com.Release(ref shape);
-                Com.Release(ref shapes);
-                Com.Release(ref page);
-            }
-        }
-
-        public void SaveAsVsdx(string fullPath)
-        {
-            var app = _app ?? throw new InvalidOperationException("Visio not attached.");
-            if (string.IsNullOrWhiteSpace(fullPath)) throw new ArgumentNullException(nameof(fullPath));
-            var path = Path.ChangeExtension(fullPath, ".vsdx");
-
-            Visio.Document doc = null;
-            try
-            {
-                doc = app.ActiveDocument ?? throw new InvalidOperationException("No active document to save.");
-                doc.SaveAs(path);
-            }
-            finally
-            {
-                Com.Release(ref doc);
-            }
-        }
-
-        public void FitToPage()
-        {
-            var app = _app ?? throw new InvalidOperationException("Visio not attached.");
-            Visio.Window win = null;
-            try
-            {
-                win = app.ActiveWindow;
-                if (win != null)
+                if (d.Type == (short)Visio.VisDocTypes.visDocTypeDrawing)
                 {
-                    // Correct: ViewFit is a property, not a method
-                    win.ViewFit = (short)Visio.VisWindowFit.visFitPage;
+                    drawDoc = d;
+                    break;
                 }
             }
-            finally
-            {
-                Com.Release(ref win);
-            }
         }
 
-        public void Dispose()
-        {
+        if (drawDoc == null)
+            throw new InvalidOperationException("No drawing document found to save.");
+
+        drawDoc.Activate();       // ensure it’s the active doc
+        drawDoc.SaveAs(path);
+        Console.WriteLine($"Saved diagram to {path}");
+    }
+    finally
+    {
+        Com.Release(ref page);
+        Com.Release(ref drawDoc);
+        Com.Release(ref docs);
+    }
+}
+public void Dispose()
+    {
             foreach (var key in _stencilCache.Keys.ToList())
             {
                 var doc = _stencilCache[key];

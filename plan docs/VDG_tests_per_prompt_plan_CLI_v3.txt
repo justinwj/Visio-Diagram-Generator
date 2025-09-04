@@ -15,7 +15,7 @@
 
 ## Checkpoint gates (10–15 min, only at key milestones)
 
-* **P4 (CLI wired)**: buttons render; clicking “Generate” logs N commands from pipeline.
+
 * **P7 (Pipeline+Builder)**: with your exported VBA text, “Generate” creates a `.vsdx`; optional check: shapes ≥ modules. The export flow is in your VBA (`ExportAllCodeToSingleFiles`), so fixtures are realistic.
 * **P9 (LivePreview stub)**: “Preview” returns a URL/string even if Visio isn’t installed.
 * **P10 (VBAMapProvider)**: if Trust Center allows, richer nodes/edges; else clean fallback to TextExport provider.&#x20;
@@ -61,7 +61,7 @@ We’re doing **Plan 2** (pre-build tree, deliver only diffs each prompt). Test 
 * **P1 Scaffold:** Build only (passes), baseline test project boots.
 * **P2 Core contracts:** Run `VDG.Core.Tests` skeleton; perf <5s.
 * **P3 VisioService wrapper:** Unit tests use `FakeVisioService`; one opt-in integration smoke (flagged) to attach Visio on your box if desired.&#x20;
-* **P4 CLI:** Smoke: click “Generate”; verify log entry (command count) or temp file path emitted.
+
 * **P5 Config+Schema:** CLI reads diagramConfig.json path, validates against shared/Config/diagramConfig.schema.json (JsonSchema.Net). 
 Smoke: invalid config prints friendly errors to CLI, writes full report to %TEMP%/vdg-config-errors.json, exit code 2.** Unit: modules detected from `StandardModulesCode.txt`; Smoke: “Generate” shows N>0 items.
 * **P6 Config+Schema:** Unit: valid vs invalid configs; Smoke: invalid produces friendly UI errors; perf <5s unit, <30s smoke.

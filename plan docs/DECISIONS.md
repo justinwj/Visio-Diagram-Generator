@@ -1,23 +1,54 @@
-# Decisions Log — Visio-Diagram-Generator
-_Last updated: 2025-08-25 05:52:29_
+# DECISIONS
 
-## 2025-08-25 05:52:29 — CLI-first migration & .NET 8 baseline
-**Status:** Adopted
+## 2025-09-04 — Architecture alignment & user-facing defaults
 
-- **Architecture:** Move to **CLI-first**; VSTO Add-in and installer content **archived** under `backlog/` (ignored by git).
-- **Solution:** Use `Visio-Diagram-Generator.sln` at repo root; auto-add projects from `src/` and `tests/`.
-- **Target Framework:** Standardize on **.NET 8** for `VDG.Core`, `VDG.Core.Contracts`, and `VDG.CLI`.  
-  - Central defaults via **`Directory.Build.props`** (nullable/implicit usings enabled, analyzers on).
-  - SDK pinned with **`global.json`** (8.x, roll-forward to latest minor).
-- **Testing:** Keep xUnit/Test SDK packages on floating majors (`xunit` `2.*`, `xunit.runner.visualstudio` `2.*`, `Microsoft.NET.Test.Sdk` `17.*`, `coverlet.collector` `6.*`).
-- **Tooling:** Provide VS Code workspace/tasks and git hygiene (`.gitignore`, `.gitattributes`).
-- **Scripts:** Use **`Convert-ToCLI.git.fixed.ps1`** as the safe, non-destructive converter (approved verbs & dry-run). 
-- **CI/CD:** GitHub Actions workflow at **`.github/workflows/dotnet.yml`** builds + tests on push/PR (NuGet cache optional).
-- **Repo Name:** GitHub remote expected to be **Visio-Diagram-Generator** (solution name matches).
+1) **Runtime split (pinned)**
+   - **Visio runner = net48** (`VDG.VisioRuntime.exe`) for reliable COM interop.
+   - **F# CLI = net8.0-windows**; it **invokes** the runner via `Process.Start`.
+   - **Shared logic = netstandard2.0** library (used by both).
 
-### Notes
-- Avoid editing files under `backlog/` (historical archive).
-- Any new project should default to `net8.0`; projects missing a TFM will inherit via `Directory.Build.props`.
+2) **No VSTO surfaces**
+   - Removed Ribbon/ThisAddIn assumptions from plans and commentary; delivery is CLI + runner only.
 
----
+3) **Connectors policy (pinned)**
+   - **Do not** load a connectors stencil; use `Application.ConnectorToolDataObject`.
+   - Create connectors **after** shapes; **glue to shape pins** (or side-policy points).
 
+4) **Page sizing policy (generate-first)**
+   - Default `PageSizingMode = "auto"` so diagrams **always generate**.
+   - `fixed` requires positive `PageWidthIn`/`PageHeightIn`; `fit-one-page` is export-time shrink-to-fit.
+
+5) **Plan cleanup**
+   - Removed duplicate **Prompt 6** in `VDG_Prompt_Plan_v3_CLI_v2.txt`.
+   - Tests plan rewritten for **CLI (net8)** ↔ **runner (net48)** lanes.
+
+Outcome: Prompt 3 goals achieved on **net48** runner; plan and scaffolds now match the actual architecture.
+
+# DECISIONS
+
+## 2025-09-03 — Runtime stabilizations for JSON → VSDX
+
+### Root causes identified
+- `KeyNotFoundException` bubbled out of `VisioStaHost.JobBase.Wait()` when a stencil document wasn’t cached and a later lookup failed. Logs also showed `BASIC_U.VSSX` being loaded twice.
+- “Visio is unable to write to this directory or disk drive” appeared when the runtime attempted to save a *stencil* (read‑only) or when the save path resolved to an unexpected working directory.
+
+### Decisions
+1) **Cache stencils + don’t steal focus**  
+   Open stencils **hidden & read‑only** and immediately cache the returned `Document` in `_stencilCache` (case‑insensitive). Prevents `ActiveDocument` switching and later cache misses.
+
+2) **Always ensure a drawing & page exist**  
+   Call `EnsureDocumentAndPage()` before drawing to guarantee `ActiveDocument`/`ActivePage` are valid.
+
+3) **No connectors stencil required**  
+   Use `Application.ConnectorToolDataObject` for edges; glue after both endpoints exist.
+
+4) **Save the drawing, not a stencil**  
+   `SaveAsVsdx()` now selects the **drawing** owning `ActivePage` (when it’s a drawing) or falls back to the first drawing in `Documents`. Normalize to an absolute path and ensure the directory exists.
+
+5) **CLI pathing rule**  
+   The CLI resolves a **relative output path against the JSON’s folder**, prints WorkingDir/JSON/Output, and catches COM exceptions with HRESULTs.
+
+### Outcome
+- Running  
+  `VDG.VisioRuntime.exe samples\sample_diagram.json samples\mydiagram.vsdx`  
+  now creates and opens `mydiagram.vsdx` in the expected `samples` folder without prompts or exceptions.

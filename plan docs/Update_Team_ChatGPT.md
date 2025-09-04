@@ -1,30 +1,55 @@
-# Update — Visio Diagram Generator (CLI-first baseline)
-_Last updated: 2025-08-25 05:52:29_
+# Team Update — 2025-09-04
 
-## What changed
-- Project is now **CLI-first** on **.NET 8**. Add-in/installer projects moved to `backlog/` (ignored by git).
-- Solution: `Visio-Diagram-Generator.sln` with projects under `src/` and tests under `tests/`.
-- Unified compiler/analyzer settings via `Directory.Build.props`; SDK pinned via `global.json`.
-- VS Code tasks and workspace are present; GitHub Actions CI added at `.github/workflows/dotnet.yml`.
+**What changed**
+- Architecture locked: **CLI (net8)** → calls **Visio runner (net48)**; shared logic in **netstandard2.0**.
+- **No VSTO** anywhere in the plan or commentary.
+- **Connectors**: use `ConnectorToolDataObject`; **no connectors stencil**.
+- **Page sizing**: default `PageSizingMode="auto"` so large diagrams **always generate**.
+- Prompt plan cleaned (removed duplicate P6); tests plan aligned with CLI/runner lanes.
 
-## How to get running
-```bash
-git pull
-dotnet restore Visio-Diagram-Generator.sln
-dotnet build   Visio-Diagram-Generator.sln -c Debug
-dotnet test    Visio-Diagram-Generator.sln -c Debug
+**Why**
+- net48 runner gives the most reliable COM interop; CLI stays modern and fast on net8.
+
+**Current status**
+- E2E: `sample_diagram.json → mydiagram.vsdx` works via runner.
+- CLI integration: plan set; CLI will shell out to runner.
+
+**Next**
+- Implement Prompt 5 in CLI (schema validation UX).
+- Add runtime hook for ApplyPageSizing; expand connector/route tests.
+
+**How to run**
+```powershell
+$json = (Resolve-Path ".\samples\sample_diagram.json").Path
+$out  = Join-Path (Split-Path -Parent $json) "mydiagram.vsdx"
+& "src\VDG.VisioRuntime\bin\x64\Release\net48\VDG.VisioRuntime.exe" $json $out
+# or via CLI (net8):
+dotnet run --project .\src\VisioDiagramGenerator.CliFs -- generate --config $json --out $out
 ```
-In VS Code, open the repo root (or the `Visio-Diagram-Generator.code-workspace`) and let the C# extension load the solution.
 
-## Conventions (Please follow)
-- Target **net8.0** for all new projects. If you forget, `Directory.Build.props` will set it.
-- Keep tests on xUnit with floating majors (`2.*`, `17.*` for `Microsoft.NET.Test.Sdk`).
-- Don’t modify `backlog/`—it’s historical archive only.
 
-## What we need next
-- Agree on initial **CLI verbs** (e.g., `render`, `validate`, `plan`) and I/O format.
-- Add/expand unit tests for `VDG.Core`.
-- (Optional) Approve `Dependabot` + `dotnet-format` check in CI.
+# Team Update — 2025-09-03
 
-— End of update —
+**What we fixed**
+- Stencil handling: opened **hidden+read‑only** and **cached**; avoids ActiveDocument switching and dictionary misses.
+- Document lifecycle: we **guarantee** a drawing + page before draw calls.
+- Connectors: switched to **ConnectorToolDataObject** (no connectors stencil).
+- Save logic: `SaveAsVsdx` always targets the **drawing** document and writes to a **normalized absolute path** (mkdir if needed).
 
+**Why it was failing**
+- Earlier runs showed stencils loading multiple times and a `KeyNotFoundException` via `VisioStaHost.JobBase.Wait()`. Saving sometimes targeted a **stencil** or a path resolved to a different working directory, yielding a COM “cannot write” error.
+
+**Current status**
+- `sample_diagram.json → mydiagram.vsdx`: **working end‑to‑end**. Output lands in `samples\` and opens in Visio.
+- CLI logs WorkingDir/JSON/Output and anchors relative output to the JSON folder.
+
+**What’s next**
+- Move on to **Prompt 5**.
+- Add regression tests for: stencil caching; connectors; width/height/text on dropped masters; output path normalization.
+
+**How to run (dev)**
+```powershell
+$json = (Resolve-Path ".\samples\sample_diagram.json").Path
+$out  = Join-Path (Split-Path -Parent $json) "mydiagram.vsdx"
+& "src\VDG.VisioRuntime\bin\x64\Release\net48\VDG.VisioRuntime.exe" $json $out
+```

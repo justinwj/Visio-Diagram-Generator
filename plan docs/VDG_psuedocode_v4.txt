@@ -1,5 +1,5 @@
 ' Project: Visio Diagram Generator (VDG)
-' Purpose: High‑level pseudocode skeleton – UPDATED per comprehensive‑critique.txt
+' Purpose: High‑level pseudocode skeleton — REFACTORED with explicit **No‑Connectors‑Stencil** rule
 ' Language‑agnostic VB‑style pseudocode illustrating strong typing, error handling,
 ' immutable models, COM safety, and test‑friendly boundaries.
 '
@@ -9,6 +9,28 @@
 Option Explicit On
 
 ' =============================================================================
+' 0. Pinned Rule — **No CONNECTORS Stencil**
+' =============================================================================
+' We never load a connectors stencil (e.g., CONNECTORS_U.VSSX). Edges are created
+' using Visio's built‑in Connector Tool object and glued to shapes. This improves:
+'   • Stability — avoids ActiveDocument switching & NameU drift between Visio builds.
+'   • Performance — no extra stencil document; fewer COM round‑trips.
+'   • Determinism — routing/glue are explicit; behavior is testable.
+'
+' Implementation sketch:
+'   connector = ActivePage.Drop(Application.ConnectorToolDataObject, x:=0, y:=0)
+'   connector.CellsU("BeginX").GlueTo( fromShape.CellsU("PinX") )  ' to shape pin
+'   connector.CellsU("EndX").GlueTo(   toShape.CellsU("PinX")   )
+'   ' Optional: choose specific connection points (N/E/S/W) before glue:
+'   '   fromShape.CellsU("Connections.X1"), .Y1, etc., or a policy that maps sides
+'   ' Optional: re‑route for cleanliness, then style via cell formulas
+'
+' Test affordances:
+'   • Ensure **no** stencil named like /CONNECTORS/i is opened (CommandLog assertion).
+'   • Verify Draw order = [all shapes] → [all connectors].
+'   • Verify each connector has Begin/End glued (GlueInfo non‑null) and nonzero geometry.
+'
+' =============================================================================
 ' 1. Configuration & Validation
 ' =============================================================================
 Module DiagramConfig
@@ -17,6 +39,8 @@ Module DiagramConfig
     Public Property PageWidth As Double = 8.5   ' inches
     Public Property PageHeight As Double = 11.0
     Public Property Version As Integer = 1
+    ' Connector policy (optional): "pin" | "sided(N|E|S|W)" | "auto"
+    Public Property ConnectorPolicy As String = "pin"
 End Module
 
 Module ConfigLoader
@@ -36,9 +60,32 @@ Module ConfigLoader
         If cfg.PageWidth <= 0 OrElse cfg.PageHeight <= 0 Then
             Throw New ArgumentException("Page size must be positive.")
         End If
+        If String.IsNullOrWhiteSpace(cfg.ConnectorPolicy) Then cfg.ConnectorPolicy = "pin"
         Return cfg
     End Function
 End Module
+
+' =============================================================================
+' 1a. Page Sizing Policy (Generate-first defaults)
+' =============================================================================
+' Users rarely want to tweak print sizes; the primary expectation is that a diagram
+' will **always generate**, regardless of size. We therefore:
+'   • Default to an **autosizing page** (page grows to content).
+'   • Treat explicit page width/height as optional overrides.
+'   • Provide a "fit-to-one-page" switch for export-only scenarios.
+'
+' Config surface (plain language):
+'   PageSizingMode: "auto" (default) | "fixed" | "fit-one-page"
+'   PageWidthIn, PageHeightIn: optional numbers (required only when mode = fixed)
+'
+' Runtime behavior:
+'   • auto: enable page autosize before drawing; no print constraints block generation.
+'   • fixed: create page with the given dimensions; still generate even if content exceeds.
+'   • fit-one-page: draw normally, then apply a "shrink to fit" transform for export/print.
+'
+' Validation:
+'   • If mode = fixed and width/height are missing or <= 0 → validation error.
+'   • Otherwise, widths/heights are **not required**.
 
 ' =============================================================================
 ' 2. Domain Models (Immutable Records)
@@ -58,6 +105,8 @@ Public Class DiagramConnection
     Public ReadOnly Property SourceId As String
     Public ReadOnly Property TargetId As String
     Public ReadOnly Property ConnectorType As String
+    ' Pinned rule surfaced here for test visibility / future policy config
+    Public ReadOnly Property UsesConnectorTool As Boolean = True  ' always True under No‑Stencil rule
     Public Sub New(src$, trg$, connType$)
         SourceId = src : TargetId = trg : ConnectorType = connType
     End Sub
@@ -68,6 +117,7 @@ End Class
 ' =============================================================================
 Module Logging
     Sub LogInfo(msg$) : Console.WriteLine($"[INFO] {DateTime.Now:u} {msg}") : End Sub
+    Sub LogWarn(msg$) : Console.WriteLine($"[WARN] {DateTime.Now:u} {msg}") : End Sub
     Sub LogError(msg$) : Console.WriteLine($"[ERR ] {DateTime.Now:u} {msg}") : End Sub
 End Module
 
@@ -140,24 +190,76 @@ End Class
 ' =============================================================================
 Public Interface IVisioService : Inherits IDisposable
     Function DrawShape(master$, x#, y#, label$) As String
-    Sub DrawConnector(srcId$, trgId$, connType$)
+    Sub DrawConnector(srcId$, trgId$, connType$, Optional policy$ = "pin")
+    Sub EnsureDocumentAndPage()
+    Sub OpenStencilHiddenReadOnly(nameOrPath$) ' caches in memory; never steals focus
 End Interface
 
 Public Class VisioServiceImpl : Implements IVisioService
     Private ReadOnly _app As Visio.Application
     Private ReadOnly _page As Visio.Page
+    Private ReadOnly _shapeIndex As New Dictionary(Of String, Visio.Shape)(StringComparer.OrdinalIgnoreCase)
+    Private ReadOnly _stencilCache As New Dictionary(Of String, Visio.Document)(StringComparer.OrdinalIgnoreCase)
+
     Public Sub New()
         _app = New Visio.Application()
         _page = _app.ActivePage
     End Sub
-    Public Function DrawShape(master$, x#, y#, label$) As String Implements IVisioService.DrawShape
-        ' Implementation placeholder
-        Return Guid.NewGuid().ToString()
-    End Function
-    Public Sub DrawConnector(srcId$, trgId$, connType$) Implements IVisioService.DrawConnector
-        ' Implementation placeholder
+
+    Public Sub EnsureDocumentAndPage() Implements IVisioService.EnsureDocumentAndPage
+        ' Ensure a drawing doc and active page exist before any draw calls
+        ' (Create if necessary; never rely on a stencil becoming ActiveDocument)
     End Sub
+
+    Public Sub OpenStencilHiddenReadOnly(nameOrPath$) Implements IVisioService.OpenStencilHiddenReadOnly
+        ' If not already cached, open as hidden+read‑only and store in _stencilCache
+        ' Do NOT modify ActiveDocument
+    End Sub
+
+    Public Function DrawShape(master$, x#, y#, label$) As String Implements IVisioService.DrawShape
+        ' Look up master in cached stencils or the document; drop and index by logical id
+        Dim sid = Guid.NewGuid().ToString()
+        ' ... drop master, set text, etc.
+        _shapeIndex(sid) = Nothing ' placeholder for the dropped Visio.Shape
+        Return sid
+    End Function
+
+    Public Sub DrawConnector(srcId$, trgId$, connType$, Optional policy$ = "pin") Implements IVisioService.DrawConnector
+        ' ===== No‑Stencil rule in action =====
+        ' Create a connector via Application.ConnectorToolDataObject instead of loading CONNECTORS stencil
+        Dim connector As Visio.Shape = _page.Drop(_app.ConnectorToolDataObject, 0, 0)
+
+        Dim fromShape = _shapeIndex(srcId$)
+        Dim toShape   = _shapeIndex(trgId$)
+
+        If fromShape Is Nothing OrElse toShape Is Nothing Then
+            Throw New InvalidOperationException("Connector endpoints must exist before wiring.")
+        End If
+
+        ' Choose glue targets per policy
+        Select Case policy$.ToLowerInvariant()
+            Case "pin"
+                connector.CellsU("BeginX").GlueTo(fromShape.CellsU("PinX"))
+                connector.CellsU("EndX").GlueTo(  toShape.CellsU("PinX"))
+            Case "sided-n", "sided-e", "sided-s", "sided-w"
+                ' Example: pick a specific Connections.Xn/Yn before gluing (pseudo)
+                ' Dim (cxFrom, cyFrom) = ConnectionPointSelector.Select(fromShape, policy$)
+                ' Dim (cxTo,   cyTo)   = ConnectionPointSelector.Select(toShape,   policy$)
+                ' connector.CellsU("BeginX").GlueTo(fromShape.CellsU(cxFrom))
+                ' connector.CellsU("EndX").GlueTo(  toShape.CellsU(cyTo))
+            Case Else
+                ' Default to pin if unknown
+                connector.CellsU("BeginX").GlueTo(fromShape.CellsU("PinX"))
+                connector.CellsU("EndX").GlueTo(  toShape.CellsU("PinX"))
+        End Select
+
+        ' Optional tidy‑up: trigger routing and basic style
+        ' connector.AutoConnect(...) or connector.Layout
+        ' SetLinePattern/Arrow if needed via cell formulas
+    End Sub
+
     Public Sub Dispose() Implements IDisposable.Dispose
+        ' Release page, then app
         _page.SafeRelease()
         _app.Quit() : _app.SafeRelease()
     End Sub
@@ -201,18 +303,21 @@ End Module
 ' =============================================================================
 Public Class DiagramBuilder
     Private ReadOnly _visio As IVisioService
-    Public Sub New(vs As IVisioService) : _visio = vs : End Sub
+    Private ReadOnly _policy As String
+    Public Sub New(vs As IVisioService, Optional connectorPolicy$ = "pin")
+        _visio = vs : _policy = connectorPolicy$
+    End Sub
 
     Public Sub Execute(cmds As IReadOnlyList(Of DrawCommand))
-        For Each cmd In cmds
-            Select Case cmd.Kind
-                Case "shape"
-                    Dim itm = CType(cmd.Data, DiagramItem)
-                    _visio.DrawShape(ShapeMapping.GetMaster(itm.TypeName), itm.X, itm.Y, itm.Label)
-                Case "connector"
-                    Dim cn = CType(cmd.Data, DiagramConnection)
-                    _visio.DrawConnector(cn.SourceId, cn.TargetId, cn.ConnectorType)
-            End Select
+        ' Draw shapes first
+        For Each cmd In cmds.Where(Function(c) c.Kind = "shape")
+            Dim itm = CType(cmd.Data, DiagramItem)
+            _visio.DrawShape(ShapeMapping.GetMaster(itm.TypeName), itm.X, itm.Y, itm.Label)
+        Next
+        ' Then connectors — **No stencil**: uses ConnectorToolDataObject internally
+        For Each cmd In cmds.Where(Function(c) c.Kind = "connector")
+            Dim cn = CType(cmd.Data, DiagramConnection)
+            _visio.DrawConnector(cn.SourceId, cn.TargetId, cn.ConnectorType, _policy)
         Next
     End Sub
 End Class
@@ -227,7 +332,10 @@ Module DiagramGenerator
         Dim pipeline = New Pipeline(providers, New GridLayoutAlgorithm())
         Dim cmds = pipeline.BuildCommands()
         Using vs As New VisioServiceImpl()
-            Dim builder = New DiagramBuilder(vs)
+            vs.EnsureDocumentAndPage()
+            ' Load needed shape stencils hidden + read‑only (never CONNECTORS)
+            ' vs.OpenStencilHiddenReadOnly("Basic Shapes.vssx")
+            Dim builder = New DiagramBuilder(vs, connectorPolicy:=cfg.ConnectorPolicy)
             builder.Execute(cmds)
             ' Export via Visio API...
         End Using

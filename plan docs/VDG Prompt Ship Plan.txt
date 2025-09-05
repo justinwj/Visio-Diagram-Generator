@@ -8,3 +8,15 @@ Prompt Delivery Plan:
 	e. provide commentary e.g. “replace this file with…” or "add this file to..." or whatever makes sense.
 
 
+2) Mark changes explicitly:
+   • [N] = New file or folder introduced in this prompt.
+   • [M] = Modified file from earlier prompt.
+
+3) Integrity:
+   • Provide SHA-256 checksum for each shipped file so the operator can verify integrity.
+
+4) Clarity:
+   • Tie each delivery explicitly to its Prompt number (e.g., “Prompt 5 Delivery Bundle”).
+   • Commentary should list which files are New vs Modified, and why.
+
+This ensures minimal, safe, and traceable deliveries across the multi-prompt workflow.

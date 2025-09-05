@@ -1,0 +1,114 @@
+Absolutely. I’ve pulled the plugin work out of the build plan and parked it as a separate backlog item. Here’s the revised, leaner plan you can run tomorrow.
+VDG_Prompt_Plan_v3 (no plugins)
+
+X1) Prompt: Solution scaffold & references
+	• Exact VS settings: target framework, platform target to match Office, Embed Interop Types, COM/NuGet refs.
+	• Establish project split: net48 **Visio runtime host** (COM interop) + netstandard2.0 shared core + net8.0-windows F# CLI.
+
+X2) Prompt: Core contracts (compile-first)
+	• Stubs that compile: Models, Providers (interfaces), Layouts (interfaces), Pipeline, DiagramBuilder, DrawCommand, Logging, ComSafety.
+
+X3) Prompt: Visio runtime host (safe COM, net48)
+	• Deliver a **net48** `VDG.VisioRuntime.exe` containing: `IVisioService` + `VisioServiceImpl` (attach/create Visio, ensure doc/page, DrawShape, **DrawConnector via ConnectorToolDataObject**, SaveAsVsdx, FinalReleaseComObject everywhere).
+	• Open stencils **hidden + read-only** and cache; never steal `ActiveDocument`.
+	• Connector strategy: create connector with `Application.ConnectorToolDataObject`, then glue Begin/End to shape **pins** (or policy-selected N/E/S/W points), optional re-route.
+	• CLI integration strategy: the **net8.0-windows F# CLI** will **invoke** this host via `Process.Start` and pass inputs/outputs; pure logic lives in a **netstandard2.0** library.
+
+5) Config loading + JSON Schema validation (CLI)
+	• Input: --config <path> (JSON). If omitted, default to shared/Config/samples/diagramConfig.sample.json.
+	• Schema: validate against shared/Config/diagramConfig.schema.json (JsonSchema.Net).
+	• Behavior: read → parse → validate; on failure, print concise table, write full report to %TEMP%/vdg-config-errors.json, exit code 2.
+	• UX: --strict (fail on unknown props), --warn-unknown (default).
+	• Logging: Info ✓, Warn (unknown), Error (schema fails).
+	• Deliverables: ConfigLoader.fs, Validation.fs (CLI), ensure DiagramConfig.cs matches schema.
+	• TextExportMapProvider: read StandardModulesCode.txt + ClassModulesCode.txt → one node per module; optional lightweight regex call edges.
+
+6) [removed — duplicate of Prompt 5]
+
+7) Prompt: Pipeline + DiagramBuilder integration
+	• Implement Pipeline.BuildCommands + DiagramBuilder.Execute wired to IVisioService and a simple GridLayout → first end-to-end diagram.
+
+8) Prompt: TemplateManager & custom stencils
+	• Open .vstx, apply theme, load .vssx; ShapeMapping (type → master nameU).
+	• Include a quick ListStencilMasters diagnostic.
+
+9) Prompt: LivePreviewService (stub)
+	• Save to temp .vsdx and return a placeholder browser URL; later we can wire real Graph upload.
+
+10) Prompt: VBAMapProvider (optional)
+	• Richer model via VBIDE when Trust Center allows; auto-fallback to TextExport provider when blocked.
+
+11) Prompt: Tests & smoketests
+	• xUnit/MSTest for Pipeline, Layout, CommandFactory (no COM).
+	• A debug harness that calls DiagramGenerator.Run with a tiny sample config.
+
+12) Prompt: Packaging & deployment
+	• Packaging outline for the **net48 runtime host** and **net8.0 CLI**; signing; versioning; manifests; release checklist (bitness/prereqs noted).
+
+13) Prompt: F# Algorithms library
+	• VisioDiagramGenerator.Algorithms targeting netstandard2.0.
+	• Public API CLS-friendly (don’t expose DU/option types directly); consumed from shared core.
+
+14) Prompt: F# CLI
+	• VisioDiagramGenerator.CliFs targeting **net8.0-windows**.
+	• generate/export/preview subcommands; call shared core; **invoke net48 Visio runner via Process.Start** when diagram rendering is needed.
+
+Backlog (separate project, not in this plan)
+	• Plugin System: VDG.Extensibility.Abstractions (netstandard2.0), runtime loader, sample plugins, PS/IronPython adapters, versioning/isolation strategy.
+
+Here’s a drop-in **Testing blurb** you can paste into your Prompt Plan v3.
+
+---
+
+## Testing (runs after every prompt, ≤3–5 min)
+
+1. **Build gate** – Solution compiles cleanly (no new errors).
+2. **Unit gate** – Run `VDG.Core.Tests` only (fast, no COM; uses `FakeVisioService`).
+3. **Smoke gate** – Run the prompt’s smoke check via `tests/smoke.ps1` and assert one simple outcome (e.g., file exists, commands > 0, friendly error shown).
+4. **Perf budget** – Unit ≤ **5s**, Smoke ≤ **30s**.
+5. **Reporting** – Script writes `tests/.last-run.txt` with pass/fail + durations.
+
+   * For checkpoints, also append a line to `tests/checkpoints.log`.
+
+> Early prompts: set `UseFakeVisio=true` (Settings) to keep COM out until checkpoints.
+
+### Runner & fixtures
+
+* Files (already provided):
+
+  * `tests/run-tests.ps1`, `tests/smoke.ps1`
+  * `tests/fixtures/diagramConfig.sample.json`
+  * `tests/fixtures/diagramConfig.invalid.json`
+  * `tests/fixtures/StandardModulesCode.txt`, `tests/fixtures/ClassModulesCode.txt`
+* Run from repo root:
+
+```powershell
+.	ests
+un-tests.ps1          # build + unit + smoke
+.	ests
+un-tests.ps1 -NoBuild # skip build if unchanged
+```
+
+### Negative paths to sprinkle in when relevant
+
+* Missing/invalid `diagramConfig.json` (schema should flag).
+* Empty/missing VBA export files.
+* Visio not installed / COM attach failure → Preview fallback works.
+
+---
+
+## Checkpoint Gate Template (10–15 min, selected prompts only)
+
+1. All micro-tests pass.
+2. End-to-end scenario for this milestone works (e.g., `.vsdx` created; shapes ≥ modules).
+3. Error paths handled gracefully (clear message, no crash).
+4. Performance within budgets (call out any regressions).
+5. Note any test additions in the plan (schema cases, fixtures, toggles).
+
+**Planned checkpoints:**
+
+* **P7 Pipeline+Builder** (creates `.vsdx`; shapes ≥ modules)
+* **P9 LivePreview** (returns URL/string without Visio)
+* **P10 VBAMapProvider** (Trust Center ON ⇒ richer graph; OFF ⇒ clean fallback)
+* **P12 Packaging** (fresh install; smoke passes)
+* **P13/14 F#** (algorithms tests; CLI `generate` works headless)

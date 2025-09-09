@@ -1,6 +1,6 @@
 namespace VDG.Core
 
-/// Represents a 2D coordinate on a page.
+/// Represents a 2D coordinate.
 type Point = float * float
 
 /// Abstract layout strategy for positioning nodes on a page.
@@ -8,8 +8,8 @@ type ILayout =
     /// Given a list of nodes, returns a map of node id to page coordinates.
     abstract member Arrange: Node list -> Map<string, Point>
 
-/// Simple grid layout for positioning nodes.  Nodes are placed left‑to‑right,
-/// top‑to‑bottom in a uniform grid.  The spacing between items can be configured
+/// Simple grid layout for positioning nodes.  Nodes are placed left-to-right,
+/// top-to-bottom in a uniform grid.  The spacing between items can be configured
 /// via the constructor argument.
 type GridLayout(gridSpacing: float) =
     interface ILayout with

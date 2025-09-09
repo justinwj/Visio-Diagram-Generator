@@ -1,12 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <!-- Target .NET 8 for this core library -->
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFrameworks>net8.0;net48</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <!-- Compile the pipeline and diagram builder in order -->
     <Compile Include="Pipeline.fs" />
     <Compile Include="DiagramBuilder.fs" />
   </ItemGroup>

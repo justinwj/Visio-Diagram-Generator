@@ -16,7 +16,7 @@ type Connector =
       To: string
       Label: string option }
 
-/// Low‑level build command.  The pipeline will convert loaded configuration into a flat list of
+/// Low level build command.  The pipeline will convert loaded configuration into a flat list of
 /// commands that the diagram builder executes.
 type Command =
     | AddNode of Node

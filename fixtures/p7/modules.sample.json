@@ -1,0 +1,26 @@
+{
+  "modules": [
+    {
+      "name": "Module1"
+    },
+    {
+      "name": "Module2"
+    },
+    {
+      "name": "Module3"
+    }
+  ],
+  "connectors": [
+    {
+      "from": "Module1",
+      "to": "Module2",
+      "label": "calls"
+    },
+    {
+      "from": "Module1",
+      "to": "Module3",
+      "label": "imports"
+    }
+  ],
+  "saveAs": "artifacts/p7-smoke.vsdx"
+}

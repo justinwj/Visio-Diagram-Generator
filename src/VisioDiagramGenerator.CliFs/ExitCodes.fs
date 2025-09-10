@@ -2,6 +2,7 @@ namespace VisioDiagramGenerator.CliFs
 
 [<AutoOpen>]
 module ExitCodes =
+    // Prompt 7 exit map
     [<Literal>] let OK               = 0
     [<Literal>] let CONFIG_INVALID   = 2
     [<Literal>] let USAGE            = 64

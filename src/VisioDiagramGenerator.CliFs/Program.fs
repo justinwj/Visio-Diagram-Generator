@@ -4,7 +4,7 @@ namespace VisioDiagramGenerator.CliFs
 open System
 open System.IO
 open System.Diagnostics
-open VisioDiagramGenerator.CliFs.ExitCodes
+open VisioDiagramGenerator.CliFs.CliExitCodes
 
 module Program =
 

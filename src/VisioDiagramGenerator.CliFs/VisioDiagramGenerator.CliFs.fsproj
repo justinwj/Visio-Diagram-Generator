@@ -4,16 +4,28 @@
     <TargetFramework>net8.0</TargetFramework>
     <GenerateProgramFile>false</GenerateProgramFile>
     <Nullable>enable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
 
-<ItemGroup>
-  <Compile Include="CliExitCodes.fs" />
-  <!-- <Compile Include="Utilities\CliLogger.fs" /> -->
-  <!-- <Compile Include="Utilities\FileBundler.fs" /> -->
-  <!-- <Compile Include="ArgParser.fs" /> -->
-  <!-- <Compile Include="GenerateCommand.fs" /> -->
-  <!-- <Compile Include="ExportCommand.fs" /> -->
-  <Compile Include="Program.fs" />
-</ItemGroup>
+  <PropertyGroup>
+  <OtherFlags>--strict-indentation-</OtherFlags>
+  <!-- or -->
+  <!-- <LangVersion>7.0</LangVersion> -->
+  </PropertyGroup>
 
+  <ItemGroup>
+    <!-- F# compile order matters: put foundational modules first -->
+    <Compile Include="CliExitCodes.fs" />
+    <Compile Include="Runner.fs" />
+    <Compile Include="ArgParser.fs" />
+    <Compile Include="Validation.fs" />
+    <Compile Include="ConfigLoader.fs" />
+    <!-- when you add these files, uncomment them and place appropriately, Prompt 14:
+    <Compile Include="Utilities\CliLogger.fs" />
+    <Compile Include="Utilities\FileBundler.fs" />
+    <Compile Include="GenerateCommand.fs" />
+    <Compile Include="ExportCommand.fs" />
+    -->
+    <Compile Include="Program.fs" />
+  </ItemGroup>
 </Project>

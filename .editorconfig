@@ -1,0 +1,14 @@
+root = true
+
+# Apply to all C# source files in the repo
+[*.cs]
+# CA1716: reserved keyword conflicts (e.g., ILogger.Error)
+dotnet_diagnostic.CA1716.severity = none
+# CA1859: suggest concrete List<T> for fields (suppress for now)
+dotnet_diagnostic.CA1859.severity = none
+# CA1416: platform compatibility (we deliberately call Windows-only COM APIs)
+dotnet_diagnostic.CA1416.severity = none
+
+# Tests: allow underscores in names
+[tests/**.cs]
+dotnet_diagnostic.CA1707.severity = none

@@ -1,20 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
 <Project>
-  <PropertyGroup>
-    <!-- Fallback TFM so any project without TFM still targets .NET 8 -->
-    <TargetFramework Condition="'$(TargetFramework)'==''">net8.0</TargetFramework>
-
-    <!-- Consistent compiler settings -->
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <LangVersion>latest</LangVersion>
-
-    <!-- Analyzers & CI behavior -->
-    <EnableNETAnalyzers>true</EnableNETAnalyzers>
-    <AnalysisMode>Recommended</AnalysisMode>
-    <TreatWarningsAsErrors Condition="'$(CI)'=='true'">true</TreatWarningsAsErrors>
-
-    <!-- Reproducible builds -->
-    <Deterministic>true</Deterministic>
-    <ContinuousIntegrationBuild Condition="'$(CI)'=='true'">true</ContinuousIntegrationBuild>
-  </PropertyGroup>
+  <!--
+    Ensures that when a .NET Framework (net48) project references VDG.Core.Contracts,
+    MSBuild evaluates that referenced project using TargetFramework=netstandard2.0.
+    This avoids the 'targets net8.0' reference error during solution builds.
+  -->
+  <ItemGroup Condition="'$(TargetFrameworkIdentifier)'=='.NETFramework'">
+    <ProjectReference Update="**\VDG.Core.Contracts\VDG.Core.Contracts.csproj">
+      <AdditionalProperties>TargetFramework=netstandard2.0</AdditionalProperties>
+    </ProjectReference>
+  </ItemGroup>
 </Project>

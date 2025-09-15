@@ -1,15 +1,31 @@
-namespace VDG.Core.Logging;
-
-/// <summary>Minimal logger abstraction to avoid external dependencies.</summary>
-public interface ILogger
+#if NETSTANDARD2_0
+namespace VDG.Core.Contracts.Logging
 {
-    void Log(LogLevel level, string message, Exception? exception = null);
+    public interface ILogger
+    {
+        void Log(LogLevel level, string message, Exception? ex = null);
 
-    // Convenience helpers with default interface implementations.
-    void Trace(string message) => Log(LogLevel.Trace, message);
-    void Debug(string message) => Log(LogLevel.Debug, message);
-    void Info(string message)  => Log(LogLevel.Information, message);
-    void Warn(string message)  => Log(LogLevel.Warning, message);
-    void Error(string message, Exception? ex = null) => Log(LogLevel.Error, message, ex);
-    void Critical(string message, Exception? ex = null) => Log(LogLevel.Critical, message, ex);
+        // No default interface impls on netstandard2.0
+        void Debug(string message);
+        void Info(string message);
+        void Warn(string message, Exception? ex = null);
+        void Error(string message, Exception? ex = null);
+        void Critical(string message, Exception? ex = null);
+    }
 }
+#else
+namespace VDG.Core.Contracts.Logging
+{
+    public interface ILogger
+    {
+        void Log(LogLevel level, string message, Exception? ex = null);
+
+        // Convenience defaults (OK on net8.0+)
+        void Debug(string message) => Log(LogLevel.Debug, message);
+        void Info(string message)  => Log(LogLevel.Info, message);
+        void Warn(string message, Exception? ex = null) => Log(LogLevel.Warn, message, ex);
+        void Error(string message, Exception? ex = null) => Log(LogLevel.Error, message, ex);
+        void Critical(string message, Exception? ex = null) => Log(LogLevel.Critical, message, ex);
+    }
+}
+#endif

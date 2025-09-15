@@ -1,13 +1,25 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <!-- Contracts used by .NET 8 tools AND the .NET 4.8 runner -->
-    <TargetFrameworks>net8.0;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
     <Nullable>enable</Nullable>
-    <LangVersion>latest</LangVersion>
+    <!-- Use modern language features even for netstandard2.0 -->
+    <LangVersion>10.0</LangVersion>
+    <!-- Keep implicit usings explicit for contracts -->
+    <ImplicitUsings>disable</ImplicitUsings>
+
+    <!-- CRITICAL: ensure the framework reference pack is wired under desktop MSBuild -->
+    <DisableImplicitFrameworkReferences>false</DisableImplicitFrameworkReferences>
   </PropertyGroup>
 
-  <!-- Polyfill 'record' support for the legacy target -->
+  <!-- Keep the IsExternalInit shim ONLY for netstandard2.0.
+       The file exists in the project folder; it will be removed from other TFMs to avoid duplicate type errors. -->
+  <ItemGroup Condition="'$(TargetFramework)'!='netstandard2.0'">
+    <Compile Remove="CompilerServices.IsExternalInit.cs" />
+    <None Include="CompilerServices.IsExternalInit.cs" />
+  </ItemGroup>
+
+  <!-- Polyfills needed by netstandard2.0 -->
   <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
-    <Compile Include="CompilerServices.IsExternalInit.cs" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
   </ItemGroup>
 </Project>

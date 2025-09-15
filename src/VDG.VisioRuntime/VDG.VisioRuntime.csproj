@@ -1,37 +1,41 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net48</TargetFramework>
     <OutputType>Exe</OutputType>
+    <Platforms>x86;x64</Platforms>
+    <Nullable>enable</Nullable>
     <RootNamespace>VDG.VisioRuntime</RootNamespace>
     <AssemblyName>VDG.VisioRuntime</AssemblyName>
-    <Platforms>x86;x64</Platforms>
-    <Prefer32Bit>false</Prefer32Bit>
-    <DisableWorkloadAutoImports>true</DisableWorkloadAutoImports>
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
 
-  <!-- Default VISLIB.DLL if user didn't pass VISIO_LIB_PATH -->
+  <!-- Resolve VISLIB.DLL automatically unless overridden by /p:VISIO_LIB_PATH=... -->
   <PropertyGroup Condition="'$(Platform)'=='x64' and '$(VISIO_LIB_PATH)'==''">
-    <VISIO_LIB_PATH>$(ProgramFiles)\Microsoft Office\root\Office16\VISLIB.DLL</VISIO_LIB_PATH>
+    <VISIO_LIB_PATH>$(ProgramFiles)\Microsoft Office
+oot\Office16\VISLIB.DLL</VISIO_LIB_PATH>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Platform)'=='x86' and '$(VISIO_LIB_PATH)'==''">
-    <VISIO_LIB_PATH>$(ProgramFiles(x86))\Microsoft Office\root\Office16\VISLIB.DLL</VISIO_LIB_PATH>
+    <VISIO_LIB_PATH>$(ProgramFiles(x86))\Microsoft Office
+oot\Office16\VISLIB.DLL</VISIO_LIB_PATH>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <Platforms>x64</Platforms>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+
+  <!-- COM interop via file path; requires desktop MSBuild (ResolveComReference) -->
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <!-- COM interop via ResolveComReference (desktop MSBuild only) -->
     <COMFileReference Include="$(VISIO_LIB_PATH)">
       <WrapperTool>tlbimp</WrapperTool>
       <EmbedInteropTypes>true</EmbedInteropTypes>
     </COMFileReference>
-
-    <!-- Force the referenced Contracts project to use the compatible TFM -->
-    <ProjectReference Include="..\VDG.Core.Contracts\VDG.Core.Contracts.csproj">
-      <AdditionalProperties>TargetFramework=netstandard2.0</AdditionalProperties>
-    </ProjectReference>
+    <ProjectReference Include="..\VDG.Core.Contracts\VDG.Core.Contracts.csproj" />
+        <AdditionalProperties>TargetFramework=netstandard2.0</AdditionalProperties>
+        <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
   </ItemGroup>
-
 </Project>

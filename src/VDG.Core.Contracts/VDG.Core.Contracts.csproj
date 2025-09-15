@@ -1,12 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Contracts used by .NET 8 tools AND the .NET 4.8 runner -->
+    <TargetFrameworks>net8.0;netstandard2.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
+
+  <!-- Polyfill 'record' support for the legacy target -->
+  <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
+    <Compile Include="CompilerServices.IsExternalInit.cs" />
+  </ItemGroup>
 </Project>
-
-
-
-

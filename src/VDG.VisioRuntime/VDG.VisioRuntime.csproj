@@ -1,32 +1,37 @@
 <Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <TargetFramework>net48</TargetFramework>
-    <OutputType>Exe</OutputType>   <!-- or Library if no Program.Main -->
-    <Platforms>x86;x64</Platforms>
+    <OutputType>Exe</OutputType>
     <RootNamespace>VDG.VisioRuntime</RootNamespace>
     <AssemblyName>VDG.VisioRuntime</AssemblyName>
-    <Nullable>enable</Nullable>
-    <!-- Make NuGet treat this as SDK-style PackageReference -->
+    <Platforms>x86;x64</Platforms>
+    <Prefer32Bit>false</Prefer32Bit>
+    <DisableWorkloadAutoImports>true</DisableWorkloadAutoImports>
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
 
-  <!-- Resolve VISLIB.DLL automatically unless overridden -->
-  <PropertyGroup>
-    <VISIO_LIB_PATH Condition="'$(VISIO_LIB_PATH)'=='' and '$(Platform)'=='x64'">
-      C:\Program Files\Microsoft Office\root\Office16\VISLIB.DLL
-    </VISIO_LIB_PATH>
-    <VISIO_LIB_PATH Condition="'$(VISIO_LIB_PATH)'=='' and '$(Platform)'=='x86'">
-      C:\Program Files (x86)\Microsoft Office\root\Office16\VISLIB.DLL
-    </VISIO_LIB_PATH>
+  <!-- Default VISLIB.DLL if user didn't pass VISIO_LIB_PATH -->
+  <PropertyGroup Condition="'$(Platform)'=='x64' and '$(VISIO_LIB_PATH)'==''">
+    <VISIO_LIB_PATH>$(ProgramFiles)\Microsoft Office\root\Office16\VISLIB.DLL</VISIO_LIB_PATH>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Platform)'=='x86' and '$(VISIO_LIB_PATH)'==''">
+    <VISIO_LIB_PATH>$(ProgramFiles(x86))\Microsoft Office\root\Office16\VISLIB.DLL</VISIO_LIB_PATH>
   </PropertyGroup>
 
-  <!-- COM interop via file path; requires MSBuild.exe (ResolveComReference) -->
   <ItemGroup>
-  <Reference Include="Microsoft.CSharp" />
-  <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <Reference Include="Microsoft.CSharp" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <!-- COM interop via ResolveComReference (desktop MSBuild only) -->
     <COMFileReference Include="$(VISIO_LIB_PATH)">
       <WrapperTool>tlbimp</WrapperTool>
       <EmbedInteropTypes>true</EmbedInteropTypes>
-    </COMFileReference>    
+    </COMFileReference>
+
+    <!-- Force the referenced Contracts project to use the compatible TFM -->
+    <ProjectReference Include="..\VDG.Core.Contracts\VDG.Core.Contracts.csproj">
+      <AdditionalProperties>TargetFramework=netstandard2.0</AdditionalProperties>
+    </ProjectReference>
   </ItemGroup>
+
 </Project>

@@ -4,19 +4,9 @@
     <Nullable>enable</Nullable>
     <LangVersion>10.0</LangVersion>
     <ImplicitUsings>disable</ImplicitUsings>
-    <!-- Ensure SDK framework refs are enabled under desktop MSBuild -->
-    <DisableImplicitFrameworkReferences>false</DisableImplicitFrameworkReferences>
   </PropertyGroup>
 
-  <!-- Keep the IsExternalInit shim ONLY for netstandard2.0 -->
-  <ItemGroup Condition="'$(TargetFramework)'!='netstandard2.0'">
-    <Compile Remove="CompilerServices.IsExternalInit.cs" />
-    <None Include="CompilerServices.IsExternalInit.cs" />
-  </ItemGroup>
-
-  <!-- Compile-time refs for ns2.0 even if ref pack is missing on the box -->
-  <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
-    <PackageReference Include="NETStandard.Library.Ref" Version="2.0.0" PrivateAssets="all" />
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,12 @@
+﻿{
+  "template": "C:\Users\justu\source\repos\Visio-Diagram-Generator\tests\p8\Blank Drawing.vstx",
+  "stencils": [
+    {
+      "key": "Basic",
+      "path": "Basic Shapes.vssx"
+    }
+  ],
+  "shapeMapping": {},
+  "themeName": "Office",
+  "themePath": "C:\Users\justu\AppData\Roaming\Microsoft\Templates\Document Themes\MyTheme.thmx"
+}

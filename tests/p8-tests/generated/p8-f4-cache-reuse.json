@@ -1,0 +1,13 @@
+﻿{
+  "template": "C:\Users\justu\source\repos\Visio-Diagram-Generator\tests\p8\Blank Drawing.vstx",
+  "stencils": [
+    {
+      "key": "Basic",
+      "path": "Basic Shapes.vssx"
+    }
+  ],
+  "shapeMapping": {
+    "A": "Basic!Rectangle",
+    "B": "Basic!Rectangle"
+  }
+}

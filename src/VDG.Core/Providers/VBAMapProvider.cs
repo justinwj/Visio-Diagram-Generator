@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
-
-using VDG.Core.Contracts; // single import: types live directly under Contracts
+using VDG.Core.Models;        // DiagramItem, DiagramConnection
+using VDG.Core.Providers;     // IMapProvider, IVbeGateway
 
 namespace VDG.Core.Providers
 {
     /// <summary>
-    /// Optional provider that uses VBIDE when trust allows; otherwise falls back to a text-export provider.
+    /// VBA-aware provider: when VBIDE access is trusted, emits one DiagramItem per module.
+    /// On any error or when trust is disabled, cleanly falls back to the supplied provider.
     /// </summary>
     public sealed class VBAMapProvider : IMapProvider
     {
@@ -29,17 +30,20 @@ namespace VDG.Core.Providers
                 var items = new List<DiagramItem>();
                 foreach (var m in _vbe.EnumerateModules())
                 {
+                    // Use ToString() for label to avoid coupling to a specific module type.
+                    var label = m?.ToString() ?? "Module";
                     items.Add(new DiagramItem(
-                        id: Guid.NewGuid().ToString(),
-                        typeName: "Module",
-                        label: m.Name,
-                        x: 0, y: 0
-                    ));
+                        Id: Guid.NewGuid().ToString(),
+                        TypeName: "Module",
+                        Label: label,
+                        X: 0,
+                        Y: 0));
                 }
                 return items;
             }
             catch
             {
+                // On any error, fall back to the underlying provider.
                 return _fallback.GetItems();
             }
         }
@@ -50,6 +54,8 @@ namespace VDG.Core.Providers
             {
                 if (!_vbe.IsTrusted())
                     return _fallback.GetConnections();
+
+                // First cut: no edges from VBIDE; rely on fallback if it supplies edges.
                 return Array.Empty<DiagramConnection>();
             }
             catch

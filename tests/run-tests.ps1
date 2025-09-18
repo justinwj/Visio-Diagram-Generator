@@ -1,48 +1,55 @@
-param([switch]$NoBuild)
+# run-tests.ps1 â€” run all unit tests (p9â€“11 included)
+# Usage:  .\run-tests.ps1 [-Configuration Debug|Release]
 
-$ErrorActionPreference = "Stop"
-$root   = Split-Path -Parent $MyInvocation.MyCommand.Path
-$repo   = Resolve-Path "$root\.."
-$report = Join-Path $root ".last-run.txt"
+param(
+  [ValidateSet('Debug','Release')]
+  [string]$Configuration = 'Debug'
+)
 
-# Force the 64-bit dotnet host—ignores PATH and DOTNET_ROOT
-$dotnet = Join-Path ${env:ProgramFiles} "dotnet\dotnet.exe"
-if (-not (Test-Path $dotnet)) { throw "dotnet host not found at $dotnet" }
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
 
-# Fail fast if the SDK can’t be loaded
-& $dotnet --info | Out-Null
+# Resolve repo root (works whether you're in subfolders or the root)
+try {
+  $repoRoot = (git rev-parse --show-toplevel) 2>$null
+  if (-not $repoRoot) { $repoRoot = (Resolve-Path ".").Path }
+} catch { $repoRoot = (Resolve-Path ".").Path }
+Set-Location $repoRoot
 
+Write-Host "Repo root: $repoRoot"
+dotnet --info | Out-Null
 
-$start = Get-Date
+# Prefer solution if present; otherwise test all projects under /tests
+$solution = Join-Path $repoRoot "Visio-Diagram-Generator.sln"
+$testsDir = Join-Path $repoRoot "tests"
 
-Write-Host "=== VDG Test Runner ==="
-Write-Host "Repo root: $repo"
-Write-Host "Skip build: $NoBuild"
-
-if (-not $NoBuild) {
-    Write-Host "`n[BUILD] dotnet build..."
-    dotnet build "$repo\VisioDiagramGenerator.sln" -c Debug --nologo
+# Restore & build once
+if (Test-Path $solution) {
+  dotnet restore $solution
+  dotnet build $solution -c $Configuration -v minimal
+} else {
+  dotnet restore
+  dotnet build -c $Configuration -v minimal
 }
 
-Write-Host "`n[UNIT] Running VDG.Core.Tests..."
-$unitStart = Get-Date
-dotnet test "$repo\tests\VDG.Core.Tests\VDG.Core.Tests.csproj" -c Debug --no-build --nologo
-$unitDur = (Get-Date) - $unitStart
-Write-Host "[UNIT] Duration: $($unitDur.TotalSeconds)s"
+# Run tests (all test projects). Results saved under artifacts\test-results
+$resultsDir = Join-Path $repoRoot "artifacts\test-results"
+New-Item -ItemType Directory -Force -Path $resultsDir | Out-Null
 
-Write-Host "`n[SMOKE] Running smoke.ps1..."
-$smokeStart = Get-Date
-& "$root\smoke.ps1"
-$smokeDur = (Get-Date) - $smokeStart
-Write-Host "[SMOKE] Duration: $($smokeDur.TotalSeconds)s"
+$testArgs = @(
+  '--no-build',
+  '-c', $Configuration,
+  '--logger', 'trx;LogFileName=TestResults.trx',
+  '--results-directory', $resultsDir
+)
 
-$totalDur = (Get-Date) - $start
+if (Test-Path $solution) {
+  dotnet test $solution @testArgs
+} elseif (Test-Path $testsDir) {
+  dotnet test $testsDir @testArgs
+} else {
+  Write-Error "Couldn't find a solution or the 'tests' folder."
+  exit 2
+}
 
-"Build: OK"                                   | Out-File $report
-"Unit: Pass ($($unitDur.TotalSeconds)s)"      | Out-File $report -Append
-"Smoke: OK ($($smokeDur.TotalSeconds)s)"      | Out-File $report -Append
-"Total Duration: $($totalDur.TotalSeconds)s"  | Out-File $report -Append
-
-Write-Host "`n=== Done. Report at $report ==="
-
-
+Write-Host "Done. Test results: $resultsDir" -ForegroundColor Green

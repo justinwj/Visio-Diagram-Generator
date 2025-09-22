@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../VDG.Core/VDG.Core.csproj" />
+    <ProjectReference Include="../VDG.Core.Contracts/VDG.Core.Contracts.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="N_Types.fs" />
+    <Compile Include="N_LayoutEngine.fs" />
+  </ItemGroup>
+</Project>

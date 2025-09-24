@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using VDG.Core.Models;        // DiagramItem, DiagramConnection
-using VDG.Core.Providers;     // IMapProvider, IVbeGateway
+using VDG.Core.Models;
+using VDG.Core.Vba;
 
 namespace VDG.Core.Providers
 {
@@ -28,10 +28,11 @@ namespace VDG.Core.Providers
                     return _fallback.GetItems();
 
                 var items = new List<DiagramItem>();
-                foreach (var m in _vbe.EnumerateModules())
+                foreach (var module in _vbe.EnumerateModules())
                 {
-                    // Use ToString() for label to avoid coupling to a specific module type.
-                    var label = m?.ToString() ?? "Module";
+                    var name = module?.Name;
+                    var label = string.IsNullOrWhiteSpace(name) ? "Module" : name!;
+
                     items.Add(new DiagramItem(
                         Id: Guid.NewGuid().ToString(),
                         TypeName: "Module",
@@ -39,6 +40,7 @@ namespace VDG.Core.Providers
                         X: 0,
                         Y: 0));
                 }
+
                 return items;
             }
             catch

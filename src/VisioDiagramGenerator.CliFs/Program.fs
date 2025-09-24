@@ -5,10 +5,12 @@ open System.Diagnostics
 open System.IO
 open System.Text.Json
 open System.Threading.Tasks
+open VDG.Core.Analysis
 open VDG.Core.Models
+open VDG.Core.Vba
 open VisioDiagramGenerator.Algorithms
 
-// DTOs for basic JSON model deserialization
+// DTOs for basic JSON model serialisation
 type NodeDto =
     { id: string
       label: string
@@ -21,10 +23,13 @@ type EdgeDto =
       label: string option }
 
 type DiagramDto =
-    { nodes: NodeDto array
+    { schemaVersion: string option
+      nodes: NodeDto array
       edges: EdgeDto array }
 
 module private ModelLoader =
+
+    let private schemaVersionValue = "1.0"
 
     let private applyNodeMetadata (dto: NodeDto) (node: Node) : Node =
         match dto.``type`` with
@@ -52,7 +57,52 @@ module private ModelLoader =
         let options = JsonSerializerOptions(PropertyNameCaseInsensitive = true)
 
         let dto = JsonSerializer.Deserialize<DiagramDto>(json, options)
+        match dto.schemaVersion with
+        | Some v when not (String.Equals(v, schemaVersionValue, StringComparison.OrdinalIgnoreCase)) ->
+            invalidOp (sprintf "Unsupported schemaVersion '%s'. Expected '%s'." v schemaVersionValue)
+        | _ -> ()
         toModel dto
+
+    let fromModel (model: DiagramModel) : DiagramDto =
+        let nodes =
+            model.Nodes
+            |> Seq.map (fun n ->
+                let nodeType =
+                    match Option.ofObj n.Type with
+                    | Some t when not (String.IsNullOrWhiteSpace t) -> Some t
+                    | _ -> None
+
+                { id = n.Id
+                  label = n.Label
+                  ``type`` = nodeType })
+            |> Seq.toArray
+
+        let edges =
+            model.Edges
+            |> Seq.map (fun e ->
+                let label =
+                    match Option.ofObj e.Label with
+                    | Some l when not (String.IsNullOrWhiteSpace l) -> Some l
+                    | _ -> None
+
+                { id = e.Id
+                  sourceId = e.SourceId
+                  targetId = e.TargetId
+                  label = label })
+            |> Seq.toArray
+
+        { schemaVersion = Some schemaVersionValue; nodes = nodes; edges = edges }
+
+    let saveToJson (path: string) (model: DiagramModel) =
+        let dto = fromModel model
+        match Path.GetDirectoryName(path) with
+        | null
+        | "" -> ()
+        | dir -> Directory.CreateDirectory(dir) |> ignore
+
+        let options = JsonSerializerOptions(WriteIndented = true)
+        let json = JsonSerializer.Serialize(dto, options)
+        File.WriteAllText(path, json)
 
 module private Runner =
 
@@ -66,7 +116,7 @@ module private Runner =
         task {
             let tempModelPath = Path.ChangeExtension(Path.GetTempFileName(), ".json")
             try
-                let modelJson = JsonSerializer.Serialize(model)
+                let modelJson = JsonSerializer.Serialize(ModelLoader.fromModel model)
                 File.WriteAllText(tempModelPath, modelJson)
 
                 ensureDirectory outputPath
@@ -107,12 +157,21 @@ open CommandLine
 
 module Program =
 
+    let mutable private gatewayFactory: unit -> IVbeGateway = fun () -> new ComVbeGateway() :> IVbeGateway
+
+    let internal setGatewayFactory factory = gatewayFactory <- factory
+
     let private printHelp () =
         Console.WriteLine("Visio Diagram Generator CLI")
         Console.WriteLine("Usage:")
         Console.WriteLine("  generate <model.json> [--output <out.vsdx>] [--live-preview]")
-        Console.WriteLine("  vba-analysis <project.xlsm> [--output <out.vsdx>] [--live-preview]")
+        Console.WriteLine("  vba-analysis <project.xlsm> [--output <out.json>] [--live-preview]")
         Console.WriteLine("  export <diagram.vsdx> <format> [--output <out.file>]")
+
+    let private disposeIfNeeded (gateway: IVbeGateway) =
+        match gateway with
+        | :? IDisposable as disp -> disp.Dispose()
+        | _ -> ()
 
     [<EntryPoint>]
     let main (argv: string array) : int =
@@ -144,10 +203,37 @@ module Program =
                         return 1
                 }
 
-            | VbaAnalysis(_projectPath, _outputOpt, _live) ->
+            | VbaAnalysis(projectPath, outputOpt, live) ->
                 task {
-                    Console.Error.WriteLine("VBA analysis requires a concrete IVbeGateway implementation.")
-                    return 1
+                    try
+                        if String.IsNullOrWhiteSpace(projectPath) then
+                            invalidArg (nameof projectPath) "Project path must be provided."
+
+                        let fullPath = Path.GetFullPath(projectPath)
+                        if not (File.Exists(fullPath)) then
+                            raise (FileNotFoundException($"File not found: {fullPath}", fullPath))
+
+                        let gateway = gatewayFactory()
+                        let model =
+                            try
+                                ProcedureGraphBuilder.GenerateProcedureGraph(gateway, fullPath)
+                            finally
+                                disposeIfNeeded gateway
+
+                        let outputPath =
+                            outputOpt
+                            |> Option.defaultValue (Path.ChangeExtension(fullPath, ".diagram.json"))
+
+                        ModelLoader.saveToJson outputPath model
+                        Console.WriteLine($"Analysis exported: {outputPath}")
+
+                        if live then
+                            Console.Error.WriteLine("Live preview is not supported for VBA analysis yet.")
+
+                        return 0
+                    with ex ->
+                        Console.Error.WriteLine($"VBA analysis error: {ex.Message}")
+                        return 1
                 }
 
             | Export(vsdxPath, format, outputOpt) ->
@@ -176,6 +262,9 @@ module Program =
                 }
 
         exitCodeTask.GetAwaiter().GetResult()
+
+
+
 
 
 

@@ -9,6 +9,13 @@ namespace VDG.Core.Tests
     {
         private sealed class StubGateway : IVbeGateway
         {
+            public bool IsTrusted() => true;
+
+            public IEnumerable<VbaModule> EnumerateModules()
+            {
+                yield return new VbaModule("Module1", null);
+            }
+
             public IEnumerable<VbaModule> ExportModules(string projectFilePath)
             {
                 // Simple module with two procedures and one call

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using NSubstitute;
 using VDG.Core;
 using VDG.Core.Providers;
+using VDG.Core.Vba;
 using Xunit;
 
 namespace VDG.Tests.P9_11
@@ -28,7 +29,11 @@ namespace VDG.Tests.P9_11
         {
             var vbe = Substitute.For<IVbeGateway>();
             vbe.IsTrusted().Returns(true);
-            vbe.EnumerateModules().Returns(new[] { new VbeModuleInfo("ModA"), new VbeModuleInfo("ModB") });
+            vbe.EnumerateModules().Returns(new[]
+            {
+                new VbaModule("ModA", null),
+                new VbaModule("ModB", null)
+            });
 
             var fb = Substitute.For<IMapProvider>();
             var provider = new VBAMapProvider(vbe, fb);

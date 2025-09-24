@@ -4,17 +4,28 @@ namespace VDG.Core.Vba
 {
     /// <summary>
     /// Abstraction over the Visual Basic for Applications (VBA) extensibility interface.
-    /// Allows exporting modules from a VBA project for analysis without tightly coupling
-    /// to the COM interfaces. Concrete implementations can wrap VBIDE or other providers.
+    /// Allows callers to query trust state, enumerate available modules, and export module
+    /// contents for deeper analysis without tightly coupling to COM types.
     /// </summary>
     public interface IVbeGateway
     {
         /// <summary>
-        /// Exports the modules contained in the specified VBA project file (.xlsm).
-        /// Returns a collection of modules with their names and code text.
+        /// True when "Trust access to the VBA project object model" is enabled and the host
+        /// application exposes its VBIDE automation surface.
         /// </summary>
-        /// <param name="projectFilePath">Path to a VBA enabled project (e.g. Excel .xlsm)</param>
-        /// <returns>Enumeration of modules with their content.</returns>
+        bool IsTrusted();
+
+        /// <summary>
+        /// Enumerate modules that are currently available in the host project. Implementations
+        /// may omit <see cref="VbaModule.Code"/> content when the intent is discovery only.
+        /// </summary>
+        IEnumerable<VbaModule> EnumerateModules();
+
+        /// <summary>
+        /// Exports the modules contained in the specified VBA project file (e.g. *.xlsm) and
+        /// returns their code so that downstream analyzers can construct call graphs.
+        /// </summary>
+        /// <param name="projectFilePath">Path to a VBA-enabled project.</param>
         IEnumerable<VbaModule> ExportModules(string projectFilePath);
     }
 
@@ -24,9 +35,9 @@ namespace VDG.Core.Vba
     public sealed class VbaModule
     {
         public string Name { get; }
-        public string Code { get; }
+        public string? Code { get; }
 
-        public VbaModule(string name, string code)
+        public VbaModule(string name, string? code)
         {
             Name = name;
             Code = code;

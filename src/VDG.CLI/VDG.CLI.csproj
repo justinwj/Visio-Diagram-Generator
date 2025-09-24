@@ -4,10 +4,15 @@
     <TargetFramework>net48</TargetFramework>
     <UseWindowsForms>false</UseWindowsForms>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <LangVersion>8.0</LangVersion>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
-  
   <ItemGroup>
     <ProjectReference Include="..\VDG.Core.Contracts\VDG.Core.Contracts.csproj" />
     <ProjectReference Include="..\VDG.Core\VDG.Core.csproj" />
+    <ProjectReference Include="..\VisioDiagramGenerator.Algorithms\VisioDiagramGenerator.Algorithms.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Text.Json" Version="6.0.10" />
   </ItemGroup>
 </Project>

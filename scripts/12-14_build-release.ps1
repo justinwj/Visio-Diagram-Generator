@@ -70,6 +70,10 @@ try {
     Write-Host "Runner: $runnerZip"
     
     if ($Sign) {
+        Write-Host "Code signing artifacts..." -ForegroundColor Yellow
+        # TODO: Implement actual signing logic
+        # signtool sign /f cert.pfx /p password /t timestamp $cliOutput\*.exe
+        # signtool sign /f cert.pfx /p password /t timestamp $runnerOutput\*.exe
         Write-Warning "Signing is not implemented yet in this version."
     }
 }

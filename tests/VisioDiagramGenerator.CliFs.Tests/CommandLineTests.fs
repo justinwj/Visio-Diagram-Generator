@@ -3,7 +3,7 @@ namespace VisioDiagramGenerator.CliFs.Tests
 open Xunit
 open VisioDiagramGenerator.CliFs
 
-type N_CommandLineTests() =
+type CommandLineTests() =
     [<Fact>]
     member _.ParseGenerateWithOptions() =
         let args = [| "generate"; "model.json"; "--output"; "out.vsdx"; "--live-preview" |]

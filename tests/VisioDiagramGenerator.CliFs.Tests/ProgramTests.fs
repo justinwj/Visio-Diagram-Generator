@@ -4,7 +4,7 @@ open System.IO
 open Xunit
 open VisioDiagramGenerator.CliFs
 
-type N_ProgramTests() =
+type ProgramTests() =
     [<Fact>]
     member _.Generate_CreatesVsdxFile() =
         // Create a temporary model JSON file

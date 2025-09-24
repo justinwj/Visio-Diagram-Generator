@@ -1,13 +1,13 @@
-namespace VDG.Core.Models;
-
-/// <summary>Minimal shape/connector styling.</summary>
-public sealed class ShapeStyle
+namespace VDG.Core.Models
 {
-    public string? FillColor { get; set; }
-    public string? StrokeColor { get; set; }
-    public double StrokeWidth { get; set; } = 1.0;
-    public string? FontFamily { get; set; }
-    public double FontSize { get; set; } = 11.0;
+    /// <summary>
+    /// Describes basic visual styling for a shape. At this stage only a singleton Default style is provided.
+    /// Additional properties can be added as needed (e.g. fill colour, line colour).
+    /// </summary>
+    public sealed class ShapeStyle
+    {
+        public static ShapeStyle Default { get; } = new ShapeStyle();
 
-    public static readonly ShapeStyle Default = new();
+        // Future styling properties can be added here.
+    }
 }

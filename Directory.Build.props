@@ -1,12 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
+  <PropertyGroup>
+    <!-- Central version used by the packaging script -->
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+  
   <!--
-    Ensures that when a .NET Framework (net48) project references VDG.Core.Contracts,
-    MSBuild evaluates that referenced project using TargetFramework=netstandard2.0.
+    Ensures that when a .NET Framework (net48) project references multi-targeted projects,
+    MSBuild evaluates those referenced projects using TargetFramework=netstandard2.0.
     This avoids the 'targets net8.0' reference error during solution builds.
   -->
   <ItemGroup Condition="'$(TargetFrameworkIdentifier)'=='.NETFramework'">
     <ProjectReference Update="**\VDG.Core.Contracts\VDG.Core.Contracts.csproj">
+      <AdditionalProperties>TargetFramework=netstandard2.0</AdditionalProperties>
+    </ProjectReference>
+    <ProjectReference Update="**\VDG.Core\VDG.Core.csproj">
       <AdditionalProperties>TargetFramework=netstandard2.0</AdditionalProperties>
     </ProjectReference>
   </ItemGroup>

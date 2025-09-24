@@ -19,10 +19,10 @@ dotnet test Visio-Diagram-Generator.sln
 
 ## Packaging
 
-Use the PowerShell script `scripts/N_build-release.ps1` to publish the CLI and runner and produce zip archives under the `artifacts/` directory. The script reads the version from `Directory.Build.props` if present, or defaults to `0.1.0`. Run it from the repository root:
+Use the PowerShell script `scripts/12-14_build-release.ps1` to publish the CLI and runner and produce zip archives under the `artifacts/` directory. The script reads the version from `Directory.Build.props` if present, or defaults to `0.1.0`. Run it from the repository root:
 
 ```powershell
-pwsh -File scripts/N_build-release.ps1
+pwsh -File scripts/12-14_build-release.ps1
 ```
 
 Artifacts will be created:

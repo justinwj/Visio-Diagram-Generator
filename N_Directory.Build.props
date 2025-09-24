@@ -1,6 +1,0 @@
-<Project>
-  <PropertyGroup>
-    <!-- Central version used by the packaging script -->
-    <Version>0.1.0</Version>
-  </PropertyGroup>
-</Project>

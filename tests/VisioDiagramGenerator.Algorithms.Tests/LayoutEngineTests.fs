@@ -4,7 +4,7 @@ open Xunit
 open VDG.Core.Models
 open VisioDiagramGenerator.Algorithms
 
-type N_LayoutEngineTests() =
+type LayoutEngineTests() =
     [<Fact>]
     member _.Compute_ReturnsLayoutWithNodesAndEdges() =
         let n1 = Node("A", "A")
@@ -17,6 +17,6 @@ type N_LayoutEngineTests() =
         Assert.Equal(3, result.Nodes.Length)
         Assert.Equal(2, result.Edges.Length)
         // Verify that nodes have increasing X coordinates
-        let xs = result.Nodes |> List.map (fun nl -> nl.Position.X)
-        let increasing = xs |> List.pairwise |> List.forall (fun (x, y) -> y > x)
+        let xs = result.Nodes |> Array.map (fun nl -> nl.Position.X)
+        let increasing = xs |> Array.pairwise |> Array.forall (fun (x, y) -> y > x)
         Assert.True(increasing)

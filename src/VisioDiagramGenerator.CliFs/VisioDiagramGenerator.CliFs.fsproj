@@ -1,14 +1,27 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
     <OutputType>Exe</OutputType>
-    <UseAppHost>true</UseAppHost>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <UseWindowsForms>false</UseWindowsForms>
+    <UseWPF>false</UseWPF>
   </PropertyGroup>
-
   <ItemGroup>
-    <Compile Include="CliExitCodes.fs" />
+    <ProjectReference Include="../VDG.Core/VDG.Core.csproj" />
+    <ProjectReference Include="../VDG.Core.Contracts/VDG.Core.Contracts.csproj" />
+    <ProjectReference Include="../VisioDiagramGenerator.Algorithms/VisioDiagramGenerator.Algorithms.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Graph" Version="5.36.0" />
+    <PackageReference Include="Microsoft.Graph.Auth" Version="1.0.0-preview.7" />
+    <PackageReference Include="Azure.Identity" Version="1.10.4" />
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+    <PackageReference Include="FSharp.Control.TaskSeq" Version="0.4.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="CommandLine.fs" />
+    <Compile Include="LivePreview.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>

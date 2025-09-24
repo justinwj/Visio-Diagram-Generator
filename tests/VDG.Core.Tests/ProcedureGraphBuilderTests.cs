@@ -5,7 +5,7 @@ using Xunit;
 
 namespace VDG.Core.Tests
 {
-    public class N_ProcedureGraphBuilderTests
+    public class ProcedureGraphBuilderTests
     {
         private sealed class StubGateway : IVbeGateway
         {

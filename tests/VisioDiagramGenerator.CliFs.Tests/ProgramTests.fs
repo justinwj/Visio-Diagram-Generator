@@ -1,9 +1,31 @@
-namespace VisioDiagramGenerator.CliFs.Tests
+﻿module VisioDiagramGenerator.CliFs.Tests.ProgramTests
 
+open System
 open System.IO
+open System.Reflection
 open Xunit
-open VisioDiagramGenerator.CliFs
 open VDG.Core.Vba
+
+let private programAssembly = typeof<VisioDiagramGenerator.CliFs.Command>.Assembly
+let private programType = programAssembly.GetType("VisioDiagramGenerator.CliFs.Program")
+let private mainMethod =
+    match programType with
+    | null -> None
+    | t -> Option.ofObj (t.GetMethod("main", BindingFlags.Static ||| BindingFlags.Public ||| BindingFlags.NonPublic))
+let private setGatewayMethod =
+    match programType with
+    | null -> None
+    | t -> Option.ofObj (t.GetMethod("setGatewayFactory", BindingFlags.Static ||| BindingFlags.NonPublic))
+
+let private runProgram (args: string[]) : int =
+    match mainMethod with
+    | Some methodInfo -> methodInfo.Invoke(null, [| args :> obj |]) :?> int
+    | None -> failwith "Program.main not found"
+
+let private setGatewayFactory (factory: unit -> IVbeGateway) : unit =
+    match setGatewayMethod with
+    | Some methodInfo -> methodInfo.Invoke(null, [| factory :> obj |]) |> ignore
+    | None -> failwith "Program.setGatewayFactory not found"
 
 type private StubGateway() =
     interface IVbeGateway with
@@ -11,45 +33,40 @@ type private StubGateway() =
         member _.EnumerateModules() =
             seq { VbaModule("Module1", null) }
         member _.ExportModules(_projectPath: string) =
-            seq {
-                VbaModule("Module1", "Sub A()\n    Call B\nEnd Sub\nSub B()\nEnd Sub")
-            }
+            seq { VbaModule("Module1", "Sub A()\n    Call B\nEnd Sub\nSub B()\nEnd Sub") }
 
-type ProgramTests() =
-    [<Fact>]
-    member _.Generate_CreatesVsdxFile() =
-        // Create a temporary model JSON file
-        let tempModel = Path.GetTempFileName()
-        let json = "{""nodes"": [{""id"": ""A"", ""label"": ""A""}], ""edges"": []}"
-        File.WriteAllText(tempModel, json)
-        let outPath = Path.ChangeExtension(tempModel, ".vsdx")
-        try
-            let exitCode = Program.main [| "generate"; tempModel; "--output"; outPath |]
-            Assert.Equal(0, exitCode)
-            Assert.True(File.Exists(outPath))
-        finally
-            if File.Exists(tempModel) then File.Delete(tempModel)
-            if File.Exists(outPath) then File.Delete(outPath)
+[<Fact>]
+let Generate_CreatesVsdxFile () =
+    let tempModel = Path.GetTempFileName()
+    let json = "{""nodes"": [{""id"": ""A"", ""label"": ""A""}], ""edges"": []}"
+    File.WriteAllText(tempModel, json)
+    let outPath = Path.ChangeExtension(tempModel, ".vsdx")
+    try
+        let exitCode = runProgram [| "generate"; tempModel; "--output"; outPath |]
+        Assert.Equal(0, exitCode)
+        Assert.True(File.Exists(outPath))
+    finally
+        if File.Exists(tempModel) then File.Delete(tempModel)
+        if File.Exists(outPath) then File.Delete(outPath)
 
-    [<Fact>]
-    member _.VbaAnalysis_WritesDiagramJson() =
-        let tempProject = Path.ChangeExtension(Path.GetTempFileName(), ".xlsm")
-        let outputPath = Path.ChangeExtension(tempProject, ".diagram.json")
-        File.WriteAllText(tempProject, "placeholder")
+[<Fact>]
+let VbaAnalysis_WritesDiagramJson () =
+    let tempProject = Path.ChangeExtension(Path.GetTempFileName(), ".xlsm")
+    let outputPath = Path.ChangeExtension(tempProject, ".diagram.json")
+    File.WriteAllText(tempProject, "placeholder")
 
-        let resetGateway () = Program.setGatewayFactory(fun () -> new ComVbeGateway() :> IVbeGateway)
+    let resetGateway () = setGatewayFactory (fun () -> new ComVbeGateway() :> IVbeGateway)
 
-        try
-            Program.setGatewayFactory(fun () -> new StubGateway() :> IVbeGateway)
-            let exitCode = Program.main [| "vba-analysis"; tempProject; "--output"; outputPath |]
-            Assert.Equal(0, exitCode)
-            Assert.True(File.Exists(outputPath))
-            let json = File.ReadAllText(outputPath)
-            Assert.Contains("\"schemaVersion\"", json)
-            Assert.Contains("\"nodes\"", json)
-            Assert.Contains("Module1", json)
-        finally
-            resetGateway ()
-            if File.Exists(tempProject) then File.Delete(tempProject)
-            if File.Exists(outputPath) then File.Delete(outputPath)
-
+    try
+        setGatewayFactory (fun () -> new StubGateway() :> IVbeGateway)
+        let exitCode = runProgram [| "vba-analysis"; tempProject; "--output"; outputPath |]
+        Assert.Equal(0, exitCode)
+        Assert.True(File.Exists(outputPath))
+        let json = File.ReadAllText(outputPath)
+        Assert.Contains("\"schemaVersion\"", json)
+        Assert.Contains("\"nodes\"", json)
+        Assert.Contains("Module1", json)
+    finally
+        resetGateway ()
+        if File.Exists(tempProject) then File.Delete(tempProject)
+        if File.Exists(outputPath) then File.Delete(outputPath)

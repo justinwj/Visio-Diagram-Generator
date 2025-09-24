@@ -112,9 +112,23 @@ module private Runner =
         | "" -> ()
         | dir -> Directory.CreateDirectory(dir) |> ignore
 
+    let private runnerLogPath (outputPath: string) =
+        let directory = Path.GetDirectoryName(outputPath)
+        let fileName = Path.GetFileNameWithoutExtension(outputPath)
+        let logName =
+            if String.IsNullOrWhiteSpace(fileName) then
+                "vdg-runner"
+            else
+                fileName
+        if String.IsNullOrWhiteSpace(directory) then
+            logName + ".error.log"
+        else
+            Path.Combine(directory, logName + ".error.log")
+
     let runRunner (model: DiagramModel) (outputPath: string) : Task<unit> =
         task {
             let tempModelPath = Path.ChangeExtension(Path.GetTempFileName(), ".json")
+            let logPath = runnerLogPath outputPath
             try
                 let modelJson = JsonSerializer.Serialize(ModelLoader.fromModel model)
                 File.WriteAllText(tempModelPath, modelJson)
@@ -138,15 +152,34 @@ module private Runner =
                         UseShellExecute = false,
                         CreateNoWindow = true
                     )
+                psi.RedirectStandardOutput <- true
+                psi.RedirectStandardError <- true
 
                 use proc =
                     match Process.Start(psi) with
                     | null -> failwith "Failed to start runner process."
                     | p -> p
 
+                let stdOutTask = proc.StandardOutput.ReadToEndAsync()
+                let stdErrTask = proc.StandardError.ReadToEndAsync()
+
                 do! proc.WaitForExitAsync()
 
+                let! stdOut = stdOutTask
+                let! stdErr = stdErrTask
+
+                if not (String.IsNullOrWhiteSpace stdOut) then
+                    Console.Write(stdOut)
+
+                if not (String.IsNullOrWhiteSpace stdErr) then
+                    Console.Error.Write(stdErr)
+
                 if proc.ExitCode <> 0 then
+                    if File.Exists(logPath) then
+                        Console.Error.WriteLine($"Runner error log: {logPath}")
+                    else
+                        Console.Error.WriteLine("Runner failed; no error log was produced.")
+
                     failwith ($"Runner process failed with exit code {proc.ExitCode}")
             finally
                 if File.Exists(tempModelPath) then
@@ -262,9 +295,4 @@ module Program =
                 }
 
         exitCodeTask.GetAwaiter().GetResult()
-
-
-
-
-
 

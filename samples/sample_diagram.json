@@ -1,10 +1,26 @@
 {
-  "stencils": ["BASIC_U.VSSX"],
+  "schemaVersion": "1.1",
+  "metadata": {
+    "title": "Simple Flow",
+    "description": "Minimal sample compatible with the v1.1 diagram schema."
+  },
   "nodes": [
-    { "id": "A", "text": "Start", "master": "Rounded Rectangle", "x": 3.0, "y": 7.0 },
-    { "id": "B", "text": "Next",  "master": "Rectangle",         "x": 6.0, "y": 7.0 }
+    {
+      "id": "Start",
+      "label": "Start",
+      "style": { "fill": "#D6F5E5" }
+    },
+    {
+      "id": "Next",
+      "label": "Next"
+    }
   ],
   "edges": [
-    { "from": "A", "to": "B", "label": "flow", "master": "Dynamic connector" }
+    {
+      "id": "Start->Next",
+      "sourceId": "Start",
+      "targetId": "Next",
+      "label": "flow"
+    }
   ]
 }

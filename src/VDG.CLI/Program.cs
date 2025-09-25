@@ -165,9 +165,11 @@ namespace VDG.CLI
                     node.GroupId = nodeDto.GroupId;
                 }
 
-                if (nodeDto.Size is { Width: > 0, Height: > 0 })
+                if (nodeDto.Size != null &&
+                    nodeDto.Size.Width.HasValue && nodeDto.Size.Width.Value > 0 &&
+                    nodeDto.Size.Height.HasValue && nodeDto.Size.Height.Value > 0)
                 {
-                    node.Size = new Size(nodeDto.Size.Width!.Value, nodeDto.Size.Height!.Value);
+                    node.Size = new Size(nodeDto.Size.Width.Value, nodeDto.Size.Height.Value);
                 }
 
                 ApplyStyle(node.Style, nodeDto.Style);
@@ -299,6 +301,54 @@ namespace VDG.CLI
                 app = CreateVisioApplication();
                 app.Visible = false;
 
+                app.AlertResponse = 7;
+
+                documents = app.Documents;
+                document = documents.Add("");
+                pages = document.Pages;
+                page = pages[1];
+
+                if (layout.Nodes.Length == 0)
+                {
+                    throw new InvalidDataException("Layout produced zero nodes.");
+                }
+
+                ComputePlacements(model, layout, placements, page);
+                DrawConnectors(model, placements, page);
+
+                document.SaveAs(outputPath);
+            }
+            finally
+            {
+                var pageCom = (object?)page;
+                var pagesCom = (object?)pages;
+                var documentCom = (object?)document;
+                var documentsCom = (object?)documents;
+                var appCom = (object?)app;
+
+                if (document != null)
+                {
+                    try { document.Close(); } catch { /* ignore */ }
+                }
+
+                if (app != null)
+                {
+                    try { app.Quit(); } catch { /* ignore */ }
+                }
+
+                foreach (var placement in placements.Values)
+                {
+                    ReleaseCom(placement.Shape);
+                }
+
+                ReleaseCom(pageCom);
+                ReleaseCom(pagesCom);
+                ReleaseCom(documentCom);
+                ReleaseCom(documentsCom);
+                ReleaseCom(appCom);
+            }
+        }
+
         private static void ApplyNodeStyle(Node node, dynamic shape)
         {
             if (node.Style == null || node.Style.IsDefault())
@@ -363,7 +413,7 @@ namespace VDG.CLI
                 return false;
             }
 
-            var span = value.Trim();
+            var span = value!.Trim();
 
             if (span.StartsWith("#", StringComparison.Ordinal))
             {
@@ -388,48 +438,6 @@ namespace VDG.CLI
             return true;
         }
 
-                app.AlertResponse = 7;
-
-                documents = app.Documents;
-                document = documents.Add("");
-                pages = document.Pages;
-                page = pages[1];
-
-                if (layout.Nodes.Length == 0)
-                {
-                    throw new InvalidDataException("Layout produced zero nodes.");
-                }
-
-                ComputePlacements(model, layout, placements, page);
-                DrawConnectors(model, placements, page);
-
-                document.SaveAs(outputPath);
-            }
-            finally
-            {
-                if (document != null)
-                {
-                    try { document.Close(); } catch { /* ignore */ }
-                }
-
-                if (app != null)
-                {
-                    try { app.Quit(); } catch { /* ignore */ }
-                }
-
-                foreach (var placement in placements.Values)
-                {
-                    ReleaseCom(placement.Shape);
-                }
-
-                ReleaseCom(page);
-                ReleaseCom(pages);
-                ReleaseCom(document);
-                ReleaseCom(documents);
-                ReleaseCom(app);
-            }
-        }
-
         private static dynamic CreateVisioApplication()
         {
             var progType = Type.GetTypeFromProgID("Visio.Application");
@@ -449,6 +457,7 @@ namespace VDG.CLI
 
         private static void ComputePlacements(DiagramModel model, LayoutResult layout, IDictionary<string, NodePlacement> placements, dynamic page)
         {
+            dynamic visioPage = page ?? throw new COMException("Visio page was not created.");
             var nodeMap = model.Nodes.ToDictionary(n => n.Id, n => n, StringComparer.OrdinalIgnoreCase);
 
             double minLeft = double.MaxValue;
@@ -480,8 +489,8 @@ namespace VDG.CLI
             var pageWidth = Math.Max(1.0, (maxRight - minLeft) + (Margin * 2));
             var pageHeight = Math.Max(1.0, (maxTop - minBottom) + (Margin * 2));
 
-            TrySetResult(page.PageSheet.CellsU["PageWidth"], pageWidth);
-            TrySetResult(page.PageSheet.CellsU["PageHeight"], pageHeight);
+            TrySetResult(visioPage.PageSheet.CellsU["PageWidth"], pageWidth);
+            TrySetResult(visioPage.PageSheet.CellsU["PageHeight"], pageHeight);
 
             foreach (var nodeLayout in layout.Nodes)
             {
@@ -503,7 +512,7 @@ namespace VDG.CLI
                 var right = left + width;
                 var top = bottom + height;
 
-                dynamic shape = page.DrawRectangle(left, bottom, right, top);
+                dynamic shape = visioPage.DrawRectangle(left, bottom, right, top);
                 shape.Text = node.Label;
                 ApplyNodeStyle(node, shape);
 
@@ -513,6 +522,7 @@ namespace VDG.CLI
 
         private static void DrawConnectors(DiagramModel model, IDictionary<string, NodePlacement> placements, dynamic page)
         {
+            dynamic visioPage = page ?? throw new COMException("Visio page was not created.");
             foreach (var edge in model.Edges)
             {
                 if (!placements.TryGetValue(edge.SourceId, out var source) ||
@@ -521,7 +531,7 @@ namespace VDG.CLI
                     continue;
                 }
 
-                dynamic line = page.DrawLine(source.CenterX, source.CenterY, target.CenterX, target.CenterY);
+                dynamic line = visioPage.DrawLine(source.CenterX, source.CenterY, target.CenterX, target.CenterY);
 
                 if (!string.IsNullOrWhiteSpace(edge.Label))
                 {
@@ -625,7 +635,7 @@ namespace VDG.CLI
 
         private sealed class NodePlacement
         {
-            public NodePlacement(dynamic shape, double left, double bottom, double width, double height)
+            public NodePlacement(object shape, double left, double bottom, double width, double height)
             {
                 Shape = shape;
                 Left = left;
@@ -634,7 +644,7 @@ namespace VDG.CLI
                 Height = height;
             }
 
-            public dynamic Shape { get; }
+            public object Shape { get; }
             public double Left { get; }
             public double Bottom { get; }
             public double Width { get; }

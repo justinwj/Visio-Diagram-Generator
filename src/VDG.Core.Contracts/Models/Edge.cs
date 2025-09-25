@@ -1,3 +1,6 @@
+﻿using System;
+using System.Collections.Generic;
+
 namespace VDG.Core.Models
 {
     /// <summary>
@@ -9,8 +12,8 @@ namespace VDG.Core.Models
         public string SourceId { get; }
         public string TargetId { get; }
         public string? Label { get; set; }
-        public bool Directed { get; init; } = true;
-        public ShapeStyle Style { get; set; } = ShapeStyle.Default;
+        public bool Directed { get; set; } = true;
+        public ShapeStyle Style { get; set; }
         public IDictionary<string, string> Metadata { get; }
 
         public Edge(string id, string sourceId, string targetId, string? label = null)
@@ -20,6 +23,7 @@ namespace VDG.Core.Models
             TargetId = targetId ?? throw new ArgumentNullException(nameof(targetId));
             Label = label;
             Metadata = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            Style = ShapeStyle.Default.Clone();
         }
     }
 }

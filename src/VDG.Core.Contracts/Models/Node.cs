@@ -1,3 +1,6 @@
+﻿using System;
+using System.Collections.Generic;
+
 namespace VDG.Core.Models
 {
     /// <summary>
@@ -9,7 +12,8 @@ namespace VDG.Core.Models
         public string Id { get; }
         public string Label { get; set; }
         public string? Type { get; set; }
-        public ShapeStyle Style { get; set; } = ShapeStyle.Default;
+        public string? GroupId { get; set; }
+        public ShapeStyle Style { get; set; }
         public Size? Size { get; set; }
         public IDictionary<string, string> Metadata { get; }
 
@@ -18,6 +22,7 @@ namespace VDG.Core.Models
             Id = id ?? throw new ArgumentNullException(nameof(id));
             Label = label ?? throw new ArgumentNullException(nameof(label));
             Metadata = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            Style = ShapeStyle.Default.Clone();
         }
     }
 }

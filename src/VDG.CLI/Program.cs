@@ -6,8 +6,10 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Globalization;
 using Microsoft.CSharp.RuntimeBinder;
 using VDG.Core.Models;
+using VDG.Core.Safety;
 using VisioDiagramGenerator.Algorithms;
 
 namespace VDG.CLI
@@ -28,7 +30,8 @@ namespace VDG.CLI
 
     internal static class Program
     {
-        private const string SchemaVersion = "1.0";
+        private const string CurrentSchemaVersion = "1.1";
+        private static readonly string[] SupportedSchemaVersions = { "1.0", CurrentSchemaVersion };
         private const double DefaultNodeWidth = 1.8;
         private const double DefaultNodeHeight = 1.0;
         private const double Margin = 1.0;
@@ -121,9 +124,13 @@ namespace VDG.CLI
                       ?? throw new InvalidDataException("Diagram JSON deserialized to null.");
 
             var schemaVersion = dto.SchemaVersion;
-            if (!string.IsNullOrEmpty(schemaVersion) && !string.Equals(schemaVersion, SchemaVersion, StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrEmpty(schemaVersion) &&
+                !SupportedSchemaVersions.Any(v => string.Equals(v, schemaVersion, StringComparison.OrdinalIgnoreCase)))
             {
-                throw new InvalidDataException(string.Format("Unsupported schemaVersion '{0}'. Expected '{1}'.", schemaVersion, SchemaVersion));
+                throw new InvalidDataException(string.Format(
+                    "Unsupported schemaVersion '{0}'. Supported versions: {1}.",
+                    schemaVersion,
+                    string.Join(", ", SupportedSchemaVersions)));
             }
 
             if (dto.Nodes is null || dto.Nodes.Count == 0)
@@ -147,10 +154,24 @@ namespace VDG.CLI
                 var nodeId = nodeDto.Id!;
                 var nodeLabel = nodeDto.Label!;
                 var node = new Node(nodeId, nodeLabel);
+
                 if (!string.IsNullOrWhiteSpace(nodeDto.Type))
                 {
                     node.Type = nodeDto.Type;
                 }
+
+                if (!string.IsNullOrWhiteSpace(nodeDto.GroupId))
+                {
+                    node.GroupId = nodeDto.GroupId;
+                }
+
+                if (nodeDto.Size is { Width: > 0, Height: > 0 })
+                {
+                    node.Size = new Size(nodeDto.Size.Width!.Value, nodeDto.Size.Height!.Value);
+                }
+
+                ApplyStyle(node.Style, nodeDto.Style);
+                ApplyMetadata(node.Metadata, nodeDto.Metadata);
 
                 nodes.Add(node);
             }
@@ -171,17 +192,87 @@ namespace VDG.CLI
                         ? string.Format("{0}->{1}", sourceId, targetId)
                         : edgeDto.Id!;
 
-                    var edge = new Edge(edgeId, sourceId, targetId, edgeDto.Label);
-                    if (!edgeDto.Directed)
+                    var edge = new Edge(edgeId, sourceId, targetId, edgeDto.Label)
                     {
-                        edge.Metadata["directed"] = "false";
-                    }
+                        Directed = edgeDto.Directed ?? true
+                    };
+
+                    ApplyStyle(edge.Style, edgeDto.Style);
+                    ApplyMetadata(edge.Metadata, edgeDto.Metadata);
 
                     edges.Add(edge);
                 }
             }
 
-            return new DiagramModel(nodes, edges);
+            var model = new DiagramModel(nodes, edges);
+            if (dto.Metadata != null)
+            {
+                ApplyMetadata(model.Metadata, dto.Metadata.Properties);
+
+                if (!string.IsNullOrWhiteSpace(dto.Metadata.Title))
+                {
+                    model.Metadata["title"] = dto.Metadata.Title!;
+                }
+
+                if (!string.IsNullOrWhiteSpace(dto.Metadata.Description))
+                {
+                    model.Metadata["description"] = dto.Metadata.Description!;
+                }
+
+                if (dto.Metadata.Tags != null && dto.Metadata.Tags.Count > 0)
+                {
+                    var cleaned = dto.Metadata.Tags
+                        .Where(tag => !string.IsNullOrWhiteSpace(tag))
+                        .Select(tag => tag!.Trim())
+                        .Where(tag => tag.Length > 0)
+                        .ToArray();
+
+                    if (cleaned.Length > 0)
+                    {
+                        model.Metadata["tags"] = string.Join(", ", cleaned);
+                    }
+                }
+            }
+
+            return model;
+        }
+        private static void ApplyStyle(ShapeStyle style, StyleDto? dto)
+        {
+            if (style == null || dto == null)
+            {
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.Fill))
+            {
+                style.FillColor = dto.Fill;
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.Stroke))
+            {
+                style.StrokeColor = dto.Stroke;
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.LinePattern))
+            {
+                style.LinePattern = dto.LinePattern;
+            }
+        }
+
+        private static void ApplyMetadata(IDictionary<string, string> target, IDictionary<string, string>? source)
+        {
+            if (source == null)
+            {
+                return;
+            }
+
+            foreach (var kvp in source)
+            {
+                if (!string.IsNullOrWhiteSpace(kvp.Key))
+                {
+                    target[kvp.Key] = kvp.Value ?? string.Empty;
+                }
+            }
         }
 
         private static void EnsureDirectory(string outputPath)
@@ -207,6 +298,96 @@ namespace VDG.CLI
             {
                 app = CreateVisioApplication();
                 app.Visible = false;
+
+        private static void ApplyNodeStyle(Node node, dynamic shape)
+        {
+            if (node.Style == null || node.Style.IsDefault())
+            {
+                return;
+            }
+
+            if (TryParseColor(node.Style.FillColor, out var fill))
+            {
+                TrySetFormula(shape, "FillForegnd", $"RGB({fill.R},{fill.G},{fill.B})");
+            }
+
+            if (TryParseColor(node.Style.StrokeColor, out var stroke))
+            {
+                TrySetFormula(shape, "LineColor", $"RGB({stroke.R},{stroke.G},{stroke.B})");
+            }
+
+            ApplyLinePattern(shape, node.Style.LinePattern);
+        }
+
+        private static void ApplyEdgeStyle(Edge edge, dynamic line)
+        {
+            if (edge.Style == null || edge.Style.IsDefault())
+            {
+                return;
+            }
+
+            var strokeSource = string.IsNullOrWhiteSpace(edge.Style.StrokeColor)
+                ? edge.Style.FillColor
+                : edge.Style.StrokeColor;
+
+            if (TryParseColor(strokeSource, out var stroke))
+            {
+                TrySetFormula(line, "LineColor", $"RGB({stroke.R},{stroke.G},{stroke.B})");
+            }
+
+            ApplyLinePattern(line, edge.Style.LinePattern);
+        }
+
+        private static void ApplyLinePattern(dynamic shape, string? pattern)
+        {
+            if (string.IsNullOrWhiteSpace(pattern))
+            {
+                return;
+            }
+
+            if (double.TryParse(pattern, NumberStyles.Float, CultureInfo.InvariantCulture, out var numeric))
+            {
+                TrySetResult(shape.CellsU["LinePattern"], numeric);
+            }
+            else
+            {
+                TrySetFormula(shape, "LinePattern", pattern);
+            }
+        }
+
+        private static bool TryParseColor(string? value, out (int R, int G, int B) color)
+        {
+            color = default;
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return false;
+            }
+
+            var span = value.Trim();
+
+            if (span.StartsWith("#", StringComparison.Ordinal))
+            {
+                span = span.Substring(1);
+            }
+
+            if (span.Length != 6 && span.Length != 8)
+            {
+                return false;
+            }
+
+            var offset = span.Length - 6;
+
+            if (!int.TryParse(span.Substring(offset, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var r) ||
+                !int.TryParse(span.Substring(offset + 2, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var g) ||
+                !int.TryParse(span.Substring(offset + 4, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var b))
+            {
+                return false;
+            }
+
+            color = (r, g, b);
+            return true;
+        }
+
                 app.AlertResponse = 7;
 
                 documents = app.Documents;
@@ -324,6 +505,7 @@ namespace VDG.CLI
 
                 dynamic shape = page.DrawRectangle(left, bottom, right, top);
                 shape.Text = node.Label;
+                ApplyNodeStyle(node, shape);
 
                 placements[nodeLayout.Id] = new NodePlacement(shape, left, bottom, width, height);
             }
@@ -355,6 +537,7 @@ namespace VDG.CLI
                     TrySetFormula(line, "EndArrow", "0");
                 }
 
+                ApplyEdgeStyle(edge, line);
                 ReleaseCom(line);
             }
         }
@@ -465,11 +648,29 @@ namespace VDG.CLI
             [JsonPropertyName("schemaVersion")]
             public string? SchemaVersion { get; set; }
 
+            [JsonPropertyName("metadata")]
+            public DiagramMetadataDto? Metadata { get; set; }
+
             [JsonPropertyName("nodes")]
             public List<NodeDto>? Nodes { get; set; }
 
             [JsonPropertyName("edges")]
             public List<EdgeDto>? Edges { get; set; }
+        }
+
+        private sealed class DiagramMetadataDto
+        {
+            [JsonPropertyName("title")]
+            public string? Title { get; set; }
+
+            [JsonPropertyName("description")]
+            public string? Description { get; set; }
+
+            [JsonPropertyName("tags")]
+            public List<string>? Tags { get; set; }
+
+            [JsonPropertyName("properties")]
+            public Dictionary<string, string>? Properties { get; set; }
         }
 
         private sealed class NodeDto
@@ -482,6 +683,18 @@ namespace VDG.CLI
 
             [JsonPropertyName("type")]
             public string? Type { get; set; }
+
+            [JsonPropertyName("groupId")]
+            public string? GroupId { get; set; }
+
+            [JsonPropertyName("size")]
+            public SizeDto? Size { get; set; }
+
+            [JsonPropertyName("style")]
+            public StyleDto? Style { get; set; }
+
+            [JsonPropertyName("metadata")]
+            public Dictionary<string, string>? Metadata { get; set; }
         }
 
         private sealed class EdgeDto
@@ -499,16 +712,38 @@ namespace VDG.CLI
             public string? Label { get; set; }
 
             [JsonPropertyName("directed")]
-            public bool Directed { get; set; } = true;
+            public bool? Directed { get; set; }
+
+            [JsonPropertyName("style")]
+            public StyleDto? Style { get; set; }
+
+            [JsonPropertyName("metadata")]
+            public Dictionary<string, string>? Metadata { get; set; }
         }
+
+        private sealed class SizeDto
+        {
+            [JsonPropertyName("width")]
+            public float? Width { get; set; }
+
+            [JsonPropertyName("height")]
+            public float? Height { get; set; }
+        }
+
+        private sealed class StyleDto
+        {
+            [JsonPropertyName("fill")]
+            public string? Fill { get; set; }
+
+            [JsonPropertyName("stroke")]
+            public string? Stroke { get; set; }
+
+            [JsonPropertyName("linePattern")]
+            public string? LinePattern { get; set; }
+        }
+
     }
 }
-
-
-
-
-
-
 
 
 

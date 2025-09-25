@@ -1,12 +1,8 @@
-{
-    "diagram":  {
-                    "title":  "Sample"
-                },
-    "shapes":  [
-
-               ],
-    "connections":  [
-
-                    ],
-    "unexpectedProp":  123
+﻿{
+  "schemaVersion": "1.1",
+  "nodes": [
+    { "id": "A", "label": "Alpha" }
+  ],
+  "edges": [],
+  "unexpectedProp": 123
 }

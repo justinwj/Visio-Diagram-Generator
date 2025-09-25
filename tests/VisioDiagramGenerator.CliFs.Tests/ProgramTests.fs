@@ -38,16 +38,34 @@ type private StubGateway() =
 [<Fact>]
 let Generate_CreatesVsdxFile () =
     let tempModel = Path.GetTempFileName()
-    let json = "{""nodes"": [{""id"": ""A"", ""label"": ""A""}], ""edges"": []}"
+    let json = """{
+  "schemaVersion": "1.1",
+  "metadata": { "title": "Test Diagram" },
+  "nodes": [
+    {
+      "id": "A",
+      "label": "Node A",
+      "groupId": "Group1",
+      "size": { "width": 2.0, "height": 1.4 },
+      "style": { "fill": "#CCE5FF", "stroke": "#004578" },
+      "metadata": { "role": "start" }
+    }
+  ],
+  "edges": []
+}"""
     File.WriteAllText(tempModel, json)
     let outPath = Path.ChangeExtension(tempModel, ".vsdx")
+    let originalSkip = Environment.GetEnvironmentVariable("VDG_SKIP_RUNNER", EnvironmentVariableTarget.Process)
+    Environment.SetEnvironmentVariable("VDG_SKIP_RUNNER", "1", EnvironmentVariableTarget.Process)
     try
         let exitCode = runProgram [| "generate"; tempModel; "--output"; outPath |]
         Assert.Equal(0, exitCode)
         Assert.True(File.Exists(outPath))
     finally
+        Environment.SetEnvironmentVariable("VDG_SKIP_RUNNER", originalSkip, EnvironmentVariableTarget.Process)
         if File.Exists(tempModel) then File.Delete(tempModel)
         if File.Exists(outPath) then File.Delete(outPath)
+        Environment.SetEnvironmentVariable("VDG_SKIP_RUNNER", originalSkip, EnvironmentVariableTarget.Process)
 
 [<Fact>]
 let VbaAnalysis_WritesDiagramJson () =
@@ -70,3 +88,4 @@ let VbaAnalysis_WritesDiagramJson () =
         resetGateway ()
         if File.Exists(tempProject) then File.Delete(tempProject)
         if File.Exists(outputPath) then File.Delete(outputPath)
+

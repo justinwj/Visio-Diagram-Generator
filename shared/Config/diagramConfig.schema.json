@@ -1,9 +1,103 @@
-{
+﻿{
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://visio-diagram-generator/schema/diagram.schema.json",
+  "title": "Visio Diagram Generator Envelope",
   "type": "object",
+  "required": [ "nodes" ],
+  "additionalProperties": false,
   "properties": {
-    "diagram": {},
-    "shapes": {},
-    "connections": {}
+    "schemaVersion": {
+      "type": "string",
+      "description": "Semantic version of the envelope. Current version: 1.1"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "properties": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/node" }
+    },
+    "edges": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/edge" },
+      "default": []
+    }
+  },
+  "$defs": {
+    "size": {
+      "type": "object",
+      "required": [ "width", "height" ],
+      "additionalProperties": false,
+      "properties": {
+        "width": { "type": "number", "exclusiveMinimum": 0 },
+        "height": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "style": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fill": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "Hex colour in #RRGGBB or #AARRGGBB format."
+        },
+        "stroke": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "Stroke colour in hex format."
+        },
+        "linePattern": {
+          "type": "string",
+          "description": "Optional Visio line pattern or formula."
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "node": {
+      "type": "object",
+      "required": [ "id", "label" ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "type": { "type": "string" },
+        "groupId": { "type": "string" },
+        "size": { "$ref": "#/$defs/size" },
+        "style": { "$ref": "#/$defs/style" },
+        "metadata": { "$ref": "#/$defs/metadata" }
+      }
+    },
+    "edge": {
+      "type": "object",
+      "required": [ "sourceId", "targetId" ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "sourceId": { "type": "string", "minLength": 1 },
+        "targetId": { "type": "string", "minLength": 1 },
+        "label": { "type": "string" },
+        "directed": { "type": "boolean" },
+        "style": { "$ref": "#/$defs/style" },
+        "metadata": { "$ref": "#/$defs/metadata" }
+      }
+    }
   }
 }

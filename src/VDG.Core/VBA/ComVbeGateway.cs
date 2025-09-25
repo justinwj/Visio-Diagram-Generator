@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
+using VDG.Core.Safety;
 
 namespace VDG.Core.Vba
 {
@@ -36,20 +37,7 @@ namespace VDG.Core.Vba
             }
         }
 
-        private static void ReleaseCom(object? instance)
-        {
-            if (instance != null && Marshal.IsComObject(instance))
-            {
-                try
-                {
-                    Marshal.FinalReleaseComObject(instance);
-                }
-                catch
-                {
-                    // Ignore release errors.
-                }
-            }
-        }
+        private static void ReleaseCom(object? instance) => ComSafety.Release(instance);
 
         private static void ShutdownExcel(dynamic? excel, bool createdNew)
         {
@@ -299,7 +287,7 @@ namespace VDG.Core.Vba
 
         public void Dispose()
         {
-            // Stateless – nothing to dispose. Interface provided so callers can use "use"/"using".
+            // Stateless - nothing to dispose. Interface provided so callers can use "use"/"using".
         }
     }
 }

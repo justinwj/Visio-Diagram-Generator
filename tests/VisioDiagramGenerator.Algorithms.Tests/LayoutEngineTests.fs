@@ -1,4 +1,4 @@
-module VisioDiagramGenerator.Algorithms.Tests.LayoutEngineTests
+﻿module VisioDiagramGenerator.Algorithms.Tests.LayoutEngineTests
 
 open Xunit
 open VDG.Core.Models
@@ -15,6 +15,6 @@ let Compute_ReturnsLayoutWithNodesAndEdges () =
     let result = LayoutEngine.compute model
     Assert.Equal(3, result.Nodes.Length)
     Assert.Equal(2, result.Edges.Length)
-    let xs = result.Nodes |> Array.map (fun nl -> nl.Position.X)
-    let increasing = xs |> Array.pairwise |> Array.forall (fun (x, y) -> y > x)
-    Assert.True(increasing)
+    let ys = result.Nodes |> Array.map (fun nl -> nl.Position.Y)
+    let vertical = ys |> Array.pairwise |> Array.forall (fun (y1, y2) -> y2 > y1)
+    Assert.True(vertical)

@@ -1,5 +1,44 @@
-{
-  "diagram": { "title": "Sample" },
-  "shapes": [],
-  "connections": []
+﻿{
+  "schemaVersion": "1.1",
+  "metadata": {
+    "title": "Sample Diagram",
+    "description": "Minimal configuration that exercises the new envelope fields.",
+    "tags": [ "sample", "vdg" ]
+  },
+  "nodes": [
+    {
+      "id": "Start",
+      "label": "Start",
+      "groupId": "Entry",
+      "size": { "width": 2.0, "height": 1.2 },
+      "style": { "fill": "#D6F5E5" },
+      "metadata": { "role": "entry" }
+    },
+    {
+      "id": "Process",
+      "label": "Process",
+      "groupId": "Core",
+      "style": { "fill": "#E8F5FF", "stroke": "#0078D4" }
+    },
+    {
+      "id": "Finish",
+      "label": "Finish",
+      "groupId": "Exit",
+      "metadata": { "role": "exit" }
+    }
+  ],
+  "edges": [
+    {
+      "id": "Start->Process",
+      "sourceId": "Start",
+      "targetId": "Process",
+      "label": "flows to"
+    },
+    {
+      "sourceId": "Process",
+      "targetId": "Finish",
+      "directed": false,
+      "metadata": { "note": "terminates" }
+    }
+  ]
 }

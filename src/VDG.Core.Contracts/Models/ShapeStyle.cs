@@ -1,13 +1,28 @@
+﻿using System;
+
 namespace VDG.Core.Models
 {
     /// <summary>
-    /// Describes basic visual styling for a shape. At this stage only a singleton Default style is provided.
-    /// Additional properties can be added as needed (e.g. fill colour, line colour).
+    /// Describes basic visual styling for a shape. Fill and stroke colours accept CSS style hex values
+    /// ("#RRGGBB" or "#AARRGGBB"). LinePattern is a free-form string that can be mapped to Visio line styles.
     /// </summary>
     public sealed class ShapeStyle
     {
         public static ShapeStyle Default { get; } = new ShapeStyle();
 
-        // Future styling properties can be added here.
+        public string? FillColor { get; set; }
+        public string? StrokeColor { get; set; }
+        public string? LinePattern { get; set; }
+
+        public bool IsDefault() => string.IsNullOrWhiteSpace(FillColor) &&
+                                   string.IsNullOrWhiteSpace(StrokeColor) &&
+                                   string.IsNullOrWhiteSpace(LinePattern);
+
+        public ShapeStyle Clone() => new ShapeStyle
+        {
+            FillColor = FillColor,
+            StrokeColor = StrokeColor,
+            LinePattern = LinePattern,
+        };
     }
 }

@@ -1,0 +1,314 @@
+{
+  "schemaVersion": "1.1",
+  "metadata": {
+    "title": "Sample Normal Diagram \u2013 Order/Microservices Flow",
+    "description": "A moderately complex service graph to stress connectors and layout (\u224820 nodes).",
+    "createdUtc": "2025-09-29T20:55:32.316367Z"
+  },
+  "nodes": [
+    {
+      "id": "Start",
+      "label": "Start",
+      "style": {
+        "fill": "#D6F5E5"
+      }
+    },
+    {
+      "id": "Gateway",
+      "label": "API Gateway",
+      "style": {
+        "fill": "#E8F1FF"
+      }
+    },
+    {
+      "id": "Auth",
+      "label": "Auth Service",
+      "style": {
+        "fill": "#E8F1FF"
+      }
+    },
+    {
+      "id": "UserSvc",
+      "label": "User Service",
+      "style": {
+        "fill": "#E8F1FF"
+      }
+    },
+    {
+      "id": "DB",
+      "label": "User DB",
+      "style": {
+        "fill": "#FFF4E5"
+      }
+    },
+    {
+      "id": "API",
+      "label": "Backend API",
+      "style": {
+        "fill": "#E8F1FF"
+      }
+    },
+    {
+      "id": "Browse",
+      "label": "Browse/Products",
+      "style": {
+        "fill": "#F0FFF4"
+      }
+    },
+    {
+      "id": "Search",
+      "label": "Search",
+      "style": {
+        "fill": "#F0FFF4"
+      }
+    },
+    {
+      "id": "Recs",
+      "label": "Recommendations",
+      "style": {
+        "fill": "#F0FFF4"
+      }
+    },
+    {
+      "id": "Cart",
+      "label": "Cart",
+      "style": {
+        "fill": "#F0FFF4"
+      }
+    },
+    {
+      "id": "Checkout",
+      "label": "Checkout",
+      "style": {
+        "fill": "#F0FFF4"
+      }
+    },
+    {
+      "id": "Payment",
+      "label": "Payment",
+      "style": {
+        "fill": "#FFF4F4"
+      }
+    },
+    {
+      "id": "Fraud",
+      "label": "Fraud Check",
+      "style": {
+        "fill": "#FFF4F4"
+      }
+    },
+    {
+      "id": "Inventory",
+      "label": "Inventory",
+      "style": {
+        "fill": "#F0FFF4"
+      }
+    },
+    {
+      "id": "Shipping",
+      "label": "Shipping",
+      "style": {
+        "fill": "#F0FFF4"
+      }
+    },
+    {
+      "id": "Notify",
+      "label": "Notification",
+      "style": {
+        "fill": "#EAF7FF"
+      }
+    },
+    {
+      "id": "Analytics",
+      "label": "Analytics",
+      "style": {
+        "fill": "#F6F6FF"
+      }
+    },
+    {
+      "id": "Logging",
+      "label": "Logging",
+      "style": {
+        "fill": "#F6F6FF"
+      }
+    },
+    {
+      "id": "Cache",
+      "label": "Cache",
+      "style": {
+        "fill": "#FFFBEA"
+      }
+    },
+    {
+      "id": "Admin",
+      "label": "Admin Console",
+      "style": {
+        "fill": "#FFFBEA"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "Start->Gateway",
+      "sourceId": "Start",
+      "targetId": "Gateway",
+      "label": "entry"
+    },
+    {
+      "id": "Gateway->Auth",
+      "sourceId": "Gateway",
+      "targetId": "Auth",
+      "label": "authenticate"
+    },
+    {
+      "id": "Auth->UserSvc",
+      "sourceId": "Auth",
+      "targetId": "UserSvc",
+      "label": "validate"
+    },
+    {
+      "id": "UserSvc->DB",
+      "sourceId": "UserSvc",
+      "targetId": "DB",
+      "label": "read/write"
+    },
+    {
+      "id": "Gateway->API",
+      "sourceId": "Gateway",
+      "targetId": "API",
+      "label": "route"
+    },
+    {
+      "id": "API->Browse",
+      "sourceId": "API",
+      "targetId": "Browse",
+      "label": "list"
+    },
+    {
+      "id": "API->Search",
+      "sourceId": "API",
+      "targetId": "Search",
+      "label": "query"
+    },
+    {
+      "id": "API->Recs",
+      "sourceId": "API",
+      "targetId": "Recs",
+      "label": "suggest"
+    },
+    {
+      "id": "Browse->Cart",
+      "sourceId": "Browse",
+      "targetId": "Cart",
+      "label": "add-item"
+    },
+    {
+      "id": "Cart->Checkout",
+      "sourceId": "Cart",
+      "targetId": "Checkout",
+      "label": "proceed"
+    },
+    {
+      "id": "Checkout->Payment",
+      "sourceId": "Checkout",
+      "targetId": "Payment",
+      "label": "pay"
+    },
+    {
+      "id": "Payment->Fraud",
+      "sourceId": "Payment",
+      "targetId": "Fraud",
+      "label": "screen"
+    },
+    {
+      "id": "Fraud->Inventory",
+      "sourceId": "Fraud",
+      "targetId": "Inventory",
+      "label": "approved"
+    },
+    {
+      "id": "Fraud->Admin",
+      "sourceId": "Fraud",
+      "targetId": "Admin",
+      "label": "flagged"
+    },
+    {
+      "id": "Inventory->Shipping",
+      "sourceId": "Inventory",
+      "targetId": "Shipping",
+      "label": "allocate"
+    },
+    {
+      "id": "Shipping->Notify",
+      "sourceId": "Shipping",
+      "targetId": "Notify",
+      "label": "status"
+    },
+    {
+      "id": "API->Analytics",
+      "sourceId": "API",
+      "targetId": "Analytics",
+      "label": "events"
+    },
+    {
+      "id": "Payment->Analytics",
+      "sourceId": "Payment",
+      "targetId": "Analytics",
+      "label": "events"
+    },
+    {
+      "id": "Shipping->Analytics",
+      "sourceId": "Shipping",
+      "targetId": "Analytics",
+      "label": "events"
+    },
+    {
+      "id": "Gateway->Logging",
+      "sourceId": "Gateway",
+      "targetId": "Logging",
+      "label": "log"
+    },
+    {
+      "id": "API->Logging",
+      "sourceId": "API",
+      "targetId": "Logging",
+      "label": "log"
+    },
+    {
+      "id": "Payment->Logging",
+      "sourceId": "Payment",
+      "targetId": "Logging",
+      "label": "log"
+    },
+    {
+      "id": "Shipping->Logging",
+      "sourceId": "Shipping",
+      "targetId": "Logging",
+      "label": "log"
+    },
+    {
+      "id": "Search->Cache",
+      "sourceId": "Search",
+      "targetId": "Cache",
+      "label": "warm"
+    },
+    {
+      "id": "Recs->Cache",
+      "sourceId": "Recs",
+      "targetId": "Cache",
+      "label": "warm"
+    },
+    {
+      "id": "Cache->API",
+      "sourceId": "Cache",
+      "targetId": "API",
+      "label": "serve"
+    },
+    {
+      "id": "Notify->UserSvc",
+      "sourceId": "Notify",
+      "targetId": "UserSvc",
+      "label": "update"
+    }
+  ]
+}

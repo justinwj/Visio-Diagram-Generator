@@ -6,9 +6,87 @@
   "required": [ "nodes" ],
   "additionalProperties": false,
   "properties": {
+    "diagramType": {
+      "type": "string",
+      "description": "High-level diagram category (e.g., ServiceArchitecture, ProcessFlow)."
+    },
     "schemaVersion": {
       "type": "string",
-      "description": "Semantic version of the envelope. Current version: 1.1"
+      "description": "Semantic version of the envelope. Current version: 1.2"
+    },
+    "layout": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "orientation": {
+          "type": "string",
+          "enum": ["horizontal", "vertical"],
+          "default": "horizontal",
+          "description": "Overall flow orientation. Only 'horizontal' is acted upon in the current milestone."
+        },
+        "tiers": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Ordered list of lane/tier names to place from left-to-right (for horizontal)."
+        },
+        "spacing": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "horizontal": { "type": "number", "minimum": 0.1, "description": "Horizontal gap between columns (inches)." },
+            "vertical": { "type": "number", "minimum": 0.1, "description": "Vertical gap between nodes in a column (inches)." }
+          },
+          "description": "Spacing configuration for layout (inches)."
+        },
+        "page": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "widthIn": { "type": "number", "minimum": 1 },
+            "heightIn": { "type": "number", "minimum": 1 },
+            "marginIn": { "type": "number", "minimum": 0 },
+            "paginate": { "type": "boolean" },
+            "errorOnOverflow": { "type": "boolean", "description": "If true, throw an error when a single node cannot fit the usable page height." }
+          },
+          "description": "Page settings and pagination preferences (milestone 2)."
+        },
+        "routing": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": ["orthogonal", "straight"],
+              "description": "Preferred connector style (M3 stub)."
+            },
+            "bundleBy": {
+              "type": "string",
+              "enum": ["lane", "group", "nodePair", "none"],
+              "description": "How to group related edges for bundling (M3 stub)."
+            },
+            "bundleSeparationIn": { "type": "number", "minimum": 0, "description": "Gap between parallel bundled edges in inches (M3 stub)." },
+            "channels": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "gapIn": { "type": "number", "minimum": 0, "description": "Reserved corridor gap between lanes, inches (M3 stub)." }
+              }
+            },
+            "routeAroundContainers": { "type": "boolean", "description": "Prefer to route connectors around lane containers (M3 stub)." }
+          },
+          "description": "Routing configuration for connectors (milestone 3 stub only)."
+        },
+        "diagnostics": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean", "default": true },
+            "pageHeightThresholdIn": { "type": "number", "minimum": 1 },
+            "laneMaxNodes": { "type": "integer", "minimum": 1 }
+          },
+          "description": "Diagnostics and hint thresholds for rendering."
+        }
+      }
     },
     "metadata": {
       "type": "object",
@@ -16,6 +94,9 @@
       "properties": {
         "title": { "type": "string" },
         "description": { "type": "string" },
+        "version": { "type": "string" },
+        "author": { "type": "string" },
+        "createdUtc": { "type": "string", "format": "date-time" },
         "tags": {
           "type": "array",
           "items": { "type": "string" }
@@ -35,9 +116,31 @@
       "type": "array",
       "items": { "$ref": "#/$defs/edge" },
       "default": []
+    },
+    "styleMap": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "shape": { "type": "string" },
+          "color": { "type": "string" },
+          "masterId": { "type": "string" }
+        },
+        "additionalProperties": false
+      },
+      "description": "Reserved for future type-to-style mappings (stub only in 1.2)."
     }
   },
   "$defs": {
+    "point": {
+      "type": "object",
+      "required": ["x", "y"],
+      "additionalProperties": false,
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" }
+      }
+    },
     "size": {
       "type": "object",
       "required": [ "width", "height" ],
@@ -79,6 +182,16 @@
         "id": { "type": "string", "minLength": 1 },
         "label": { "type": "string", "minLength": 1 },
         "type": { "type": "string" },
+        "tier": { "type": "string", "description": "Lane/tier the node belongs to (e.g., External, Edge, Services, Data)." },
+        "ports": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "inSide": { "type": "string", "enum": ["auto", "left", "right", "top", "bottom"], "default": "auto" },
+            "outSide": { "type": "string", "enum": ["auto", "left", "right", "top", "bottom"], "default": "auto" }
+          },
+          "description": "Hints for which side connectors should enter/exit (M3 stub)."
+        },
         "groupId": { "type": "string" },
         "size": { "$ref": "#/$defs/size" },
         "style": { "$ref": "#/$defs/style" },
@@ -96,7 +209,13 @@
         "label": { "type": "string" },
         "directed": { "type": "boolean" },
         "style": { "$ref": "#/$defs/style" },
-        "metadata": { "$ref": "#/$defs/metadata" }
+        "metadata": { "$ref": "#/$defs/metadata" },
+        "waypoints": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/point" },
+          "description": "Optional explicit polyline waypoints (M3 stub)."
+        },
+        "priority": { "type": "number", "description": "Routing hint to break ties; higher routes first (M3 stub)." }
       }
     }
   }

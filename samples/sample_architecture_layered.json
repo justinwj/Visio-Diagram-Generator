@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "1.2",
+  "diagramType": "ServiceArchitecture",
+  "layout": {
+    "orientation": "horizontal",
+    "tiers": ["External", "Edge", "Services", "Data", "Observability"],
+    "spacing": { "horizontal": 1.2, "vertical": 0.6 },
+    "page": { "widthIn": 11, "heightIn": 8.5, "marginIn": 0.75 },
+    "diagnostics": { "pageHeightThresholdIn": 11.0, "laneMaxNodes": 12 }
+  },
+  "metadata": {
+    "title": "Layered Architecture – Sample",
+    "version": "0.1",
+    "author": "Sample",
+    "createdUtc": "2025-10-01T00:00:00Z"
+  },
+  "nodes": [
+    { "id": "Client", "label": "Client", "tier": "External", "style": {"fill": "#D6F5E5"} },
+    { "id": "Gateway", "label": "API Gateway", "tier": "Edge", "style": {"fill": "#E8F1FF"} },
+    { "id": "Auth", "label": "Auth Service", "tier": "Services", "style": {"fill": "#E8F1FF"} },
+    { "id": "UserSvc", "label": "User Service", "tier": "Services", "style": {"fill": "#E8F1FF"} },
+    { "id": "DB", "label": "User DB", "tier": "Data", "style": {"fill": "#FFF4E5"} },
+    { "id": "Observability", "label": "Log & Metrics", "tier": "Observability", "style": {"fill": "#F6F6FF"} }
+  ],
+  "edges": [
+    { "sourceId": "Client", "targetId": "Gateway", "directed": true },
+    { "sourceId": "Gateway", "targetId": "Auth", "directed": true },
+    { "sourceId": "Gateway", "targetId": "UserSvc", "directed": true },
+    { "sourceId": "UserSvc", "targetId": "DB", "directed": true },
+    { "sourceId": "UserSvc", "targetId": "Observability", "label": "events", "directed": true }
+  ]
+}

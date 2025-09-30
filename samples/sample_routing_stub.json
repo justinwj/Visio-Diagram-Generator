@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "1.2",
+  "diagramType": "ServiceArchitecture",
+  "layout": {
+    "orientation": "horizontal",
+    "tiers": ["External", "Edge", "Services", "Data"],
+    "spacing": { "horizontal": 1.2, "vertical": 0.6 },
+    "page": { "widthIn": 11, "heightIn": 8.5, "marginIn": 0.75 },
+    "routing": {
+      "mode": "orthogonal",
+      "bundleBy": "lane",
+      "bundleSeparationIn": 0.1,
+      "channels": { "gapIn": 0.4 },
+      "routeAroundContainers": true
+    }
+  },
+  "metadata": {
+    "title": "Routing/Ports Stub Demo",
+    "version": "0.1",
+    "author": "Sample"
+  },
+  "nodes": [
+    { "id": "Client",   "label": "Client",       "tier": "External", "style": {"fill": "#D6F5E5"},
+      "ports": { "outSide": "right" } },
+    { "id": "Gateway",  "label": "API Gateway",   "tier": "Edge",      "style": {"fill": "#E8F1FF"},
+      "ports": { "inSide": "left", "outSide": "right" } },
+    { "id": "UserSvc",  "label": "User Service",  "tier": "Services",  "style": {"fill": "#E8F1FF"},
+      "ports": { "inSide": "left", "outSide": "right" } },
+    { "id": "DB",       "label": "User DB",       "tier": "Data",      "style": {"fill": "#FFF4E5"},
+      "ports": { "inSide": "left" } }
+  ],
+  "edges": [
+    { "sourceId": "Client",  "targetId": "Gateway", "priority": 5,
+      "waypoints": [ {"x": 0.0, "y": 0.0} ] },
+    { "sourceId": "Gateway", "targetId": "UserSvc",  "priority": 5 },
+    { "sourceId": "UserSvc", "targetId": "DB",       "priority": 5,
+      "metadata": { "protocol": "SQL" } }
+  ]
+}
+

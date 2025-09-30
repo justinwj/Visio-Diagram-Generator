@@ -12,6 +12,7 @@ namespace VDG.Core.Models
         public string Id { get; }
         public string Label { get; set; }
         public string? Type { get; set; }
+        public string? Tier { get; set; }
         public string? GroupId { get; set; }
         public ShapeStyle Style { get; set; }
         public Size? Size { get; set; }

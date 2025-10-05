@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "1.2",
+  "diagramType": "ServiceArchitecture",
+  "metadata": { "title": "M3 Cross-Lane Stagger Stress", "author": "VDG" },
+  "layout": {
+    "tiers": ["External", "Services", "Data"],
+    "routing": {
+      "mode": "orthogonal",
+      "channels": { "gapIn": 0.6 },
+      "bundleSeparationIn": 0.12
+    },
+    "spacing": { "horizontal": 1.2, "vertical": 0.6 },
+    "page": { "widthIn": 11, "heightIn": 8.5, "marginIn": 0.75, "paginate": true }
+  },
+  "nodes": [
+    { "id": "C1", "label": "Client 1", "tier": "External" },
+    { "id": "C2", "label": "Client 2", "tier": "External" },
+    { "id": "C3", "label": "Client 3", "tier": "External" },
+    { "id": "C4", "label": "Client 4", "tier": "External" },
+    { "id": "C5", "label": "Client 5", "tier": "External" },
+    { "id": "C6", "label": "Client 6", "tier": "External" },
+    { "id": "C7", "label": "Client 7", "tier": "External" },
+    { "id": "C8", "label": "Client 8", "tier": "External" },
+
+    { "id": "SvcA", "label": "Service A", "tier": "Services" },
+    { "id": "SvcB", "label": "Service B", "tier": "Services" },
+    { "id": "SvcC", "label": "Service C", "tier": "Services" },
+    { "id": "SvcD", "label": "Service D", "tier": "Services" },
+
+    { "id": "DB1", "label": "DB 1", "tier": "Data" },
+    { "id": "DB2", "label": "DB 2", "tier": "Data" },
+    { "id": "DB3", "label": "DB 3", "tier": "Data" },
+    { "id": "DB4", "label": "DB 4", "tier": "Data" }
+  ],
+  "edges": [
+    { "sourceId": "C1", "targetId": "SvcA" },
+    { "sourceId": "C2", "targetId": "SvcA" },
+    { "sourceId": "C3", "targetId": "SvcA" },
+    { "sourceId": "C4", "targetId": "SvcA" },
+    { "sourceId": "C5", "targetId": "SvcA" },
+    { "sourceId": "C6", "targetId": "SvcA" },
+    { "sourceId": "C7", "targetId": "SvcA" },
+    { "sourceId": "C8", "targetId": "SvcA" },
+
+    { "sourceId": "C1", "targetId": "DB1" },
+    { "sourceId": "C2", "targetId": "DB1" },
+    { "sourceId": "C3", "targetId": "DB1" },
+    { "sourceId": "C4", "targetId": "DB1" },
+    { "sourceId": "C5", "targetId": "DB1" },
+    { "sourceId": "C6", "targetId": "DB1" },
+    { "sourceId": "C7", "targetId": "DB1" },
+    { "sourceId": "C8", "targetId": "DB1" },
+
+    { "sourceId": "SvcA", "targetId": "DB2" },
+    { "sourceId": "SvcB", "targetId": "DB2" },
+    { "sourceId": "SvcC", "targetId": "DB2" },
+    { "sourceId": "SvcD", "targetId": "DB2" },
+    { "sourceId": "SvcA", "targetId": "DB3" },
+    { "sourceId": "SvcB", "targetId": "DB3" },
+    { "sourceId": "SvcC", "targetId": "DB3" },
+    { "sourceId": "SvcD", "targetId": "DB3" }
+  ]
+}
+

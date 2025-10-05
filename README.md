@@ -92,8 +92,14 @@ A minimal 1.2 envelope with lanes looks like this:
 - Additional document metadata and `diagramType` field.
 - Backward compatible with 1.0/1.1 inputs.
 
-Schema stubs for upcoming M3
-- `layout.routing` (mode, bundling, channels, routeAroundContainers) and `node.ports` (inSide/outSide) are present in the schema as hints for connector routing improvements. They are parsed but not yet acted upon by the engine; defaults maintain current behavior.
+Milestone 3 routing (alpha)
+- `layout.routing` (mode, bundling, channels, routeAroundContainers) and `node.ports` (inSide/outSide) are now parsed by the CLI.
+- Default routing mode is `orthogonal` using Visio Dynamic Connectors; set `--route-mode straight` to revert to straight lines.
+- Additional flags: `--bundle-by`, `--bundle-sep`, `--channel-gap`, `--route-around` are accepted and stored for future bundling/channel algorithms.
+- `edge.waypoints` and `edge.priority` are parsed and stored for future use.
+- Testing note: set `VDG_SKIP_RUNNER=1` to skip the Visio automation in `VDG.CLI` during tests/CI. The CLI will still parse input, emit diagnostics, and create a stub output file.
+ - Labels: polylines (corridors/waypoints) use detached label boxes placed near the longest segment. Tune with `edge.metadata["edge.label.offsetIn"]` (inches).
+ - Diagnostics: now include baseline crossings, planned route crossings, average path length, channel utilization, edges-with-waypoints count, and a bundle-separation effectiveness warning for tiny shapes.
 
 Notes and Future Integration
 - The layout model (nodes/edges + layout hints) is renderer-agnostic. While M1–M2 target Visio via COM, the same model can be exported to other formats (e.g., SVG, PPTX, PDF) in future milestones.
@@ -101,7 +107,20 @@ Notes and Future Integration
 ## Testing and Validation
 - Run unit tests: `dotnet test --configuration Release`
 - Rebuild after edits: `dotnet build -c Release`
+- To test the CLI without Visio COM automation, set `VDG_SKIP_RUNNER=1`.
 - For CLI smoke tests, re-run the command in the quick start section using your scenario-specific JSON.
+
+## Samples
+- Corridor-aware routing sample: `samples/m3_dense_sample.json`
+- Cross‑lane stagger stress sample: `samples/m3_crosslane_stress.json`
+ - Tiny-shapes bundle-separation warning: `samples/m3_tiny_bundle_warning.json`
+- Generate (skip Visio):
+  - PowerShell: `$env:VDG_SKIP_RUNNER=1; dotnet run --project src/VDG.CLI -- samples/m3_dense_sample.json out/m3_dense_sample.vsdx`
+  - cmd.exe: `set VDG_SKIP_RUNNER=1 && dotnet run --project src\VDG.CLI -- samples\m3_dense_sample.json out\m3_dense_sample.vsdx`
+  - PowerShell: `$env:VDG_SKIP_RUNNER=1; dotnet run --project src/VDG.CLI -- samples/m3_crosslane_stress.json out/m3_crosslane_stress.vsdx`
+  - cmd.exe: `set VDG_SKIP_RUNNER=1 && dotnet run --project src\VDG.CLI -- samples\m3_crosslane_stress.json out\m3_crosslane_stress.vsdx`
+  - PowerShell: `$env:VDG_SKIP_RUNNER=1; dotnet run --project src/VDG.CLI -- samples/m3_tiny_bundle_warning.json out/m3_tiny_bundle_warning.vsdx`
+  - cmd.exe: `set VDG_SKIP_RUNNER=1 && dotnet run --project src\VDG.CLI -- samples\m3_tiny_bundle_warning.json out\m3_tiny_bundle_warning.vsdx`
 
 ## Troubleshooting
 - Visio automation errors (`RPC_E_DISCONNECTED`, `Visio automation error`, etc.): ensure Visio is installed, not already busy with modal dialogs, and that the CLI is executed from an STA-aware host (PowerShell works). The CLI automatically sets `[STAThread]` but recording macros or add-ins that lock the UI can still break automation.

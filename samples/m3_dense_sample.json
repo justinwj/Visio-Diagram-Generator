@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "1.2",
+  "diagramType": "ServiceArchitecture",
+  "metadata": { "title": "M3 Dense Corridor Sample", "author": "VDG" },
+  "layout": {
+    "tiers": ["External", "Edge", "Services", "Data"],
+    "routing": {
+      "mode": "orthogonal",
+      "channels": { "gapIn": 0.5 },
+      "bundleSeparationIn": 0.12
+    },
+    "spacing": { "horizontal": 1.2, "vertical": 0.6 },
+    "page": { "widthIn": 11, "heightIn": 8.5, "marginIn": 0.75, "paginate": true }
+  },
+  "nodes": [
+    { "id": "ClientA", "label": "Client A", "tier": "External" },
+    { "id": "ClientB", "label": "Client B", "tier": "External" },
+    { "id": "Gateway", "label": "API Gateway", "tier": "Edge" },
+    { "id": "Auth", "label": "Auth", "tier": "Services" },
+    { "id": "UserSvc", "label": "Users", "tier": "Services" },
+    { "id": "OrderSvc", "label": "Orders", "tier": "Services" },
+    { "id": "InvSvc", "label": "Inventory", "tier": "Services" },
+    { "id": "UserDB", "label": "User DB", "tier": "Data" },
+    { "id": "OrderDB", "label": "Order DB", "tier": "Data" },
+    { "id": "InvDB", "label": "Inventory DB", "tier": "Data" }
+  ],
+  "edges": [
+    { "sourceId": "ClientA", "targetId": "Gateway" },
+    { "sourceId": "ClientB", "targetId": "Gateway" },
+    { "sourceId": "Gateway", "targetId": "Auth" },
+    { "sourceId": "Gateway", "targetId": "UserSvc" },
+    { "sourceId": "Gateway", "targetId": "OrderSvc" },
+    { "sourceId": "Gateway", "targetId": "InvSvc" },
+    { "sourceId": "Auth", "targetId": "UserSvc" },
+    { "sourceId": "UserSvc", "targetId": "UserDB" },
+    { "sourceId": "OrderSvc", "targetId": "OrderDB" },
+    { "sourceId": "InvSvc", "targetId": "InvDB" },
+    { "sourceId": "UserSvc", "targetId": "OrderSvc" },
+    { "sourceId": "OrderSvc", "targetId": "InvSvc" },
+    { "sourceId": "UserSvc", "targetId": "UserDB" },
+    { "sourceId": "OrderSvc", "targetId": "OrderDB" },
+    { "sourceId": "InvSvc", "targetId": "InvDB" }
+  ]
+}
+

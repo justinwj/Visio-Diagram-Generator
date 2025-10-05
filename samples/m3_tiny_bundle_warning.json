@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "1.2",
+  "diagramType": "ServiceArchitecture",
+  "metadata": { "title": "M3 Tiny Shapes Bundle Warning", "author": "VDG" },
+  "layout": {
+    "tiers": ["External", "Services"],
+    "routing": {
+      "mode": "orthogonal",
+      "channels": { "gapIn": 0.4 },
+      "bundleSeparationIn": 0.30
+    },
+    "spacing": { "horizontal": 1.2, "vertical": 0.6 },
+    "page": { "widthIn": 11, "heightIn": 8.5, "marginIn": 0.75, "paginate": false }
+  },
+  "nodes": [
+    { "id": "A1", "label": "A1", "tier": "External", "size": { "width": 1.4, "height": 0.20 } },
+    { "id": "A2", "label": "A2", "tier": "External", "size": { "width": 1.4, "height": 0.20 } },
+    { "id": "B1", "label": "B1", "tier": "Services", "size": { "width": 1.4, "height": 0.20 } },
+    { "id": "B2", "label": "B2", "tier": "Services", "size": { "width": 1.4, "height": 0.20 } }
+  ],
+  "edges": [
+    { "sourceId": "A1", "targetId": "B1" },
+    { "sourceId": "A2", "targetId": "B2" },
+    { "sourceId": "A1", "targetId": "B1" }
+  ]
+}
+

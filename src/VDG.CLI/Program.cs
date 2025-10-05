@@ -59,6 +59,13 @@ namespace VDG.CLI
                 double? pageMarginOverride = null;
                 bool? paginateOverride = null;
 
+                // M3 routing CLI overrides
+                string? routeModeOverride = null;             // orthogonal|straight
+                string? bundleByOverride = null;              // lane|group|nodepair|none
+                double? bundleSepOverride = null;             // inches
+                double? channelGapOverride = null;            // inches
+                bool? routeAroundOverride = null;             // true|false
+
                 int index = 0;
                 while (index < args.Length && args[index].StartsWith("-"))
                 {
@@ -137,6 +144,45 @@ namespace VDG.CLI
                         if (!bool.TryParse(args[index + 1], out var b)) { throw new UsageException("--paginate must be true or false."); }
                         paginateOverride = b; index += 2; continue;
                     }
+                    else if (string.Equals(flag, "--route-mode", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (index + 1 >= args.Length) { throw new UsageException("--route-mode requires orthogonal|straight."); }
+                        var v = args[index + 1];
+                        if (!string.Equals(v, "orthogonal", StringComparison.OrdinalIgnoreCase) &&
+                            !string.Equals(v, "straight", StringComparison.OrdinalIgnoreCase))
+                        {
+                            throw new UsageException("--route-mode must be orthogonal or straight.");
+                        }
+                        routeModeOverride = v; index += 2; continue;
+                    }
+                    else if (string.Equals(flag, "--bundle-by", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (index + 1 >= args.Length) { throw new UsageException("--bundle-by requires lane|group|nodepair|none."); }
+                        var v = args[index + 1];
+                        if (!(new[] { "lane", "group", "nodepair", "none" }).Any(x => string.Equals(x, v, StringComparison.OrdinalIgnoreCase)))
+                        { throw new UsageException("--bundle-by must be lane|group|nodepair|none."); }
+                        bundleByOverride = v; index += 2; continue;
+                    }
+                    else if (string.Equals(flag, "--bundle-sep", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (index + 1 >= args.Length) { throw new UsageException("--bundle-sep requires inches value."); }
+                        if (!double.TryParse(args[index + 1], NumberStyles.Float, CultureInfo.InvariantCulture, out var v))
+                        { throw new UsageException("--bundle-sep must be a number (inches)."); }
+                        bundleSepOverride = v; index += 2; continue;
+                    }
+                    else if (string.Equals(flag, "--channel-gap", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (index + 1 >= args.Length) { throw new UsageException("--channel-gap requires inches value."); }
+                        if (!double.TryParse(args[index + 1], NumberStyles.Float, CultureInfo.InvariantCulture, out var v))
+                        { throw new UsageException("--channel-gap must be a number (inches)."); }
+                        channelGapOverride = v; index += 2; continue;
+                    }
+                    else if (string.Equals(flag, "--route-around", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (index + 1 >= args.Length) { throw new UsageException("--route-around requires true|false."); }
+                        if (!bool.TryParse(args[index + 1], out var b)) { throw new UsageException("--route-around must be true or false."); }
+                        routeAroundOverride = b; index += 2; continue;
+                    }
                     else
                     {
                         break;
@@ -159,15 +205,35 @@ namespace VDG.CLI
                 if (pageHeightOverride.HasValue) model.Metadata["layout.page.heightIn"] = pageHeightOverride.Value.ToString(CultureInfo.InvariantCulture);
                 if (pageMarginOverride.HasValue) model.Metadata["layout.page.marginIn"] = pageMarginOverride.Value.ToString(CultureInfo.InvariantCulture);
                 if (paginateOverride.HasValue) model.Metadata["layout.page.paginate"] = paginateOverride.Value.ToString();
+                if (!string.IsNullOrWhiteSpace(routeModeOverride)) model.Metadata["layout.routing.mode"] = routeModeOverride!;
+                if (!string.IsNullOrWhiteSpace(bundleByOverride)) model.Metadata["layout.routing.bundleBy"] = bundleByOverride!;
+                if (bundleSepOverride.HasValue) model.Metadata["layout.routing.bundleSeparationIn"] = bundleSepOverride.Value.ToString(CultureInfo.InvariantCulture);
+                if (channelGapOverride.HasValue) model.Metadata["layout.routing.channels.gapIn"] = channelGapOverride.Value.ToString(CultureInfo.InvariantCulture);
+                if (routeAroundOverride.HasValue) model.Metadata["layout.routing.routeAroundContainers"] = routeAroundOverride.Value.ToString();
                 var layout = LayoutEngine.compute(model);
                 EmitDiagnostics(model, layout, diagHeightOverride, diagLaneMaxOverride);
 
-                EnsureDirectory(outputPath);
-                RunVisio(model, layout, outputPath);
-                DeleteErrorLog(outputPath);
+                // Allow tests/CI to skip Visio automation and still succeed
+                var skipRunnerEnv = Environment.GetEnvironmentVariable("VDG_SKIP_RUNNER");
+                var skipRunner = !string.IsNullOrEmpty(skipRunnerEnv) &&
+                                 (skipRunnerEnv.Equals("1", StringComparison.OrdinalIgnoreCase) || skipRunnerEnv.Equals("true", StringComparison.OrdinalIgnoreCase));
 
-                Console.WriteLine($"Saved diagram: {outputPath}");
-                return ExitCodes.Ok;
+                if (skipRunner)
+                {
+                    EnsureDirectory(outputPath);
+                    File.WriteAllText(outputPath, "Runner skipped (VDG_SKIP_RUNNER)");
+                    Console.WriteLine("info: skipping Visio runner due to VDG_SKIP_RUNNER");
+                    return ExitCodes.Ok;
+                }
+                else
+                {
+                    EnsureDirectory(outputPath);
+                    RunVisio(model, layout, outputPath);
+                    DeleteErrorLog(outputPath);
+
+                    Console.WriteLine($"Saved diagram: {outputPath}");
+                    return ExitCodes.Ok;
+                }
             }
             catch (UsageException uex)
             {
@@ -220,6 +286,12 @@ namespace VDG.CLI
             Console.Error.WriteLine("  --page-height <in>      Page height (inches)");
             Console.Error.WriteLine("  --page-margin <in>      Page margin (inches)");
             Console.Error.WriteLine("  --paginate <bool>       Enable pagination (future use)");
+            // M3 routing options
+            Console.Error.WriteLine("  --route-mode <orthogonal|straight>  Preferred connector style (M3)");
+            Console.Error.WriteLine("  --bundle-by <lane|group|nodepair|none> Group edges for bundling (M3)");
+            Console.Error.WriteLine("  --bundle-sep <in>       Gap between bundled edges (M3)");
+            Console.Error.WriteLine("  --channel-gap <in>      Reserved corridor gap between lanes (M3)");
+            Console.Error.WriteLine("  --route-around <true|false> Route around lane containers (M3)");
             Console.Error.WriteLine("  -h, --help              Show this help");
         }
 
@@ -291,6 +363,19 @@ namespace VDG.CLI
                 ApplyStyle(node.Style, nodeDto.Style);
                 ApplyMetadata(node.Metadata, nodeDto.Metadata);
 
+                // M3: map ports hints into node metadata for downstream algorithms
+                if (nodeDto.Ports != null)
+                {
+                    if (!string.IsNullOrWhiteSpace(nodeDto.Ports.InSide))
+                    {
+                        node.Metadata["node.ports.inSide"] = nodeDto.Ports.InSide!;
+                    }
+                    if (!string.IsNullOrWhiteSpace(nodeDto.Ports.OutSide))
+                    {
+                        node.Metadata["node.ports.outSide"] = nodeDto.Ports.OutSide!;
+                    }
+                }
+
                 nodes.Add(node);
             }
 
@@ -317,6 +402,28 @@ namespace VDG.CLI
 
                     ApplyStyle(edge.Style, edgeDto.Style);
                     ApplyMetadata(edge.Metadata, edgeDto.Metadata);
+
+                    // M3: map waypoints/priority into metadata for routing layer
+                    if (edgeDto.Priority.HasValue)
+                    {
+                        edge.Metadata["edge.priority"] = edgeDto.Priority.Value.ToString(CultureInfo.InvariantCulture);
+                    }
+                    if (edgeDto.Waypoints != null && edgeDto.Waypoints.Count > 0)
+                    {
+                        try
+                        {
+                            var wps = edgeDto.Waypoints
+                                .Where(p => p != null && p.X.HasValue && p.Y.HasValue)
+                                .Select(p => new { x = p.X!.Value, y = p.Y!.Value })
+                                .ToList();
+                            if (wps.Count > 0)
+                            {
+                                var jsonWps = JsonSerializer.Serialize(wps, JsonOptions);
+                                edge.Metadata["edge.waypoints"] = jsonWps;
+                            }
+                        }
+                        catch { /* ignore bad waypoint data */ }
+                    }
 
                     edges.Add(edge);
                 }
@@ -432,6 +539,21 @@ namespace VDG.CLI
                     if (dto.Layout.Page.Paginate.HasValue)
                         model.Metadata["layout.page.paginate"] = dto.Layout.Page.Paginate.Value.ToString();
                 }
+
+                // M3: layout.routing mapping to metadata for downstream routing engine
+                if (dto.Layout.Routing != null)
+                {
+                    if (!string.IsNullOrWhiteSpace(dto.Layout.Routing.Mode))
+                        model.Metadata["layout.routing.mode"] = dto.Layout.Routing.Mode!.Trim();
+                    if (!string.IsNullOrWhiteSpace(dto.Layout.Routing.BundleBy))
+                        model.Metadata["layout.routing.bundleBy"] = dto.Layout.Routing.BundleBy!.Trim();
+                    if (dto.Layout.Routing.BundleSeparationIn.HasValue)
+                        model.Metadata["layout.routing.bundleSeparationIn"] = dto.Layout.Routing.BundleSeparationIn.Value.ToString(CultureInfo.InvariantCulture);
+                    if (dto.Layout.Routing.Channels != null && dto.Layout.Routing.Channels.GapIn.HasValue)
+                        model.Metadata["layout.routing.channels.gapIn"] = dto.Layout.Routing.Channels.GapIn.Value.ToString(CultureInfo.InvariantCulture);
+                    if (dto.Layout.Routing.RouteAroundContainers.HasValue)
+                        model.Metadata["layout.routing.routeAroundContainers"] = dto.Layout.Routing.RouteAroundContainers.Value.ToString();
+                }
             }
 
             return model;
@@ -536,6 +658,11 @@ namespace VDG.CLI
             }
             if (!enabled) return;
 
+            // M3: minimal routing diagnostics
+            var routeMode = (model.Metadata.TryGetValue("layout.routing.mode", out var rm) && !string.IsNullOrWhiteSpace(rm)) ? rm.Trim() : "orthogonal";
+            Console.WriteLine($"info: routing mode: {routeMode}");
+            Console.WriteLine($"info: connector count: {model.Edges.Count}");
+
             double pageThreshold = 11.0;
             if (pageHeightOverride.HasValue) pageThreshold = pageHeightOverride.Value;
             else if (model.Metadata.TryGetValue("layout.diagnostics.pageHeightThresholdIn", out var ph) &&
@@ -637,6 +764,277 @@ namespace VDG.CLI
                     }
                 }
             }
+
+            // M3 diagnostics: bundle planning and straight-line crossing estimate
+            try
+            {
+                var bundleBy = model.Metadata.TryGetValue("layout.routing.bundleBy", out var bb) ? (bb ?? "none").Trim() : "none";
+                var nodeById = model.Nodes.ToDictionary(n => n.Id, n => n, StringComparer.OrdinalIgnoreCase);
+
+                // Build centers from layout (node center points)
+                var layoutMap = layout.Nodes.ToDictionary(n => n.Id, n => n, StringComparer.OrdinalIgnoreCase);
+                (double x, double y) GetCenter(string id)
+                {
+                    if (!layoutMap.TryGetValue(id, out var nl)) return (0, 0);
+                    var w = (nl.Size.HasValue && nl.Size.Value.Width > 0) ? nl.Size.Value.Width : (float)DefaultNodeWidth;
+                    var h = (nl.Size.HasValue && nl.Size.Value.Height > 0) ? nl.Size.Value.Height : (float)DefaultNodeHeight;
+                    return (nl.Position.X + (w / 2.0), nl.Position.Y + (h / 2.0));
+                }
+
+                // Bundling groups
+                var groups = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+                string GetTierForNode(VDG.Core.Models.Node n)
+                {
+                    var t = !string.IsNullOrWhiteSpace(n.Tier) ? n.Tier! : (n.Metadata.TryGetValue("tier", out var tv) ? tv : tiers.First());
+                    if (!tiersSet.Contains(t)) t = tiers.First();
+                    return t;
+                }
+
+                foreach (var e in model.Edges)
+                {
+                    string key = "none";
+                    if (string.Equals(bundleBy, "lane", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (!nodeById.TryGetValue(e.SourceId, out var sn) || !nodeById.TryGetValue(e.TargetId, out var tn)) continue;
+                        key = $"{GetTierForNode(sn)}->{GetTierForNode(tn)}";
+                    }
+                    else if (string.Equals(bundleBy, "group", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (!nodeById.TryGetValue(e.SourceId, out var sn) || !nodeById.TryGetValue(e.TargetId, out var tn)) continue;
+                        var sg = string.IsNullOrWhiteSpace(sn.GroupId) ? "~" : sn.GroupId!;
+                        var tg = string.IsNullOrWhiteSpace(tn.GroupId) ? "~" : tn.GroupId!;
+                        key = $"{sg}->{tg}";
+                    }
+                    else if (string.Equals(bundleBy, "nodepair", StringComparison.OrdinalIgnoreCase) || string.Equals(bundleBy, "nodePair", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var a = e.SourceId; var b = e.TargetId;
+                        var k1 = string.Compare(a, b, StringComparison.OrdinalIgnoreCase) <= 0 ? a : b;
+                        var k2 = string.Compare(a, b, StringComparison.OrdinalIgnoreCase) <= 0 ? b : a;
+                        key = $"{k1}<->{k2}";
+                    }
+                    else
+                    {
+                        continue;
+                    }
+
+                    groups[key] = groups.TryGetValue(key, out var c) ? c + 1 : 1;
+                }
+
+                if (groups.Count > 0)
+                {
+                    var maxBundle = groups.Values.Count == 0 ? 0 : groups.Values.Max();
+                    Console.WriteLine($"info: bundles planned: {groups.Count} groups; max bundle size: {maxBundle}");
+                }
+
+                // Channels (vertical corridors) positions between tiers
+                if (model.Metadata.TryGetValue("layout.routing.channels.gapIn", out var gapRaw) && double.TryParse(gapRaw, NumberStyles.Float, CultureInfo.InvariantCulture, out var gapIn))
+                {
+                    var tierRanges = new List<(string tier, double left, double right)>();
+                    foreach (var t in tiers)
+                    {
+                        var xs = new List<double>();
+                        var xe = new List<double>();
+                        foreach (var nl in layout.Nodes)
+                        {
+                            if (!nodeById.TryGetValue(nl.Id, out var node)) continue;
+                            var tn = GetTierForNode(node);
+                            if (!string.Equals(tn, t, StringComparison.OrdinalIgnoreCase)) continue;
+                            var w = (nl.Size.HasValue && nl.Size.Value.Width > 0) ? nl.Size.Value.Width : (float)DefaultNodeWidth;
+                            xs.Add(nl.Position.X);
+                            xe.Add(nl.Position.X + w);
+                        }
+                        if (xs.Count > 0)
+                        {
+                            tierRanges.Add((t, xs.Min(), xe.Max()));
+                        }
+                    }
+                    var mids = new List<double>();
+                    for (int i = 0; i + 1 < tierRanges.Count; i++)
+                    {
+                        mids.Add((tierRanges[i].right + tierRanges[i + 1].left) / 2.0);
+                    }
+                    if (mids.Count > 0)
+                    {
+                        var midsStr = string.Join(", ", mids.Select(v => v.ToString("F2", CultureInfo.InvariantCulture)));
+                        Console.WriteLine($"info: channels gapIn={gapIn:F2}in; vertical corridors at X≈ {midsStr}");
+                    }
+                }
+
+                // Straight-line crossing estimate (baseline)
+                int crossings = 0;
+                for (int i = 0; i < model.Edges.Count; i++)
+                {
+                    var e1 = model.Edges[i];
+                    var a1 = GetCenter(e1.SourceId); var b1 = GetCenter(e1.TargetId);
+                    for (int j = i + 1; j < model.Edges.Count; j++)
+                    {
+                        var e2 = model.Edges[j];
+                        if (e1.SourceId.Equals(e2.SourceId, StringComparison.OrdinalIgnoreCase) ||
+                            e1.SourceId.Equals(e2.TargetId, StringComparison.OrdinalIgnoreCase) ||
+                            e1.TargetId.Equals(e2.SourceId, StringComparison.OrdinalIgnoreCase) ||
+                            e1.TargetId.Equals(e2.TargetId, StringComparison.OrdinalIgnoreCase))
+                        {
+                            continue; // share endpoint
+                        }
+                        var a2 = GetCenter(e2.SourceId); var b2 = GetCenter(e2.TargetId);
+                        if (SegmentsIntersect(a1.x, a1.y, b1.x, b1.y, a2.x, a2.y, b2.x, b2.y)) crossings++;
+                    }
+                }
+                Console.WriteLine($"info: estimated straight-line crossings: {crossings}");
+
+                // Corridor staggering potential
+                if (model.Metadata.TryGetValue("layout.routing.channels.gapIn", out var cgap) && double.TryParse(cgap, NumberStyles.Float, CultureInfo.InvariantCulture, out var cgv) && cgv > 0)
+                {
+                    // Count lane-pair groups with more than one edge
+                    var laneBundles = BuildBundleIndex(model, "lane");
+                    var multi = laneBundles.GroupBy(k => k.Value)
+                                           .Select(g => new { size = g.Key.size, count = g.Count() })
+                                           .Where(x => x.size > 1)
+                                           .Sum(x => x.count);
+                    if (multi > 0)
+                        Console.WriteLine($"info: corridor staggering applied where available (lane bundles with >1 edges: {multi}).");
+
+                    // After-routing plan estimate (layout-based)
+                    int afterCross = 0; double totalLen = 0; int util = 0; int crossLane = 0; int missingCorridor = 0;
+                    var tiers2 = GetOrderedTiers(model);
+                    var nlMap = layout.Nodes.ToDictionary(n => n.Id, n => n, StringComparer.OrdinalIgnoreCase);
+                    (double x, double y) AttachFromLayout(NodeLayout nl, string side)
+                    {
+                        var w = nl.Size.HasValue && nl.Size.Value.Width > 0 ? nl.Size.Value.Width : (float)DefaultNodeWidth;
+                        var h = nl.Size.HasValue && nl.Size.Value.Height > 0 ? nl.Size.Value.Height : (float)DefaultNodeHeight;
+                        if (side.Equals("left", StringComparison.OrdinalIgnoreCase)) return (nl.Position.X, nl.Position.Y + h / 2.0);
+                        if (side.Equals("right", StringComparison.OrdinalIgnoreCase)) return (nl.Position.X + w, nl.Position.Y + h / 2.0);
+                        if (side.Equals("top", StringComparison.OrdinalIgnoreCase)) return (nl.Position.X + w / 2.0, nl.Position.Y + h);
+                        if (side.Equals("bottom", StringComparison.OrdinalIgnoreCase)) return (nl.Position.X + w / 2.0, nl.Position.Y);
+                        return (nl.Position.X + w / 2.0, nl.Position.Y + h / 2.0);
+                    }
+                    List<(double x, double y)> PathFor(Edge e)
+                    {
+                        if (!nlMap.TryGetValue(e.SourceId, out var snl) || !nlMap.TryGetValue(e.TargetId, out var tnl)) return new List<(double, double)>();
+                        // waypoints precedence (layout coords assumed)
+                        if (TryGetWaypointsFromMetadata(e, out var wps))
+                        {
+                            var a = AttachFromLayout(snl, "right"); var b = AttachFromLayout(tnl, "left");
+                            var pts = new List<(double, double)> { a };
+                            pts.AddRange(wps);
+                            pts.Add(b);
+                            return pts;
+                        }
+                        string GetTier(Node n)
+                        {
+                            var t = !string.IsNullOrWhiteSpace(n.Tier) ? n.Tier! : (n.Metadata.TryGetValue("tier", out var tv) ? tv : tiers2.First());
+                            return t;
+                        }
+                        var srcN = nodeById[e.SourceId]; var dstN = nodeById[e.TargetId];
+                        var si = Array.IndexOf(tiers2, GetTier(srcN));
+                        var ti = Array.IndexOf(tiers2, GetTier(dstN));
+                        var sourceSide = "right"; var targetSide = "left";
+                        if (si == ti)
+                        {
+                            var scx = snl.Position.X + ((snl.Size.HasValue ? snl.Size.Value.Width : (float)DefaultNodeWidth) / 2.0);
+                            var tcx = tnl.Position.X + ((tnl.Size.HasValue ? tnl.Size.Value.Width : (float)DefaultNodeWidth) / 2.0);
+                            if (scx > tcx) { sourceSide = "left"; targetSide = "right"; }
+                        }
+                        var a2 = AttachFromLayout(snl, sourceSide);
+                        var b2 = AttachFromLayout(tnl, targetSide);
+                        var pts2 = new List<(double, double)> { a2 };
+                        if (si != ti)
+                        {
+                            crossLane++;
+                            var cx2 = CorridorXForEdgeFromLayout(model, layout, e.SourceId, e.TargetId);
+                            if (cx2.HasValue)
+                            {
+                                util++;
+                                pts2.Add((cx2.Value, a2.y));
+                                pts2.Add((cx2.Value, b2.y));
+                            }
+                            else { missingCorridor++; }
+                        }
+                        pts2.Add(b2);
+                        return pts2;
+                    }
+
+                    var planned = model.Edges.Select(PathFor).ToArray();
+                    for (int i = 0; i < planned.Length; i++)
+                    {
+                        var pi = planned[i]; if (pi.Count < 2) continue;
+                        for (int k = 0; k + 1 < pi.Count; k++)
+                        {
+                            var dxi = pi[k + 1].x - pi[k].x; var dyi = pi[k + 1].y - pi[k].y; totalLen += Math.Sqrt(dxi * dxi + dyi * dyi);
+                        }
+                        for (int j = i + 1; j < planned.Length; j++)
+                        {
+                            var pj = planned[j]; if (pj.Count < 2) continue;
+                            for (int k = 0; k + 1 < pi.Count; k++)
+                                for (int m = 0; m + 1 < pj.Count; m++)
+                                    if (SegmentsIntersect(pi[k].x, pi[k].y, pi[k + 1].x, pi[k + 1].y, pj[m].x, pj[m].y, pj[m + 1].x, pj[m + 1].y)) { afterCross++; goto nextPair2; }
+                        nextPair2: ;
+                        }
+                    }
+                    Console.WriteLine($"info: planned route crossings: {afterCross}; avg path length: {(model.Edges.Count > 0 ? totalLen / model.Edges.Count : 0):F2}in");
+                    if (crossLane > 0)
+                        Console.WriteLine($"info: channel utilization: {util}/{crossLane} cross-lane edges ({(100.0 * util / crossLane):F1}%)");
+                    if (missingCorridor > 0)
+                        Console.WriteLine($"warning: {missingCorridor} cross-lane edge(s) had no corridor available; check lane spans or channel gap settings.");
+                }
+                // Waypoints count
+                var wpCount = model.Edges.Count(e => e.Metadata != null && e.Metadata.ContainsKey("edge.waypoints"));
+                if (wpCount > 0) Console.WriteLine($"info: edges with explicit waypoints: {wpCount}");
+            }
+            catch { /* diagnostics are best-effort */ }
+
+            // Bundle separation effectiveness warning (best-effort)
+            try
+            {
+                if (model.Metadata.TryGetValue("layout.routing.bundleSeparationIn", out var sepRaw) &&
+                    double.TryParse(sepRaw, NumberStyles.Float, CultureInfo.InvariantCulture, out var sepIn) && sepIn > 0)
+                {
+                    var nodeHeights = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+                    foreach (var nl in layout.Nodes)
+                    {
+                        var h = (nl.Size.HasValue && nl.Size.Value.Height > 0) ? nl.Size.Value.Height : (float)DefaultNodeHeight;
+                        nodeHeights[nl.Id] = h;
+                    }
+                    int impacted = 0;
+                    foreach (var e in model.Edges)
+                    {
+                        if (nodeHeights.TryGetValue(e.SourceId, out var hs) && hs < (sepIn * 2.0)) impacted++;
+                        if (nodeHeights.TryGetValue(e.TargetId, out var ht) && ht < (sepIn * 2.0)) impacted++;
+                    }
+                    if (impacted > 0)
+                    {
+                        Console.WriteLine($"warning: bundle separation {sepIn:F2}in may be ineffective for {impacted} end(s) due to small node height; consider reducing layout.routing.bundleSeparationIn or increasing node heights.");
+                    }
+                }
+            }
+            catch { }
+        }
+
+        private static double Orientation(double ax, double ay, double bx, double by, double cx, double cy)
+        {
+            return (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
+        }
+
+        private static bool OnSegment(double ax, double ay, double bx, double by, double px, double py)
+        {
+            return Math.Min(ax, bx) <= px && px <= Math.Max(ax, bx) && Math.Min(ay, by) <= py && py <= Math.Max(ay, by);
+        }
+
+        private static bool SegmentsIntersect(double a1x, double a1y, double a2x, double a2y, double b1x, double b1y, double b2x, double b2y)
+        {
+            var o1 = Orientation(a1x, a1y, a2x, a2y, b1x, b1y);
+            var o2 = Orientation(a1x, a1y, a2x, a2y, b2x, b2y);
+            var o3 = Orientation(b1x, b1y, b2x, b2y, a1x, a1y);
+            var o4 = Orientation(b1x, b1y, b2x, b2y, a2x, a2y);
+
+            if ((o1 > 0 && o2 < 0 || o1 < 0 && o2 > 0) && (o3 > 0 && o4 < 0 || o3 < 0 && o4 > 0)) return true;
+
+            // Colinear special cases
+            if (Math.Abs(o1) < 1e-6 && OnSegment(a1x, a1y, a2x, a2y, b1x, b1y)) return true;
+            if (Math.Abs(o2) < 1e-6 && OnSegment(a1x, a1y, a2x, a2y, b2x, b2y)) return true;
+            if (Math.Abs(o3) < 1e-6 && OnSegment(b1x, b1y, b2x, b2y, a1x, a1y)) return true;
+            if (Math.Abs(o4) < 1e-6 && OnSegment(b1x, b1y, b2x, b2y, a2x, a2y)) return true;
+            return false;
         }
 
         private static string[] GetOrderedTiers(DiagramModel model)
@@ -650,6 +1048,268 @@ namespace VDG.CLI
             }
 
             return new[] { "External", "Edge", "Services", "Data", "Observability" };
+        }
+
+        private static Dictionary<string, (int index, int size)> BuildBundleIndex(DiagramModel model, string bundleBy)
+        {
+            var result = new Dictionary<string, (int, int)>(StringComparer.OrdinalIgnoreCase);
+            if (string.IsNullOrWhiteSpace(bundleBy) || string.Equals(bundleBy, "none", StringComparison.OrdinalIgnoreCase))
+            {
+                return result;
+            }
+
+            var groups = new Dictionary<string, List<(string edgeId, string src, string dst)>>(StringComparer.OrdinalIgnoreCase);
+            var tiers = GetOrderedTiers(model);
+            var tiersSet = new HashSet<string>(tiers, StringComparer.OrdinalIgnoreCase);
+            var nodeMap = model.Nodes.ToDictionary(n => n.Id, n => n, StringComparer.OrdinalIgnoreCase);
+
+            string GetTier(VDG.Core.Models.Node n)
+            {
+                var t = !string.IsNullOrWhiteSpace(n.Tier) ? n.Tier! : (n.Metadata.TryGetValue("tier", out var tv) ? tv : tiers.First());
+                return tiersSet.Contains(t) ? t : tiers.First();
+            }
+
+            foreach (var e in model.Edges)
+            {
+                string? key = null;
+                if (string.Equals(bundleBy, "lane", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!nodeMap.TryGetValue(e.SourceId, out var sn) || !nodeMap.TryGetValue(e.TargetId, out var tn)) continue;
+                    key = $"{GetTier(sn)}->{GetTier(tn)}";
+                }
+                else if (string.Equals(bundleBy, "group", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!nodeMap.TryGetValue(e.SourceId, out var sn) || !nodeMap.TryGetValue(e.TargetId, out var tn)) continue;
+                    var sg = string.IsNullOrWhiteSpace(sn.GroupId) ? "~" : sn.GroupId!;
+                    var tg = string.IsNullOrWhiteSpace(tn.GroupId) ? "~" : tn.GroupId!;
+                    key = $"{sg}->{tg}";
+                }
+                else if (string.Equals(bundleBy, "nodepair", StringComparison.OrdinalIgnoreCase) || string.Equals(bundleBy, "nodePair", StringComparison.OrdinalIgnoreCase))
+                {
+                    var a = e.SourceId; var b = e.TargetId;
+                    var k1 = string.Compare(a, b, StringComparison.OrdinalIgnoreCase) <= 0 ? a : b;
+                    var k2 = string.Compare(a, b, StringComparison.OrdinalIgnoreCase) <= 0 ? b : a;
+                    key = $"{k1}<->{k2}";
+                }
+
+                if (string.IsNullOrWhiteSpace(key)) continue;
+                if (!groups.TryGetValue(key!, out var list)) { list = new List<(string, string, string)>(); groups[key!] = list; }
+                list.Add((e.Id, e.SourceId, e.TargetId));
+            }
+
+            foreach (var kv in groups)
+            {
+                var list = kv.Value;
+                list.Sort((x, y) =>
+                {
+                    var c1 = string.Compare(x.src, y.src, StringComparison.OrdinalIgnoreCase);
+                    if (c1 != 0) return c1;
+                    var c2 = string.Compare(x.dst, y.dst, StringComparison.OrdinalIgnoreCase);
+                    if (c2 != 0) return c2;
+                    return string.Compare(x.edgeId, y.edgeId, StringComparison.OrdinalIgnoreCase);
+                });
+                for (int i = 0; i < list.Count; i++)
+                {
+                    result[list[i].edgeId] = (i, list.Count);
+                }
+            }
+
+            return result;
+        }
+
+        private static double Clamp01(double value, double min, double max)
+        {
+            if (value < min) return min;
+            if (value > max) return max;
+            return value;
+        }
+
+        private static (double xr, double yr) ApplyBundleOffsetRel(string side, (double xr, double yr) rel, NodePlacement shape, (int index, int size) info, double sepIn)
+        {
+            if (info.size <= 1 || sepIn <= 0) return rel;
+            var centerIndex = (info.size - 1) / 2.0;
+            var delta = (info.index - centerIndex) * sepIn;
+            if (side.Equals("left", StringComparison.OrdinalIgnoreCase) || side.Equals("right", StringComparison.OrdinalIgnoreCase))
+            {
+                var frac = shape.Height > 0 ? delta / shape.Height : 0.0;
+                var y = Clamp01(rel.yr + frac, 0.1, 0.9);
+                return (rel.xr, y);
+            }
+            else if (side.Equals("top", StringComparison.OrdinalIgnoreCase) || side.Equals("bottom", StringComparison.OrdinalIgnoreCase))
+            {
+                var frac = shape.Width > 0 ? delta / shape.Width : 0.0;
+                var x = Clamp01(rel.xr + frac, 0.1, 0.9);
+                return (x, rel.yr);
+            }
+            return rel;
+        }
+
+        private static List<double> ComputeCorridorMidXs(DiagramModel model, IDictionary<string, NodePlacement> placements)
+        {
+            var tiers = GetOrderedTiers(model);
+            var tiersSet = new HashSet<string>(tiers, StringComparer.OrdinalIgnoreCase);
+            var nodeMap = model.Nodes.ToDictionary(n => n.Id, n => n, StringComparer.OrdinalIgnoreCase);
+
+            var spans = new List<(bool has, double left, double right)>(tiers.Length);
+            foreach (var t in tiers) spans.Add((false, double.MaxValue, double.MinValue));
+
+            foreach (var kv in placements)
+            {
+                if (!nodeMap.TryGetValue(kv.Key, out var node)) continue;
+                var tier = !string.IsNullOrWhiteSpace(node.Tier) ? node.Tier! : (node.Metadata.TryGetValue("tier", out var tv) ? tv : tiers.First());
+                if (!tiersSet.Contains(tier)) tier = tiers.First();
+                var idx = Array.IndexOf(tiers, tier);
+                var np = kv.Value;
+                var left = np.Left;
+                var right = np.Left + np.Width;
+                var s = spans[idx];
+                s.has = true; s.left = Math.Min(s.left, left); s.right = Math.Max(s.right, right);
+                spans[idx] = s;
+            }
+
+            var mids = new List<double>();
+            for (int i = 0; i + 1 < spans.Count; i++)
+            {
+                var a = spans[i]; var b = spans[i + 1];
+                if (a.has && b.has)
+                {
+                    mids.Add((a.right + b.left) / 2.0);
+                }
+            }
+            return mids;
+        }
+
+        private static List<double> ComputeCorridorMidXsFromLayout(DiagramModel model, LayoutResult layout)
+        {
+            var tiers = GetOrderedTiers(model);
+            var tiersSet = new HashSet<string>(tiers, StringComparer.OrdinalIgnoreCase);
+            var spans = new List<(bool has, double left, double right)>(tiers.Length);
+            for (int i = 0; i < tiers.Length; i++) spans.Add((false, double.MaxValue, double.MinValue));
+
+            foreach (var nl in layout.Nodes)
+            {
+                var node = model.Nodes.FirstOrDefault(n => string.Equals(n.Id, nl.Id, StringComparison.OrdinalIgnoreCase));
+                if (node == null) continue;
+                var t = !string.IsNullOrWhiteSpace(node.Tier) ? node.Tier! : (node.Metadata.TryGetValue("tier", out var tv) ? tv : tiers.First());
+                if (!tiersSet.Contains(t)) t = tiers.First();
+                var idx = Array.IndexOf(tiers, t);
+                var left = nl.Position.X;
+                var right = nl.Position.X + (nl.Size.HasValue && nl.Size.Value.Width > 0 ? nl.Size.Value.Width : (float)DefaultNodeWidth);
+                var s = spans[idx];
+                s.has = true; s.left = Math.Min(s.left, left); s.right = Math.Max(s.right, right);
+                spans[idx] = s;
+            }
+
+            var mids = new List<double>();
+            for (int i = 0; i + 1 < spans.Count; i++)
+            {
+                var a = spans[i]; var b = spans[i + 1];
+                if (a.has && b.has) mids.Add((a.right + b.left) / 2.0);
+            }
+            return mids;
+        }
+
+        private static (double x, double y) ToAbsAttach(NodePlacement shape, string side, double xr, double yr)
+        {
+            if (side.Equals("left", StringComparison.OrdinalIgnoreCase))
+                return (shape.Left, shape.Bottom + yr * shape.Height);
+            if (side.Equals("right", StringComparison.OrdinalIgnoreCase))
+                return (shape.Left + shape.Width, shape.Bottom + yr * shape.Height);
+            if (side.Equals("top", StringComparison.OrdinalIgnoreCase))
+                return (shape.Left + xr * shape.Width, shape.Bottom + shape.Height);
+            if (side.Equals("bottom", StringComparison.OrdinalIgnoreCase))
+                return (shape.Left + xr * shape.Width, shape.Bottom);
+            return (shape.Left + xr * shape.Width, shape.Bottom + yr * shape.Height);
+        }
+
+        private static double? CorridorXForEdge(DiagramModel model, IDictionary<string, NodePlacement> placements, string srcId, string dstId)
+        {
+            var tiers = GetOrderedTiers(model);
+            var nodeMap = model.Nodes.ToDictionary(n => n.Id, n => n, StringComparer.OrdinalIgnoreCase);
+            if (!nodeMap.TryGetValue(srcId, out var s) || !nodeMap.TryGetValue(dstId, out var t)) return null;
+            string GetTier(VDG.Core.Models.Node n)
+            {
+                var tr = !string.IsNullOrWhiteSpace(n.Tier) ? n.Tier! : (n.Metadata.TryGetValue("tier", out var tv) ? tv : tiers.First());
+                return tiers.Contains(tr) ? tr : tiers.First();
+            }
+            var si = Array.IndexOf(tiers, GetTier(s));
+            var ti = Array.IndexOf(tiers, GetTier(t));
+            if (si == ti) return null;
+            var mids = ComputeCorridorMidXs(model, placements);
+            if (mids.Count == 0) return null;
+            var a = Math.Min(si, ti);
+            var b = Math.Max(si, ti);
+            // Average of mids between lanes [a..b)
+            double sum = 0; int c = 0;
+            for (int i = a; i < b && i < mids.Count; i++) { sum += mids[i]; c++; }
+            return c > 0 ? sum / c : (double?)null;
+        }
+
+        private static double? CorridorXForEdgeFromLayout(DiagramModel model, LayoutResult layout, string srcId, string dstId)
+        {
+            var tiers = GetOrderedTiers(model);
+            var nodeMap = model.Nodes.ToDictionary(n => n.Id, n => n, StringComparer.OrdinalIgnoreCase);
+            if (!nodeMap.TryGetValue(srcId, out var s) || !nodeMap.TryGetValue(dstId, out var t)) return null;
+            string GetTier(VDG.Core.Models.Node n)
+            {
+                var tr = !string.IsNullOrWhiteSpace(n.Tier) ? n.Tier! : (n.Metadata.TryGetValue("tier", out var tv) ? tv : tiers.First());
+                return tiers.Contains(tr) ? tr : tiers.First();
+            }
+            var si = Array.IndexOf(tiers, GetTier(s));
+            var ti = Array.IndexOf(tiers, GetTier(t));
+            if (si == ti) return null;
+            var mids = ComputeCorridorMidXsFromLayout(model, layout);
+            if (mids.Count == 0) return null;
+            var a = Math.Min(si, ti);
+            var b = Math.Max(si, ti);
+            double sum = 0; int c = 0;
+            for (int i = a; i < b && i < mids.Count; i++) { sum += mids[i]; c++; }
+            return c > 0 ? sum / c : (double?)null;
+        }
+
+        private static bool TryGetWaypointsFromMetadata(Edge edge, out List<(double x, double y)> points)
+        {
+            points = new List<(double x, double y)>();
+            if (edge.Metadata == null) return false;
+            if (!edge.Metadata.TryGetValue("edge.waypoints", out var json) || string.IsNullOrWhiteSpace(json)) return false;
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                if (doc.RootElement.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var el in doc.RootElement.EnumerateArray())
+                    {
+                        if (el.TryGetProperty("x", out var xEl) && el.TryGetProperty("y", out var yEl))
+                        {
+                            var x = xEl.GetDouble(); var y = yEl.GetDouble();
+                            points.Add((x, y));
+                        }
+                    }
+                    return points.Count > 0;
+                }
+            }
+            catch { }
+            return false;
+        }
+
+        private static void DrawLabelBox(dynamic page, string text, double midX, double midY, double offX, double offY)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return;
+            var width = Math.Max(0.6, Math.Min(3.0, text.Length * 0.09));
+            var height = 0.25;
+            var left = midX + offX - (width / 2.0);
+            var bottom = midY + offY - (height / 2.0);
+            try
+            {
+                dynamic box = page.DrawRectangle(left, bottom, left + width, bottom + height);
+                box.Text = text;
+                TrySetFormula(box, "LinePattern", "1");
+                TrySetFormula(box, "LineColor", "RGB(200,200,200)");
+                TrySetFormula(box, "FillForegnd", "RGB(255,255,255)");
+                try { box.BringToFront(); } catch { }
+                ReleaseCom(box);
+            }
+            catch { }
         }
 
         private static (double minLeft, double minBottom, double maxRight, double maxTop) ComputeLayoutBounds(LayoutResult layout)
@@ -972,6 +1632,30 @@ namespace VDG.CLI
         private static void DrawConnectors(DiagramModel model, IDictionary<string, NodePlacement> placements, dynamic page)
         {
             dynamic visioPage = page ?? throw new COMException("Visio page was not created.");
+            var routeMode = (model.Metadata.TryGetValue("layout.routing.mode", out var rm) && !string.IsNullOrWhiteSpace(rm)) ? rm.Trim() : "orthogonal";
+            var useOrthogonal = !string.Equals(routeMode, "straight", StringComparison.OrdinalIgnoreCase);
+            var tiers = GetOrderedTiers(model);
+            var tiersSet = new HashSet<string>(tiers, StringComparer.OrdinalIgnoreCase);
+            var nodeMap = model.Nodes.ToDictionary(n => n.Id, n => n, StringComparer.OrdinalIgnoreCase);
+            var bundleByRaw = model.Metadata.TryGetValue("layout.routing.bundleBy", out var bb) ? (bb ?? "none").Trim() : "none";
+            double bundleSepIn = 0.12;
+            if (model.Metadata.TryGetValue("layout.routing.bundleSeparationIn", out var bsep) && double.TryParse(bsep, NumberStyles.Float, CultureInfo.InvariantCulture, out var bsv) && bsv >= 0) bundleSepIn = bsv;
+            var channelGapIn = (model.Metadata.TryGetValue("layout.routing.channels.gapIn", out var cgap) && double.TryParse(cgap, NumberStyles.Float, CultureInfo.InvariantCulture, out var cg)) ? cg : 0.0;
+            var effectiveBundleBy = (string.Equals(bundleByRaw, "none", StringComparison.OrdinalIgnoreCase) && channelGapIn > 0.0) ? "lane" : bundleByRaw;
+            var bundles = BuildBundleIndex(model, effectiveBundleBy);
+            string GetTier(VDG.Core.Models.Node n)
+            {
+                var t = !string.IsNullOrWhiteSpace(n.Tier) ? n.Tier! : (n.Metadata.TryGetValue("tier", out var tv) ? tv : tiers.First());
+                return tiersSet.Contains(t) ? t : tiers.First();
+            }
+            (double xr, double yr) SideToRel(string side) => side.ToLowerInvariant() switch
+            {
+                "left" => (0.0, 0.5),
+                "right" => (1.0, 0.5),
+                "top" => (0.5, 1.0),
+                "bottom" => (0.5, 0.0),
+                _ => (0.5, 0.5)
+            };
             foreach (var edge in model.Edges)
             {
                 if (!placements.TryGetValue(edge.SourceId, out var source) ||
@@ -980,24 +1664,145 @@ namespace VDG.CLI
                     continue;
                 }
 
-                dynamic line = visioPage.DrawLine(source.CenterX, source.CenterY, target.CenterX, target.CenterY);
-
-                if (!string.IsNullOrWhiteSpace(edge.Label))
+                if (useOrthogonal)
                 {
-                    line.Text = edge.Label;
-                }
+                    dynamic connector = null;
+                    try
+                    {
+                        var app = visioPage.Application;
+                        connector = visioPage.Drop(app.ConnectorToolDataObject, source.CenterX, source.CenterY);
+                        // Corridor-aware: choose side based on relative tier positions
+                        string srcSide = "right";
+                        string dstSide = "left";
+                        if (nodeMap.TryGetValue(edge.SourceId, out var srcNode) && nodeMap.TryGetValue(edge.TargetId, out var dstNode))
+                        {
+                            var sTier = Array.IndexOf(tiers, GetTier(srcNode));
+                            var tTier = Array.IndexOf(tiers, GetTier(dstNode));
+                            if (sTier == tTier)
+                            {
+                                // Same lane: choose by X ordering
+                                if (source.CenterX <= target.CenterX) { srcSide = "right"; dstSide = "left"; }
+                                else { srcSide = "left"; dstSide = "right"; }
+                            }
+                            else if (sTier < tTier) { srcSide = "right"; dstSide = "left"; }
+                            else { srcSide = "left"; dstSide = "right"; }
+                        }
 
-                if (edge.Directed)
-                {
-                    TrySetFormula(line, "EndArrow", "5");
+                        var (sxr, syr) = SideToRel(srcSide);
+                        var (dxr, dyr) = SideToRel(dstSide);
+                        if (bundles.TryGetValue(edge.Id, out var binfo))
+                        {
+                            (sxr, syr) = ApplyBundleOffsetRel(srcSide, (sxr, syr), source, binfo, bundleSepIn);
+                            (dxr, dyr) = ApplyBundleOffsetRel(dstSide, (dxr, dyr), target, binfo, bundleSepIn);
+                        }
+                        bool usedPolyline = false;
+                        // Resolve channels gap once to avoid scope issues and unassigned locals
+                        double channelsGapValue = 0.0; string? channelsGapStr;
+                        var hasKey = model.Metadata.TryGetValue("layout.routing.channels.gapIn", out channelsGapStr);
+                        if (hasKey && !string.IsNullOrWhiteSpace(channelsGapStr)) double.TryParse(channelsGapStr, NumberStyles.Float, CultureInfo.InvariantCulture, out channelsGapValue);
+                        var hasChannels = channelsGapValue > 0.0;
+                        var cx = hasChannels ? CorridorXForEdge(model, placements, edge.SourceId, edge.TargetId) : null;
+
+                        // Waypoints override: draw polyline honoring explicit waypoints
+                        if (!usedPolyline && TryGetWaypointsFromMetadata(edge, out var wps))
+                        {
+                            var (sx, sy) = ToAbsAttach(source, srcSide, sxr, syr);
+                            var (tx, ty) = ToAbsAttach(target, dstSide, dxr, dyr);
+                            var pts = new List<double>(2 + (wps.Count * 2) + 2) { sx, sy };
+                            foreach (var p in wps) { pts.Add(p.x); pts.Add(p.y); }
+                            pts.Add(tx); pts.Add(ty);
+                            try
+                            {
+                                dynamic pl = visioPage.DrawPolyline(pts.ToArray(), 0);
+                                if (!string.IsNullOrWhiteSpace(edge.Label))
+                                {
+                                    // label box near midpoint of longest segment
+                                    var arr = pts.ToArray();
+                                    double maxLen = -1; double mx = sx, my = sy; int segs = (arr.Length / 2) - 1;
+                                    for (int i = 0; i < segs; i++)
+                                    {
+                                        var x1 = arr[i * 2]; var y1 = arr[i * 2 + 1]; var x2 = arr[(i + 1) * 2]; var y2 = arr[(i + 1) * 2 + 1];
+                                        var len = Math.Sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+                                        if (len > maxLen) { maxLen = len; mx = (x1 + x2) / 2.0; my = (y1 + y2) / 2.0; }
+                                    }
+                                    var off = 0.15; if (edge.Metadata != null && edge.Metadata.TryGetValue("edge.label.offsetIn", out var offRaw)) { double.TryParse(offRaw, NumberStyles.Float, CultureInfo.InvariantCulture, out off); }
+                                    DrawLabelBox(visioPage, edge.Label!, mx, my, 0.0, off);
+                                }
+                                if (edge.Directed) TrySetFormula(pl, "EndArrow", "5"); else TrySetFormula(pl, "EndArrow", "0");
+                                ApplyEdgeStyle(edge, pl);
+                                try { pl.SendToBack(); } catch { }
+                                ReleaseCom(pl);
+                                usedPolyline = true;
+                            }
+                            catch { usedPolyline = false; }
+                        }
+                        if (!usedPolyline && cx.HasValue)
+                        {
+                            var (sx, sy) = ToAbsAttach(source, srcSide, sxr, syr);
+                            var (tx, ty) = ToAbsAttach(target, dstSide, dxr, dyr);
+                            // Stagger vertical corridor by lane bundle index to reduce overlaps
+                            var corridorX = cx.Value;
+                            var laneBundles = BuildBundleIndex(model, "lane");
+                            if (laneBundles.TryGetValue(edge.Id, out var cinfo) && channelsGapValue > 0)
+                            {
+                                var center = (cinfo.size - 1) / 2.0;
+                                var delta = (cinfo.index - center) * Math.Min(channelsGapValue * 0.4, 0.4);
+                                corridorX += delta;
+                            }
+                            try
+                            {
+                                var arr = new double[] { sx, sy, corridorX, sy, corridorX, ty, tx, ty };
+                                dynamic pl = visioPage.DrawPolyline(arr, 0);
+                                if (!string.IsNullOrWhiteSpace(edge.Label))
+                                {
+                                    // Place detached label near middle segment
+                                    var mx = (arr[2] + arr[4]) / 2.0; var my = (arr[3] + arr[5]) / 2.0;
+                                    var off = 0.15; if (edge.Metadata != null && edge.Metadata.TryGetValue("edge.label.offsetIn", out var offRaw)) { double.TryParse(offRaw, NumberStyles.Float, CultureInfo.InvariantCulture, out off); }
+                                    DrawLabelBox(visioPage, edge.Label!, mx, my, 0.0, off);
+                                }
+                                if (edge.Directed) TrySetFormula(pl, "EndArrow", "5"); else TrySetFormula(pl, "EndArrow", "0");
+                                ApplyEdgeStyle(edge, pl);
+                                try { pl.SendToBack(); } catch { }
+                                ReleaseCom(pl);
+                                usedPolyline = true;
+                            }
+                            catch { usedPolyline = false; }
+                        }
+                        if (!usedPolyline)
+                        {
+                            connector = visioPage.Drop(app.ConnectorToolDataObject, source.CenterX, source.CenterY);
+                            // Prefer GlueToPos if available; fall back to PinX
+                            try { connector.CellsU["BeginX"].GlueToPos(((dynamic)source.Shape), sxr, syr); }
+                            catch { connector.CellsU["BeginX"].GlueTo(((dynamic)source.Shape).CellsU["PinX"]); }
+                            try { connector.CellsU["EndX"].GlueToPos(((dynamic)target.Shape), dxr, dyr); }
+                            catch { connector.CellsU["EndX"].GlueTo(((dynamic)target.Shape).CellsU["PinX"]); }
+
+                            if (!string.IsNullOrWhiteSpace(edge.Label))
+                            {
+                                connector.Text = edge.Label;
+                            }
+
+                            if (edge.Directed) TrySetFormula(connector, "EndArrow", "5"); else TrySetFormula(connector, "EndArrow", "0");
+                            // Prefer right-angle routing
+                            TrySetFormula(connector, "Routestyle", "16");
+                            try { TrySetFormula(connector, "LineRouteExt", "2"); } catch { }
+                            ApplyEdgeStyle(edge, connector);
+                            try { connector.SendToBack(); } catch { }
+                        }
+                    }
+                    finally
+                    {
+                        if (connector != null) ReleaseCom(connector);
+                    }
                 }
                 else
                 {
-                    TrySetFormula(line, "EndArrow", "0");
+                    dynamic line = visioPage.DrawLine(source.CenterX, source.CenterY, target.CenterX, target.CenterY);
+                    if (!string.IsNullOrWhiteSpace(edge.Label)) line.Text = edge.Label;
+                    if (edge.Directed) TrySetFormula(line, "EndArrow", "5"); else TrySetFormula(line, "EndArrow", "0");
+                    ApplyEdgeStyle(edge, line);
+                    ReleaseCom(line);
                 }
-
-                ApplyEdgeStyle(edge, line);
-                ReleaseCom(line);
             }
         }
 
@@ -1252,6 +2057,9 @@ namespace VDG.CLI
 
             [JsonPropertyName("page")]
             public PageDto? Page { get; set; }
+
+            [JsonPropertyName("routing")]
+            public RoutingDto? Routing { get; set; }
         }
 
         private sealed class DiagnosticsDto
@@ -1290,6 +2098,31 @@ namespace VDG.CLI
             public bool? Paginate { get; set; }
         }
 
+        // M3 routing DTOs
+        private sealed class RoutingDto
+        {
+            [JsonPropertyName("mode")]
+            public string? Mode { get; set; } // orthogonal|straight
+
+            [JsonPropertyName("bundleBy")]
+            public string? BundleBy { get; set; } // lane|group|nodePair|none
+
+            [JsonPropertyName("bundleSeparationIn")]
+            public double? BundleSeparationIn { get; set; }
+
+            [JsonPropertyName("channels")]
+            public ChannelsDto? Channels { get; set; }
+
+            [JsonPropertyName("routeAroundContainers")]
+            public bool? RouteAroundContainers { get; set; }
+        }
+
+        private sealed class ChannelsDto
+        {
+            [JsonPropertyName("gapIn")]
+            public double? GapIn { get; set; }
+        }
+
         private sealed class NodeDto
         {
             [JsonPropertyName("id")]
@@ -1315,6 +2148,19 @@ namespace VDG.CLI
 
             [JsonPropertyName("metadata")]
             public Dictionary<string, string>? Metadata { get; set; }
+
+            // M3: optional ports hints
+            [JsonPropertyName("ports")]
+            public PortsDto? Ports { get; set; }
+        }
+
+        private sealed class PortsDto
+        {
+            [JsonPropertyName("inSide")]
+            public string? InSide { get; set; }
+
+            [JsonPropertyName("outSide")]
+            public string? OutSide { get; set; }
         }
 
         private sealed class EdgeDto
@@ -1339,6 +2185,22 @@ namespace VDG.CLI
 
             [JsonPropertyName("metadata")]
             public Dictionary<string, string>? Metadata { get; set; }
+
+            // M3: optional routing hints
+            [JsonPropertyName("waypoints")]
+            public List<PointDto>? Waypoints { get; set; }
+
+            [JsonPropertyName("priority")]
+            public double? Priority { get; set; }
+        }
+
+        private sealed class PointDto
+        {
+            [JsonPropertyName("x")]
+            public double? X { get; set; }
+
+            [JsonPropertyName("y")]
+            public double? Y { get; set; }
         }
 
         private sealed class SizeDto
@@ -1548,6 +2410,17 @@ namespace VDG.CLI
             var title = GetTitleHeight(model);
             var pageHeight = GetPageHeight(model) ?? 0.0;
             var usable = pageHeight > 0 ? pageHeight - (2 * margin) - title : double.PositiveInfinity;
+            var routeMode = (model.Metadata.TryGetValue("layout.routing.mode", out var rm) && !string.IsNullOrWhiteSpace(rm)) ? rm.Trim() : "orthogonal";
+            var useOrthogonal = !string.Equals(routeMode, "straight", StringComparison.OrdinalIgnoreCase);
+            var tiers = GetOrderedTiers(model);
+            var tiersSet = new HashSet<string>(tiers, StringComparer.OrdinalIgnoreCase);
+            var nodeMap = model.Nodes.ToDictionary(n => n.Id, n => n, StringComparer.OrdinalIgnoreCase);
+            var bundleByRaw = model.Metadata.TryGetValue("layout.routing.bundleBy", out var bb) ? (bb ?? "none").Trim() : "none";
+            double bundleSepIn = 0.12;
+            if (model.Metadata.TryGetValue("layout.routing.bundleSeparationIn", out var bsep) && double.TryParse(bsep, NumberStyles.Float, CultureInfo.InvariantCulture, out var bsv) && bsv >= 0) bundleSepIn = bsv;
+            var channelGapIn = (model.Metadata.TryGetValue("layout.routing.channels.gapIn", out var cgap) && double.TryParse(cgap, NumberStyles.Float, CultureInfo.InvariantCulture, out var cg)) ? cg : 0.0;
+            var effectiveBundleBy = (string.Equals(bundleByRaw, "none", StringComparison.OrdinalIgnoreCase) && channelGapIn > 0.0) ? "lane" : bundleByRaw;
+            var bundles = BuildBundleIndex(model, effectiveBundleBy);
             for (int pi = 0; pi < pageCount; pi++)
             {
                 foreach (var edge in model.Edges)
@@ -1569,10 +2442,134 @@ namespace VDG.CLI
 
                     if (hasSrc && hasDst)
                     {
-                        dynamic line = page.DrawLine(src.CenterX, src.CenterY, dst.CenterX, dst.CenterY);
-                        if (!string.IsNullOrWhiteSpace(edge.Label)) line.Text = edge.Label;
-                        if (edge.Directed) TrySetFormula(line, "EndArrow", "5"); else TrySetFormula(line, "EndArrow", "0");
-                        ApplyEdgeStyle(edge, line); ReleaseCom(line);
+                        if (useOrthogonal)
+                        {
+                            dynamic connector = null;
+                            try
+                            {
+                                var app = page.Application;
+                                connector = page.Drop(app.ConnectorToolDataObject, src.CenterX, src.CenterY);
+                                // Corridor-aware: choose side based on relative tier positions (same logic as single-page)
+                                string GetTier2(VDG.Core.Models.Node n)
+                                {
+                                    var t = !string.IsNullOrWhiteSpace(n.Tier) ? n.Tier! : (n.Metadata.TryGetValue("tier", out var tv) ? tv : tiers.First());
+                                    return tiersSet.Contains(t) ? t : tiers.First();
+                                }
+                                string srcSide = "right";
+                                string dstSide = "left";
+                                if (nodeMap.TryGetValue(edge.SourceId, out var srcNode) && nodeMap.TryGetValue(edge.TargetId, out var dstNode))
+                                {
+                                    var sTier = Array.IndexOf(tiers, GetTier2(srcNode));
+                                    var tTier = Array.IndexOf(tiers, GetTier2(dstNode));
+                                    if (sTier == tTier)
+                                    {
+                                        if (src.CenterX <= dst.CenterX) { srcSide = "right"; dstSide = "left"; }
+                                        else { srcSide = "left"; dstSide = "right"; }
+                                    }
+                                    else if (sTier < tTier) { srcSide = "right"; dstSide = "left"; }
+                                    else { srcSide = "left"; dstSide = "right"; }
+                                }
+                                (double xr, double yr) SideToRel2(string side) => side.ToLowerInvariant() switch
+                                {
+                                    "left" => (0.0, 0.5),
+                                    "right" => (1.0, 0.5),
+                                    "top" => (0.5, 1.0),
+                                    "bottom" => (0.5, 0.0),
+                                    _ => (0.5, 0.5)
+                                };
+                                var (sxr, syr) = SideToRel2(srcSide);
+                                var (dxr, dyr) = SideToRel2(dstSide);
+                                if (bundles.TryGetValue(edge.Id, out var binfo))
+                                {
+                                    (sxr, syr) = ApplyBundleOffsetRel(srcSide, (sxr, syr), src, binfo, bundleSepIn);
+                                    (dxr, dyr) = ApplyBundleOffsetRel(dstSide, (dxr, dyr), dst, binfo, bundleSepIn);
+                                }
+                                bool usedPolyline = false;
+                                double channelsGapValue = 0.0; string? channelsGapStr;
+                                var hasKey = model.Metadata.TryGetValue("layout.routing.channels.gapIn", out channelsGapStr);
+                                if (hasKey && !string.IsNullOrWhiteSpace(channelsGapStr)) double.TryParse(channelsGapStr, NumberStyles.Float, CultureInfo.InvariantCulture, out channelsGapValue);
+                                var hasChannels = channelsGapValue > 0.0;
+                                var cx = hasChannels ? CorridorXForEdge(model, placementsOnPage, edge.SourceId, edge.TargetId) : null;
+                                // Waypoints override first
+                                if (!usedPolyline && TryGetWaypointsFromMetadata(edge, out var wps))
+                                {
+                                    var (sx, sy) = ToAbsAttach(src, srcSide, sxr, syr);
+                                    var (tx, ty) = ToAbsAttach(dst, dstSide, dxr, dyr);
+                                    var pts = new List<double>(2 + (wps.Count * 2) + 2) { sx, sy };
+                                    foreach (var p in wps) { pts.Add(p.x); pts.Add(p.y); }
+                                    pts.Add(tx); pts.Add(ty);
+                                    try
+                                    {
+                                        dynamic pl = page.DrawPolyline(pts.ToArray(), 0);
+                                        if (!string.IsNullOrWhiteSpace(edge.Label))
+                                        {
+                                            var arr = pts.ToArray();
+                                            double maxLen = -1; double mx = sx, my = sy; int segs = (arr.Length / 2) - 1;
+                                            for (int i = 0; i < segs; i++)
+                                            {
+                                                var x1 = arr[i * 2]; var y1 = arr[i * 2 + 1]; var x2 = arr[(i + 1) * 2]; var y2 = arr[(i + 1) * 2 + 1];
+                                                var len = Math.Sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+                                                if (len > maxLen) { maxLen = len; mx = (x1 + x2) / 2.0; my = (y1 + y2) / 2.0; }
+                                            }
+                                            var off = 0.15; if (edge.Metadata != null && edge.Metadata.TryGetValue("edge.label.offsetIn", out var offRaw)) { double.TryParse(offRaw, NumberStyles.Float, CultureInfo.InvariantCulture, out off); } DrawLabelBox(page, edge.Label!, mx, my, 0.0, off);
+                                        }
+                                        if (edge.Directed) TrySetFormula(pl, "EndArrow", "5"); else TrySetFormula(pl, "EndArrow", "0");
+                                        ApplyEdgeStyle(edge, pl); try { pl.SendToBack(); } catch { }
+                                        ReleaseCom(pl); usedPolyline = true;
+                                    }
+                                    catch { usedPolyline = false; }
+                                }
+                                if (!usedPolyline && cx.HasValue)
+                                {
+                                    var (sx, sy) = ToAbsAttach(src, srcSide, sxr, syr);
+                                    var (tx, ty) = ToAbsAttach(dst, dstSide, dxr, dyr);
+                                    // Stagger vertical corridor by lane bundle index to reduce overlaps (paged)
+                                    var corridorX = cx.Value;
+                                    var laneBundles = BuildBundleIndex(model, "lane");
+                                    if (laneBundles.TryGetValue(edge.Id, out var cinfo) && channelsGapValue > 0)
+                                    {
+                                        var center = (cinfo.size - 1) / 2.0;
+                                        var delta = (cinfo.index - center) * Math.Min(channelsGapValue * 0.4, 0.4);
+                                        corridorX += delta;
+                                    }
+                                    try
+                                    {
+                                        var arr = new double[] { sx, sy, corridorX, sy, corridorX, ty, tx, ty };
+                                        dynamic pl = page.DrawPolyline(arr, 0);
+                                        if (!string.IsNullOrWhiteSpace(edge.Label))
+                                        {
+                                            var mx = (arr[2] + arr[4]) / 2.0; var my = (arr[3] + arr[5]) / 2.0;
+                                            var off = 0.15; if (edge.Metadata != null && edge.Metadata.TryGetValue("edge.label.offsetIn", out var offRaw)) { double.TryParse(offRaw, NumberStyles.Float, CultureInfo.InvariantCulture, out off); } DrawLabelBox(page, edge.Label!, mx, my, 0.0, off);
+                                        }
+                                        if (edge.Directed) TrySetFormula(pl, "EndArrow", "5"); else TrySetFormula(pl, "EndArrow", "0");
+                                        ApplyEdgeStyle(edge, pl); try { pl.SendToBack(); } catch { }
+                                        ReleaseCom(pl); usedPolyline = true;
+                                    }
+                                    catch { usedPolyline = false; }
+                                }
+                                if (!usedPolyline)
+                                {
+                                    try { connector.CellsU["BeginX"].GlueToPos(((dynamic)src.Shape), sxr, syr); }
+                                    catch { connector.CellsU["BeginX"].GlueTo(((dynamic)src.Shape).CellsU["PinX"]); }
+                                    try { connector.CellsU["EndX"].GlueToPos(((dynamic)dst.Shape), dxr, dyr); }
+                                    catch { connector.CellsU["EndX"].GlueTo(((dynamic)dst.Shape).CellsU["PinX"]); }
+                                    if (!string.IsNullOrWhiteSpace(edge.Label)) connector.Text = edge.Label;
+                                    if (edge.Directed) TrySetFormula(connector, "EndArrow", "5"); else TrySetFormula(connector, "EndArrow", "0");
+                                    TrySetFormula(connector, "Routestyle", "16");
+                                    try { TrySetFormula(connector, "LineRouteExt", "2"); } catch { }
+                                    ApplyEdgeStyle(edge, connector);
+                                    try { connector.SendToBack(); } catch { }
+                                }
+                            }
+                            finally { if (connector != null) ReleaseCom(connector); }
+                        }
+                        else
+                        {
+                            dynamic line = page.DrawLine(src.CenterX, src.CenterY, dst.CenterX, dst.CenterY);
+                            if (!string.IsNullOrWhiteSpace(edge.Label)) line.Text = edge.Label;
+                            if (edge.Directed) TrySetFormula(line, "EndArrow", "5"); else TrySetFormula(line, "EndArrow", "0");
+                            ApplyEdgeStyle(edge, line); ReleaseCom(line);
+                        }
                     }
                     else if (hasSrc && !hasDst)
                     {
@@ -1594,3 +2591,4 @@ namespace VDG.CLI
 
     }
 }
+

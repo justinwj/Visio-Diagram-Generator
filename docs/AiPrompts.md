@@ -1,5 +1,4 @@
-see `inspect_output.ps1` for latest ouput. 
 ```ps
-& "src\VDG.CLI\bin\Debug\net48\VDG.CLI.exe" "samples\m4_containers_sample.json" "out\m4_containers_sample.vsdx"
+PS D:\justinwj\Solutions\Visio Diagram Generator> & "src\VDG.CLI\bin\Debug\net48\VDG.CLI.exe" dense.json out.vsdx --diag-lane-warn 0.80 --diag-lane-error 0.90 --diag-page-warn 0.90
+input file not found: D:\justinwj\Solutions\Visio Diagram Generator\dense.json
 ```
-method works, update `README.md`

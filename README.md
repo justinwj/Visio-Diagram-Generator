@@ -38,12 +38,18 @@ Generate Microsoft Visio diagrams from declarative JSON. The project ships with 
    Use a sample such as `samples\sample_architecture_layered.json` (schema 1.2) or `samples\sample_diagram.json` (simpler). See `shared\Config\diagramConfig.schema.json` for the full schema.
 
 4. Run the Windows CLI
-   ```powershell
-   $cli = "src/VDG.CLI/bin/Release/net48/VDG.CLI.exe"
-   $input = "samples/sample_architecture_layered.json"
-   $output = "out/sample-diagram.vsdx"
-   & $cli $input $output
-   ```
+   - Direct invocation (recommended):
+     ```powershell
+     & "src\VDG.CLI\bin\Release\net48\VDG.CLI.exe" "samples\sample_architecture_layered.json" "out\sample-diagram.vsdx"
+     ```
+   - Or, using variables (avoid the PowerShell automatic variable `$input`):
+     ```powershell
+     $cli = "src\VDG.CLI\bin\Release\net48\VDG.CLI.exe"
+     $inPath = "samples\sample_architecture_layered.json"
+     $outPath = "out\sample-diagram.vsdx"
+     & $cli $inPath $outPath
+     ```
+   Note: `$input` is a PowerShell automatic variable and will cause a parse error if used as shown above.
    When Visio automation succeeds you will see `Saved diagram: out/sample-diagram.vsdx` and the target `.vsdx` appears in the `out` folder. The CLI writes `<output>.error.log` if anything goes wrong.
 
    Optional diagnostics/spacing/page flags (override JSON):
@@ -101,6 +107,21 @@ Milestone 3 routing (alpha)
  - Labels: polylines (corridors/waypoints) use detached label boxes placed near the longest segment. Tune with `edge.metadata["edge.label.offsetIn"]` (inches).
  - Diagnostics: now include baseline crossings, planned route crossings, average path length, channel utilization, edges-with-waypoints count, and a bundle-separation effectiveness warning for tiny shapes.
 
+Milestone 4 containers (alpha)
+- `layout.containers` adds container rendering options: `paddingIn` (inches), `cornerIn` (inches), and optional `style` (fill/stroke/linePattern).
+- Optional top-level `containers[]` allows defining explicit sub-containers per tier. Nodes can opt-in via `containerId`.
+- CLI flags: `--container-padding <in>` and `--container-corner <in>` override JSON; `--route-around <true|false>` prefers paths that skirt container edges.
+- When `routeAroundContainers=true`, the CLI draws H–V–H polylines that hug lane container edges using roughly half the container padding, reducing overlap through container interiors.
+- Diagnostics: logs container count, padding/corner values, and warns if nodes reference unknown container IDs.
+- Sample: `samples/m4_containers_sample.json` (works with both Debug/Release builds).
+
+Exported properties (Visio DocumentSheet)
+- The CLI writes container metadata to the document’s ShapeSheet for downstream automation:
+  - `User.ContainerCount` (numeric)
+  - `User.ContainerIds` (CSV string)
+  - `User.ContainerLabels` (CSV string)
+  - `User.ContainerTiers` (CSV string)
+
 Notes and Future Integration
 - The layout model (nodes/edges + layout hints) is renderer-agnostic. While M1–M2 target Visio via COM, the same model can be exported to other formats (e.g., SVG, PPTX, PDF) in future milestones.
 
@@ -112,8 +133,9 @@ Notes and Future Integration
 
 ## Samples
 - Corridor-aware routing sample: `samples/m3_dense_sample.json`
-- Cross‑lane stagger stress sample: `samples/m3_crosslane_stress.json`
+- Cross-lane stagger stress sample: `samples/m3_crosslane_stress.json`
  - Tiny-shapes bundle-separation warning: `samples/m3_tiny_bundle_warning.json`
+- Containers (M4) sample: `samples/m4_containers_sample.json`
 - Generate (skip Visio):
   - PowerShell: `$env:VDG_SKIP_RUNNER=1; dotnet run --project src/VDG.CLI -- samples/m3_dense_sample.json out/m3_dense_sample.vsdx`
   - cmd.exe: `set VDG_SKIP_RUNNER=1 && dotnet run --project src\VDG.CLI -- samples\m3_dense_sample.json out\m3_dense_sample.vsdx`
@@ -121,6 +143,10 @@ Notes and Future Integration
   - cmd.exe: `set VDG_SKIP_RUNNER=1 && dotnet run --project src\VDG.CLI -- samples\m3_crosslane_stress.json out\m3_crosslane_stress.vsdx`
   - PowerShell: `$env:VDG_SKIP_RUNNER=1; dotnet run --project src/VDG.CLI -- samples/m3_tiny_bundle_warning.json out/m3_tiny_bundle_warning.vsdx`
   - cmd.exe: `set VDG_SKIP_RUNNER=1 && dotnet run --project src\VDG.CLI -- samples\m3_tiny_bundle_warning.json out\m3_tiny_bundle_warning.vsdx`
+  - PowerShell: `$env:VDG_SKIP_RUNNER=1; dotnet run --project src/VDG.CLI -- samples/m4_containers_sample.json out/m4_containers_sample.vsdx`
+  
+  Direct run of built CLI (Visio required):
+  - PowerShell: `& "src\VDG.CLI\bin\Debug\net48\VDG.CLI.exe" "samples\m4_containers_sample.json" "out\m4_containers_sample.vsdx"`
 
 ## Troubleshooting
 - Visio automation errors (`RPC_E_DISCONNECTED`, `Visio automation error`, etc.): ensure Visio is installed, not already busy with modal dialogs, and that the CLI is executed from an STA-aware host (PowerShell works). The CLI automatically sets `[STAThread]` but recording macros or add-ins that lock the UI can still break automation.

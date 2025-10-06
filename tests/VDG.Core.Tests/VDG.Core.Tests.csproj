@@ -20,5 +20,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\VDG.Core\VDG.Core.csproj" />
     <ProjectReference Include="..\..\src\VDG.Core.Contracts\VDG.Core.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\VDG.CLI\VDG.CLI.csproj" />
   </ItemGroup>
 </Project>

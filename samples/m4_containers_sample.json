@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "1.2",
+  "metadata": { "title": "M4 Containers Sample", "version": "0.1" },
+  "layout": {
+    "tiers": ["External", "Services", "Data"],
+    "spacing": { "horizontal": 1.2, "vertical": 0.6 },
+    "containers": { "paddingIn": 0.35, "cornerIn": 0.18, "style": { "fill": "#F5F8FA", "stroke": "#C8C8C8", "linePattern": "2" } },
+    "routing": { "mode": "orthogonal", "channels": { "gapIn": 0.5 }, "routeAroundContainers": true }
+  },
+  "nodes": [
+    { "id": "E1", "label": "Client", "tier": "External", "size": {"width": 1.8, "height": 1.0}, "containerId": "Z_EXT" },
+    { "id": "S1", "label": "API", "tier": "Services", "size": {"width": 1.8, "height": 1.0}, "containerId": "Z_SVC" },
+    { "id": "D1", "label": "DB", "tier": "Data", "size": {"width": 1.8, "height": 1.0}, "containerId": "Z_DATA" }
+  ],
+  "edges": [
+    { "sourceId": "E1", "targetId": "S1" },
+    { "sourceId": "S1", "targetId": "D1" }
+  ],
+  "containers": [
+    { "id": "Z_EXT", "label": "External Zone", "tier": "External" },
+    { "id": "Z_SVC", "label": "Services Zone", "tier": "Services" },
+    { "id": "Z_DATA", "label": "Data Zone", "tier": "Data" }
+  ]
+}
+

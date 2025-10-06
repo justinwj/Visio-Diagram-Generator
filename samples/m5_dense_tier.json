@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "1.2",
+  "layout": {
+    "tiers": ["Services"],
+    "spacing": { "vertical": 0.6 },
+    "page": { "heightIn": 2.5, "marginIn": 0.2, "paginate": false }
+  },
+  "nodes": [
+    { "id": "S1", "label": "S1", "tier": "Services", "size": {"width": 1.8, "height": 1.2} },
+    { "id": "S2", "label": "S2", "tier": "Services", "size": {"width": 1.8, "height": 1.2} },
+    { "id": "S3", "label": "S3", "tier": "Services", "size": {"width": 1.8, "height": 1.2} }
+  ]
+}
+

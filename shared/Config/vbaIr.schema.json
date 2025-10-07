@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://visio-diagram-generator/schema/vbaIr.schema.json",
+  "title": "VDG VBA Intermediate Representation (IR) v0.1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["irSchemaVersion", "project"],
+  "properties": {
+    "irSchemaVersion": { "type": "string", "const": "0.1" },
+    "generator": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" }
+      }
+    },
+    "project": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["name", "modules"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "modules": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/module" },
+          "minItems": 0
+        }
+      }
+    }
+  },
+  "$defs": {
+    "module": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "name", "kind", "procedures"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "enum": ["Module", "Class", "Form"] },
+        "file": { "type": "string" },
+        "attributes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        },
+        "procedures": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/procedure" },
+          "minItems": 0
+        }
+      }
+    },
+    "procedure": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "name", "kind"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "enum": ["Sub", "Function", "PropertyGet", "PropertyLet", "PropertySet"] },
+        "access": { "type": "string", "enum": ["Public", "Private", "Friend"] },
+        "static": { "type": "boolean" },
+        "params": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/param" },
+          "default": []
+        },
+        "returns": { "type": ["string", "null"] },
+        "locs": { "$ref": "#/$defs/locs" },
+        "calls": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/call" },
+          "default": []
+        },
+        "metrics": { "$ref": "#/$defs/metrics" },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        }
+      }
+    },
+    "param": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "type": { "type": "string" },
+        "byRef": { "type": "boolean" }
+      }
+    },
+    "locs": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["file", "startLine", "endLine"],
+      "properties": {
+        "file": { "type": "string", "minLength": 1 },
+        "startLine": { "type": "integer", "minimum": 1 },
+        "endLine": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "call": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["target"],
+      "properties": {
+        "target": { "type": "string", "minLength": 1 },
+        "isDynamic": { "type": "boolean" },
+        "site": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "module": { "type": "string" },
+            "file": { "type": "string" },
+            "line": { "type": "integer", "minimum": 1 }
+          }
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "cyclomatic": { "type": "integer", "minimum": 0 },
+        "lines": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}
+

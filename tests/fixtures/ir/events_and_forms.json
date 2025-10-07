@@ -1,0 +1,36 @@
+{
+  "irSchemaVersion": "0.1",
+  "generator": { "name": "vba2json", "version": "0.1.0" },
+  "project": {
+    "name": "events_and_forms",
+    "modules": [
+      {
+        "id": "Form1",
+        "name": "Form1",
+        "kind": "Form",
+        "file": "tests/fixtures/vba/events_and_forms/Form1.frm",
+        "procedures": [
+          {
+            "id": "Form1.Command1_Click",
+            "name": "Command1_Click",
+            "kind": "Sub",
+            "access": "Private",
+            "params": [],
+            "locs": { "file": "tests/fixtures/vba/events_and_forms/Form1.frm", "startLine": 7, "endLine": 10 },
+            "calls": [ { "target": "Form1.HandleClick", "isDynamic": false, "site": { "module": "Form1", "file": "tests/fixtures/vba/events_and_forms/Form1.frm", "line": 9 } } ]
+          },
+          {
+            "id": "Form1.HandleClick",
+            "name": "HandleClick",
+            "kind": "Sub",
+            "access": "Private",
+            "params": [],
+            "locs": { "file": "tests/fixtures/vba/events_and_forms/Form1.frm", "startLine": 11, "endLine": 14 },
+            "calls": []
+          }
+        ]
+      }
+    ]
+  }
+}
+

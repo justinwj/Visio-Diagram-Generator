@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "1.2",
+  "layout": {
+    "tiers": ["External", "Services", "Data"],
+    "routing": { "channels": { "gapIn": 0.5 } },
+    "page": { "heightIn": 8.5, "marginIn": 0.5, "paginate": false }
+  },
+  "nodes": [
+    { "id": "E1", "label": "E1", "tier": "External" },
+    { "id": "E2", "label": "E2", "tier": "External" },
+    { "id": "D1", "label": "D1", "tier": "Data" },
+    { "id": "D2", "label": "D2", "tier": "Data" }
+  ],
+  "edges": [
+    { "sourceId": "E1", "targetId": "D1" },
+    { "sourceId": "E2", "targetId": "D2" }
+  ]
+}
+

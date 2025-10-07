@@ -1,0 +1,38 @@
+name: IR Validation
+
+on:
+  push:
+    paths:
+      - 'tools/ir-validate.ps1'
+      - 'tests/fixtures/ir/**'
+      - 'shared/Config/vbaIr.schema.json'
+      - 'docs/VBA_IR.md'
+      - '.github/workflows/ir-validate.yml'
+  pull_request:
+    paths:
+      - 'tools/ir-validate.ps1'
+      - 'tests/fixtures/ir/**'
+      - 'shared/Config/vbaIr.schema.json'
+      - 'docs/VBA_IR.md'
+      - '.github/workflows/ir-validate.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate IR fixtures
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $items = Get-ChildItem -Recurse tests/fixtures/ir -Filter *.json -File
+          if ($items.Count -eq 0) {
+            Write-Host "No IR fixtures found under tests/fixtures/ir"; exit 1
+          }
+          foreach ($f in $items) {
+            Write-Host "Validating $($f.FullName)" -ForegroundColor Cyan
+            ./tools/ir-validate.ps1 -InputPath $f.FullName
+          }
+

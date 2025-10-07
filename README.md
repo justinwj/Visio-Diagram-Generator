@@ -53,12 +53,52 @@ Generate Microsoft Visio diagrams from declarative JSON. The project ships with 
    When Visio automation succeeds you will see `Saved diagram: out/sample-diagram.vsdx` and the target `.vsdx` appears in the `out` folder. The CLI writes `<output>.error.log` if anything goes wrong.
 
    Optional diagnostics/spacing/page flags (override JSON):
-   - `--diag-height <inches>` page-height threshold for overflow hints
-   - `--diag-lane-max <int>` max nodes per lane before crowding hint
+   - Diagnostics (legacy hints):
+     - `--diag-height <inches>` page-height threshold for overflow hints
+     - `--diag-lane-max <int>` max nodes per lane before crowding hint
+   - Diagnostics (M5):
+     - `--diag-level <info|warning|error>` minimum severity to emit
+     - `--diag-lane-warn <0..1>` lane occupancy warn ratio (default 0.85)
+     - `--diag-lane-error <0..1>` lane occupancy error ratio (default 0.95)
+     - `--diag-page-warn <0..1>` page/band occupancy warn ratio (default 0.90)
+     - `--diag-cross-warn <n>` planned crossings warn threshold (default 200)
+     - `--diag-cross-err <n>` planned crossings error threshold (default 400)
+     - `--diag-util-warn <0..100>` corridor utilization warn minimum percent (default 40)
+     - `--diag-json [path]` write structured diagnostics JSON (default `<output>.diagnostics.json`)
    - `--spacing-h <inches>` horizontal spacing between columns
    - `--spacing-v <inches>` vertical spacing between nodes
    - `--page-width <inches>` / `--page-height <inches>` / `--page-margin <inches>`
    - `--paginate <bool>` (reserved for future pagination)
+
+   Diagnostics JSON contents (when enabled):
+   - `metrics.connectorCount`, `metrics.straightLineCrossings`, `metrics.pageHeight`, `metrics.usableHeight`
+   - `metrics.lanePages[] { tier, page, occupancyRatio, nodes }`
+   - `metrics.containers[] { id, tier, page, occupancyRatio, nodes }` (when containers present and page height configured)
+   - `issues[] { code, level, message, lane?, page? }` (respects `--diag-level`; includes `LaneCrowding`, `PageCrowding`, `PageOverflow`, `ContainerOverflow`, `ContainerCrowding`)
+
+   Example (containers excerpt):
+   ```json
+   {
+     "metrics": {
+       "containers": [
+         { "id": "Z_SVC", "tier": "Services", "page": 1, "occupancyRatio": 0.42, "nodes": 3 }
+       ]
+     },
+     "issues": [
+       { "code": "ContainerOverflow", "level": "warning", "lane": "Services", "page": 1, "message": "sub-container 'Z_SVC' overflows lane 'Services'." }
+     ]
+   }
+   ```
+
+   Interpreting `metrics.containers[]`
+   - Occupancy formula: `sum(nodeHeightsOnPage) + (nodesOnPage - 1) * verticalSpacing` divided by `usableHeight`.
+   - `usableHeight` = `pageHeight - (2 * pageMargin) - titleHeight` (titleHeight is 0.6in when a title is present, else 0.0).
+   - Thresholds: uses lane thresholds for severity — `laneCrowdWarnRatio` (default 0.85) and `laneCrowdErrorRatio` (default 0.95).
+   - Gating: console and JSON issues respect `--diag-level` / `layout.diagnostics.level`.
+
+   Tips
+   - CrossingDensity and LowUtilization use the planned routing estimate; set `layout.routing.channels.gapIn` (or `--channel-gap`) to enable corridor planning.
+   - To reproduce a low utilization warning quickly, use `samples\m5_low_utilization.json` with `--diag-util-warn 60`.
 
 5. Open the result in Visio
    Double-click the generated VSDX file to verify shapes, connectors, and styling.
@@ -136,6 +176,8 @@ Notes and Future Integration
 - Cross-lane stagger stress sample: `samples/m3_crosslane_stress.json`
  - Tiny-shapes bundle-separation warning: `samples/m3_tiny_bundle_warning.json`
 - Containers (M4) sample: `samples/m4_containers_sample.json`
+ - Dense tier (M5) sample (triggers lane crowding): `samples/m5_dense_tier.json`
+ - Crossing density (M5) sample: `samples/m5_crossing_density.json`
 - Generate (skip Visio):
   - PowerShell: `$env:VDG_SKIP_RUNNER=1; dotnet run --project src/VDG.CLI -- samples/m3_dense_sample.json out/m3_dense_sample.vsdx`
   - cmd.exe: `set VDG_SKIP_RUNNER=1 && dotnet run --project src\VDG.CLI -- samples\m3_dense_sample.json out\m3_dense_sample.vsdx`
@@ -144,15 +186,37 @@ Notes and Future Integration
   - PowerShell: `$env:VDG_SKIP_RUNNER=1; dotnet run --project src/VDG.CLI -- samples/m3_tiny_bundle_warning.json out/m3_tiny_bundle_warning.vsdx`
   - cmd.exe: `set VDG_SKIP_RUNNER=1 && dotnet run --project src\VDG.CLI -- samples\m3_tiny_bundle_warning.json out\m3_tiny_bundle_warning.vsdx`
   - PowerShell: `$env:VDG_SKIP_RUNNER=1; dotnet run --project src/VDG.CLI -- samples/m4_containers_sample.json out/m4_containers_sample.vsdx`
+    - PowerShell: `$env:VDG_SKIP_RUNNER=1; dotnet run --project src/VDG.CLI -- --diag-json --diag-lane-warn 0.80 --diag-lane-error 0.90 --diag-page-warn 0.90 samples/m5_dense_tier.json out/m5_dense_tier.vsdx`
+    - PowerShell: `$env:VDG_SKIP_RUNNER=1; dotnet run --project src/VDG.CLI -- --diag-json out/m5_crossing_density.diag.json --diag-cross-warn 1 samples/m5_crossing_density.json out/m5_crossing_density.vsdx`
   
   Direct run of built CLI (Visio required):
-  - PowerShell: `& "src\VDG.CLI\bin\Debug\net48\VDG.CLI.exe" "samples\m4_containers_sample.json" "out\m4_containers_sample.vsdx"`
+    - PowerShell: `& "src\VDG.CLI\bin\Debug\net48\VDG.CLI.exe" "samples\m4_containers_sample.json" "out\m4_containers_sample.vsdx"`
+    - PowerShell: `& "src\VDG.CLI\bin\Debug\net48\VDG.CLI.exe" --diag-json --diag-lane-warn 0.80 --diag-lane-error 0.90 --diag-page-warn 0.90 "samples\m5_dense_tier.json" "out\m5_dense_tier.vsdx"`
+    - PowerShell: `& "src\VDG.CLI\bin\Debug\net48\VDG.CLI.exe" --diag-json --diag-cross-warn 1 "samples\m5_crossing_density.json" "out\m5_crossing_density.vsdx"`
 
 ## Troubleshooting
 - Visio automation errors (`RPC_E_DISCONNECTED`, `Visio automation error`, etc.): ensure Visio is installed, not already busy with modal dialogs, and that the CLI is executed from an STA-aware host (PowerShell works). The CLI automatically sets `[STAThread]` but recording macros or add-ins that lock the UI can still break automation.
 - Access denied when writing output: confirm the target folder exists and you have write permissions. The CLI creates the directory tree when possible.
+- `--diag-json` without a path: the next non-flag token is treated as the JSON path. If you omit a path, the CLI writes `<output>.diagnostics.json` next to your `.vsdx`. To avoid consuming your input path accidentally, either provide an explicit JSON path or place another flag immediately after `--diag-json` before the input and output paths.
 - Build failures targeting `net48`: install the .NET Framework 4.8 Developer Pack or use Visual Studio Build Tools with the desktop development workload.
 - Package vulnerability warnings: `Azure.Identity` currently triggers NU1902 warnings. They are non-blocking for diagram generation but will be updated before production use.
+- CrossingDensity uses the planned-routing estimate; enable corridors via `layout.routing.channels.gapIn` (or `--channel-gap`) and prefer multiple nodes per lane for a more representative crossing count.
+
+## VBA CLI
+- See `docs/VDG_VBA_CLI.md` for a reusable CLI that converts VBA sources to IR JSON (`vba2json`) and IR JSON to Diagram JSON (`ir2diagram`).
+- End-to-end example (PowerShell):
+  - `dotnet run --project src/VDG.VBA.CLI -- vba2json --in tests/fixtures/vba/cross_module_calls --out out/tmp/ir.json`
+  - `./tools/ir-validate.ps1 -InputPath out/tmp/ir.json`
+  - `dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in out/tmp/ir.json --out out/tmp/diagram.json`
+  - `& "src\VDG.CLI\bin\Debug\net48\VDG.CLI.exe" out/tmp/diagram.json out/tmp/diagram.vsdx`
+ - Modes:
+   - `--mode callgraph` (default): per-procedure nodes + call edges
+   - `--mode module-structure`: procedures grouped in module containers; no edges
+   - `--mode module-callmap`: module-level call aggregation edges (N call(s))
+   - `--mode event-wiring`: control events → handler procedures for Form modules
+ - One-shot render convenience:
+   - `dotnet run --project src/VDG.VBA.CLI -- render --in <folder> --out out/diagram.vsdx --mode callgraph`
+   - The `render` command auto-discovers `VDG.CLI.exe` (or use `--cli` or `VDG_CLI` env).
 
 ## Repository Layout
 ```

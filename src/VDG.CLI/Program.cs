@@ -87,6 +87,16 @@ namespace VDG.CLI
             public double? PageHeight { get; set; }
             public double? UsableHeight { get; set; }
             public List<LanePageMetric> LanePages { get; set; } = new List<LanePageMetric>();
+            public List<ContainerPageMetric> Containers { get; set; } = new List<ContainerPageMetric>();
+        }
+
+        private sealed class ContainerPageMetric
+        {
+            public string Id { get; set; } = string.Empty;
+            public string Tier { get; set; } = string.Empty;
+            public int Page { get; set; }
+            public double OccupancyRatio { get; set; }
+            public int Nodes { get; set; }
         }
 
         [STAThread]
@@ -118,6 +128,9 @@ namespace VDG.CLI
                 double? diagLaneWarnOverride = null;          // ratio 0..1
                 double? diagLaneErrorOverride = null;         // ratio 0..1
                 double? diagPageWarnOverride = null;          // ratio 0..1
+                int? diagCrossWarnOverride = null;            // integer
+                int? diagCrossErrorOverride = null;           // integer
+                double? diagUtilWarnMinOverride = null;       // percent 0..100
 
                 int index = 0;
                 bool diagJsonEnable = false; string? diagJsonPath = null; string? diagLevelOverride = null;
@@ -272,6 +285,27 @@ namespace VDG.CLI
                         { throw new UsageException("--diag-page-warn must be a number between 0 and 1."); }
                         diagPageWarnOverride = v; index += 2; continue;
                     }
+                    else if (string.Equals(flag, "--diag-cross-warn", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (index + 1 >= args.Length) { throw new UsageException("--diag-cross-warn requires integer value."); }
+                        if (!int.TryParse(args[index + 1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var iv) || iv < 0)
+                        { throw new UsageException("--diag-cross-warn must be a non-negative integer."); }
+                        diagCrossWarnOverride = iv; index += 2; continue;
+                    }
+                    else if (string.Equals(flag, "--diag-cross-err", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (index + 1 >= args.Length) { throw new UsageException("--diag-cross-err requires integer value."); }
+                        if (!int.TryParse(args[index + 1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var iv) || iv < 0)
+                        { throw new UsageException("--diag-cross-err must be a non-negative integer."); }
+                        diagCrossErrorOverride = iv; index += 2; continue;
+                    }
+                    else if (string.Equals(flag, "--diag-util-warn", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (index + 1 >= args.Length) { throw new UsageException("--diag-util-warn requires percent (0..100)."); }
+                        if (!double.TryParse(args[index + 1], NumberStyles.Float, CultureInfo.InvariantCulture, out var dv) || dv < 0 || dv > 100)
+                        { throw new UsageException("--diag-util-warn must be a number between 0 and 100."); }
+                        diagUtilWarnMinOverride = dv; index += 2; continue;
+                    }
                     else if (string.Equals(flag, "--diag-level", StringComparison.OrdinalIgnoreCase))
                     {
                         if (index + 1 >= args.Length) { throw new UsageException("--diag-level requires info|warning|error."); }
@@ -283,10 +317,19 @@ namespace VDG.CLI
                     else if (string.Equals(flag, "--diag-json", StringComparison.OrdinalIgnoreCase))
                     {
                         diagJsonEnable = true;
-                        if (index + 1 < args.Length && !args[index + 1].StartsWith("-"))
-                        { diagJsonPath = args[index + 1]; index += 2; }
-                        else { index += 1; }
-                        continue;
+                        // Only consume the next token as a path if it looks like a .json file
+                        // and there will still remain two arguments for input and output.
+                        if (index + 1 < args.Length)
+                        {
+                            var cand = args[index + 1];
+                            bool looksJson = !cand.StartsWith("-") && cand.EndsWith(".json", StringComparison.OrdinalIgnoreCase);
+                            bool leavesIo = (args.Length - (index + 2)) >= 2;
+                            if (looksJson && leavesIo)
+                            {
+                                diagJsonPath = cand; index += 2; continue;
+                            }
+                        }
+                        index += 1; continue;
                     }
                     else
                     {
@@ -320,9 +363,23 @@ namespace VDG.CLI
                 if (diagLaneWarnOverride.HasValue) model.Metadata["layout.diagnostics.laneCrowdWarnRatio"] = diagLaneWarnOverride.Value.ToString(CultureInfo.InvariantCulture);
                 if (diagLaneErrorOverride.HasValue) model.Metadata["layout.diagnostics.laneCrowdErrorRatio"] = diagLaneErrorOverride.Value.ToString(CultureInfo.InvariantCulture);
                 if (diagPageWarnOverride.HasValue) model.Metadata["layout.diagnostics.pageCrowdWarnRatio"] = diagPageWarnOverride.Value.ToString(CultureInfo.InvariantCulture);
+                if (diagCrossWarnOverride.HasValue) model.Metadata["layout.diagnostics.crossingsWarn"] = diagCrossWarnOverride.Value.ToString(CultureInfo.InvariantCulture);
+                if (diagCrossErrorOverride.HasValue) model.Metadata["layout.diagnostics.crossingsError"] = diagCrossErrorOverride.Value.ToString(CultureInfo.InvariantCulture);
+                if (diagUtilWarnMinOverride.HasValue) model.Metadata["layout.diagnostics.utilizationWarnMin"] = diagUtilWarnMinOverride.Value.ToString(CultureInfo.InvariantCulture);
                 if (!string.IsNullOrWhiteSpace(diagLevelOverride)) model.Metadata["layout.diagnostics.level"] = diagLevelOverride!;
                 if (diagJsonEnable) model.Metadata["layout.diagnostics.emitJson"] = "true";
-                if (!string.IsNullOrWhiteSpace(diagJsonPath)) model.Metadata["layout.diagnostics.jsonPath"] = diagJsonPath!;
+                if (!string.IsNullOrWhiteSpace(diagJsonPath))
+                {
+                    model.Metadata["layout.diagnostics.jsonPath"] = diagJsonPath!;
+                }
+                else if (diagJsonEnable)
+                {
+                    // Default JSON path alongside the output VSDX
+                    var defaultJson = !string.IsNullOrWhiteSpace(outputPath)
+                        ? (outputPath + ".diagnostics.json")
+                        : Path.Combine("out", "diagnostics.json");
+                    model.Metadata["layout.diagnostics.jsonPath"] = defaultJson;
+                }
                 var layout = LayoutEngine.compute(model);
                 EmitDiagnostics(model, layout, diagHeightOverride, diagLaneMaxOverride);
 
@@ -412,6 +469,9 @@ namespace VDG.CLI
             Console.Error.WriteLine("  --diag-lane-warn <0..1>    Lane occupancy warn ratio");
             Console.Error.WriteLine("  --diag-lane-error <0..1>   Lane occupancy error ratio");
             Console.Error.WriteLine("  --diag-page-warn <0..1>    Page occupancy warn ratio");
+            Console.Error.WriteLine("  --diag-cross-warn <n>      Planned crossings warn threshold");
+            Console.Error.WriteLine("  --diag-cross-err <n>       Planned crossings error threshold");
+            Console.Error.WriteLine("  --diag-util-warn <0..100>  Corridor utilization warn minimum (%)");
             Console.Error.WriteLine("  --diag-json [path]         Emit structured diagnostics JSON (optional path)");
             Console.Error.WriteLine("  -h, --help              Show this help");
         }
@@ -771,8 +831,58 @@ namespace VDG.CLI
             }
         }
 
+        // Global diagnostics gating helpers (used outside EmitDiagnostics)
+        private static int DiagRank(string level)
+        {
+            if (string.Equals(level, "error", StringComparison.OrdinalIgnoreCase)) return 2;
+            if (string.Equals(level, "warning", StringComparison.OrdinalIgnoreCase)) return 1;
+            return 0; // info and unknown
+        }
+
+        private static bool ShouldEmit(DiagramModel model, string level)
+        {
+            var min = "info";
+            if (model.Metadata.TryGetValue("layout.diagnostics.level", out var lvl) && !string.IsNullOrWhiteSpace(lvl))
+            {
+                min = lvl.Trim();
+            }
+            return DiagRank(level) >= DiagRank(min);
+        }
+
         private static void EmitDiagnostics(DiagramModel model, LayoutResult layout, double? pageHeightOverride = null, int? laneMaxOverride = null)
         {
+            // Diagnostics level gating (info|warning|error); default info
+            string minLevel = "info";
+            if (model.Metadata.TryGetValue("layout.diagnostics.level", out var lvl) && !string.IsNullOrWhiteSpace(lvl))
+            {
+                minLevel = lvl.Trim().ToLowerInvariant();
+            }
+            static int LevelRank(string level)
+            {
+                if (string.Equals(level, "error", StringComparison.OrdinalIgnoreCase)) return 2;
+                if (string.Equals(level, "warning", StringComparison.OrdinalIgnoreCase)) return 1;
+                // treat unknown/hint/info as info
+                return 0;
+            }
+            int minRank = LevelRank(minLevel);
+            void Emit(string level, string message)
+            {
+                int r = LevelRank(level);
+                if (r >= minRank)
+                {
+                    Console.WriteLine($"{level}: {message}");
+                }
+            }
+
+            // Collect issues for JSON (apply same gating)
+            var gatedIssues = new List<DiagIssue>();
+            void AddIssue(string code, string level, string message, string? lane = null, int? page = null)
+            {
+                if (LevelRank(level) >= minRank)
+                {
+                    gatedIssues.Add(new DiagIssue { Code = code, Level = level, Message = message, Lane = lane, Page = page });
+                }
+            }
             var tiers = GetOrderedTiers(model);
             var tiersSet = new HashSet<string>(tiers, StringComparer.OrdinalIgnoreCase);
 
@@ -807,12 +917,16 @@ namespace VDG.CLI
 
             if (missingTier > 0)
             {
-                Console.WriteLine($"warning: {missingTier} node(s) have no 'tier'; placed into '{tiers[0]}' lane.");
+                var msg = $"{missingTier} node(s) have no 'tier'; placed into '{tiers[0]}' lane.";
+                Emit("warning", msg);
+                AddIssue("MissingTier", "warning", msg);
             }
 
             if (unknown.Count > 0)
             {
-                Console.WriteLine($"warning: {unknown.Count} unknown tier name(s) encountered: {string.Join(", ", unknown)}. Nodes were placed into '{tiers[0]}' lane.");
+                var msg = $"{unknown.Count} unknown tier name(s) encountered: {string.Join(", ", unknown)}. Nodes were placed into '{tiers[0]}' lane.";
+                Emit("warning", msg);
+                AddIssue("UnknownTier", "warning", msg);
             }
 
             // Read diagnostics settings
@@ -825,8 +939,8 @@ namespace VDG.CLI
 
             // M3: minimal routing diagnostics
             var routeMode = (model.Metadata.TryGetValue("layout.routing.mode", out var rm) && !string.IsNullOrWhiteSpace(rm)) ? rm.Trim() : "orthogonal";
-            Console.WriteLine($"info: routing mode: {routeMode}");
-            Console.WriteLine($"info: connector count: {model.Edges.Count}");
+            Emit("info", $"routing mode: {routeMode}");
+            Emit("info", $"connector count: {model.Edges.Count}");
 
             double pageThreshold = 11.0;
             if (pageHeightOverride.HasValue) pageThreshold = pageHeightOverride.Value;
@@ -851,7 +965,10 @@ namespace VDG.CLI
 
             if (height > pageThreshold)
             {
-                Console.WriteLine($"hint: layout height {height:F1}in exceeds threshold {pageThreshold:F1}in; consider pagination, reducing spacing, or vertical orientation.");
+                var msg = $"layout height {height:F1}in exceeds threshold {pageThreshold:F1}in; consider pagination, reducing spacing, or vertical orientation.";
+                // treat hint as info for gating
+                Emit("info", msg);
+                AddIssue("LayoutHeightThreshold", "warning", msg);
             }
 
             // Lane crowding hint
@@ -859,7 +976,9 @@ namespace VDG.CLI
             {
                 if (kv.Value > laneMax)
                 {
-                    Console.WriteLine($"hint: lane '{kv.Key}' contains {kv.Value} nodes (max {laneMax}); consider splitting the lane or paginating.");
+                    var msg = $"lane '{kv.Key}' contains {kv.Value} nodes (max {laneMax}); consider splitting the lane or paginating.";
+                    Emit("info", msg);
+                    AddIssue("LaneNodeMax", "warning", msg, lane: kv.Key);
                 }
             }
 
@@ -898,13 +1017,13 @@ namespace VDG.CLI
                     }
 
                     var pageCount = nodePage.Values.Count == 0 ? 1 : nodePage.Values.Max() + 1;
-                    Console.WriteLine($"info: pagination analysis — usable height {usable:F2}in, predicted pages {pageCount}.");
+                    Emit("info", $"pagination analysis - usable height {usable:F2}in, predicted pages {pageCount}.");
 
                     foreach (var kv in tierPageCounts)
                     {
                         if (kv.Value.Count == 0) continue;
                         var parts = kv.Value.OrderBy(p => p.Key).Select(p => $"{p.Key + 1}:{p.Value}");
-                        Console.WriteLine($"info: lane '{kv.Key}' nodes per page => {string.Join(", ", parts)}");
+                        Emit("info", $"lane '{kv.Key}' nodes per page => {string.Join(", ", parts)}");
                     }
 
                     int cross = 0;
@@ -915,7 +1034,7 @@ namespace VDG.CLI
                     }
                     if (cross > 0)
                     {
-                        Console.WriteLine($"info: cross-page edges: {cross}");
+                        Emit("info", $"cross-page edges: {cross}");
                     }
 
                     // Single node too tall to ever fit
@@ -924,7 +1043,9 @@ namespace VDG.CLI
                         var hNode = (nl.Size.HasValue && nl.Size.Value.Height > 0) ? nl.Size.Value.Height : (float)DefaultNodeHeight;
                         if (hNode > usable)
                         {
-                            Console.WriteLine($"warning: node '{nl.Id}' height {hNode:F2}in exceeds usable page height {usable:F2}in. Increase page height/margin or resize node.");
+                            var msg = $"node '{nl.Id}' height {hNode:F2}in exceeds usable page height {usable:F2}in. Increase page height/margin or resize node.";
+                            Emit("warning", msg);
+                            AddIssue("NodeTooTall", "warning", msg);
                         }
                     }
                 }
@@ -965,15 +1086,61 @@ namespace VDG.CLI
                             perPageTier[key] = (sumCur + h, countCur + 1);
                         }
 
+                        // Aggregate per-page maxima for band crowding
+                        var perPageMax = new Dictionary<int, double>();
+                        var perPageTopHeights = new Dictionary<int, List<(string id, double h)>>();
+
                         foreach (var kv in perPageTier)
                         {
                             var page = kv.Key.page; var tierName = kv.Key.tier; var (sumH, count) = kv.Value;
                             var occupied = sumH + (count > 0 ? (count - 1) * vs : 0);
                             var ratio = occupied / usable;
                             if (ratio >= laneErr)
-                                Console.WriteLine($"error: lane overcrowded: lane='{tierName}' page={page + 1} occupancy={(ratio * 100):F0}% nodes={count} usable={usable:F2}in");
+                            {
+                                var msg = $"lane overcrowded: lane='{tierName}' page={page + 1} occupancy={(ratio * 100):F0}% nodes={count} usable={usable:F2}in";
+                                Emit("error", msg);
+                                AddIssue("LaneCrowding", "error", msg, lane: tierName, page: page + 1);
+                            }
                             else if (ratio >= laneWarn)
-                                Console.WriteLine($"warning: lane crowded: lane='{tierName}' page={page + 1} occupancy={(ratio * 100):F0}% nodes={count} usable={usable:F2}in");
+                            {
+                                var msg = $"lane crowded: lane='{tierName}' page={page + 1} occupancy={(ratio * 100):F0}% nodes={count} usable={usable:F2}in";
+                                Emit("warning", msg);
+                                AddIssue("LaneCrowding", "warning", msg, lane: tierName, page: page + 1);
+                            }
+
+                            // update per-page maximum occupancy ratio across lanes
+                            if (!perPageMax.TryGetValue(page, out var cur) || ratio > cur) perPageMax[page] = ratio;
+                        }
+
+                        // Build per-page top offenders by height
+                        var nodeMapForTops = model.Nodes.ToDictionary(n => n.Id, n => n, StringComparer.OrdinalIgnoreCase);
+                        foreach (var nl in layout.Nodes)
+                        {
+                            var yNorm = nl.Position.Y - (float)minBottom2;
+                            var pi = (int)Math.Floor(yNorm / (float)usable); if (pi < 0) pi = 0;
+                            var h = (nl.Size.HasValue && nl.Size.Value.Height > 0) ? nl.Size.Value.Height : (float)DefaultNodeHeight;
+                            if (!perPageTopHeights.TryGetValue(pi, out var list)) { list = new List<(string, double)>(); perPageTopHeights[pi] = list; }
+                            list.Add((nl.Id, h));
+                        }
+                        foreach (var kvp in perPageTopHeights) kvp.Value.Sort((a, b) => b.h.CompareTo(a.h));
+
+                        // Page/band crowding based on max lane occupancy on the page
+                        foreach (var kvp in perPageMax)
+                        {
+                            var page = kvp.Key; var r = kvp.Value; var pct = r * 100.0;
+                            var tops = perPageTopHeights.TryGetValue(page, out var list) ? string.Join(", ", list.Take(3).Select(x => $"{x.id}({x.h:F2}in)")) : string.Empty;
+                            if (r > 1.0)
+                            {
+                                var msg = $"page overflow: page={page + 1} occupancy={pct:F0}% (usable {usable:F2}in); top: [{tops}]";
+                                Emit("error", msg);
+                                AddIssue("PageOverflow", "error", msg, page: page + 1);
+                            }
+                            else if (r >= pageWarn)
+                            {
+                                var msg = $"page crowded: page={page + 1} occupancy={pct:F0}% (usable {usable:F2}in); top: [{tops}]";
+                                Emit("warning", msg);
+                                AddIssue("PageCrowding", "warning", msg, page: page + 1);
+                            }
                         }
                     }
                 }
@@ -1038,7 +1205,7 @@ namespace VDG.CLI
                 if (groups.Count > 0)
                 {
                     var maxBundle = groups.Values.Count == 0 ? 0 : groups.Values.Max();
-                    Console.WriteLine($"info: bundles planned: {groups.Count} groups; max bundle size: {maxBundle}");
+                    Emit("info", $"bundles planned: {groups.Count} groups; max bundle size: {maxBundle}");
                 }
 
                 // Channels (vertical corridors) positions between tiers
@@ -1071,7 +1238,8 @@ namespace VDG.CLI
                     if (mids.Count > 0)
                     {
                         var midsStr = string.Join(", ", mids.Select(v => v.ToString("F2", CultureInfo.InvariantCulture)));
-                        Console.WriteLine($"info: channels gapIn={gapIn:F2}in; vertical corridors at X≈ {midsStr}");
+                        // Use plain ASCII separator instead of approximate symbol
+                        Emit("info", $"channels gapIn={gapIn:F2}in; vertical corridors at X~ {midsStr}");
                     }
                 }
 
@@ -1095,7 +1263,7 @@ namespace VDG.CLI
                         if (SegmentsIntersect(a1.x, a1.y, b1.x, b1.y, a2.x, a2.y, b2.x, b2.y)) crossings++;
                     }
                 }
-                Console.WriteLine($"info: estimated straight-line crossings: {crossings}");
+                Emit("info", $"estimated straight-line crossings: {crossings}");
 
                 // Corridor staggering potential
                 if (model.Metadata.TryGetValue("layout.routing.channels.gapIn", out var cgap) && double.TryParse(cgap, NumberStyles.Float, CultureInfo.InvariantCulture, out var cgv) && cgv > 0)
@@ -1107,7 +1275,7 @@ namespace VDG.CLI
                                            .Where(x => x.size > 1)
                                            .Sum(x => x.count);
                     if (multi > 0)
-                        Console.WriteLine($"info: corridor staggering applied where available (lane bundles with >1 edges: {multi}).");
+                        Emit("info", $"corridor staggering applied where available (lane bundles with >1 edges: {multi}).");
 
                     // After-routing plan estimate (layout-based)
                     int afterCross = 0; double totalLen = 0; int util = 0; int crossLane = 0; int missingCorridor = 0;
@@ -1186,29 +1354,56 @@ namespace VDG.CLI
                         nextPair2: ;
                         }
                     }
-                    Console.WriteLine($"info: planned route crossings: {afterCross}; avg path length: {(model.Edges.Count > 0 ? totalLen / model.Edges.Count : 0):F2}in");
+                    Emit("info", $"planned route crossings: {afterCross}; avg path length: {(model.Edges.Count > 0 ? totalLen / model.Edges.Count : 0):F2}in");
+                    double utilPct = (crossLane > 0) ? (100.0 * util / crossLane) : 0.0;
                     if (crossLane > 0)
-                        Console.WriteLine($"info: channel utilization: {util}/{crossLane} cross-lane edges ({(100.0 * util / crossLane):F1}%)");
+                        Emit("info", $"channel utilization: {util}/{crossLane} cross-lane edges ({utilPct:F1}%)");
                     if (missingCorridor > 0)
-                        Console.WriteLine($"warning: {missingCorridor} cross-lane edge(s) had no corridor available; check lane spans or channel gap settings.");
+                        Emit("warning", $"{missingCorridor} cross-lane edge(s) had no corridor available; check lane spans or channel gap settings.");
+
+                    // Thresholds for crossings/utilization
+                    int crossWarn = 200, crossErr = 400; double utilWarnMin = 40.0;
+                    if (model.Metadata.TryGetValue("layout.diagnostics.crossingsWarn", out var cw) && int.TryParse(cw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var cwv)) crossWarn = cwv;
+                    if (model.Metadata.TryGetValue("layout.diagnostics.crossingsError", out var ce) && int.TryParse(ce, NumberStyles.Integer, CultureInfo.InvariantCulture, out var cev)) crossErr = cev;
+                    if (model.Metadata.TryGetValue("layout.diagnostics.utilizationWarnMin", out var uw) && double.TryParse(uw, NumberStyles.Float, CultureInfo.InvariantCulture, out var uwv)) utilWarnMin = uwv;
+
+                    if (afterCross >= crossErr)
+                    {
+                        var msg = $"crossing density high: planned crossings={afterCross} (>= {crossErr})";
+                        Emit("error", msg);
+                        AddIssue("CrossingDensity", "error", msg);
+                    }
+                    else if (afterCross >= crossWarn)
+                    {
+                        var msg = $"crossing density elevated: planned crossings={afterCross} (>= {crossWarn})";
+                        Emit("warning", msg);
+                        AddIssue("CrossingDensity", "warning", msg);
+                    }
+
+                    if (crossLane > 0 && utilPct < utilWarnMin)
+                    {
+                        var msg = $"corridor utilization low: {utilPct:F1}% (< {utilWarnMin:F0}%)";
+                        Emit("warning", msg);
+                        AddIssue("LowUtilization", "warning", msg);
+                    }
                 }
                 // Waypoints count
                 var wpCount = model.Edges.Count(e => e.Metadata != null && e.Metadata.ContainsKey("edge.waypoints"));
-                if (wpCount > 0) Console.WriteLine($"info: edges with explicit waypoints: {wpCount}");
+                if (wpCount > 0) Emit("info", $"edges with explicit waypoints: {wpCount}");
 
                 // M4: containers diagnostics (best-effort)
                 if (model.Metadata.TryGetValue("layout.containers.count", out var ccountRaw) && int.TryParse(ccountRaw, out var ccount) && ccount > 0)
                 {
-                    Console.WriteLine($"info: containers: {ccount}");
+                    Emit("info", $"containers: {ccount}");
                 }
                 else if (model.Metadata.TryGetValue("layout.containers.json", out var cj) && !string.IsNullOrWhiteSpace(cj))
                 {
-                    try { using var doc = JsonDocument.Parse(cj); if (doc.RootElement.ValueKind == JsonValueKind.Array) Console.WriteLine($"info: containers: {doc.RootElement.GetArrayLength()}"); } catch { }
+                    try { using var doc = JsonDocument.Parse(cj); if (doc.RootElement.ValueKind == JsonValueKind.Array) Emit("info", $"containers: {doc.RootElement.GetArrayLength()}"); } catch { }
                 }
                 if (model.Metadata.TryGetValue("layout.containers.paddingIn", out var pin) && double.TryParse(pin, NumberStyles.Float, CultureInfo.InvariantCulture, out var pval))
                 {
                     var corner = 0.12; if (model.Metadata.TryGetValue("layout.containers.cornerIn", out var cin) && double.TryParse(cin, NumberStyles.Float, CultureInfo.InvariantCulture, out var cval)) corner = cval;
-                    Console.WriteLine($"info: containers paddingIn={pval:F2}in; cornerIn={corner:F2}in");
+                    Emit("info", $"containers paddingIn={pval:F2}in; cornerIn={corner:F2}in");
                 }
                 if (TryGetExplicitContainers(model, out var contList))
                 {
@@ -1221,7 +1416,146 @@ namespace VDG.CLI
                             if (!valid.Contains(cid)) unknownAssigned++;
                         }
                     }
-                    if (unknownAssigned > 0) Console.WriteLine($"warning: {unknownAssigned} node(s) assigned to unknown container id(s).");
+                    if (unknownAssigned > 0) Emit("warning", $"{unknownAssigned} node(s) assigned to unknown container id(s).");
+
+                    // Best-effort overflow detection without invoking Visio runner (page 1 only)
+                    try
+                    {
+                        var tiers2 = GetOrderedTiers(model);
+                        var tiersSet2 = new HashSet<string>(tiers2, StringComparer.OrdinalIgnoreCase);
+                        var (minLeft, minBottom, _, _) = ComputeLayoutBounds(layout);
+                        var margin2 = GetPageMargin(model) ?? Margin;
+                        var title2 = GetTitleHeight(model);
+                        var pageHeight2 = GetPageHeight(model) ?? 0.0;
+                        var usable2 = pageHeight2 > 0 ? pageHeight2 - (2 * margin2) - title2 : double.PositiveInfinity;
+                        int pageIndex = 0;
+                        if (double.IsInfinity(usable2) || usable2 <= 0) { usable2 = double.PositiveInfinity; pageIndex = 0; }
+
+                        var nodeMap = model.Nodes.ToDictionary(n => n.Id, n => n, StringComparer.OrdinalIgnoreCase);
+                        var tierBounds = new Dictionary<string, (double l, double b, double r, double t)>(StringComparer.OrdinalIgnoreCase);
+                        foreach (var t in tiers2)
+                        {
+                            double tMinL = double.MaxValue, tMinB = double.MaxValue, tMaxR = double.MinValue, tMaxT = double.MinValue;
+                            foreach (var nl in layout.Nodes)
+                            {
+                                var yNorm = nl.Position.Y - (float)minBottom;
+                                var idx = (IsFinite(usable2) && usable2 > 0) ? (int)Math.Floor(yNorm / (float)usable2) : 0;
+                                if (idx != pageIndex) continue;
+                                if (!nodeMap.TryGetValue(nl.Id, out var node)) continue;
+                                var nt = !string.IsNullOrWhiteSpace(node.Tier) ? node.Tier! : (node.Metadata.TryGetValue("tier", out var tv) ? tv : tiers2.First());
+                                if (!string.Equals(nt, t, StringComparison.OrdinalIgnoreCase)) continue;
+                                var w = nl.Size.HasValue && nl.Size.Value.Width > 0 ? nl.Size.Value.Width : (float)DefaultNodeWidth;
+                                var h = nl.Size.HasValue && nl.Size.Value.Height > 0 ? nl.Size.Value.Height : (float)DefaultNodeHeight;
+                                var offsetX = margin2 - minLeft;
+                                var bandOffset = (pageIndex * usable2);
+                                var offsetY = margin2 + title2 - minBottom - (IsFinite(usable2) ? bandOffset : 0);
+                                var l = nl.Position.X + offsetX;
+                                var b = nl.Position.Y + offsetY;
+                                tMinL = Math.Min(tMinL, l); tMinB = Math.Min(tMinB, b);
+                                tMaxR = Math.Max(tMaxR, l + w); tMaxT = Math.Max(tMaxT, b + h);
+                            }
+                            if (!(double.IsInfinity(tMinL) || tMinL == double.MaxValue))
+                            {
+                                tierBounds[t] = (tMinL, tMinB, tMaxR, tMaxT);
+                            }
+                        }
+
+                        foreach (var c in contList)
+                        {
+                            if (c == null || string.IsNullOrWhiteSpace(c.Id)) continue;
+                            var ctier = !string.IsNullOrWhiteSpace(c.Tier) ? c.Tier! : tiers2.First();
+                            if (!tiersSet2.Contains(ctier)) ctier = tiers2.First();
+                            if (!tierBounds.TryGetValue(ctier, out var tb)) continue;
+                            var offsetX = margin2 - minLeft;
+                            var bandOffset = (pageIndex * usable2);
+                            var offsetY = margin2 + title2 - minBottom - (IsFinite(usable2) ? bandOffset : 0);
+
+                            double l, b, r, t;
+                            if (c.Bounds != null && c.Bounds.Width.HasValue && c.Bounds.Height.HasValue)
+                            {
+                                l = (c.Bounds.X ?? 0.0) + offsetX;
+                                b = (c.Bounds.Y ?? 0.0) + offsetY;
+                                r = l + c.Bounds.Width!.Value;
+                                t = b + c.Bounds.Height!.Value;
+                            }
+                            else
+                            {
+                                // Infer bounds from member nodes
+                                double cMinL = double.MaxValue, cMinB = double.MaxValue, cMaxR = double.MinValue, cMaxT = double.MinValue;
+                                foreach (var nl in layout.Nodes)
+                                {
+                                    var yNorm = nl.Position.Y - (float)minBottom;
+                                    var idx = (IsFinite(usable2) && usable2 > 0) ? (int)Math.Floor(yNorm / (float)usable2) : 0;
+                                    if (idx != pageIndex) continue;
+                                    if (!nodeMap.TryGetValue(nl.Id, out var node)) continue;
+                                    var nt = !string.IsNullOrWhiteSpace(node.Tier) ? node.Tier! : (node.Metadata.TryGetValue("tier", out var tv) ? tv : tiers2.First());
+                                    if (!string.Equals(nt, ctier, StringComparison.OrdinalIgnoreCase)) continue;
+                                    if (node.Metadata == null || !node.Metadata.TryGetValue("node.containerId", out var cid) || !string.Equals(cid, c.Id, StringComparison.OrdinalIgnoreCase)) continue;
+                                    var w = nl.Size.HasValue && nl.Size.Value.Width > 0 ? nl.Size.Value.Width : (float)DefaultNodeWidth;
+                                    var h = nl.Size.HasValue && nl.Size.Value.Height > 0 ? nl.Size.Value.Height : (float)DefaultNodeHeight;
+                                    var lx = nl.Position.X + offsetX; var by = nl.Position.Y + offsetY;
+                                    cMinL = Math.Min(cMinL, lx); cMinB = Math.Min(cMinB, by);
+                                    cMaxR = Math.Max(cMaxR, lx + w); cMaxT = Math.Max(cMaxT, by + h);
+                                }
+                                if (double.IsInfinity(cMinL) || cMinL == double.MaxValue)
+                                {
+                                    // no members on this page; skip
+                                    continue;
+                                }
+                                var pad = GetContainerPadding(model);
+                                l = cMinL - pad; b = cMinB - pad; r = cMaxR + pad; t = cMaxT + pad;
+                            }
+
+                            bool overflow = (l < tb.l) || (r > tb.r) || (b < tb.b) || (t > tb.t);
+                            if (overflow)
+                            {
+                                var msg = $"sub-container '{c.Id}' overflows lane '{ctier}'.";
+                                Emit("warning", msg);
+                                AddIssue("ContainerOverflow", "warning", msg, lane: ctier, page: 1);
+                            }
+
+                            // Container occupancy ratio vs usable page height (crowding)
+                            try
+                            {
+                                double vs = 0.6; if (model.Metadata.TryGetValue("layout.spacing.vertical", out var vsv) && double.TryParse(vsv, NumberStyles.Float, CultureInfo.InvariantCulture, out var vparsed)) vs = vparsed;
+                                int count = 0; double sumH = 0.0;
+                                foreach (var nl in layout.Nodes)
+                                {
+                                    var yNorm = nl.Position.Y - (float)minBottom;
+                                    var idx = (IsFinite(usable2) && usable2 > 0) ? (int)Math.Floor(yNorm / (float)usable2) : 0;
+                                    if (idx != pageIndex) continue;
+                                    if (!nodeMap.TryGetValue(nl.Id, out var node)) continue;
+                                    var nt = !string.IsNullOrWhiteSpace(node.Tier) ? node.Tier! : (node.Metadata.TryGetValue("tier", out var tv) ? tv : tiers2.First());
+                                    if (!string.Equals(nt, ctier, StringComparison.OrdinalIgnoreCase)) continue;
+                                    if (node.Metadata == null || !node.Metadata.TryGetValue("node.containerId", out var cid) || !string.Equals(cid, c.Id, StringComparison.OrdinalIgnoreCase)) continue;
+                                    var h = (nl.Size.HasValue && nl.Size.Value.Height > 0) ? nl.Size.Value.Height : (float)DefaultNodeHeight;
+                                    sumH += h; count += 1;
+                                }
+                                if (count > 0 && IsFinite(usable2) && usable2 > 0)
+                                {
+                                    var occupied = sumH + ((count - 1) * vs);
+                                    var ratio = occupied / usable2;
+                                    double laneWarn = 0.85, laneErr = 0.95;
+                                    if (model.Metadata.TryGetValue("layout.diagnostics.laneCrowdWarnRatio", out var lw) && double.TryParse(lw, NumberStyles.Float, CultureInfo.InvariantCulture, out var lwv)) laneWarn = lwv;
+                                    if (model.Metadata.TryGetValue("layout.diagnostics.laneCrowdErrorRatio", out var le) && double.TryParse(le, NumberStyles.Float, CultureInfo.InvariantCulture, out var lev)) laneErr = lev;
+                                    if (ratio >= laneErr)
+                                    {
+                                        var msg = $"container crowded: id='{c.Id}' lane='{ctier}' occupancy={(ratio * 100):F0}% nodes={count}";
+                                        Emit("error", msg);
+                                        AddIssue("ContainerCrowding", "error", msg, lane: ctier, page: 1);
+                                    }
+                                    else if (ratio >= laneWarn)
+                                    {
+                                        var msg = $"container crowded: id='{c.Id}' lane='{ctier}' occupancy={(ratio * 100):F0}% nodes={count}";
+                                        Emit("warning", msg);
+                                        AddIssue("ContainerCrowding", "warning", msg, lane: ctier, page: 1);
+                                    }
+                                }
+                            }
+                            catch { }
+                        }
+                    }
+                    catch { }
                 }
             }
             catch { /* diagnostics are best-effort */ }
@@ -1246,7 +1580,7 @@ namespace VDG.CLI
                     }
                     if (impacted > 0)
                     {
-                        Console.WriteLine($"warning: bundle separation {sepIn:F2}in may be ineffective for {impacted} end(s) due to small node height; consider reducing layout.routing.bundleSeparationIn or increasing node heights.");
+                        Emit("warning", $"bundle separation {sepIn:F2}in may be ineffective for {impacted} end(s) due to small node height; consider reducing layout.routing.bundleSeparationIn or increasing node heights.");
                     }
                 }
             }
@@ -1331,17 +1665,56 @@ namespace VDG.CLI
                                     var ratio = occ / usable;
                                     payload.Metrics.LanePages.Add(new LanePageMetric { Tier = tierName, Page = page + 1, OccupancyRatio = ratio, Nodes = count });
                                 }
+
+                                // Container page occupancy metrics (explicit containers only)
+                                try
+                                {
+                                    if (TryGetExplicitContainers(model, out var contList) && contList.Count > 0)
+                                    {
+                                        var contById = contList.Where(c => !string.IsNullOrWhiteSpace(c.Id))
+                                                                .ToDictionary(c => c.Id!, c => c, StringComparer.OrdinalIgnoreCase);
+                                        var perPageContainer = new Dictionary<(int page, string id, string tier), (double sumH, int count)>();
+                                        foreach (var nl in layout.Nodes)
+                                        {
+                                            var yNorm = nl.Position.Y - (float)minBottom;
+                                            var pi = (int)Math.Floor(yNorm / (float)usable); if (pi < 0) pi = 0;
+                                            if (!nodeMap.TryGetValue(nl.Id, out var node)) continue;
+                                            if (node.Metadata == null || !node.Metadata.TryGetValue("node.containerId", out var cid) || string.IsNullOrWhiteSpace(cid)) continue;
+                                            if (!contById.TryGetValue(cid!, out var c)) continue;
+                                            var t = !string.IsNullOrWhiteSpace(node.Tier) ? node.Tier! : (node.Metadata.TryGetValue("tier", out var tv) ? tv : tiers2.First());
+                                            if (!tiersSet2.Contains(t)) t = tiers2.First();
+                                            var h = (nl.Size.HasValue && nl.Size.Value.Height > 0) ? nl.Size.Value.Height : (float)DefaultNodeHeight;
+                                            var key = (pi, cid!, c.Tier ?? t);
+                                            var cur = perPageContainer.TryGetValue(key, out var v) ? v : (0.0, 0);
+                                            perPageContainer[key] = (cur.Item1 + h, cur.Item2 + 1);
+                                        }
+                                        foreach (var kv2 in perPageContainer)
+                                        {
+                                            var page = kv2.Key.page; var id = kv2.Key.id; var tierName = kv2.Key.tier; var (sumH, count) = kv2.Value;
+                                            var occ = sumH + (count > 0 ? (count - 1) * vs : 0);
+                                            var ratio = occ / usable;
+                                            payload.Metrics.Containers.Add(new ContainerPageMetric { Id = id, Tier = tierName, Page = page + 1, OccupancyRatio = ratio, Nodes = count });
+                                        }
+                                    }
+                                }
+                                catch { }
                             }
                         }
                     }
                     catch { }
+
+                    // Attach gated issues collected during diagnostics
+                    if (gatedIssues.Count > 0)
+                    {
+                        payload.Issues.AddRange(gatedIssues);
+                    }
 
                     var json = System.Text.Json.JsonSerializer.Serialize(payload, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
                     var target = string.IsNullOrWhiteSpace(outPath) ? Path.Combine("out", "diagnostics.json") : Path.GetFullPath(outPath!);
                     var dir = Path.GetDirectoryName(target);
                     if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
                     File.WriteAllText(target, json);
-                    Console.WriteLine($"info: diagnostics JSON written: {target}");
+                    Emit("info", $"diagnostics JSON written: {target}");
                 }
             }
             catch { }
@@ -2728,7 +3101,10 @@ namespace VDG.CLI
                 bool overflow = (left < tMinL) || (right > tMaxR) || (bottom < tMinB) || (top > tMaxT);
                 if (overflow)
                 {
-                    Console.WriteLine($"warning: sub-container '{c.Id}' overflows lane '{tier}'.");
+                    if (ShouldEmit(model, "warning"))
+                    {
+                        Console.WriteLine($"warning: sub-container '{c.Id}' overflows lane '{tier}'.");
+                    }
                     left = Math.Max(left, tMinL); right = Math.Min(right, tMaxR); bottom = Math.Max(bottom, tMinB); top = Math.Min(top, tMaxT);
                 }
 

@@ -4,5 +4,8 @@
     "**/bin": true,
     "**/obj": true,
     "backlog": true
-  }
+  },
+  "vscode_custom_css.imports": [
+    "C:\\Users\\justinwj\\OneDrive\\Custom CSS & JS Loader\\custom-panel-font.css"
+  ]
 }

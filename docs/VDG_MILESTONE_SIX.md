@@ -39,7 +39,7 @@ IR Surface (v0.1)
   - `target` (`Module.Proc`), `isDynamic?` (e.g., `CallByName`, `Application.Run`), `site { module, file, line }`.
 
 Conventions
-- [ ] Field casing lowerCamel; enum casing Pascal.
+- [x] Field casing lowerCamel; enum casing Pascal.
 - [ ] IDs: `Module.Proc` unique; modules unique by `name` within project.
 - [ ] Optional fields omitted (not null); additive evolution preferred.
 - [ ] Stable ordering for determinism (modules, then procedures by name).
@@ -97,7 +97,7 @@ Work Breakdown
 - [x] Rewrite qualified calls `obj.Method` to `Type.Method` when `obj` type is known.
 7) Expand Call Detection (Step 1)
 - [x] Unqualified call detection at line start (`Call Proc(...)`, `Proc(...)`).
-- [ ] Additional patterns (aliases, chained calls) — planned.
+- [x] Additional patterns (aliases, chained calls) - basic alias + chained-call heuristics wired into v0.1 parser.
 8) New Diagram Modes (Step 2)
 - [x] `module-callmap` (module-level call aggregation).
 - [x] `event-wiring` (Form control events → handler procedures).

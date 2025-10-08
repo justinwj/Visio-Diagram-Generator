@@ -1,0 +1,146 @@
+{
+  "irSchemaVersion": "0.1",
+  "generator": {
+    "name": "vba2json",
+    "version": "0.1.0"
+  },
+  "project": {
+    "name": "alias_and_chain",
+    "modules": [
+      {
+        "id": "Helper",
+        "name": "Helper",
+        "kind": "Class",
+        "file": "Helper.cls",
+        "procedures": [
+          {
+            "id": "Helper.RunAll",
+            "name": "RunAll",
+            "kind": "Sub",
+            "access": "Public",
+            "static": false,
+            "params": [],
+            "locs": {
+              "file": "Helper.cls",
+              "startLine": 8,
+              "endLine": 9
+            },
+            "calls": [],
+            "metrics": {
+              "lines": 2
+            },
+            "tags": []
+          }
+        ]
+      },
+      {
+        "id": "ModuleAlias",
+        "name": "ModuleAlias",
+        "kind": "Module",
+        "file": "ModuleAlias.bas",
+        "procedures": [
+          {
+            "id": "ModuleAlias.Caller",
+            "name": "Caller",
+            "kind": "Sub",
+            "access": "Public",
+            "static": false,
+            "params": [],
+            "locs": {
+              "file": "ModuleAlias.bas",
+              "startLine": 4,
+              "endLine": 15
+            },
+            "calls": [
+              {
+                "target": "Worker.DoWork",
+                "isDynamic": false,
+                "site": {
+                  "module": "ModuleAlias",
+                  "file": "ModuleAlias.bas",
+                  "line": 8
+                }
+              },
+              {
+                "target": "Worker.Factory",
+                "isDynamic": false,
+                "site": {
+                  "module": "ModuleAlias",
+                  "file": "ModuleAlias.bas",
+                  "line": 11
+                }
+              },
+              {
+                "target": "Helper.RunAll",
+                "isDynamic": false,
+                "site": {
+                  "module": "ModuleAlias",
+                  "file": "ModuleAlias.bas",
+                  "line": 12
+                }
+              },
+              {
+                "target": "Worker.RunAll",
+                "isDynamic": false,
+                "site": {
+                  "module": "ModuleAlias",
+                  "file": "ModuleAlias.bas",
+                  "line": 14
+                }
+              }
+            ],
+            "metrics": {
+              "lines": 12
+            },
+            "tags": []
+          }
+        ]
+      },
+      {
+        "id": "Worker",
+        "name": "Worker",
+        "kind": "Class",
+        "file": "Worker.cls",
+        "procedures": [
+          {
+            "id": "Worker.DoWork",
+            "name": "DoWork",
+            "kind": "Sub",
+            "access": "Public",
+            "static": false,
+            "params": [],
+            "locs": {
+              "file": "Worker.cls",
+              "startLine": 8,
+              "endLine": 9
+            },
+            "calls": [],
+            "metrics": {
+              "lines": 2
+            },
+            "tags": []
+          },
+          {
+            "id": "Worker.Factory",
+            "name": "Factory",
+            "kind": "Function",
+            "access": "Public",
+            "static": false,
+            "params": [],
+            "returns": "Helper",
+            "locs": {
+              "file": "Worker.cls",
+              "startLine": 11,
+              "endLine": 13
+            },
+            "calls": [],
+            "metrics": {
+              "lines": 3
+            },
+            "tags": []
+          }
+        ]
+      }
+    ]
+  }
+}

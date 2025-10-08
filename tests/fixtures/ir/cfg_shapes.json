@@ -1,0 +1,125 @@
+{
+  "irSchemaVersion": "0.1",
+  "generator": {
+    "name": "vba2json",
+    "version": "0.1.0"
+  },
+  "project": {
+    "name": "cfg_shapes",
+    "modules": [
+      {
+        "id": "ModuleCfg",
+        "name": "ModuleCfg",
+        "kind": "Module",
+        "file": "ModuleCfg.bas",
+        "procedures": [
+          {
+            "id": "ModuleCfg.WithIf",
+            "name": "WithIf",
+            "kind": "Sub",
+            "access": "Public",
+            "static": false,
+            "params": [],
+            "locs": {
+              "file": "ModuleCfg.bas",
+              "startLine": 4,
+              "endLine": 10
+            },
+            "calls": [
+              {
+                "target": "ModuleCfg.HelperA",
+                "isDynamic": false,
+                "site": {
+                  "module": "ModuleCfg",
+                  "file": "ModuleCfg.bas",
+                  "line": 6
+                }
+              },
+              {
+                "target": "ModuleCfg.HelperB",
+                "isDynamic": false,
+                "site": {
+                  "module": "ModuleCfg",
+                  "file": "ModuleCfg.bas",
+                  "line": 8
+                }
+              }
+            ],
+            "metrics": {
+              "lines": 7
+            },
+            "tags": [
+              "hasIf"
+            ]
+          },
+          {
+            "id": "ModuleCfg.WithLoop",
+            "name": "WithLoop",
+            "kind": "Sub",
+            "access": "Public",
+            "static": false,
+            "params": [],
+            "locs": {
+              "file": "ModuleCfg.bas",
+              "startLine": 12,
+              "endLine": 17
+            },
+            "calls": [
+              {
+                "target": "ModuleCfg.HelperB",
+                "isDynamic": false,
+                "site": {
+                  "module": "ModuleCfg",
+                  "file": "ModuleCfg.bas",
+                  "line": 15
+                }
+              }
+            ],
+            "metrics": {
+              "lines": 6
+            },
+            "tags": [
+              "hasLoop"
+            ]
+          },
+          {
+            "id": "ModuleCfg.HelperA",
+            "name": "HelperA",
+            "kind": "Sub",
+            "access": "Public",
+            "static": false,
+            "params": [],
+            "locs": {
+              "file": "ModuleCfg.bas",
+              "startLine": 19,
+              "endLine": 20
+            },
+            "calls": [],
+            "metrics": {
+              "lines": 2
+            },
+            "tags": []
+          },
+          {
+            "id": "ModuleCfg.HelperB",
+            "name": "HelperB",
+            "kind": "Sub",
+            "access": "Public",
+            "static": false,
+            "params": [],
+            "locs": {
+              "file": "ModuleCfg.bas",
+              "startLine": 22,
+              "endLine": 23
+            },
+            "calls": [],
+            "metrics": {
+              "lines": 2
+            },
+            "tags": []
+          }
+        ]
+      }
+    ]
+  }
+}

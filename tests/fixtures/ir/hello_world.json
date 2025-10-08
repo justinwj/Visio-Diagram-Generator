@@ -1,6 +1,9 @@
 {
   "irSchemaVersion": "0.1",
-  "generator": { "name": "vba2json", "version": "0.1.0" },
+  "generator": {
+    "name": "vba2json",
+    "version": "0.1.0"
+  },
   "project": {
     "name": "hello_world",
     "modules": [
@@ -8,20 +11,28 @@
         "id": "Module1",
         "name": "Module1",
         "kind": "Module",
-        "file": "tests/fixtures/vba/hello_world/Module1.bas",
+        "file": "Module1.bas",
         "procedures": [
           {
             "id": "Module1.Hello",
             "name": "Hello",
             "kind": "Sub",
             "access": "Public",
+            "static": false,
             "params": [],
-            "locs": { "file": "tests/fixtures/vba/hello_world/Module1.bas", "startLine": 3, "endLine": 6 },
-            "calls": []
+            "locs": {
+              "file": "Module1.bas",
+              "startLine": 4,
+              "endLine": 6
+            },
+            "calls": [],
+            "metrics": {
+              "lines": 3
+            },
+            "tags": []
           }
         ]
       }
     ]
   }
 }
-

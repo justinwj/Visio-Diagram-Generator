@@ -18,7 +18,8 @@ internal static class Program
     private static readonly JsonSerializerOptions JsonOpts = new()
     {
         WriteIndented = true,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
     public static int Main(string[] args)
@@ -358,6 +359,16 @@ internal static class Program
     private static List<ProcedureIr> ParseProcedures(string[] lines, string moduleName, string filePath, HashSet<string> moduleSet)
     {
         var result = new List<ProcedureIr>();
+        string TrimToken(string token) => Regex.Replace(token ?? string.Empty, @"\(\s*\)$", "");
+        string? ResolveReferenceType(Dictionary<string, string> scopeTypes, string token)
+        {
+            var cleaned = TrimToken(token);
+            if (string.IsNullOrWhiteSpace(cleaned)) return null;
+            if (string.Equals(cleaned, "Me", StringComparison.OrdinalIgnoreCase)) return moduleName;
+            if (scopeTypes.TryGetValue(cleaned, out var ty)) return ty;
+            if (moduleSet.Contains(cleaned)) return cleaned;
+            return null;
+        }
         var sig = new Regex(@"^(?<indent>\s*)(?<access>Public|Private|Friend)?\s*(?<static>Static\s*)?(?<kind>Sub|Function|Property\s+Get|Property\s+Let|Property\s+Set)\s+(?<name>[A-Za-z_][A-Za-z0-9_]*)(?<rest>.*)$", RegexOptions.IgnoreCase);
         for (int i = 0; i < lines.Length; i++)
         {
@@ -420,60 +431,85 @@ internal static class Program
             bool hasIf = false, hasLoop = false;
             for (int k = i; k < Math.Min(lines.Length, end - 1); k++)
             {
+                var line = lines[k];
+                var seenLineCalls = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                void RecordCall(string target, bool isDynamic = false)
+                {
+                    if (string.IsNullOrWhiteSpace(target)) return;
+                    var key = $"{target}|{isDynamic}";
+                    if (!seenLineCalls.Add(key)) return;
+                    calls.Add(new CallIr { Target = target, IsDynamic = isDynamic, Site = new SiteIr { Module = moduleName, File = filePath, Line = k + 1 } });
+                }
+
                 if (!hasIf && Regex.IsMatch(lines[k], @"^\s*If\b", RegexOptions.IgnoreCase)) hasIf = true;
                 if (!hasLoop && Regex.IsMatch(lines[k], @"^\s*(For\b|Do\b|While\b)", RegexOptions.IgnoreCase)) hasLoop = true;
                 // Track variable declarations/types
-            var dim = Regex.Match(lines[k], @"^\s*(?:Dim|Public|Private)\s+(?<nm>[A-Za-z_][A-Za-z0-9_]*)\s+As\s+(?<ty>[A-Za-z_][A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase);
-            if (dim.Success) varTypes[dim.Groups["nm"].Value] = dim.Groups["ty"].Value;
-            // Dim x As New Type
-            var dimNew = Regex.Match(lines[k], @"^\s*(?:Dim|Public|Private)\s+(?<nm>[A-Za-z_][A-Za-z0-9_]*)\s+As\s+New\s+(?<ty>[A-Za-z_][A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase);
-            if (dimNew.Success) varTypes[dimNew.Groups["nm"].Value] = dimNew.Groups["ty"].Value;
-            var inst = Regex.Match(lines[k], @"^\s*Set\s+(?<nm>[A-Za-z_][A-Za-z0-9_]*)\s*=\s*New\s+(?<ty>[A-Za-z_][A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase);
-            if (inst.Success) varTypes[inst.Groups["nm"].Value] = inst.Groups["ty"].Value;
-            var withStart = Regex.Match(lines[k], @"^\s*With\s+(?<nm>[A-Za-z_][A-Za-z0-9_]*)", RegexOptions.IgnoreCase);
-            if (withStart.Success) withStack.Push(withStart.Groups["nm"].Value);
-            if (Regex.IsMatch(lines[k], @"^\s*End\s+With\b", RegexOptions.IgnoreCase) && withStack.Count > 0) withStack.Pop();
-            // Bind 'Me' to current module (for Class/Form)
-            if (!varTypes.ContainsKey("Me")) varTypes["Me"] = moduleName;
-                // Qualified calls: Obj.Member(...) or Module.Proc(...)
-                foreach (Match cm in Regex.Matches(lines[k], @"([A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)?)\.([A-Za-z_][A-Za-z0-9_]*)\s*(\(|\b)", RegexOptions.IgnoreCase))
+                var dim = Regex.Match(line, @"^\s*(?:Dim|Public|Private)\s+(?<nm>[A-Za-z_][A-Za-z0-9_]*)\s+As\s+(?<ty>[A-Za-z_][A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase);
+                if (dim.Success) varTypes[dim.Groups["nm"].Value] = dim.Groups["ty"].Value;
+                // Dim x As New Type
+                var dimNew = Regex.Match(line, @"^\s*(?:Dim|Public|Private)\s+(?<nm>[A-Za-z_][A-Za-z0-9_]*)\s+As\s+New\s+(?<ty>[A-Za-z_][A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase);
+                if (dimNew.Success) varTypes[dimNew.Groups["nm"].Value] = dimNew.Groups["ty"].Value;
+                var inst = Regex.Match(line, @"^\s*Set\s+(?<nm>[A-Za-z_][A-Za-z0-9_]*)\s*=\s*New\s+(?<ty>[A-Za-z_][A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase);
+                if (inst.Success) varTypes[inst.Groups["nm"].Value] = inst.Groups["ty"].Value;
+                var aliasAssign = Regex.Match(line, @"^\s*Set\s+(?<nm>[A-Za-z_][A-Za-z0-9_]*)\s*=\s*(?<rhs>[A-Za-z_][A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase);
+                if (aliasAssign.Success)
                 {
-                    var lhs = cm.Groups[1].Value; var method = cm.Groups[2].Value;
-                    var baseName = lhs.Split('.')[0];
-                    var target = varTypes.TryGetValue(baseName, out var ty) ? (ty + "." + method) : (baseName + "." + method);
-                    calls.Add(new CallIr { Target = target, IsDynamic = false, Site = new SiteIr { Module = moduleName, File = filePath, Line = k + 1 } });
+                    var lhs = aliasAssign.Groups["nm"].Value;
+                    var rhsRaw = aliasAssign.Groups["rhs"].Value;
+                    if (!rhsRaw.Contains("(") && !rhsRaw.Contains("."))
+                    {
+                        var resolved = ResolveReferenceType(varTypes, rhsRaw);
+                        if (!string.IsNullOrEmpty(resolved)) varTypes[lhs] = resolved!;
+                    }
+                }
+                var withStart = Regex.Match(line, @"^\s*With\s+(?<nm>[A-Za-z_][A-Za-z0-9_]*)", RegexOptions.IgnoreCase);
+                if (withStart.Success) withStack.Push(withStart.Groups["nm"].Value);
+                if (Regex.IsMatch(line, @"^\s*End\s+With\b", RegexOptions.IgnoreCase) && withStack.Count > 0) withStack.Pop();
+                // Bind 'Me' to current module (for Class/Form)
+                if (!varTypes.ContainsKey("Me")) varTypes["Me"] = moduleName;
+                // Qualified or chained calls: Obj.Member or Obj.Prop().Member
+                foreach (Match cm in Regex.Matches(line, @"(?<chain>[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*(?:\(\s*\))?)+)\s*(?=\(|\b)", RegexOptions.IgnoreCase))
+                {
+                    var chain = cm.Groups["chain"].Value;
+                    var segments = chain.Split('.', StringSplitOptions.RemoveEmptyEntries);
+                    if (segments.Length < 2) continue;
+                    var method = TrimToken(segments[^1]);
+                    if (string.IsNullOrWhiteSpace(method)) continue;
+                    var qualifierToken = segments[0];
+                    var qualifier = ResolveReferenceType(varTypes, qualifierToken) ?? TrimToken(qualifierToken);
+                    RecordCall(qualifier + "." + method);
                 }
                 // Unqualified at line start: (Set var = )?(Call )?ProcName(
-                var uq = Regex.Match(lines[k], @"^\s*(?:Set\s+\w+\s*=\s*)?(?:Call\s+)?(?<p>[A-Za-z_][A-Za-z0-9_]*)\s*\(", RegexOptions.IgnoreCase);
+                var uq = Regex.Match(line, @"^\s*(?:Set\s+\w+\s*=\s*)?(?:Call\s+)?(?<p>[A-Za-z_][A-Za-z0-9_]*)\s*\(", RegexOptions.IgnoreCase);
                 if (uq.Success)
                 {
                     var pname = uq.Groups["p"].Value;
                     var kw = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "If", "While", "Do", "For", "With", "Select", "Call", "Set" };
                     if (!kw.Contains(pname))
-                        calls.Add(new CallIr { Target = moduleName + "." + pname, IsDynamic = false, Site = new SiteIr { Module = moduleName, File = filePath, Line = k + 1 } });
+                        RecordCall(moduleName + "." + pname);
                 }
                 // Call Module.Proc(...)
-                var callQual = Regex.Match(lines[k], @"\bCall\s+([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)", RegexOptions.IgnoreCase);
+                var callQual = Regex.Match(line, @"\bCall\s+([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)", RegexOptions.IgnoreCase);
                 if (callQual.Success)
                 {
-                    calls.Add(new CallIr { Target = callQual.Groups[1].Value + "." + callQual.Groups[2].Value, IsDynamic = false, Site = new SiteIr { Module = moduleName, File = filePath, Line = k + 1 } });
+                    RecordCall(callQual.Groups[1].Value + "." + callQual.Groups[2].Value);
                 }
                 // Within With-block: .Method(
                 if (withStack.Count > 0)
                 {
-                    var dot = Regex.Match(lines[k], @"^\s*\.\s*(?<m>[A-Za-z_][A-Za-z0-9_]*)\s*\(", RegexOptions.IgnoreCase);
+                    var dot = Regex.Match(line, @"^\s*\.\s*(?<m>[A-Za-z_][A-Za-z0-9_]*)\s*\(", RegexOptions.IgnoreCase);
                     if (dot.Success)
                     {
                         var w = withStack.Peek();
                         if (varTypes.TryGetValue(w, out var ty))
                         {
-                            calls.Add(new CallIr { Target = ty + "." + dot.Groups["m"].Value, IsDynamic = false, Site = new SiteIr { Module = moduleName, File = filePath, Line = k + 1 } });
+                            RecordCall(ty + "." + dot.Groups["m"].Value);
                         }
                     }
                 }
-                if (Regex.IsMatch(lines[k], @"\b(CallByName|Application\.Run)\b", RegexOptions.IgnoreCase))
+                if (Regex.IsMatch(line, @"\b(CallByName|Application\.Run)\b", RegexOptions.IgnoreCase))
                 {
-                    calls.Add(new CallIr { Target = "~unknown", IsDynamic = true, Site = new SiteIr { Module = moduleName, File = filePath, Line = k + 1 } });
+                    RecordCall("~unknown", true);
                 }
             }
 

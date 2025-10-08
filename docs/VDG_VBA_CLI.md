@@ -37,4 +37,7 @@ dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in out/tmp/ir_cross.json --
 Notes
 - The CLI writes helpful usage messages on invalid arguments. Use `--help` to see supported commands.
 - For robust parsing beyond the skeleton, enhancements will be tracked in a subsequent milestone (types/params/returns, more call patterns, VBIDE integration).
+- Alias handling: `vba2json` now tracks simple `Set alias = ModuleOrVar` assignments and rewrites chained calls like `worker.Factory().RunAll`; targets fall back to the qualifier type when return types are unknown.
+- Limitations: alias inference skips expressions containing dots/parentheses, chained calls only snapshot the final segment, and dynamic invocation (`CallByName`, `Application.Run`) still emits `~unknown` targets.
+- CFG mode (`--mode proc-cfg`) emits decision (`#dec`) and loop (`#loop`) scaffolds with sequential edges; nested/branch merge logic remains a future milestone item.
 

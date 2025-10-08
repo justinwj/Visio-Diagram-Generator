@@ -37,7 +37,8 @@ dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in out/tmp/ir_cross.json --
 Notes
 - The CLI writes helpful usage messages on invalid arguments. Use `--help` to see supported commands.
 - For robust parsing beyond the skeleton, enhancements will be tracked in a subsequent milestone (types/params/returns, more call patterns, VBIDE integration).
-- Alias handling: `vba2json` now tracks simple `Set alias = ModuleOrVar` assignments and rewrites chained calls like `worker.Factory().RunAll`; targets fall back to the qualifier type when return types are unknown.
-- Limitations: alias inference skips expressions containing dots/parentheses, chained calls only snapshot the final segment, and dynamic invocation (`CallByName`, `Application.Run`) still emits `~unknown` targets.
+- Alias handling: `vba2json` now tracks simple `Set alias = ...` assignments, pulling return-type metadata (`Module.Function As Type`) so `worker.Factory().RunAll` resolves to `Helper.RunAll`; targets fall back to the qualifier type when return types are unknown.
+- Limitations: alias inference assumes single-line expressions without arguments lists or line continuations, and dynamic invocation (`CallByName`, `Application.Run`) still emits `~unknown` targets.
+- Return type lookups rely on explicit `As Type` in the signature; late-bound factories or Property Let/Set cannot yet feed alias inference.
 - CFG mode (`--mode proc-cfg`) emits decision (`#dec`) and loop (`#loop`) scaffolds with sequential edges; nested/branch merge logic remains a future milestone item.
 

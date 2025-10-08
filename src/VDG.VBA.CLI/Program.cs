@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
@@ -105,17 +106,18 @@ internal static class Program
         var moduleSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var f in files)
         {
-            var lines = File.ReadAllLines(f);
+            var lines = LoadLogicalLines(f);
             var modName = TryMatch(lines, "Attribute\\s+VB_Name\\s*=\\s*\\\"([^\\\"]+)\\\"") ?? Path.GetFileNameWithoutExtension(f);
             var kind = KindFromExt(Path.GetExtension(f));
             firstPass.Add((f, lines, modName, kind));
             moduleSet.Add(modName);
         }
         // Second pass: parse with symbol table awareness
+        var returnTypeMap = BuildReturnTypeMap(firstPass);
         var modules = new List<ModuleIr>();
         foreach (var it in firstPass)
         {
-            var procs = ParseProcedures(it.lines, it.name, MakeRelative(folder, it.file), moduleSet);
+            var procs = ParseProcedures(it.lines, it.name, MakeRelative(folder, it.file), moduleSet, returnTypeMap);
             modules.Add(new ModuleIr { Id = it.name, Name = it.name, Kind = it.kind, File = MakeRelative(folder, it.file), Procedures = procs });
         }
 
@@ -346,6 +348,27 @@ internal static class Program
         _ => "Module"
     };
 
+    private static string[] LoadLogicalLines(string file)
+    {
+        var raw = File.ReadAllLines(file);
+        var logical = new List<string>();
+        var current = new StringBuilder();
+        foreach (var line in raw)
+        {
+            var trimmed = line.TrimEnd();
+            current.Append(trimmed);
+            if (trimmed.EndsWith("_", StringComparison.Ordinal))
+            {
+                current.Length -= 1; // remove trailing underscore
+                continue;
+            }
+            logical.Add(current.ToString());
+            current.Clear();
+        }
+        if (current.Length > 0) logical.Add(current.ToString());
+        return logical.ToArray();
+    }
+
     private static string? TryMatch(string[] lines, string pattern)
     {
         foreach (var l in lines)
@@ -356,7 +379,7 @@ internal static class Program
         return null;
     }
 
-    private static List<ProcedureIr> ParseProcedures(string[] lines, string moduleName, string filePath, HashSet<string> moduleSet)
+    private static List<ProcedureIr> ParseProcedures(string[] lines, string moduleName, string filePath, HashSet<string> moduleSet, Dictionary<string, string?> returnTypeMap)
     {
         var result = new List<ProcedureIr>();
         string TrimToken(string token) => Regex.Replace(token ?? string.Empty, @"\(\s*\)$", "");
@@ -368,6 +391,41 @@ internal static class Program
             if (scopeTypes.TryGetValue(cleaned, out var ty)) return ty;
             if (moduleSet.Contains(cleaned)) return cleaned;
             return null;
+        }
+        string? LookupReturnType(string? qualifierType, string methodName)
+        {
+            if (string.IsNullOrWhiteSpace(qualifierType)) return null;
+            var key = qualifierType + "." + methodName;
+            return returnTypeMap.TryGetValue(key, out var ret) && !string.IsNullOrWhiteSpace(ret) ? ret : null;
+        }
+        string? ResolveExpressionType(string expression, Dictionary<string, string> scopeTypes)
+        {
+            var segments = expression.Split('.', StringSplitOptions.RemoveEmptyEntries);
+            if (segments.Length == 0) return null;
+            string? currentType = null;
+            for (int idx = 0; idx < segments.Length; idx++)
+            {
+                var segment = segments[idx];
+                var token = TrimToken(segment);
+                var isCall = segment.Contains("(");
+                if (idx == 0)
+                {
+                    currentType = ResolveReferenceType(scopeTypes, token) ?? token;
+                    if (isCall)
+                    {
+                        currentType = LookupReturnType(currentType, token) ?? currentType;
+                    }
+                }
+                else
+                {
+                    var baseType = currentType ?? ResolveReferenceType(scopeTypes, token) ?? token;
+                    if (isCall)
+                        currentType = LookupReturnType(baseType, token) ?? baseType;
+                    else
+                        currentType = ResolveReferenceType(scopeTypes, token) ?? token;
+                }
+            }
+            return currentType;
         }
         var sig = new Regex(@"^(?<indent>\s*)(?<access>Public|Private|Friend)?\s*(?<static>Static\s*)?(?<kind>Sub|Function|Property\s+Get|Property\s+Let|Property\s+Set)\s+(?<name>[A-Za-z_][A-Za-z0-9_]*)(?<rest>.*)$", RegexOptions.IgnoreCase);
         for (int i = 0; i < lines.Length; i++)
@@ -451,15 +509,22 @@ internal static class Program
                 if (dimNew.Success) varTypes[dimNew.Groups["nm"].Value] = dimNew.Groups["ty"].Value;
                 var inst = Regex.Match(line, @"^\s*Set\s+(?<nm>[A-Za-z_][A-Za-z0-9_]*)\s*=\s*New\s+(?<ty>[A-Za-z_][A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase);
                 if (inst.Success) varTypes[inst.Groups["nm"].Value] = inst.Groups["ty"].Value;
-                var aliasAssign = Regex.Match(line, @"^\s*Set\s+(?<nm>[A-Za-z_][A-Za-z0-9_]*)\s*=\s*(?<rhs>[A-Za-z_][A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase);
+                var aliasAssign = Regex.Match(line, @"^\s*Set\s+(?<nm>[A-Za-z_][A-Za-z0-9_]*)\s*=\s*(?<rhs>.+)$", RegexOptions.IgnoreCase);
                 if (aliasAssign.Success)
                 {
                     var lhs = aliasAssign.Groups["nm"].Value;
                     var rhsRaw = aliasAssign.Groups["rhs"].Value;
+                    var commentSplit = rhsRaw.Split('\'');
+                    rhsRaw = commentSplit.Length > 0 ? commentSplit[0].Trim() : rhsRaw.Trim();
                     if (!rhsRaw.Contains("(") && !rhsRaw.Contains("."))
                     {
                         var resolved = ResolveReferenceType(varTypes, rhsRaw);
                         if (!string.IsNullOrEmpty(resolved)) varTypes[lhs] = resolved!;
+                    }
+                    else
+                    {
+                        var exprType = ResolveExpressionType(rhsRaw, varTypes);
+                        if (!string.IsNullOrWhiteSpace(exprType)) varTypes[lhs] = exprType!;
                     }
                 }
                 var withStart = Regex.Match(line, @"^\s*With\s+(?<nm>[A-Za-z_][A-Za-z0-9_]*)", RegexOptions.IgnoreCase);
@@ -475,9 +540,11 @@ internal static class Program
                     if (segments.Length < 2) continue;
                     var method = TrimToken(segments[^1]);
                     if (string.IsNullOrWhiteSpace(method)) continue;
-                    var qualifierToken = segments[0];
-                    var qualifier = ResolveReferenceType(varTypes, qualifierToken) ?? TrimToken(qualifierToken);
-                    RecordCall(qualifier + "." + method);
+                    var qualifierExpr = string.Join(".", segments.Take(segments.Length - 1));
+                    var qualifier = ResolveExpressionType(qualifierExpr, varTypes);
+                    if (string.IsNullOrWhiteSpace(qualifier))
+                        qualifier = ResolveReferenceType(varTypes, TrimToken(segments[0])) ?? TrimToken(segments[0]);
+                    RecordCall((qualifier ?? moduleName) + "." + method);
                 }
                 // Unqualified at line start: (Set var = )?(Call )?ProcName(
                 var uq = Regex.Match(line, @"^\s*(?:Set\s+\w+\s*=\s*)?(?:Call\s+)?(?<p>[A-Za-z_][A-Za-z0-9_]*)\s*\(", RegexOptions.IgnoreCase);
@@ -533,6 +600,46 @@ internal static class Program
             i = end - 1;
         }
         return result;
+    }
+
+    private static Dictionary<string, string?> BuildReturnTypeMap(List<(string file, string[] lines, string name, string kind)> modules)
+    {
+        var map = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+        var sig = new Regex(@"^(?<indent>\s*)(?<access>Public|Private|Friend)?\s*(?<static>Static\s*)?(?<kind>Sub|Function|Property\s+Get|Property\s+Let|Property\s+Set)\s+(?<name>[A-Za-z_][A-Za-z0-9_]*)(?<rest>.*)$", RegexOptions.IgnoreCase);
+        foreach (var module in modules)
+        {
+            for (int i = 0; i < module.lines.Length; i++)
+            {
+                var m = sig.Match(module.lines[i]);
+                if (!m.Success) continue;
+                var kindRaw = m.Groups["kind"].Value.Trim();
+                var kind = kindRaw.Equals("Sub", StringComparison.OrdinalIgnoreCase) ? "Sub" :
+                           kindRaw.Equals("Function", StringComparison.OrdinalIgnoreCase) ? "Function" :
+                           kindRaw.Contains("Get", StringComparison.OrdinalIgnoreCase) ? "PropertyGet" :
+                           kindRaw.Contains("Let", StringComparison.OrdinalIgnoreCase) ? "PropertyLet" : "PropertySet";
+                var name = m.Groups["name"].Value;
+                string? returns = null;
+                if (kind == "Function" || kind == "PropertyGet")
+                {
+                    var rest = m.Groups["rest"].Value;
+                    var asMatch = Regex.Match(rest, @"\)\s*As\s+(?<rt>[A-Za-z_][A-Za-z0-9_\.]*)", RegexOptions.IgnoreCase);
+                    if (!asMatch.Success)
+                        asMatch = Regex.Match(rest, @"\bAs\s+(?<rt>[A-Za-z_][A-Za-z0-9_\.]*)", RegexOptions.IgnoreCase);
+                    if (asMatch.Success) returns = asMatch.Groups["rt"].Value;
+                }
+                var key = module.name + "." + name;
+                if (map.TryGetValue(key, out var existing))
+                {
+                    if (string.IsNullOrWhiteSpace(existing) && !string.IsNullOrWhiteSpace(returns))
+                        map[key] = returns;
+                }
+                else
+                {
+                    map[key] = returns;
+                }
+            }
+        }
+        return map;
     }
 
     private static string MakeRelative(string root, string path)

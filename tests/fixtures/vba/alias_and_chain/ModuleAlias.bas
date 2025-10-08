@@ -12,5 +12,14 @@ Public Sub Caller()
     helperAlias.RunAll
 
     worker.Factory().RunAll
-End Sub
+    worker.Factory( _
+        1, _
+        "x" _
+    ).RunAll
 
+    Dim multiAlias As Helper
+    Set multiAlias = worker. _
+        Factory(). _
+        RunFactory()
+    multiAlias.RunAll
+End Sub

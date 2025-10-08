@@ -206,10 +206,11 @@ public class ParserSmokeTests
             .SelectMany(m => m.GetProperty("procedures").EnumerateArray())
             .Single(p => p.GetProperty("id").GetString() == "ModuleAlias.Caller");
 
-        var targets = caller.GetProperty("calls").EnumerateArray().Select(c => c.GetProperty("target").GetString()).ToList();
-        Assert.Contains("Worker.DoWork", targets);
-        Assert.Contains("Helper.RunAll", targets);
-        Assert.Contains("Worker.RunAll", targets);
+        var calls = caller.GetProperty("calls").EnumerateArray().ToList();
+        Assert.Contains(calls, c => c.GetProperty("target").GetString() == "Worker.DoWork");
+        Assert.Contains(calls, c => c.GetProperty("target").GetString() == "Worker.Factory");
+        var helperRunAll = calls.Where(c => c.GetProperty("target").GetString() == "Helper.RunAll").ToList();
+        Assert.Equal(2, helperRunAll.Count);
     }
 
     private static JsonDocument GenerateDiagram(string fixtureName, string mode)

@@ -61,6 +61,8 @@ Validation & Tests
   - `hello_world` (1 module / 1 Sub)
   - `cross_module_calls` (2–3 modules; crossing calls)
   - `events_and_forms` (form + handler; class module)
+  - `alias_and_chain` (factory returns + alias/chained calls)
+  - `cfg_shapes` (If/Else + For loop scaffolds)
 - [x] Golden IRs in `tests/fixtures/ir/`.
 - [ ] Schema validation tests (IR conforms to `vbaIr.schema.json`).
 - [ ] Determinism tests (stable IDs/ordering).
@@ -97,7 +99,7 @@ Work Breakdown
 - [x] Rewrite qualified calls `obj.Method` to `Type.Method` when `obj` type is known.
 7) Expand Call Detection (Step 1)
 - [x] Unqualified call detection at line start (`Call Proc(...)`, `Proc(...)`).
-- [x] Additional patterns (aliases, chained calls) - basic alias + chained-call heuristics wired into v0.1 parser.
+- [x] Additional patterns (aliases, chained calls) - heuristics now include return-type lookups for factories to power alias inference.
 8) New Diagram Modes (Step 2)
 - [x] `module-callmap` (module-level call aggregation).
 - [x] `event-wiring` (Form control events → handler procedures).

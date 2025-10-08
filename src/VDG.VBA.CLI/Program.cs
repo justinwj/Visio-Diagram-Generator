@@ -229,7 +229,38 @@ internal static class Program
                     string prev = startId;
                     bool hasIf = (p.Tags?.Contains("hasIf") ?? false);
                     bool hasLoop = (p.Tags?.Contains("hasLoop") ?? false);
-                    if (hasIf)
+                    if (hasIf && hasLoop)
+                    {
+                        var loopId = p.Id + "#loop";
+                        nodes.Add(new { id = loopId, label = "Loop", tier, containerId = contId });
+                        edges.Add(new { sourceId = prev, targetId = loopId, label = "seq", metadata = new Dictionary<string, string> { ["code.edge"] = "flow" } });
+
+                        var decId = p.Id + "#dec";
+                        nodes.Add(new { id = decId, label = "Decision", tier, containerId = contId });
+                        edges.Add(new { sourceId = loopId, targetId = decId, label = "iter", metadata = new Dictionary<string, string> { ["code.edge"] = "flow" } });
+
+                        var thenId = p.Id + "#then";
+                        nodes.Add(new { id = thenId, label = "Then", tier, containerId = contId });
+                        edges.Add(new { sourceId = decId, targetId = thenId, label = "True", metadata = new Dictionary<string, string> { ["code.edge"] = "flow" } });
+
+                        string thenPrev = thenId;
+                        foreach (var c in p.Calls ?? new())
+                        {
+                            if (string.IsNullOrWhiteSpace(c.Target) || c.Target == "~unknown") continue;
+                            var nid = p.Id + "#call:" + c.Target;
+                            nodes.Add(new { id = nid, label = c.Target, tier, containerId = contId });
+                            edges.Add(new { sourceId = thenPrev, targetId = nid, label = "seq", metadata = new Dictionary<string, string> { ["code.edge"] = "flow" } });
+                            thenPrev = nid;
+                        }
+
+                        edges.Add(new { sourceId = thenPrev, targetId = loopId, label = "back", metadata = new Dictionary<string, string> { ["code.edge"] = "flow" } });
+
+                        var endId = p.Id + "#end";
+                        nodes.Add(new { id = endId, label = "End", tier, containerId = contId });
+                        edges.Add(new { sourceId = decId, targetId = endId, label = "False", metadata = new Dictionary<string, string> { ["code.edge"] = "flow" } });
+                        edges.Add(new { sourceId = loopId, targetId = endId, label = "exit", metadata = new Dictionary<string, string> { ["code.edge"] = "flow" } });
+                    }
+                    else if (hasIf)
                     {
                         var decId = p.Id + "#dec";
                         nodes.Add(new { id = decId, label = "Decision", tier, containerId = contId });
@@ -382,7 +413,7 @@ internal static class Program
     private static List<ProcedureIr> ParseProcedures(string[] lines, string moduleName, string filePath, HashSet<string> moduleSet, Dictionary<string, string?> returnTypeMap)
     {
         var result = new List<ProcedureIr>();
-        string TrimToken(string token) => Regex.Replace(token ?? string.Empty, @"\(\s*\)$", "");
+        string TrimToken(string token) => Regex.Replace(token ?? string.Empty, @"\([^)]*\)$", "");
         string? ResolveReferenceType(Dictionary<string, string> scopeTypes, string token)
         {
             var cleaned = TrimToken(token);
@@ -400,7 +431,10 @@ internal static class Program
         }
         string? ResolveExpressionType(string expression, Dictionary<string, string> scopeTypes)
         {
-            var segments = expression.Split('.', StringSplitOptions.RemoveEmptyEntries);
+            var segments = expression.Split('.', StringSplitOptions.RemoveEmptyEntries)
+                                     .Select(s => s.Trim())
+                                     .Where(s => !string.IsNullOrEmpty(s))
+                                     .ToArray();
             if (segments.Length == 0) return null;
             string? currentType = null;
             for (int idx = 0; idx < segments.Length; idx++)
@@ -536,7 +570,10 @@ internal static class Program
                 foreach (Match cm in Regex.Matches(line, @"(?<chain>[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*(?:\(\s*\))?)+)\s*(?=\(|\b)", RegexOptions.IgnoreCase))
                 {
                     var chain = cm.Groups["chain"].Value;
-                    var segments = chain.Split('.', StringSplitOptions.RemoveEmptyEntries);
+                    var segments = chain.Split('.', StringSplitOptions.RemoveEmptyEntries)
+                                        .Select(s => s.Trim())
+                                        .Where(s => !string.IsNullOrEmpty(s))
+                                        .ToArray();
                     if (segments.Length < 2) continue;
                     var method = TrimToken(segments[^1]);
                     if (string.IsNullOrWhiteSpace(method)) continue;
@@ -564,13 +601,35 @@ internal static class Program
                 // Within With-block: .Method(
                 if (withStack.Count > 0)
                 {
-                    var dot = Regex.Match(line, @"^\s*\.\s*(?<m>[A-Za-z_][A-Za-z0-9_]*)\s*\(", RegexOptions.IgnoreCase);
-                    if (dot.Success)
+                    var exprMatch = Regex.Match(line, @"^\s*\.(?<expr>[A-Za-z_][A-Za-z0-9_]*(?:\(\s*\))?(?:\.[A-Za-z_][A-Za-z0-9_]*(?:\(\s*\))?)*)", RegexOptions.IgnoreCase);
+                    if (exprMatch.Success)
                     {
-                        var w = withStack.Peek();
-                        if (varTypes.TryGetValue(w, out var ty))
+                        var expr = exprMatch.Groups["expr"].Value;
+                        var segments = expr.Split('.', StringSplitOptions.RemoveEmptyEntries)
+                                           .Select(s => s.Trim())
+                                           .Where(s => !string.IsNullOrEmpty(s))
+                                           .ToArray();
+                        if (segments.Length > 0)
                         {
-                            RecordCall(ty + "." + dot.Groups["m"].Value);
+                            var baseVar = withStack.Peek();
+                            var baseType = ResolveReferenceType(varTypes, baseVar) ?? baseVar;
+                            var firstSegment = segments[0];
+                            if (firstSegment.Contains("("))
+                            {
+                                var firstMethod = TrimToken(firstSegment);
+                                RecordCall(baseType + "." + firstMethod);
+                            }
+                            string? qualifierType = baseType;
+                            if (segments.Length > 1)
+                            {
+                                var qualifierExpr = baseType + "." + string.Join(".", segments.Take(segments.Length - 1));
+                                qualifierType = ResolveExpressionType(qualifierExpr, varTypes) ?? qualifierType;
+                            }
+                            var method = TrimToken(segments[^1]);
+                            if (!string.IsNullOrWhiteSpace(method))
+                            {
+                                RecordCall((qualifierType ?? baseType) + "." + method);
+                            }
                         }
                     }
                 }

@@ -22,4 +22,9 @@ Public Sub Caller()
         Factory(). _
         RunFactory()
     multiAlias.RunAll
+
+    With worker
+        .Factory().RunAll
+        .RunFactory().RunAll
+    End With
 End Sub

@@ -8,3 +8,6 @@ Option Explicit
 Public Sub RunAll()
 End Sub
 
+Public Function RunFactory() As Helper
+    Set RunFactory = New Helper
+End Function

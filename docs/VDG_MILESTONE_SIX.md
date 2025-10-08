@@ -63,6 +63,7 @@ Validation & Tests
   - `events_and_forms` (form + handler; class module)
   - `alias_and_chain` (factory returns + alias/chained calls)
   - `cfg_shapes` (If/Else + For loop scaffolds)
+  - `cfg_nested` (loop containing branch; nested CFG coverage)
 - [x] Golden IRs in `tests/fixtures/ir/`.
 - [ ] Schema validation tests (IR conforms to `vbaIr.schema.json`).
 - [ ] Determinism tests (stable IDs/ordering).

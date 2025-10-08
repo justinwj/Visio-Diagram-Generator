@@ -146,6 +146,36 @@ public class ParserSmokeTests
     }
 
     [Fact]
+    public void ProcCfgHandlesNestedLoopWithBranch()
+    {
+        using var diagram = GenerateDiagram("cfg_nested", "proc-cfg");
+        var nodes = diagram.RootElement.GetProperty("nodes").EnumerateArray().ToList();
+        Assert.Contains(nodes, n => n.GetProperty("id").GetString() == "ModuleNested.LoopWithBranch#loop");
+        Assert.Contains(nodes, n => n.GetProperty("id").GetString() == "ModuleNested.LoopWithBranch#dec");
+        Assert.Contains(nodes, n => n.GetProperty("id").GetString() == "ModuleNested.LoopWithBranch#then");
+        Assert.Contains(nodes, n => n.GetProperty("id").GetString() == "ModuleNested.LoopWithBranch#call:ModuleNested.HelperEven");
+        Assert.Contains(nodes, n => n.GetProperty("id").GetString() == "ModuleNested.LoopWithBranch#call:ModuleNested.HelperOdd");
+        Assert.Contains(nodes, n => n.GetProperty("id").GetString() == "ModuleNested.LoopWithBranch#end");
+
+        var edges = diagram.RootElement.GetProperty("edges").EnumerateArray().ToList();
+        Assert.Contains(edges, e => e.GetProperty("sourceId").GetString() == "ModuleNested.LoopWithBranch#loop" &&
+                                    e.GetProperty("targetId").GetString() == "ModuleNested.LoopWithBranch#dec" &&
+                                    e.GetProperty("label").GetString() == "iter");
+        Assert.Contains(edges, e => e.GetProperty("sourceId").GetString() == "ModuleNested.LoopWithBranch#dec" &&
+                                    e.GetProperty("targetId").GetString() == "ModuleNested.LoopWithBranch#then" &&
+                                    e.GetProperty("label").GetString() == "True");
+        Assert.Contains(edges, e => e.GetProperty("sourceId").GetString() == "ModuleNested.LoopWithBranch#call:ModuleNested.HelperOdd" &&
+                                    e.GetProperty("targetId").GetString() == "ModuleNested.LoopWithBranch#loop" &&
+                                    e.GetProperty("label").GetString() == "back");
+        Assert.Contains(edges, e => e.GetProperty("sourceId").GetString() == "ModuleNested.LoopWithBranch#dec" &&
+                                    e.GetProperty("targetId").GetString() == "ModuleNested.LoopWithBranch#end" &&
+                                    e.GetProperty("label").GetString() == "False");
+        Assert.Contains(edges, e => e.GetProperty("sourceId").GetString() == "ModuleNested.LoopWithBranch#loop" &&
+                                    e.GetProperty("targetId").GetString() == "ModuleNested.LoopWithBranch#end" &&
+                                    e.GetProperty("label").GetString() == "exit");
+    }
+
+    [Fact]
     public void Vba2JsonMatchesGoldenFixture()
     {
         var actual = JsonNode.Parse(GenerateIrJson("hello_world"));
@@ -209,8 +239,9 @@ public class ParserSmokeTests
         var calls = caller.GetProperty("calls").EnumerateArray().ToList();
         Assert.Contains(calls, c => c.GetProperty("target").GetString() == "Worker.DoWork");
         Assert.Contains(calls, c => c.GetProperty("target").GetString() == "Worker.Factory");
+        Assert.Contains(calls, c => c.GetProperty("target").GetString() == "Worker.RunFactory");
         var helperRunAll = calls.Where(c => c.GetProperty("target").GetString() == "Helper.RunAll").ToList();
-        Assert.Equal(2, helperRunAll.Count);
+        Assert.True(helperRunAll.Count >= 4, "Expected multiple Helper.RunAll targets from aliases and chains.");
     }
 
     private static JsonDocument GenerateDiagram(string fixtureName, string mode)

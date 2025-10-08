@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -10,6 +11,9 @@ public class ParserSmokeTests
 {
     private static readonly string RepoRoot = LocateRepoRoot();
     private static readonly string CliProjectPath = Path.Combine(RepoRoot, "src", "VDG.VBA.CLI", "VDG.VBA.CLI.csproj");
+    private static readonly string[] ModuleKinds = { "Module", "Class", "Form" };
+    private static readonly string[] ProcedureKinds = { "Sub", "Function", "PropertyGet", "PropertyLet", "PropertySet" };
+    private static readonly string[] AccessModifiers = { "Public", "Private", "Friend" };
 
     private static string RunCli(params string[] args)
     {
@@ -203,6 +207,17 @@ public class ParserSmokeTests
     }
 
     [Fact]
+    public void GoldenIrFixturesValidateAgainstSchema()
+    {
+        var fixturesDir = Path.Combine(RepoRoot, "tests", "fixtures", "ir");
+        foreach (var path in Directory.EnumerateFiles(fixturesDir, "*.json"))
+        {
+            using var doc = JsonDocument.Parse(File.ReadAllText(path));
+            ValidateIrSchema(doc.RootElement, Path.GetFileName(path));
+        }
+    }
+
+    [Fact]
     public void Vba2JsonOutputIsDeterministic()
     {
         static string Normalize(string text) => text.Replace("\r\n", "\n");
@@ -257,6 +272,230 @@ public class ParserSmokeTests
         Assert.Contains(calls, c => c.GetProperty("target").GetString() == "Worker.RunFactory");
         var helperRunAll = calls.Where(c => c.GetProperty("target").GetString() == "Helper.RunAll").ToList();
         Assert.True(helperRunAll.Count >= 4, "Expected multiple Helper.RunAll targets from aliases and chains.");
+    }
+
+    private static void ValidateIrSchema(JsonElement root, string fixtureName)
+    {
+        Assert.Equal(JsonValueKind.Object, root.ValueKind);
+        Assert.Equal("0.1", RequireString(root, "irSchemaVersion", fixtureName));
+
+        if (root.TryGetProperty("generator", out var generator))
+        {
+            Assert.Equal(JsonValueKind.Object, generator.ValueKind);
+            RequireString(generator, "name", $"{fixtureName} generator");
+            RequireString(generator, "version", $"{fixtureName} generator");
+        }
+
+        var project = RequireObject(root, "project", fixtureName);
+        RequireString(project, "name", $"{fixtureName} project");
+        ExpectOptionalString(project, "version", $"{fixtureName} project");
+
+        var modules = RequireArray(project, "modules", $"{fixtureName} project");
+        Assert.True(modules.GetArrayLength() > 0, $"{fixtureName} project.modules must contain at least one module");
+
+        var seenModuleIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var seenModuleNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (module, index) in modules.EnumerateArray().Select((m, i) => (m, i)))
+        {
+            ValidateModule(module, fixtureName, index, seenModuleIds, seenModuleNames);
+        }
+    }
+
+    private static void ValidateModule(
+        JsonElement module,
+        string fixtureName,
+        int index,
+        HashSet<string> seenModuleIds,
+        HashSet<string> seenModuleNames)
+    {
+        Assert.Equal(JsonValueKind.Object, module.ValueKind);
+        var context = $"{fixtureName} module[{index}]";
+        var moduleId = RequireString(module, "id", context);
+        Assert.True(seenModuleIds.Add(moduleId), $"{context}: duplicate module id '{moduleId}'");
+        var moduleName = RequireString(module, "name", context);
+        Assert.True(seenModuleNames.Add(moduleName), $"{context}: duplicate module name '{moduleName}'");
+        var kind = RequireString(module, "kind", context);
+        Assert.Contains(kind, ModuleKinds);
+        ExpectOptionalString(module, "file", context);
+
+        if (module.TryGetProperty("attributes", out var attributes))
+        {
+            Assert.Equal(JsonValueKind.Array, attributes.ValueKind);
+            foreach (var attribute in attributes.EnumerateArray())
+            {
+                Assert.Equal(JsonValueKind.String, attribute.ValueKind);
+            }
+        }
+
+        var procedures = RequireArray(module, "procedures", context);
+        Assert.True(procedures.GetArrayLength() > 0, $"{context}: procedures must contain at least one entry");
+        var seenProcedureIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (procedure, procIndex) in procedures.EnumerateArray().Select((p, i) => (p, i)))
+        {
+            ValidateProcedure(procedure, fixtureName, moduleName, procIndex, seenProcedureIds);
+        }
+    }
+
+    private static void ValidateProcedure(
+        JsonElement procedure,
+        string fixtureName,
+        string moduleName,
+        int index,
+        HashSet<string> seenProcedureIds)
+    {
+        Assert.Equal(JsonValueKind.Object, procedure.ValueKind);
+        var context = $"{fixtureName} {moduleName}.procedures[{index}]";
+        var id = RequireString(procedure, "id", context);
+        Assert.StartsWith(moduleName + ".", id, StringComparison.Ordinal);
+        Assert.True(seenProcedureIds.Add(id), $"{context}: duplicate procedure id '{id}'");
+        RequireString(procedure, "name", context);
+        var kind = RequireString(procedure, "kind", context);
+        Assert.Contains(kind, ProcedureKinds);
+
+        if (procedure.TryGetProperty("access", out var access))
+        {
+            Assert.Equal(JsonValueKind.String, access.ValueKind);
+            Assert.Contains(access.GetString(), AccessModifiers);
+        }
+
+        if (procedure.TryGetProperty("static", out var isStatic))
+        {
+            Assert.True(
+                isStatic.ValueKind is JsonValueKind.True or JsonValueKind.False,
+                $"{context}: 'static' must be boolean when present");
+        }
+
+        if (procedure.TryGetProperty("params", out var parameters))
+        {
+            Assert.Equal(JsonValueKind.Array, parameters.ValueKind);
+            foreach (var (parameter, paramIndex) in parameters.EnumerateArray().Select((p, i) => (p, i)))
+            {
+                ValidateParameter(parameter, $"{context}.params[{paramIndex}]");
+            }
+        }
+
+        if (procedure.TryGetProperty("returns", out var returns))
+        {
+            if (returns.ValueKind == JsonValueKind.String)
+            {
+                Assert.False(string.IsNullOrWhiteSpace(returns.GetString()), $"{context}: returns must not be empty");
+            }
+            else if (returns.ValueKind == JsonValueKind.Object)
+            {
+                ExpectOptionalString(returns, "type", $"{context}.returns");
+            }
+            else
+            {
+                Assert.True(false, $"{context}: returns must be string or object when present");
+            }
+        }
+
+        var locs = RequireObject(procedure, "locs", context);
+        RequireString(locs, "file", $"{context}.locs");
+        RequireNumber(locs, "startLine", $"{context}.locs");
+        RequireNumber(locs, "endLine", $"{context}.locs");
+
+        var calls = RequireArray(procedure, "calls", context);
+        foreach (var (call, callIndex) in calls.EnumerateArray().Select((c, i) => (c, i)))
+        {
+            ValidateCall(call, $"{context}.calls[{callIndex}]");
+        }
+
+        if (procedure.TryGetProperty("metrics", out var metrics))
+        {
+            Assert.Equal(JsonValueKind.Object, metrics.ValueKind);
+            if (metrics.TryGetProperty("lines", out var lines))
+            {
+                Assert.Equal(JsonValueKind.Number, lines.ValueKind);
+                Assert.True(lines.GetInt32() >= 0, $"{context}.metrics.lines must be >= 0");
+            }
+            if (metrics.TryGetProperty("cyclomatic", out var cyclomatic))
+            {
+                Assert.Equal(JsonValueKind.Number, cyclomatic.ValueKind);
+                Assert.True(cyclomatic.GetInt32() >= 0, $"{context}.metrics.cyclomatic must be >= 0");
+            }
+        }
+
+        if (procedure.TryGetProperty("tags", out var tags))
+        {
+            Assert.Equal(JsonValueKind.Array, tags.ValueKind);
+            foreach (var tag in tags.EnumerateArray())
+            {
+                Assert.Equal(JsonValueKind.String, tag.ValueKind);
+            }
+        }
+    }
+
+    private static void ValidateParameter(JsonElement parameter, string context)
+    {
+        Assert.Equal(JsonValueKind.Object, parameter.ValueKind);
+        RequireString(parameter, "name", context);
+        ExpectOptionalString(parameter, "type", context);
+        if (parameter.TryGetProperty("byRef", out var byRef))
+        {
+            Assert.True(
+                byRef.ValueKind is JsonValueKind.True or JsonValueKind.False,
+                $"{context}: 'byRef' must be boolean when present");
+        }
+    }
+
+    private static void ValidateCall(JsonElement call, string context)
+    {
+        Assert.Equal(JsonValueKind.Object, call.ValueKind);
+        RequireString(call, "target", context);
+        if (call.TryGetProperty("isDynamic", out var isDynamic))
+        {
+            Assert.True(
+                isDynamic.ValueKind is JsonValueKind.True or JsonValueKind.False,
+                $"{context}: 'isDynamic' must be boolean when present");
+        }
+
+        if (call.TryGetProperty("site", out var site))
+        {
+            Assert.Equal(JsonValueKind.Object, site.ValueKind);
+            RequireString(site, "module", $"{context}.site");
+            RequireString(site, "file", $"{context}.site");
+            RequireNumber(site, "line", $"{context}.site");
+        }
+    }
+
+    private static JsonElement RequireObject(JsonElement element, string propertyName, string context)
+    {
+        Assert.True(element.TryGetProperty(propertyName, out var property), $"{context}: missing '{propertyName}'");
+        Assert.Equal(JsonValueKind.Object, property.ValueKind);
+        return property;
+    }
+
+    private static JsonElement RequireArray(JsonElement element, string propertyName, string context)
+    {
+        Assert.True(element.TryGetProperty(propertyName, out var property), $"{context}: missing '{propertyName}'");
+        Assert.Equal(JsonValueKind.Array, property.ValueKind);
+        return property;
+    }
+
+    private static string RequireString(JsonElement element, string propertyName, string context)
+    {
+        Assert.True(element.TryGetProperty(propertyName, out var property), $"{context}: missing '{propertyName}'");
+        Assert.Equal(JsonValueKind.String, property.ValueKind);
+        var value = property.GetString();
+        Assert.False(string.IsNullOrWhiteSpace(value), $"{context}: '{propertyName}' must not be empty");
+        return value!;
+    }
+
+    private static int RequireNumber(JsonElement element, string propertyName, string context)
+    {
+        Assert.True(element.TryGetProperty(propertyName, out var property), $"{context}: missing '{propertyName}'");
+        Assert.Equal(JsonValueKind.Number, property.ValueKind);
+        return property.GetInt32();
+    }
+
+    private static void ExpectOptionalString(JsonElement element, string propertyName, string context)
+    {
+        if (element.TryGetProperty(propertyName, out var property))
+        {
+            Assert.Equal(JsonValueKind.String, property.ValueKind);
+            Assert.False(string.IsNullOrWhiteSpace(property.GetString()), $"{context}: '{propertyName}' must not be empty when provided");
+        }
     }
 
     private static JsonDocument GenerateDiagram(string fixtureName, string mode)

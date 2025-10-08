@@ -1,7 +1,7 @@
 **VDG MILESTONE SIX — Define VBA IR + Versioning**
 
 Goal
-- [x] Produce a documented, versioned, and test‑validated JSON IR for VBA projects that downstream tools can convert into diagram JSON and render via VDG.
+- [x] Produce a documented, versioned, and test‑validated JSON [IR](docs/Glossary.md#ir) for VBA projects that downstream tools can convert into diagram JSON and render via [VDG](docs/Glossary.md#vdg).
 
 Scope
 - [x] IR design and JSON Schema (v0.1).
@@ -75,7 +75,7 @@ Acceptance Criteria
 - [x] Three fixtures produce IRs that validate (via `tools/ir-validate.ps1`).
 - [x] IR contains sufficient data to draw a project call graph with VDG.
 - [x] Versioning policy documented; tools tolerate unknown fields.
-- [x] CLI can render call graph from sources in one step (`render`).
+- [x] [CLI](docs/Glossary.md#cli) can render call graph from sources in one step (`render`).
 
 Work Breakdown
 1) Spec & Schema
@@ -109,7 +109,7 @@ Work Breakdown
 6) Scaffolds (optional within this milestone)
 - [x] Add `tools/vba2json.ps1` skeleton (signatures/calls, not a full parser).
 - [x] Add `tools/vba-ir2diagram.ps1` skeleton (project call graph mapping).
-- [ ] Wire a sample end-to-end doc snippet (vba2json → ir-validate → ir2diagram → VDG.CLI).
+- [ ] Wire a sample end-to-end doc snippet ([vba2json](docs/Glossary.md#vba2json) -> ir-validate -> ir2diagram -> [VDG.CLI](docs/Glossary.md#cli)).
 
 Risks & Mitigations
 - Ambiguity for dynamic calls → mark `isDynamic`, record call site; resolve later if possible.

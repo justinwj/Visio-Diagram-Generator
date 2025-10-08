@@ -235,3 +235,8 @@ out/                           // Build + generated diagrams
 
 ## Contributing
 Issues and pull requests are welcome. Please run `dotnet test` before submitting and include reproduction steps for Visio automation issues. The automation layer is sensitive to environment differences, so details about Visio version and Windows build help significantly.
+
+### IR / Schema Onboarding
+1. Read the VBA IR specification in `docs/VBA_IR.md` to understand entities, schema shape, and examples.
+2. Follow the governance checklist and smoke workflow in `docs/IR_Governance.md` before proposing IR changes.
+3. Review the terminology in `docs/Glossary.md` so you recognise project-specific acronyms during reviews.

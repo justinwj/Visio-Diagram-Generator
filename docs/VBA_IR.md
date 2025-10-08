@@ -1,12 +1,16 @@
-# VDG VBA Intermediate Representation (IR) v0.1
+# VDG VBA Intermediate Representation ([IR](docs/Glossary.md#ir)) v0.1
 
 Purpose
-- A small, stable JSON format that captures the structure of a VBA project (modules, procedures, and calls) so downstream tools can convert it to diagram JSON and render via VDG.
+- A small, stable JSON format that captures the structure of a VBA project (modules, procedures, and calls) so downstream tools can convert it to diagram JSON and render via [VDG](docs/Glossary.md#vdg).
 
 Versioning
 - `irSchemaVersion`: `0.1` (SemVer `major.minor`).
 - Minor versions are additive only (new optional fields/enums). Tools must ignore unknown fields.
 - Major version bump for breaking changes; provide migration notes in `docs/CHANGELOG_IR.md`.
+
+Related Resources
+- IR change governance checklist and smoke workflow: `docs/IR_Governance.md`.
+- Project glossary for acronyms and terminology: `docs/Glossary.md`.
 
 Top‑Level Shape
 ```json
@@ -120,7 +124,7 @@ Mapping to Diagram JSON (Project Call Graph)
 
 Future Extensions
 - Additional call metadata (arity, inferred targets for dynamics), attributes for forms/classes, module references.
-- Additional diagram modes: Module Structure, per‑procedure CFG, Event Wiring.
+- Additional diagram modes: Module Structure, per-procedure [CFG](docs/Glossary.md#cfg), Event Wiring.
 
 FAQ
 
@@ -147,4 +151,3 @@ Q: How are forms and events modeled?
 
 Q: What about file paths?
 - A: Relative paths are recommended (repo‑relative) to improve portability; absolute paths are allowed but discouraged. The combination of `module.name` and `locs.file` should be sufficient for navigation.
-

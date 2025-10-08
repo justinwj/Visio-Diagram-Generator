@@ -30,6 +30,25 @@
               "lines": 2
             },
             "tags": []
+          },
+          {
+            "id": "Helper.RunFactory",
+            "name": "RunFactory",
+            "kind": "Function",
+            "access": "Public",
+            "static": false,
+            "params": [],
+            "returns": "Helper",
+            "locs": {
+              "file": "Helper.cls",
+              "startLine": 11,
+              "endLine": 13
+            },
+            "calls": [],
+            "metrics": {
+              "lines": 3
+            },
+            "tags": []
           }
         ]
       },
@@ -49,7 +68,7 @@
             "locs": {
               "file": "ModuleAlias.bas",
               "startLine": 4,
-              "endLine": 15
+              "endLine": 25
             },
             "calls": [
               {
@@ -80,17 +99,71 @@
                 }
               },
               {
-                "target": "Worker.RunAll",
+                "target": "Helper.RunAll",
                 "isDynamic": false,
                 "site": {
                   "module": "ModuleAlias",
                   "file": "ModuleAlias.bas",
                   "line": 14
                 }
+              },
+              {
+                "target": "Worker.Factory",
+                "isDynamic": false,
+                "site": {
+                  "module": "ModuleAlias",
+                  "file": "ModuleAlias.bas",
+                  "line": 15
+                }
+              },
+              {
+                "target": "Helper.RunAll",
+                "isDynamic": false,
+                "site": {
+                  "module": "ModuleAlias",
+                  "file": "ModuleAlias.bas",
+                  "line": 19
+                }
+              },
+              {
+                "target": "Worker.Factory",
+                "isDynamic": false,
+                "site": {
+                  "module": "ModuleAlias",
+                  "file": "ModuleAlias.bas",
+                  "line": 22
+                }
+              },
+              {
+                "target": "Helper.RunAll",
+                "isDynamic": false,
+                "site": {
+                  "module": "ModuleAlias",
+                  "file": "ModuleAlias.bas",
+                  "line": 22
+                }
+              },
+              {
+                "target": "Worker.RunFactory",
+                "isDynamic": false,
+                "site": {
+                  "module": "ModuleAlias",
+                  "file": "ModuleAlias.bas",
+                  "line": 23
+                }
+              },
+              {
+                "target": "Helper.RunAll",
+                "isDynamic": false,
+                "site": {
+                  "module": "ModuleAlias",
+                  "file": "ModuleAlias.bas",
+                  "line": 23
+                }
               }
             ],
             "metrics": {
-              "lines": 12
+              "lines": 22
             },
             "tags": []
           }
@@ -126,12 +199,42 @@
             "kind": "Function",
             "access": "Public",
             "static": false,
-            "params": [],
+            "params": [
+              {
+                "name": "count",
+                "type": "Integer",
+                "byRef": false
+              },
+              {
+                "name": "name",
+                "type": "String",
+                "byRef": false
+              }
+            ],
             "returns": "Helper",
             "locs": {
               "file": "Worker.cls",
               "startLine": 11,
               "endLine": 13
+            },
+            "calls": [],
+            "metrics": {
+              "lines": 3
+            },
+            "tags": []
+          },
+          {
+            "id": "Worker.RunFactory",
+            "name": "RunFactory",
+            "kind": "Function",
+            "access": "Public",
+            "static": false,
+            "params": [],
+            "returns": "Helper",
+            "locs": {
+              "file": "Worker.cls",
+              "startLine": 15,
+              "endLine": 17
             },
             "calls": [],
             "metrics": {

@@ -33,7 +33,8 @@
                   "module": "ModuleCfg",
                   "file": "ModuleCfg.bas",
                   "line": 6
-                }
+                },
+                "branch": "then"
               },
               {
                 "target": "ModuleCfg.HelperB",
@@ -42,7 +43,8 @@
                   "module": "ModuleCfg",
                   "file": "ModuleCfg.bas",
                   "line": 8
-                }
+                },
+                "branch": "else"
               }
             ],
             "metrics": {
@@ -72,7 +74,8 @@
                   "module": "ModuleCfg",
                   "file": "ModuleCfg.bas",
                   "line": 15
-                }
+                },
+                "branch": "loop"
               }
             ],
             "metrics": {

@@ -39,7 +39,7 @@ Notes
 - For robust parsing beyond the skeleton, enhancements will be tracked in a subsequent milestone (types/params/returns, more call patterns, VBIDE integration).
 - Alias handling: `vba2json` now tracks simple `Set alias = ...` assignments, pulling return-type metadata (`Module.Function As Type`) so `worker.Factory().RunAll` resolves to `Helper.RunAll`; targets fall back to the qualifier type when return types are unknown.
 - Inside `With` blocks, chained member calls (e.g., `.Factory().RunAll`) reuse the same inference pipeline, yielding both the intermediate call (`Worker.Factory`) and the resolved helper (`Helper.RunAll`).
-- Limitations: alias inference skips expressions with inline comments or member chains that lose type info, and dynamic invocation (`CallByName`, `Application.Run`) still emits `~unknown` targets.
+- Limitations: alias inference trims trailing inline comments but still falls back when member chains lose type info, and dynamic invocation (`CallByName`, `Application.Run`) still emits `~unknown` targets.
 - Return type lookups rely on explicit `As Type` in the signature; late-bound factories or Property Let/Set cannot yet feed alias inference.
-- CFG mode (`--mode proc-cfg`) emits decision (`#dec`) and loop (`#loop`) scaffolds, and now surfaces combined loop-with-branch patterns (see `tests/fixtures/vba/cfg_nested`), but deeper nested merging remains on the roadmap.
+- CFG mode (`--mode proc-cfg`) emits decision (`#dec`) and loop (`#loop`) scaffolds, and now surfaces combined loop-with-branch patterns with explicit `Else` nodes/back edges (see `tests/fixtures/vba/cfg_nested`); deeper nesting remains on the roadmap.
 

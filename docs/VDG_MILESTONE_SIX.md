@@ -104,7 +104,7 @@ Work Breakdown
 8) New Diagram Modes (Step 2)
 - [x] `module-callmap` (module-level call aggregation).
 - [x] `event-wiring` (Form control events → handler procedures).
- - [x] `proc-cfg` (per-procedure CFG) — MVP: Start→Calls→End sequence; control branching planned.
+ - [x] `proc-cfg` (per-procedure CFG) - MVP: Start->Calls->End sequence; now surfaces loop/branch scaffolds for simple conditionals.
 
 6) Scaffolds (optional within this milestone)
 - [x] Add `tools/vba2json.ps1` skeleton (signatures/calls, not a full parser).

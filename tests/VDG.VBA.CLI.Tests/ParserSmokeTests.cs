@@ -93,14 +93,14 @@ public class ParserSmokeTests
 
         Assert.Contains(containers, c => c.GetProperty("id").GetString() == "Module1.Caller#proc");
         Assert.Contains(nodes, n => n.GetProperty("id").GetString() == "Module1.Caller#start");
-        Assert.Contains(nodes, n => n.GetProperty("id").GetString() == "Module1.Caller#call:Module2.Work");
+        Assert.Contains(nodes, n => n.GetProperty("id").GetString()?.StartsWith("Module1.Caller#call:Module2.Work") == true);
         Assert.Contains(nodes, n => n.GetProperty("id").GetString() == "Module1.Caller#end");
 
         var edges = diagram.RootElement.GetProperty("edges").EnumerateArray().ToList();
         Assert.Contains(edges, e => e.GetProperty("sourceId").GetString() == "Module1.Caller#start" &&
-                                    e.GetProperty("targetId").GetString() == "Module1.Caller#call:Module2.Work" &&
+                                    e.GetProperty("targetId").GetString()?.StartsWith("Module1.Caller#call:Module2.Work") == true &&
                                     e.GetProperty("metadata").GetProperty("code.edge").GetString() == "flow");
-        Assert.Contains(edges, e => e.GetProperty("sourceId").GetString() == "Module1.Caller#call:Module2.Work" &&
+        Assert.Contains(edges, e => e.GetProperty("sourceId").GetString()?.StartsWith("Module1.Caller#call:Module2.Work") == true &&
                                     e.GetProperty("targetId").GetString() == "Module1.Caller#end" &&
                                     e.GetProperty("metadata").GetProperty("code.edge").GetString() == "flow");
     }
@@ -112,7 +112,9 @@ public class ParserSmokeTests
         var nodes = diagram.RootElement.GetProperty("nodes").EnumerateArray().ToList();
         Assert.Contains(nodes, n => n.GetProperty("id").GetString() == "ModuleCfg.WithIf#dec");
         Assert.Contains(nodes, n => n.GetProperty("id").GetString() == "ModuleCfg.WithIf#then");
-        Assert.Contains(nodes, n => n.GetProperty("id").GetString() == "ModuleCfg.WithIf#call:ModuleCfg.HelperA");
+        Assert.Contains(nodes, n => n.GetProperty("id").GetString()?.StartsWith("ModuleCfg.WithIf#call:ModuleCfg.HelperA") == true);
+        Assert.Contains(nodes, n => n.GetProperty("id").GetString() == "ModuleCfg.WithIf#else");
+        Assert.Contains(nodes, n => n.GetProperty("id").GetString()?.StartsWith("ModuleCfg.WithIf#call:ModuleCfg.HelperB") == true);
         Assert.Contains(nodes, n => n.GetProperty("id").GetString() == "ModuleCfg.WithIf#end");
 
         var edges = diagram.RootElement.GetProperty("edges").EnumerateArray().ToList();
@@ -120,8 +122,14 @@ public class ParserSmokeTests
                                     e.GetProperty("targetId").GetString() == "ModuleCfg.WithIf#then" &&
                                     e.GetProperty("label").GetString() == "True");
         Assert.Contains(edges, e => e.GetProperty("sourceId").GetString() == "ModuleCfg.WithIf#dec" &&
-                                    e.GetProperty("targetId").GetString() == "ModuleCfg.WithIf#end" &&
+                                    e.GetProperty("targetId").GetString() == "ModuleCfg.WithIf#else" &&
                                     e.GetProperty("label").GetString() == "False");
+        Assert.Contains(edges, e => e.GetProperty("sourceId").GetString() == "ModuleCfg.WithIf#then" &&
+                                    e.GetProperty("targetId").GetString()?.StartsWith("ModuleCfg.WithIf#call:ModuleCfg.HelperA") == true &&
+                                    e.GetProperty("metadata").GetProperty("code.edge").GetString() == "flow");
+        Assert.Contains(edges, e => e.GetProperty("sourceId").GetString() == "ModuleCfg.WithIf#else" &&
+                                    e.GetProperty("targetId").GetString()?.StartsWith("ModuleCfg.WithIf#call:ModuleCfg.HelperB") == true &&
+                                    e.GetProperty("metadata").GetProperty("code.edge").GetString() == "flow");
     }
 
     [Fact]
@@ -130,14 +138,14 @@ public class ParserSmokeTests
         using var diagram = GenerateDiagram("cfg_shapes", "proc-cfg");
         var nodes = diagram.RootElement.GetProperty("nodes").EnumerateArray().ToList();
         Assert.Contains(nodes, n => n.GetProperty("id").GetString() == "ModuleCfg.WithLoop#loop");
-        Assert.Contains(nodes, n => n.GetProperty("id").GetString() == "ModuleCfg.WithLoop#call:ModuleCfg.HelperB");
+        Assert.Contains(nodes, n => n.GetProperty("id").GetString()?.StartsWith("ModuleCfg.WithLoop#call:ModuleCfg.HelperB") == true);
         Assert.Contains(nodes, n => n.GetProperty("id").GetString() == "ModuleCfg.WithLoop#end");
 
         var edges = diagram.RootElement.GetProperty("edges").EnumerateArray().ToList();
         Assert.Contains(edges, e => e.GetProperty("sourceId").GetString() == "ModuleCfg.WithLoop#loop" &&
-                                    e.GetProperty("targetId").GetString() == "ModuleCfg.WithLoop#call:ModuleCfg.HelperB" &&
+                                    e.GetProperty("targetId").GetString()?.StartsWith("ModuleCfg.WithLoop#call:ModuleCfg.HelperB") == true &&
                                     e.GetProperty("label").GetString() == "seq");
-        Assert.Contains(edges, e => e.GetProperty("sourceId").GetString() == "ModuleCfg.WithLoop#call:ModuleCfg.HelperB" &&
+        Assert.Contains(edges, e => e.GetProperty("sourceId").GetString()?.StartsWith("ModuleCfg.WithLoop#call:ModuleCfg.HelperB") == true &&
                                     e.GetProperty("targetId").GetString() == "ModuleCfg.WithLoop#loop" &&
                                     e.GetProperty("label").GetString() == "back");
         Assert.Contains(edges, e => e.GetProperty("sourceId").GetString() == "ModuleCfg.WithLoop#loop" &&
@@ -153,8 +161,9 @@ public class ParserSmokeTests
         Assert.Contains(nodes, n => n.GetProperty("id").GetString() == "ModuleNested.LoopWithBranch#loop");
         Assert.Contains(nodes, n => n.GetProperty("id").GetString() == "ModuleNested.LoopWithBranch#dec");
         Assert.Contains(nodes, n => n.GetProperty("id").GetString() == "ModuleNested.LoopWithBranch#then");
-        Assert.Contains(nodes, n => n.GetProperty("id").GetString() == "ModuleNested.LoopWithBranch#call:ModuleNested.HelperEven");
-        Assert.Contains(nodes, n => n.GetProperty("id").GetString() == "ModuleNested.LoopWithBranch#call:ModuleNested.HelperOdd");
+        Assert.Contains(nodes, n => n.GetProperty("id").GetString()?.StartsWith("ModuleNested.LoopWithBranch#call:ModuleNested.HelperEven") == true);
+        Assert.Contains(nodes, n => n.GetProperty("id").GetString() == "ModuleNested.LoopWithBranch#else");
+        Assert.Contains(nodes, n => n.GetProperty("id").GetString()?.StartsWith("ModuleNested.LoopWithBranch#call:ModuleNested.HelperOdd") == true);
         Assert.Contains(nodes, n => n.GetProperty("id").GetString() == "ModuleNested.LoopWithBranch#end");
 
         var edges = diagram.RootElement.GetProperty("edges").EnumerateArray().ToList();
@@ -164,12 +173,18 @@ public class ParserSmokeTests
         Assert.Contains(edges, e => e.GetProperty("sourceId").GetString() == "ModuleNested.LoopWithBranch#dec" &&
                                     e.GetProperty("targetId").GetString() == "ModuleNested.LoopWithBranch#then" &&
                                     e.GetProperty("label").GetString() == "True");
-        Assert.Contains(edges, e => e.GetProperty("sourceId").GetString() == "ModuleNested.LoopWithBranch#call:ModuleNested.HelperOdd" &&
+        Assert.Contains(edges, e => e.GetProperty("sourceId").GetString()?.StartsWith("ModuleNested.LoopWithBranch#call:ModuleNested.HelperEven") == true &&
                                     e.GetProperty("targetId").GetString() == "ModuleNested.LoopWithBranch#loop" &&
                                     e.GetProperty("label").GetString() == "back");
         Assert.Contains(edges, e => e.GetProperty("sourceId").GetString() == "ModuleNested.LoopWithBranch#dec" &&
-                                    e.GetProperty("targetId").GetString() == "ModuleNested.LoopWithBranch#end" &&
+                                    e.GetProperty("targetId").GetString() == "ModuleNested.LoopWithBranch#else" &&
                                     e.GetProperty("label").GetString() == "False");
+        Assert.Contains(edges, e => e.GetProperty("sourceId").GetString() == "ModuleNested.LoopWithBranch#else" &&
+                                    e.GetProperty("targetId").GetString()?.StartsWith("ModuleNested.LoopWithBranch#call:ModuleNested.HelperOdd") == true &&
+                                    e.GetProperty("label").GetString() == "seq");
+        Assert.Contains(edges, e => e.GetProperty("sourceId").GetString()?.StartsWith("ModuleNested.LoopWithBranch#call:ModuleNested.HelperOdd") == true &&
+                                    e.GetProperty("targetId").GetString() == "ModuleNested.LoopWithBranch#loop" &&
+                                    e.GetProperty("label").GetString() == "back");
         Assert.Contains(edges, e => e.GetProperty("sourceId").GetString() == "ModuleNested.LoopWithBranch#loop" &&
                                     e.GetProperty("targetId").GetString() == "ModuleNested.LoopWithBranch#end" &&
                                     e.GetProperty("label").GetString() == "exit");

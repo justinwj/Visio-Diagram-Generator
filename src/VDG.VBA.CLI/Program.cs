@@ -215,107 +215,147 @@ internal static class Program
         if (mode.Equals("proc-cfg", StringComparison.OrdinalIgnoreCase))
         {
             nodes.Clear(); edges.Clear(); containers.Clear();
+            var flowMeta = new Dictionary<string, string> { ["code.edge"] = "flow" };
+
             foreach (var m in root.Project.Modules)
             {
                 var tier = TierFor(m.Kind ?? "Module");
                 foreach (var p in m.Procedures ?? new())
                 {
-                    // Container per procedure
                     var contId = p.Id + "#proc";
                     containers.Add(new { id = contId, label = p.Id, tier });
-                    // Sequence nodes: Start -> each call -> End (MVP CFG)
+
                     var startId = p.Id + "#start";
                     nodes.Add(new { id = startId, label = "Start", tier, containerId = contId });
-                    string prev = startId;
+
                     bool hasIf = (p.Tags?.Contains("hasIf") ?? false);
                     bool hasLoop = (p.Tags?.Contains("hasLoop") ?? false);
-                    if (hasIf && hasLoop)
+                    var calls = (p.Calls ?? new List<CallIr>()).Where(c => !string.IsNullOrWhiteSpace(c.Target) && c.Target != "~unknown").ToList();
+
+                    string AppendSequence(IEnumerable<CallIr> sequence, string fromId)
+                    {
+                        foreach (var call in sequence)
+                        {
+                            var nodeId = $"{p.Id}#call:{call.Target}@{call.Site?.Line ?? 0}";
+                            nodes.Add(new { id = nodeId, label = call.Target, tier, containerId = contId });
+                            edges.Add(new { sourceId = fromId, targetId = nodeId, label = "seq", metadata = flowMeta });
+                            fromId = nodeId;
+                        }
+                        return fromId;
+                    }
+
+                    static bool ContainsBranch(CallIr call, string token)
+                    {
+                        if (string.IsNullOrWhiteSpace(call.Branch)) return false;
+                        return call.Branch.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                                          .Any(part => part.Equals(token, StringComparison.OrdinalIgnoreCase));
+                    }
+
+                    var plainCalls = calls.Where(c => string.IsNullOrWhiteSpace(c.Branch)).ToList();
+                    var loopCalls = calls.Where(c => ContainsBranch(c, "loop")).ToList();
+                    var loopCore = loopCalls.Where(c => !ContainsBranch(c, "then") && !ContainsBranch(c, "else")).ToList();
+                    var loopThen = loopCalls.Where(c => ContainsBranch(c, "then")).ToList();
+                    var loopElse = loopCalls.Where(c => ContainsBranch(c, "else")).ToList();
+                    var topThen = calls.Where(c => !ContainsBranch(c, "loop") && ContainsBranch(c, "then")).ToList();
+                    var topElse = calls.Where(c => !ContainsBranch(c, "loop") && ContainsBranch(c, "else")).ToList();
+
+                    var handled = new HashSet<CallIr>();
+                    string cursor = startId;
+                    cursor = AppendSequence(plainCalls, cursor);
+                    foreach (var call in plainCalls) handled.Add(call);
+
+                    bool endAdded = false;
+
+                    if (hasLoop)
                     {
                         var loopId = p.Id + "#loop";
                         nodes.Add(new { id = loopId, label = "Loop", tier, containerId = contId });
-                        edges.Add(new { sourceId = prev, targetId = loopId, label = "seq", metadata = new Dictionary<string, string> { ["code.edge"] = "flow" } });
+                        edges.Add(new { sourceId = cursor, targetId = loopId, label = "seq", metadata = flowMeta });
 
-                        var decId = p.Id + "#dec";
-                        nodes.Add(new { id = decId, label = "Decision", tier, containerId = contId });
-                        edges.Add(new { sourceId = loopId, targetId = decId, label = "iter", metadata = new Dictionary<string, string> { ["code.edge"] = "flow" } });
+                        foreach (var call in loopCore) handled.Add(call);
+                        foreach (var call in loopThen) handled.Add(call);
+                        foreach (var call in loopElse) handled.Add(call);
 
-                        var thenId = p.Id + "#then";
-                        nodes.Add(new { id = thenId, label = "Then", tier, containerId = contId });
-                        edges.Add(new { sourceId = decId, targetId = thenId, label = "True", metadata = new Dictionary<string, string> { ["code.edge"] = "flow" } });
+                        string loopCursor = AppendSequence(loopCore, loopId);
 
-                        string thenPrev = thenId;
-                        foreach (var c in p.Calls ?? new())
+                        if (hasIf)
                         {
-                            if (string.IsNullOrWhiteSpace(c.Target) || c.Target == "~unknown") continue;
-                            var nid = p.Id + "#call:" + c.Target;
-                            nodes.Add(new { id = nid, label = c.Target, tier, containerId = contId });
-                            edges.Add(new { sourceId = thenPrev, targetId = nid, label = "seq", metadata = new Dictionary<string, string> { ["code.edge"] = "flow" } });
-                            thenPrev = nid;
-                        }
+                            var decId = p.Id + "#dec";
+                            nodes.Add(new { id = decId, label = "Decision", tier, containerId = contId });
+                            edges.Add(new { sourceId = loopCursor, targetId = decId, label = "iter", metadata = flowMeta });
 
-                        edges.Add(new { sourceId = thenPrev, targetId = loopId, label = "back", metadata = new Dictionary<string, string> { ["code.edge"] = "flow" } });
+                            var thenId = p.Id + "#then";
+                            nodes.Add(new { id = thenId, label = "Then", tier, containerId = contId });
+                            edges.Add(new { sourceId = decId, targetId = thenId, label = "True", metadata = flowMeta });
+                            var thenExit = AppendSequence(loopThen, thenId);
+                            edges.Add(new { sourceId = thenExit, targetId = loopId, label = "back", metadata = flowMeta });
+
+                            if (loopElse.Any())
+                            {
+                                var elseId = p.Id + "#else";
+                                nodes.Add(new { id = elseId, label = "Else", tier, containerId = contId });
+                                edges.Add(new { sourceId = decId, targetId = elseId, label = "False", metadata = flowMeta });
+                                var elseExit = AppendSequence(loopElse, elseId);
+                                edges.Add(new { sourceId = elseExit, targetId = loopId, label = "back", metadata = flowMeta });
+                            }
+                            else
+                            {
+                                edges.Add(new { sourceId = decId, targetId = loopId, label = "False", metadata = flowMeta });
+                            }
+                        }
+                        else
+                        {
+                            edges.Add(new { sourceId = loopCursor, targetId = loopId, label = "back", metadata = flowMeta });
+                        }
 
                         var endId = p.Id + "#end";
                         nodes.Add(new { id = endId, label = "End", tier, containerId = contId });
-                        edges.Add(new { sourceId = decId, targetId = endId, label = "False", metadata = new Dictionary<string, string> { ["code.edge"] = "flow" } });
-                        edges.Add(new { sourceId = loopId, targetId = endId, label = "exit", metadata = new Dictionary<string, string> { ["code.edge"] = "flow" } });
+                        edges.Add(new { sourceId = loopId, targetId = endId, label = "exit", metadata = flowMeta });
+                        cursor = endId;
+                        endAdded = true;
                     }
                     else if (hasIf)
                     {
                         var decId = p.Id + "#dec";
                         nodes.Add(new { id = decId, label = "Decision", tier, containerId = contId });
-                        edges.Add(new { sourceId = prev, targetId = decId, label = "seq", metadata = new Dictionary<string, string> { ["code.edge"] = "flow" } });
+                        edges.Add(new { sourceId = cursor, targetId = decId, label = "seq", metadata = flowMeta });
+
+                        foreach (var call in topThen) handled.Add(call);
+                        foreach (var call in topElse) handled.Add(call);
+
                         var thenId = p.Id + "#then";
                         nodes.Add(new { id = thenId, label = "Then", tier, containerId = contId });
-                        edges.Add(new { sourceId = decId, targetId = thenId, label = "True", metadata = new Dictionary<string, string> { ["code.edge"] = "flow" } });
-                        prev = decId; // for false path to End
-                        // Represent calls along then path only for MVP
-                        string thenPrev = thenId;
-                        foreach (var c in p.Calls ?? new())
-                        {
-                            if (string.IsNullOrWhiteSpace(c.Target) || c.Target == "~unknown") continue;
-                            var nid = p.Id + "#call:" + c.Target;
-                            nodes.Add(new { id = nid, label = c.Target, tier, containerId = contId });
-                            edges.Add(new { sourceId = thenPrev, targetId = nid, label = "seq", metadata = new Dictionary<string, string> { ["code.edge"] = "flow" } });
-                            thenPrev = nid;
-                        }
+                        edges.Add(new { sourceId = decId, targetId = thenId, label = "True", metadata = flowMeta });
+                        var thenExit = AppendSequence(topThen, thenId);
+
                         var endId = p.Id + "#end";
                         nodes.Add(new { id = endId, label = "End", tier, containerId = contId });
-                        edges.Add(new { sourceId = thenPrev, targetId = endId, label = "seq", metadata = new Dictionary<string, string> { ["code.edge"] = "flow" } });
-                        edges.Add(new { sourceId = prev, targetId = endId, label = "False", metadata = new Dictionary<string, string> { ["code.edge"] = "flow" } });
+                        edges.Add(new { sourceId = thenExit, targetId = endId, label = "seq", metadata = flowMeta });
+
+                        if (topElse.Any())
+                        {
+                            var elseId = p.Id + "#else";
+                            nodes.Add(new { id = elseId, label = "Else", tier, containerId = contId });
+                            edges.Add(new { sourceId = decId, targetId = elseId, label = "False", metadata = flowMeta });
+                            var elseExit = AppendSequence(topElse, elseId);
+                            edges.Add(new { sourceId = elseExit, targetId = endId, label = "seq", metadata = flowMeta });
+                        }
+                        else
+                        {
+                            edges.Add(new { sourceId = decId, targetId = endId, label = "False", metadata = flowMeta });
+                        }
+
+                        cursor = endId;
+                        endAdded = true;
                     }
-                    else if (hasLoop)
+
+                    if (!endAdded)
                     {
-                        var loopId = p.Id + "#loop";
-                        nodes.Add(new { id = loopId, label = "Loop", tier, containerId = contId });
-                        edges.Add(new { sourceId = prev, targetId = loopId, label = "seq", metadata = new Dictionary<string, string> { ["code.edge"] = "flow" } });
-                        string loopPrev = loopId;
-                        foreach (var c in p.Calls ?? new())
-                        {
-                            if (string.IsNullOrWhiteSpace(c.Target) || c.Target == "~unknown") continue;
-                            var nid = p.Id + "#call:" + c.Target;
-                            nodes.Add(new { id = nid, label = c.Target, tier, containerId = contId });
-                            edges.Add(new { sourceId = loopPrev, targetId = nid, label = "seq", metadata = new Dictionary<string, string> { ["code.edge"] = "flow" } });
-                            loopPrev = nid;
-                        }
-                        edges.Add(new { sourceId = loopPrev, targetId = loopId, label = "back", metadata = new Dictionary<string, string> { ["code.edge"] = "flow" } });
+                        var remaining = calls.Where(c => !handled.Contains(c)).ToList();
+                        cursor = AppendSequence(remaining, cursor);
                         var endId = p.Id + "#end";
                         nodes.Add(new { id = endId, label = "End", tier, containerId = contId });
-                        edges.Add(new { sourceId = loopId, targetId = endId, label = "exit", metadata = new Dictionary<string, string> { ["code.edge"] = "flow" } });
-                    }
-                    else
-                    {
-                        foreach (var c in p.Calls ?? new())
-                        {
-                            if (string.IsNullOrWhiteSpace(c.Target) || c.Target == "~unknown") continue;
-                            var nid = p.Id + "#call:" + c.Target;
-                            nodes.Add(new { id = nid, label = c.Target, tier, containerId = contId });
-                            edges.Add(new { sourceId = prev, targetId = nid, label = "seq", metadata = new Dictionary<string, string> { ["code.edge"] = "flow" } });
-                            prev = nid;
-                        }
-                        var endId = p.Id + "#end";
-                        nodes.Add(new { id = endId, label = "End", tier, containerId = contId });
-                        edges.Add(new { sourceId = prev, targetId = endId, label = "seq", metadata = new Dictionary<string, string> { ["code.edge"] = "flow" } });
+                        edges.Add(new { sourceId = cursor, targetId = endId, label = "seq", metadata = flowMeta });
                     }
                 }
             }
@@ -520,21 +560,70 @@ internal static class Program
             var calls = new List<CallIr>();
             var varTypes = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             var withStack = new Stack<string>();
+            var branchStack = new Stack<string>();
             bool hasIf = false, hasLoop = false;
+            int loopDepth = 0;
             for (int k = i; k < Math.Min(lines.Length, end - 1); k++)
             {
-                var line = lines[k];
+                var originalLine = lines[k];
+                var commentIndex = originalLine.IndexOf('\'');
+                var line = commentIndex >= 0 ? originalLine.Substring(0, commentIndex) : originalLine;
                 var seenLineCalls = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                string? CurrentBranchLabel()
+                {
+                    var parts = new List<string>();
+                    if (loopDepth > 0) parts.Add("loop");
+                    if (branchStack.Count > 0) parts.Add(branchStack.Peek());
+                    return parts.Count > 0 ? string.Join("|", parts) : null;
+                }
                 void RecordCall(string target, bool isDynamic = false)
                 {
                     if (string.IsNullOrWhiteSpace(target)) return;
-                    var key = $"{target}|{isDynamic}";
+                    var branchLabel = CurrentBranchLabel();
+                    var key = $"{target}|{isDynamic}|{branchLabel}";
                     if (!seenLineCalls.Add(key)) return;
-                    calls.Add(new CallIr { Target = target, IsDynamic = isDynamic, Site = new SiteIr { Module = moduleName, File = filePath, Line = k + 1 } });
+                    calls.Add(new CallIr
+                    {
+                        Target = target,
+                        IsDynamic = isDynamic,
+                        Branch = branchLabel,
+                        Site = new SiteIr { Module = moduleName, File = filePath, Line = k + 1 }
+                    });
                 }
 
-                if (!hasIf && Regex.IsMatch(lines[k], @"^\s*If\b", RegexOptions.IgnoreCase)) hasIf = true;
-                if (!hasLoop && Regex.IsMatch(lines[k], @"^\s*(For\b|Do\b|While\b)", RegexOptions.IgnoreCase)) hasLoop = true;
+                var trimmed = line.Trim();
+                if (!hasIf && Regex.IsMatch(trimmed, @"^\s*If\b", RegexOptions.IgnoreCase)) hasIf = true;
+                if (!hasLoop && Regex.IsMatch(trimmed, @"^\s*(For\b|Do\b|While\b)", RegexOptions.IgnoreCase)) hasLoop = true;
+
+                if (Regex.IsMatch(trimmed, @"^\s*End\s+If\b", RegexOptions.IgnoreCase))
+                {
+                    if (branchStack.Count > 0) branchStack.Pop();
+                }
+                else if (Regex.IsMatch(trimmed, @"^\s*ElseIf\b.*Then\b", RegexOptions.IgnoreCase))
+                {
+                    if (branchStack.Count > 0) branchStack.Pop();
+                    branchStack.Push("then");
+                }
+                else if (Regex.IsMatch(trimmed, @"^\s*Else\b", RegexOptions.IgnoreCase))
+                {
+                    if (branchStack.Count > 0) branchStack.Pop();
+                    branchStack.Push("else");
+                }
+                else if (Regex.IsMatch(trimmed, @"^\s*If\b.*Then\b", RegexOptions.IgnoreCase))
+                {
+                    branchStack.Push("then");
+                }
+
+                if (Regex.IsMatch(trimmed, @"^\s*(Next\b|Loop\b|End\s+Do\b|Wend\b)", RegexOptions.IgnoreCase))
+                {
+                    if (loopDepth > 0) loopDepth--;
+                }
+
+                if (Regex.IsMatch(trimmed, @"^\s*(For\b|Do\b|While\b)", RegexOptions.IgnoreCase))
+                {
+                    loopDepth++;
+                }
+
                 // Track variable declarations/types
                 var dim = Regex.Match(line, @"^\s*(?:Dim|Public|Private)\s+(?<nm>[A-Za-z_][A-Za-z0-9_]*)\s+As\s+(?<ty>[A-Za-z_][A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase);
                 if (dim.Success) varTypes[dim.Groups["nm"].Value] = dim.Groups["ty"].Value;
@@ -778,6 +867,6 @@ internal sealed class ModuleIr { public string Id { get; set; } = ""; public str
 internal sealed class ProcedureIr { public string Id { get; set; } = ""; public string Name { get; set; } = ""; public string? Kind { get; set; } public string? Access { get; set; } public bool Static { get; set; } public List<ParamIr> Params { get; set; } = new(); public string? Returns { get; set; } public LocsIr Locs { get; set; } = new(); public List<CallIr> Calls { get; set; } = new(); public MetricsIr Metrics { get; set; } = new(); public List<string> Tags { get; set; } = new(); }
 internal sealed class ParamIr { public string Name { get; set; } = ""; public string? Type { get; set; } public bool ByRef { get; set; } }
 internal sealed class LocsIr { public string File { get; set; } = ""; public int StartLine { get; set; } public int EndLine { get; set; } }
-internal sealed class CallIr { public string Target { get; set; } = ""; public bool IsDynamic { get; set; } public SiteIr Site { get; set; } = new(); }
+internal sealed class CallIr { public string Target { get; set; } = ""; public bool IsDynamic { get; set; } public SiteIr Site { get; set; } = new(); public string? Branch { get; set; } }
 internal sealed class SiteIr { public string Module { get; set; } = ""; public string File { get; set; } = ""; public int Line { get; set; } }
 internal sealed class MetricsIr { public int? Cyclomatic { get; set; } public int? Lines { get; set; } }

@@ -1,0 +1,98 @@
+{
+  "irSchemaVersion": "0.1",
+  "generator": {
+    "name": "vba2json",
+    "version": "0.1.0"
+  },
+  "project": {
+    "name": "cfg_nested",
+    "modules": [
+      {
+        "id": "ModuleNested",
+        "name": "ModuleNested",
+        "kind": "Module",
+        "file": "ModuleNested.bas",
+        "procedures": [
+          {
+            "id": "ModuleNested.LoopWithBranch",
+            "name": "LoopWithBranch",
+            "kind": "Sub",
+            "access": "Public",
+            "static": false,
+            "params": [],
+            "locs": {
+              "file": "ModuleNested.bas",
+              "startLine": 4,
+              "endLine": 14
+            },
+            "calls": [
+              {
+                "target": "ModuleNested.HelperEven",
+                "isDynamic": false,
+                "site": {
+                  "module": "ModuleNested",
+                  "file": "ModuleNested.bas",
+                  "line": 9
+                },
+                "branch": "loop|then"
+              },
+              {
+                "target": "ModuleNested.HelperOdd",
+                "isDynamic": false,
+                "site": {
+                  "module": "ModuleNested",
+                  "file": "ModuleNested.bas",
+                  "line": 11
+                },
+                "branch": "loop|else"
+              }
+            ],
+            "metrics": {
+              "lines": 11
+            },
+            "tags": [
+              "hasIf",
+              "hasLoop"
+            ]
+          },
+          {
+            "id": "ModuleNested.HelperEven",
+            "name": "HelperEven",
+            "kind": "Sub",
+            "access": "Public",
+            "static": false,
+            "params": [],
+            "locs": {
+              "file": "ModuleNested.bas",
+              "startLine": 16,
+              "endLine": 17
+            },
+            "calls": [],
+            "metrics": {
+              "lines": 2
+            },
+            "tags": []
+          },
+          {
+            "id": "ModuleNested.HelperOdd",
+            "name": "HelperOdd",
+            "kind": "Sub",
+            "access": "Public",
+            "static": false,
+            "params": [],
+            "locs": {
+              "file": "ModuleNested.bas",
+              "startLine": 19,
+              "endLine": 20
+            },
+            "calls": [],
+            "metrics": {
+              "lines": 2
+            },
+            "tags": []
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -37,12 +37,19 @@ module LayoutEngine =
     let private containsCI (arr: string array) (value: string) =
         arr |> Array.exists (fun x -> String.Equals(x, value, StringComparison.OrdinalIgnoreCase))
 
+    let private tryGetTierProperty (node: Node) =
+        let prop = node.GetType().GetProperty("Tier")
+        if not (isNull prop) then
+            match prop.GetValue(node) with
+            | :? string as s when not (String.IsNullOrWhiteSpace s) -> Some (s.Trim())
+            | _ -> None
+        else None
+
     let private getTier (tiers: string array) (node: Node) =
-        match Option.ofObj node.Tier with
-        | Some t when not (String.IsNullOrWhiteSpace t) ->
-            let t' = t.Trim()
-            if containsCI tiers t' then t' else tiers[0]
-        | _ when node.Metadata.ContainsKey "tier" ->
+        match tryGetTierProperty node with
+        | Some t when containsCI tiers t -> t
+        | Some _ -> tiers[0]
+        | None when node.Metadata.ContainsKey "tier" ->
             let v = node.Metadata["tier"]
             if String.IsNullOrWhiteSpace v then tiers[0]
             else

@@ -11,3 +11,8 @@ Tick the options that apply to this change.
 - [ ] No changes to the VBA IR or tooling
 - [ ] IR or tooling updated and `docs/IR_Governance.md` checklist completed (smoke workflow run, fixtures regenerated)
 - [ ] New terminology reviewed; `docs/Glossary.md` updated if needed
+
+## IR Checklist Exception Rationale
+<!-- Required when any IR Impact checkbox above remains unchecked.
+     Replace "None" with a short justification (see docs/IR_Governance.md#checklist-automation for guidance). -->
+None

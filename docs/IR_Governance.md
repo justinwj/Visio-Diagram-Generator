@@ -11,6 +11,16 @@ Use this checklist whenever a pull request alters the VBA [IR](docs/Glossary.md#
 ## Review Cadence
 - Revisit this checklist at least quarterly or whenever the IR schema publishes a new minor version. Capture any policy changes or follow-up actions in `docs/CHANGELOG_IR.md`.
 
+## Checklist Automation
+- Every pull request runs the **PR Checklist Enforcement** status check. It passes when all IR Impact items are checked or when unchecked items include a justified exception rationale.
+- Repository admins should mark the `PR Checklist Enforcement / Validate IR checklist` check as **required** in branch protection rules so merges cannot bypass the policy.
+- For periodic reviews, run `tools/audit-ir-exceptions.ps1` (requires GitHub CLI) to list recent PRs that exercised the exception path.
+
+### Acceptable Exceptions
+- A blocking upstream dependency or pending schema change with a linked issue or approval.
+- Emergency hotfixes where completing the checklist would materially delay the fix (document follow-up work).
+- Documentation-only PRs that intentionally defer code instrumentation (explain the scope and follow-up owner).
+
 ## End-to-End Smoke Workflow
 
 ```powershell
@@ -26,3 +36,7 @@ dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in out/tmp/cross.ir.json --
 # 4) Render diagram with the main CLI
 dotnet run --project src/VDG.CLI -- out/tmp/cross.diagram.json out/tmp/cross.vsdx
 ```
+
+## FAQ
+**Q: The PR Checklist Enforcement check failed with “provide a justification”. What should I do?**  
+Update the PR body so that either all IR Impact checkboxes are ticked or the *IR Checklist Exception Rationale* section contains a short explanation (≥20 characters) and links to the issue/approval that allows the exception.

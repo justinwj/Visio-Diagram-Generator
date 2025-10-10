@@ -14,12 +14,32 @@
         "file": "ModuleNested.bas",
         "procedures": [
           {
+            "id": "ModuleNested.HelperEven",
+            "name": "HelperEven",
+            "kind": "Sub",
+            "access": "Public",
+            "locs": {
+              "file": "ModuleNested.bas",
+              "startLine": 16,
+              "endLine": 17
+            }
+          },
+          {
+            "id": "ModuleNested.HelperOdd",
+            "name": "HelperOdd",
+            "kind": "Sub",
+            "access": "Public",
+            "locs": {
+              "file": "ModuleNested.bas",
+              "startLine": 19,
+              "endLine": 20
+            }
+          },
+          {
             "id": "ModuleNested.LoopWithBranch",
             "name": "LoopWithBranch",
             "kind": "Sub",
             "access": "Public",
-            "static": false,
-            "params": [],
             "locs": {
               "file": "ModuleNested.bas",
               "startLine": 4,
@@ -47,49 +67,10 @@
                 "branch": "loop|else"
               }
             ],
-            "metrics": {
-              "lines": 11
-            },
             "tags": [
               "hasIf",
               "hasLoop"
             ]
-          },
-          {
-            "id": "ModuleNested.HelperEven",
-            "name": "HelperEven",
-            "kind": "Sub",
-            "access": "Public",
-            "static": false,
-            "params": [],
-            "locs": {
-              "file": "ModuleNested.bas",
-              "startLine": 16,
-              "endLine": 17
-            },
-            "calls": [],
-            "metrics": {
-              "lines": 2
-            },
-            "tags": []
-          },
-          {
-            "id": "ModuleNested.HelperOdd",
-            "name": "HelperOdd",
-            "kind": "Sub",
-            "access": "Public",
-            "static": false,
-            "params": [],
-            "locs": {
-              "file": "ModuleNested.bas",
-              "startLine": 19,
-              "endLine": 20
-            },
-            "calls": [],
-            "metrics": {
-              "lines": 2
-            },
-            "tags": []
           }
         ]
       }

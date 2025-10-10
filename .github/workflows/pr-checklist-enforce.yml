@@ -1,0 +1,82 @@
+name: PR Checklist Enforcement
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+jobs:
+  validate:
+    name: Validate IR checklist
+    runs-on: ubuntu-latest
+    steps:
+      - name: Evaluate PR body
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const core = require('@actions/core');
+
+            const pr = context.payload.pull_request;
+            const body = (pr && pr.body) ? pr.body : '';
+
+            if (!body.trim()) {
+              core.setFailed('PR body is empty. Please use the pull request template so the IR checklist can be evaluated.');
+              return;
+            }
+
+            function extractSection(content, heading) {
+              const index = content.indexOf(heading);
+              if (index === -1) return null;
+              const afterHeading = content.slice(index + heading.length);
+              const nextHeadingIndex = afterHeading.indexOf('## ');
+              return nextHeadingIndex === -1 ? afterHeading : afterHeading.slice(0, nextHeadingIndex);
+            }
+
+            const irSection = extractSection(body, '## IR Impact');
+            if (!irSection) {
+              core.setFailed('Unable to locate the "IR Impact" section in the PR description. Please keep the checklist intact.');
+              return;
+            }
+
+            const checkboxRegex = /- \[( |x|X)\] .+/g;
+            const matches = irSection.match(checkboxRegex) || [];
+
+            if (matches.length === 0) {
+              core.setFailed('No IR Impact checkboxes were found. Please complete the checklist before requesting review.');
+              return;
+            }
+
+            const unchecked = matches.filter(line => /\[ \]/.test(line));
+            core.info(`IR Impact summary: ${matches.length - unchecked.length}/${matches.length} items checked.`);
+
+            if (unchecked.length === 0) {
+              core.info('All IR Impact checklist items are checked. Exception rationale is not required.');
+              return;
+            }
+
+            const rationaleSection = extractSection(body, '## IR Checklist Exception Rationale');
+            if (!rationaleSection) {
+              core.setFailed('One or more IR Impact items are unchecked, but the "IR Checklist Exception Rationale" section is missing.');
+              return;
+            }
+
+            const withoutComments = rationaleSection.replace(/<!--[\s\S]*?-->/g, '');
+            let rationale = withoutComments.trim();
+
+            // Drop common leading labels (e.g., "None", "Rationale:", bullet points).
+            rationale = rationale.replace(/^(Rationale\s*:)?\s*/i, '');
+            rationale = rationale.replace(/^\s*[-*]\s*/g, '').trim();
+
+            const disallowed = new Set(['', 'none', 'n/a', 'na', 'pending', 'tbd', 'todo']);
+            const normalized = rationale.toLowerCase();
+
+            if (disallowed.has(normalized)) {
+              core.setFailed('Please provide a meaningful exception rationale describing why unchecked items are acceptable.');
+              return;
+            }
+
+            if (rationale.length < 20) {
+              core.setFailed('Exception rationale is too short. Include specific context (at least 20 characters).');
+              return;
+            }
+
+            core.info('Unchecked IR Impact items are justified with a rationale. Checklist validation passed.');

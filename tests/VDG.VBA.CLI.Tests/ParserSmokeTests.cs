@@ -49,9 +49,26 @@ public class ParserSmokeTests
             File.Delete(ir); File.Delete(dj);
             RunCli("vba2json", "--in", "tests/fixtures/vba/cross_module_calls", "--out", ir);
             RunCli("ir2diagram", "--in", ir, "--out", dj, "--mode", "callgraph");
-            var text = File.ReadAllText(dj);
-            Assert.Contains("Module1.Caller", text);
-            Assert.Contains("Module2.Work", text);
+            using var diagram = JsonDocument.Parse(File.ReadAllText(dj));
+            var root = diagram.RootElement;
+            var nodes = root.GetProperty("nodes").EnumerateArray().ToList();
+            var callerNode = nodes.Single(n => n.GetProperty("id").GetString() == "Module1.Caller");
+            var callerMeta = callerNode.GetProperty("metadata");
+            Assert.Equal("Module1", callerMeta.GetProperty("code.module").GetString());
+            Assert.Equal("Caller", callerMeta.GetProperty("code.proc").GetString());
+            Assert.Equal("Module1.bas", callerMeta.GetProperty("code.locs.file").GetString());
+            Assert.Equal("4", callerMeta.GetProperty("code.locs.startLine").GetString());
+            Assert.Equal("6", callerMeta.GetProperty("code.locs.endLine").GetString());
+
+            var edges = root.GetProperty("edges").EnumerateArray().ToList();
+            var callEdge = edges.Single(e => e.GetProperty("sourceId").GetString() == "Module1.Caller" &&
+                                             e.GetProperty("targetId").GetString() == "Module2.Work");
+            var edgeMeta = callEdge.GetProperty("metadata");
+            Assert.Equal("call", edgeMeta.GetProperty("code.edge").GetString());
+            Assert.Equal("Module1", edgeMeta.GetProperty("code.site.module").GetString());
+            Assert.Equal("Module1.bas", edgeMeta.GetProperty("code.site.file").GetString());
+            Assert.Equal("5", edgeMeta.GetProperty("code.site.line").GetString());
+            Assert.False(edgeMeta.TryGetProperty("code.branch", out _));
         }
         finally { if (File.Exists(ir)) File.Delete(ir); if (File.Exists(dj)) File.Delete(dj); }
     }
@@ -227,6 +244,24 @@ public class ParserSmokeTests
     }
 
     [Fact]
+    public void Vba2JsonSortsModulesAndProcedures()
+    {
+        using var ir = GenerateIrDocument("alias_and_chain");
+        var modules = ir.RootElement.GetProperty("project").GetProperty("modules").EnumerateArray().ToList();
+        var moduleNames = modules.Select(m => m.GetProperty("name").GetString()).ToList();
+        var sortedModules = moduleNames.OrderBy(n => n, StringComparer.OrdinalIgnoreCase).ToList();
+        Assert.Equal(sortedModules, moduleNames);
+
+        foreach (var module in modules)
+        {
+            var procedures = module.GetProperty("procedures").EnumerateArray().ToList();
+            var procNames = procedures.Select(p => p.GetProperty("name").GetString()).ToList();
+            var sortedProcs = procNames.OrderBy(n => n, StringComparer.OrdinalIgnoreCase).ToList();
+            Assert.Equal(sortedProcs, procNames);
+        }
+    }
+
+    [Fact]
     public void Vba2JsonEmitsRequiredFields()
     {
         using var ir = GenerateIrDocument("events_and_forms");
@@ -244,6 +279,7 @@ public class ParserSmokeTests
             Assert.False(string.IsNullOrWhiteSpace(module.GetProperty("id").GetString()));
             Assert.False(string.IsNullOrWhiteSpace(module.GetProperty("name").GetString()));
             Assert.False(string.IsNullOrWhiteSpace(module.GetProperty("kind").GetString()));
+            Assert.False(module.TryGetProperty("metrics", out _), "module metrics should be omitted unless --infer-metrics is used.");
 
             var procedures = module.GetProperty("procedures");
             Assert.True(procedures.GetArrayLength() > 0);
@@ -252,8 +288,74 @@ public class ParserSmokeTests
                 Assert.False(string.IsNullOrWhiteSpace(procedure.GetProperty("id").GetString()));
                 Assert.False(string.IsNullOrWhiteSpace(procedure.GetProperty("name").GetString()));
                 Assert.False(string.IsNullOrWhiteSpace(procedure.GetProperty("kind").GetString()));
+                Assert.False(procedure.TryGetProperty("metrics", out _), "procedure metrics should be omitted unless --infer-metrics is used.");
             }
         }
+    }
+
+    [Fact]
+    public void Vba2JsonInferMetricsIncludesLines()
+    {
+        using var ir = GenerateIrDocument("hello_world", "--infer-metrics");
+        var modules = ir.RootElement.GetProperty("project").GetProperty("modules").EnumerateArray().ToList();
+        Assert.NotEmpty(modules);
+
+        var module = modules.Single();
+        var moduleMetrics = module.GetProperty("metrics");
+        Assert.True(moduleMetrics.TryGetProperty("lines", out var moduleLines));
+        Assert.True(moduleLines.GetInt32() > 0);
+
+        var procedure = module.GetProperty("procedures").EnumerateArray().Single();
+        var procMetrics = procedure.GetProperty("metrics");
+        Assert.True(procMetrics.TryGetProperty("lines", out var procLines));
+        Assert.True(procLines.GetInt32() > 0);
+    }
+
+    [Fact]
+    public void Vba2JsonSupportsGlobPatterns()
+    {
+        var irPath = Path.Combine(Path.GetTempPath(), $"vdg_ir_glob_{Guid.NewGuid():N}.json");
+        try
+        {
+            var fixtureDir = Path.Combine(RepoRoot, "tests", "fixtures", "vba", "cross_module_calls");
+            var module2Abs = Path.Combine(fixtureDir, "Module2.bas");
+            RunCli("vba2json", "--in", fixtureDir, "--glob", "Module*.bas", "--glob", module2Abs, "--out", irPath);
+
+            using var ir = JsonDocument.Parse(File.ReadAllText(irPath));
+            var modules = ir.RootElement.GetProperty("project").GetProperty("modules").EnumerateArray().ToList();
+            Assert.Equal(2, modules.Count);
+            Assert.Contains(modules, m => m.GetProperty("id").GetString() == "Module1");
+            Assert.Contains(modules, m => m.GetProperty("id").GetString() == "Module2");
+        }
+        finally
+        {
+            if (File.Exists(irPath)) File.Delete(irPath);
+        }
+    }
+
+    [Fact]
+    public void Vba2JsonStreamsToStdoutWhenOutOmitted()
+    {
+        var fixtureDir = Path.Combine(RepoRoot, "tests", "fixtures", "vba", "hello_world");
+        var output = RunCli("vba2json", "--in", fixtureDir);
+        Assert.False(string.IsNullOrWhiteSpace(output));
+
+        using var ir = JsonDocument.Parse(output);
+        var module = ir.RootElement.GetProperty("project").GetProperty("modules").EnumerateArray().Single();
+        Assert.False(module.TryGetProperty("metrics", out _));
+    }
+
+    [Fact]
+    public void Vba2JsonHonorsRootForFilePaths()
+    {
+        using var ir = GenerateIrDocument("cross_module_calls", "--root", Path.Combine(RepoRoot, "tests"));
+        var modules = ir.RootElement.GetProperty("project").GetProperty("modules").EnumerateArray().ToList();
+        Assert.Equal(2, modules.Count);
+        Assert.All(modules, module =>
+        {
+            var file = module.GetProperty("file").GetString();
+            Assert.StartsWith("fixtures/", file, StringComparison.OrdinalIgnoreCase);
+        });
     }
 
     [Fact]
@@ -317,6 +419,20 @@ public class ParserSmokeTests
         var kind = RequireString(module, "kind", context);
         Assert.Contains(kind, ModuleKinds);
         ExpectOptionalString(module, "file", context);
+        if (module.TryGetProperty("metrics", out var moduleMetrics))
+        {
+            Assert.Equal(JsonValueKind.Object, moduleMetrics.ValueKind);
+            if (moduleMetrics.TryGetProperty("lines", out var moduleLines))
+            {
+                Assert.Equal(JsonValueKind.Number, moduleLines.ValueKind);
+                Assert.True(moduleLines.GetInt32() >= 0, $"{context}.metrics.lines must be >= 0");
+            }
+            if (moduleMetrics.TryGetProperty("cyclomatic", out var moduleCyclomatic))
+            {
+                Assert.Equal(JsonValueKind.Number, moduleCyclomatic.ValueKind);
+                Assert.True(moduleCyclomatic.GetInt32() >= 0, $"{context}.metrics.cyclomatic must be >= 0");
+            }
+        }
 
         if (module.TryGetProperty("attributes", out var attributes))
         {
@@ -395,10 +511,13 @@ public class ParserSmokeTests
         RequireNumber(locs, "startLine", $"{context}.locs");
         RequireNumber(locs, "endLine", $"{context}.locs");
 
-        var calls = RequireArray(procedure, "calls", context);
-        foreach (var (call, callIndex) in calls.EnumerateArray().Select((c, i) => (c, i)))
+        if (procedure.TryGetProperty("calls", out var calls))
         {
-            ValidateCall(call, $"{context}.calls[{callIndex}]");
+            Assert.Equal(JsonValueKind.Array, calls.ValueKind);
+            foreach (var (call, callIndex) in calls.EnumerateArray().Select((c, i) => (c, i)))
+            {
+                ValidateCall(call, $"{context}.calls[{callIndex}]");
+            }
         }
 
         if (procedure.TryGetProperty("metrics", out var metrics))
@@ -519,16 +638,18 @@ public class ParserSmokeTests
         return doc;
     }
 
-    private static JsonDocument GenerateIrDocument(string fixtureName) =>
-        JsonDocument.Parse(GenerateIrJson(fixtureName));
+    private static JsonDocument GenerateIrDocument(string fixtureName, params string[] extraArgs) =>
+        JsonDocument.Parse(GenerateIrJson(fixtureName, extraArgs));
 
-    private static string GenerateIrJson(string fixtureName)
+    private static string GenerateIrJson(string fixtureName, params string[] extraArgs)
     {
         var irPath = Path.Combine(Path.GetTempPath(), $"vdg_ir_{Guid.NewGuid():N}.json");
         try
         {
             var fixtureDir = Path.Combine(RepoRoot, "tests", "fixtures", "vba", fixtureName);
-            RunCli("vba2json", "--in", fixtureDir, "--out", irPath);
+            var cliArgs = new List<string> { "vba2json", "--in", fixtureDir, "--out", irPath };
+            if (extraArgs is { Length: > 0 }) cliArgs.AddRange(extraArgs);
+            RunCli(cliArgs.ToArray());
             return File.ReadAllText(irPath);
         }
         finally

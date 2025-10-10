@@ -6,8 +6,8 @@ Purpose
 Commands
 - vba2json: Parse exported VBA files and emit IR JSON v0.1
   - Usage:
-    - `dotnet run --project src/VDG.VBA.CLI -- vba2json --in <folder> [--out <ir.json>] [--project-name <name>]`
-  - Inputs: folder containing `.bas/.cls/.frm`
+    - `dotnet run --project src/VDG.VBA.CLI -- vba2json --in <folder> [--glob <pattern> ...] [--out <ir.json>] [--project-name <name>] [--root <path>] [--infer-metrics]`
+  - Inputs: folder containing `.bas/.cls/.frm`; optional glob patterns limit which files are included
   - Outputs: IR JSON to stdout if `--out` omitted; writes to file when provided
   - Exit codes: 0 success; 65 invalid input; 70 internal error
 
@@ -21,6 +21,9 @@ Commands
 Flags & Behavior
 - `--in` and `--out` are positional as shown. When `--out` is omitted, the tool prints JSON to stdout (for streaming workflows).
 - `--project-name` overrides the project name detected from input folder (vba2json only).
+- `--glob <pattern>` (repeatable) filters the discovered files using `*`/`?` wildcards relative to `--in`. All matches merge into a single IR project.
+- `--root <path>` controls how module files are relativised inside the IR; defaults to the `--in` directory.
+- `--infer-metrics` toggles lightweight `metrics.lines` output on modules and procedures. Metrics are omitted by default to keep payloads lean.
 - The vba2json parser is a pragmatic skeleton: it recognizes procedure signatures and simple `Module.Proc` call patterns, and tags dynamic calls (CallByName/Application.Run).
 
 Examples
@@ -36,6 +39,7 @@ dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in out/tmp/ir_cross.json --
 
 Notes
 - The CLI writes helpful usage messages on invalid arguments. Use `--help` to see supported commands.
+- Module-name collisions or missing glob matches result in descriptive errors on stderr and exit code 65.
 - For robust parsing beyond the skeleton, enhancements will be tracked in a subsequent milestone (types/params/returns, more call patterns, VBIDE integration).
 - Alias handling: `vba2json` now tracks simple `Set alias = ...` assignments, pulling return-type metadata (`Module.Function As Type`) so `worker.Factory().RunAll` resolves to `Helper.RunAll`; targets fall back to the qualifier type when return types are unknown.
 - Inside `With` blocks, chained member calls (e.g., `.Factory().RunAll`) reuse the same inference pipeline, yielding both the intermediate call (`Worker.Factory`) and the resolved helper (`Helper.RunAll`).

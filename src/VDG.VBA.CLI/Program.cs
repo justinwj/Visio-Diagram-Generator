@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -63,14 +64,24 @@ internal static class Program
     {
         Console.Error.WriteLine("VDG.VBA.CLI");
         Console.Error.WriteLine("Usage:");
-        Console.Error.WriteLine("  vba2json --in <folder> [--out <ir.json>] [--project-name <name>]");
+        Console.Error.WriteLine("  vba2json --in <folder> [--glob <pattern> ...] [--out <ir.json>] [--project-name <name>] [--root <path>] [--infer-metrics]");
+        Console.Error.WriteLine("     --glob <pattern>       Limit inputs using * / ? wildcards relative to --in (repeatable).");
+        Console.Error.WriteLine("     --root <path>          Base path for emitted module file paths (defaults to --in).");
+        Console.Error.WriteLine("     --infer-metrics        Include simple line-count metrics in the IR payload.");
         Console.Error.WriteLine("  ir2diagram --in <ir.json> [--out <diagram.json>] [--mode <callgraph|module-structure|module-callmap|event-wiring|proc-cfg>]");
         Console.Error.WriteLine("  render --in <folder> --out <diagram.vsdx> [--mode <callgraph|module-structure|module-callmap>] [--cli <VDG.CLI.exe>] [--diagram-json <path>]");
     }
 
     private static int RunVba2Json(string[] args)
     {
-        string? input = null; string? output = null; string? projectName = null;
+        string? input = null;
+        string? output = null;
+        string? projectName = null;
+        string? rootOverride = null;
+        var globPatterns = new List<string>();
+        var allowedExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".bas", ".cls", ".frm" };
+        bool inferMetrics = false;
+
         for (int i = 0; i < args.Length; i++)
         {
             var a = args[i];
@@ -89,48 +100,144 @@ internal static class Program
                 if (i + 1 >= args.Length) throw new UsageException("--project-name requires a value.");
                 projectName = args[++i];
             }
+            else if (string.Equals(a, "--glob", StringComparison.OrdinalIgnoreCase))
+            {
+                if (i + 1 >= args.Length) throw new UsageException("--glob requires a pattern.");
+                globPatterns.Add(args[++i]);
+            }
+            else if (string.Equals(a, "--infer-metrics", StringComparison.OrdinalIgnoreCase))
+            {
+                inferMetrics = true;
+            }
+            else if (string.Equals(a, "--root", StringComparison.OrdinalIgnoreCase))
+            {
+                if (i + 1 >= args.Length) throw new UsageException("--root requires a path.");
+                rootOverride = args[++i];
+            }
             else throw new UsageException($"Unknown option '{a}' for vba2json.");
         }
 
         if (string.IsNullOrWhiteSpace(input)) throw new UsageException("vba2json requires --in <folder>.");
-        var folder = Path.GetFullPath(input!);
-        if (!Directory.Exists(folder)) throw new UsageException($"Input folder not found: {folder}");
+        var inputFolder = Path.GetFullPath(input!);
+        if (!Directory.Exists(inputFolder)) throw new UsageException($"Input folder not found: {inputFolder}");
 
-        var files = Directory.EnumerateFiles(folder, "*.*", SearchOption.AllDirectories)
-                             .Where(f => f.EndsWith(".bas", StringComparison.OrdinalIgnoreCase) ||
-                                         f.EndsWith(".cls", StringComparison.OrdinalIgnoreCase) ||
-                                         f.EndsWith(".frm", StringComparison.OrdinalIgnoreCase))
-                             .ToArray();
+        var discoveredFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        if (globPatterns.Count == 0)
+        {
+            foreach (var file in Directory.EnumerateFiles(inputFolder, "*.*", SearchOption.AllDirectories))
+            {
+                if (allowedExtensions.Contains(Path.GetExtension(file)))
+                    discoveredFiles.Add(Path.GetFullPath(file));
+            }
+        }
+        else
+        {
+            var relativeCandidates = Directory.EnumerateFiles(inputFolder, "*.*", SearchOption.AllDirectories)
+                                              .Where(f => allowedExtensions.Contains(Path.GetExtension(f)))
+                                              .Select(Path.GetFullPath)
+                                              .ToArray();
+
+            foreach (var pattern in globPatterns)
+            {
+                if (string.IsNullOrWhiteSpace(pattern)) continue;
+
+                if (Path.IsPathRooted(pattern))
+                {
+                    var baseDir = Path.GetDirectoryName(pattern);
+                    var searchPattern = Path.GetFileName(pattern);
+                    if (string.IsNullOrWhiteSpace(baseDir)) baseDir = Directory.GetCurrentDirectory();
+                    if (string.IsNullOrWhiteSpace(searchPattern)) searchPattern = "*.*";
+                    if (!Directory.Exists(baseDir)) continue;
+
+                    foreach (var match in Directory.EnumerateFiles(baseDir!, searchPattern!, SearchOption.TopDirectoryOnly))
+                    {
+                        if (allowedExtensions.Contains(Path.GetExtension(match)))
+                            discoveredFiles.Add(Path.GetFullPath(match));
+                    }
+                }
+                else
+                {
+                    var normalized = pattern.Replace('\\', '/');
+                    foreach (var candidate in relativeCandidates)
+                    {
+                        var relative = Path.GetRelativePath(inputFolder, candidate).Replace('\\', '/');
+                        if (System.IO.Enumeration.FileSystemName.MatchesSimpleExpression(normalized, relative, ignoreCase: true) ||
+                            System.IO.Enumeration.FileSystemName.MatchesSimpleExpression(normalized, Path.GetFileName(candidate), ignoreCase: true))
+                        {
+                            discoveredFiles.Add(candidate);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (discoveredFiles.Count == 0)
+            throw new UsageException(globPatterns.Count > 0
+                ? $"No files matched the provided --glob patterns under '{inputFolder}'."
+                : $"No .bas/.cls/.frm files found under '{inputFolder}'.");
+
+        var rootDir = !string.IsNullOrWhiteSpace(rootOverride)
+            ? Path.GetFullPath(rootOverride!)
+            : inputFolder;
+
         // First pass: gather module names/kinds
         var firstPass = new List<(string file, string[] lines, string name, string kind)>();
         var moduleSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var f in files)
+        foreach (var file in discoveredFiles.OrderBy(f => f, StringComparer.OrdinalIgnoreCase))
         {
-            var lines = LoadLogicalLines(f);
-            var modName = TryMatch(lines, "Attribute\\s+VB_Name\\s*=\\s*\\\"([^\\\"]+)\\\"") ?? Path.GetFileNameWithoutExtension(f);
-            var kind = KindFromExt(Path.GetExtension(f));
-            firstPass.Add((f, lines, modName, kind));
-            moduleSet.Add(modName);
+            var lines = LoadLogicalLines(file);
+            var modName = TryMatch(lines, "Attribute\\s+VB_Name\\s*=\\s*\\\"([^\\\"]+)\\\"") ?? Path.GetFileNameWithoutExtension(file);
+            if (!moduleSet.Add(modName))
+                throw new UsageException($"Duplicate module name detected: '{modName}'. Ensure module names are unique across inputs.");
+            var kind = KindFromExt(Path.GetExtension(file));
+            firstPass.Add((file, lines, modName, kind));
         }
+
         // Second pass: parse with symbol table awareness
         var returnTypeMap = BuildReturnTypeMap(firstPass);
         var modules = new List<ModuleIr>();
         foreach (var it in firstPass)
         {
-            var procs = ParseProcedures(it.lines, it.name, MakeRelative(folder, it.file), moduleSet, returnTypeMap);
-            modules.Add(new ModuleIr { Id = it.name, Name = it.name, Kind = it.kind, File = MakeRelative(folder, it.file), Procedures = procs });
+            var relativePath = MakeRelative(rootDir, it.file);
+            var procs = ParseProcedures(it.lines, it.name, relativePath, moduleSet, returnTypeMap, inferMetrics);
+            modules.Add(new ModuleIr
+            {
+                Id = it.name,
+                Name = it.name,
+                Kind = it.kind,
+                File = relativePath,
+                Metrics = inferMetrics ? new MetricsIr { Lines = it.lines.Length } : null,
+                Procedures = procs.OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
+                                  .ThenBy(p => p.Id, StringComparer.Ordinal)
+                                  .ToList()
+            });
         }
+
+        modules = modules
+            .OrderBy(m => m.Name, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(m => m.Id, StringComparer.Ordinal)
+            .ToList();
 
         var ir = new IrRoot
         {
             IrSchemaVersion = "0.1",
             Generator = new() { Name = "vba2json", Version = "0.1.0" },
-            Project = new() { Name = string.IsNullOrWhiteSpace(projectName) ? Path.GetFileName(folder) : projectName!, Modules = modules }
+            Project = new()
+            {
+                Name = string.IsNullOrWhiteSpace(projectName) ? Path.GetFileName(inputFolder) : projectName!,
+                Modules = modules
+            }
         };
 
         var json = JsonSerializer.Serialize(ir, JsonOpts);
         if (string.IsNullOrWhiteSpace(output)) Console.WriteLine(json);
-        else { Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(output!)) ?? "."); File.WriteAllText(output!, json); }
+        else
+        {
+            var outPath = Path.GetFullPath(output!);
+            Directory.CreateDirectory(Path.GetDirectoryName(outPath) ?? ".");
+            File.WriteAllText(outPath, json);
+        }
         return ExitCodes.Ok;
     }
 
@@ -163,17 +270,33 @@ internal static class Program
         var edges = new List<object>();
         var containers = new List<object>();
 
-        foreach (var m in root.Project.Modules)
+        var orderedModules = (root.Project.Modules ?? new())
+            .OrderBy(m => m.Name, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(m => m.Id, StringComparer.Ordinal)
+            .ToList();
+
+        foreach (var m in orderedModules)
         {
             var tier = TierFor(m.Kind ?? "Module");
             containers.Add(new { id = m.Id, label = m.Name, tier });
-            foreach (var p in m.Procedures ?? new())
+            var orderedProcedures = (m.Procedures ?? new())
+                .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(p => p.Id, StringComparer.Ordinal)
+                .ToList();
+
+            foreach (var p in orderedProcedures)
             {
                 var nodeMeta = new Dictionary<string, string>();
                 if (!string.IsNullOrWhiteSpace(m.Name)) nodeMeta["code.module"] = m.Name;
                 if (!string.IsNullOrWhiteSpace(p.Name)) nodeMeta["code.proc"] = p.Name;
                 if (!string.IsNullOrWhiteSpace(p.Kind)) nodeMeta["code.kind"] = p.Kind!;
                 if (!string.IsNullOrWhiteSpace(p.Access)) nodeMeta["code.access"] = p.Access!;
+                if (p.Locs is { } locs)
+                {
+                    nodeMeta["code.locs.file"] = locs.File;
+                    nodeMeta["code.locs.startLine"] = locs.StartLine.ToString(CultureInfo.InvariantCulture);
+                    nodeMeta["code.locs.endLine"] = locs.EndLine.ToString(CultureInfo.InvariantCulture);
+                }
                 var label = mode.Equals("module-structure", StringComparison.OrdinalIgnoreCase) ? (p.Name ?? p.Id) : p.Id;
                 nodes.Add(new { id = p.Id, label, tier, containerId = m.Id, metadata = nodeMeta });
                 if (!mode.Equals("callgraph", StringComparison.OrdinalIgnoreCase)) continue;
@@ -182,6 +305,13 @@ internal static class Program
                     if (!string.IsNullOrWhiteSpace(c.Target) && c.Target != "~unknown")
                     {
                         var edgeMeta = new Dictionary<string, string> { ["code.edge"] = "call" };
+                        if (!string.IsNullOrWhiteSpace(c.Branch)) edgeMeta["code.branch"] = c.Branch!;
+                        if (c.Site is { } site)
+                        {
+                            if (!string.IsNullOrWhiteSpace(site.Module)) edgeMeta["code.site.module"] = site.Module;
+                            if (!string.IsNullOrWhiteSpace(site.File)) edgeMeta["code.site.file"] = site.File;
+                            if (site.Line > 0) edgeMeta["code.site.line"] = site.Line.ToString(CultureInfo.InvariantCulture);
+                        }
                         edges.Add(new { sourceId = p.Id, targetId = c.Target, label = "call", metadata = edgeMeta });
                     }
                 }
@@ -191,11 +321,16 @@ internal static class Program
         if (mode.Equals("event-wiring", StringComparison.OrdinalIgnoreCase))
         {
             nodes.Clear(); edges.Clear(); containers.Clear();
-            var formModules = root.Project.Modules.Where(m => string.Equals(m.Kind, "Form", StringComparison.OrdinalIgnoreCase)).ToList();
+            var formModules = orderedModules.Where(m => string.Equals(m.Kind, "Form", StringComparison.OrdinalIgnoreCase)).ToList();
             foreach (var m in formModules)
             {
                 containers.Add(new { id = m.Id, label = m.Name, tier = "Forms" });
-                foreach (var p in m.Procedures ?? new())
+                var orderedProcedures = (m.Procedures ?? new())
+                    .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
+                    .ThenBy(p => p.Id, StringComparer.Ordinal)
+                    .ToList();
+
+                foreach (var p in orderedProcedures)
                 {
                     if (string.IsNullOrWhiteSpace(p.Name)) continue;
                     var mm = Regex.Match(p.Name, @"^(?<ctl>[A-Za-z_][A-Za-z0-9_]*)_(?<evt>[A-Za-z_][A-Za-z0-9_]*)$");
@@ -217,10 +352,15 @@ internal static class Program
             nodes.Clear(); edges.Clear(); containers.Clear();
             var flowMeta = new Dictionary<string, string> { ["code.edge"] = "flow" };
 
-            foreach (var m in root.Project.Modules)
+            foreach (var m in orderedModules)
             {
                 var tier = TierFor(m.Kind ?? "Module");
-                foreach (var p in m.Procedures ?? new())
+                var orderedProcedures = (m.Procedures ?? new())
+                    .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
+                    .ThenBy(p => p.Id, StringComparer.Ordinal)
+                    .ToList();
+
+                foreach (var p in orderedProcedures)
                 {
                     var contId = p.Id + "#proc";
                     containers.Add(new { id = contId, label = p.Id, tier });
@@ -365,13 +505,17 @@ internal static class Program
         {
             // Replace with module-level call map
             nodes.Clear(); edges.Clear(); containers.Clear();
-            var modKinds = root.Project.Modules.ToDictionary(m => m.Id, m => m.Kind ?? "Module", StringComparer.OrdinalIgnoreCase);
-            foreach (var m in root.Project.Modules)
+            foreach (var m in orderedModules)
                 nodes.Add(new { id = m.Id, label = m.Name, tier = TierFor(m.Kind ?? "Module") });
             var agg = new Dictionary<(string src, string dst), int>();
-            foreach (var m in root.Project.Modules)
+            foreach (var m in orderedModules)
             {
-                foreach (var p in m.Procedures ?? new())
+                var orderedProcedures = (m.Procedures ?? new())
+                    .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
+                    .ThenBy(p => p.Id, StringComparer.Ordinal)
+                    .ToList();
+
+                foreach (var p in orderedProcedures)
                 {
                     foreach (var c in p.Calls ?? new())
                     {
@@ -450,7 +594,13 @@ internal static class Program
         return null;
     }
 
-    private static List<ProcedureIr> ParseProcedures(string[] lines, string moduleName, string filePath, HashSet<string> moduleSet, Dictionary<string, string?> returnTypeMap)
+    private static List<ProcedureIr> ParseProcedures(
+        string[] lines,
+        string moduleName,
+        string filePath,
+        HashSet<string> moduleSet,
+        Dictionary<string, string?> returnTypeMap,
+        bool includeMetrics)
     {
         var result = new List<ProcedureIr>();
         string TrimToken(string token) => Regex.Replace(token ?? string.Empty, @"\([^)]*\)$", "");
@@ -728,23 +878,26 @@ internal static class Program
                 }
             }
 
-            var proc = new ProcedureIr
+            var tags = new List<string>();
+            if (hasIf) tags.Add("hasIf");
+            if (hasLoop) tags.Add("hasLoop");
+
+            var metrics = includeMetrics ? new MetricsIr { Lines = end - start + 1 } : null;
+
+            result.Add(new ProcedureIr
             {
                 Id = moduleName + "." + name,
                 Name = name,
                 Kind = kind,
                 Access = access,
-                Static = isStatic,
-                Params = @params,
+                Static = isStatic ? true : null,
+                Params = @params.Count > 0 ? @params : null,
                 Returns = returns,
                 Locs = new LocsIr { File = filePath, StartLine = start, EndLine = end },
-                Calls = calls,
-                Metrics = new MetricsIr { Lines = end - start + 1 },
-                Tags = new List<string>()
-            };
-            if (hasIf) proc.Tags.Add("hasIf");
-            if (hasLoop) proc.Tags.Add("hasLoop");
-            result.Add(proc);
+                Calls = calls.Count > 0 ? calls : null,
+                Metrics = metrics,
+                Tags = tags.Count > 0 ? tags : null
+            });
             i = end - 1;
         }
         return result;
@@ -792,8 +945,17 @@ internal static class Program
 
     private static string MakeRelative(string root, string path)
     {
-        var r = root.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
-        return path.StartsWith(r, StringComparison.OrdinalIgnoreCase) ? path.Substring(r.Length) : path;
+        try
+        {
+            var rel = Path.GetRelativePath(Path.GetFullPath(root), Path.GetFullPath(path));
+            if (!string.IsNullOrWhiteSpace(rel) && !rel.StartsWith("..", StringComparison.Ordinal))
+                return rel.Replace('\\', '/');
+        }
+        catch
+        {
+            // fall back to original path
+        }
+        return path;
     }
 
     private static int RunRender(string[] args)
@@ -863,8 +1025,21 @@ internal sealed class IrRoot
 }
 internal sealed class GeneratorIr { public string? Name { get; set; } public string? Version { get; set; } }
 internal sealed class ProjectIr { public string Name { get; set; } = ""; public List<ModuleIr> Modules { get; set; } = new(); }
-internal sealed class ModuleIr { public string Id { get; set; } = ""; public string Name { get; set; } = ""; public string? Kind { get; set; } public string? File { get; set; } public List<ProcedureIr> Procedures { get; set; } = new(); }
-internal sealed class ProcedureIr { public string Id { get; set; } = ""; public string Name { get; set; } = ""; public string? Kind { get; set; } public string? Access { get; set; } public bool Static { get; set; } public List<ParamIr> Params { get; set; } = new(); public string? Returns { get; set; } public LocsIr Locs { get; set; } = new(); public List<CallIr> Calls { get; set; } = new(); public MetricsIr Metrics { get; set; } = new(); public List<string> Tags { get; set; } = new(); }
+internal sealed class ModuleIr { public string Id { get; set; } = ""; public string Name { get; set; } = ""; public string? Kind { get; set; } public string? File { get; set; } public MetricsIr? Metrics { get; set; } public List<ProcedureIr> Procedures { get; set; } = new(); }
+internal sealed class ProcedureIr
+{
+    public string Id { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string? Kind { get; set; }
+    public string? Access { get; set; }
+    public bool? Static { get; set; }
+    public List<ParamIr>? Params { get; set; }
+    public string? Returns { get; set; }
+    public LocsIr Locs { get; set; } = new();
+    public List<CallIr>? Calls { get; set; }
+    public MetricsIr? Metrics { get; set; }
+    public List<string>? Tags { get; set; }
+}
 internal sealed class ParamIr { public string Name { get; set; } = ""; public string? Type { get; set; } public bool ByRef { get; set; } }
 internal sealed class LocsIr { public string File { get; set; } = ""; public int StartLine { get; set; } public int EndLine { get; set; } }
 internal sealed class CallIr { public string Target { get; set; } = ""; public bool IsDynamic { get; set; } public SiteIr Site { get; set; } = new(); public string? Branch { get; set; } }

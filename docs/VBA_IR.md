@@ -31,6 +31,7 @@ Module
   "name": "Module1",                    // Source name
   "kind": "Module",                     // Module | Class | Form
   "file": "src/Module1.bas",            // Source file path (relative allowed)
+  "metrics": { "lines": 42 },           // Optional (requires --infer-metrics)
   "attributes": ["Option Explicit"],     // Optional
   "procedures": [ /* Procedure objects */ ]
 }
@@ -41,14 +42,14 @@ Procedure
 {
   "id": "Module1.DoWork",               // Stable id (Module.Proc)
   "name": "DoWork",                      // Procedure name
-  "kind": "Sub",                         // Sub | Function | PropertyGet | PropertyLet | PropertySet
+  "kind": "Function",                    // Sub | Function | PropertyGet | PropertyLet | PropertySet
   "access": "Public",                    // Public | Private | Friend
-  "static": false,
-  "params": [ { "name": "x", "type": "Integer", "byRef": false } ],
-  "returns": null,                        // e.g., "String" for Function
+  "static": true,                       // Present only when procedure is declared Static
+  "params": [ { "name": "count", "type": "Integer", "byRef": false } ],
+  "returns": "String",
   "locs": { "file": "src/Module1.bas", "startLine": 12, "endLine": 42 },
   "calls": [ /* Call objects */ ],
-  "metrics": { "cyclomatic": 3, "lines": 31 },
+  "metrics": { "cyclomatic": 3, "lines": 31 }, // Optional (requires --infer-metrics)
   "tags": ["utility"]
 }
 ```
@@ -58,6 +59,7 @@ Call
 {
   "target": "Module2.OtherProc",        // Target id (Module.Proc)
   "isDynamic": false,                    // true for CallByName, Application.Run, etc.
+  "branch": "loop|then",                // Optional branch/loop context tags
   "site": { "module": "Module1", "file": "src/Module1.bas", "line": 27 }
 }
 ```
@@ -67,6 +69,7 @@ Conventions
 - IDs: `Module.Proc` unique within project. Modules unique by `name`.
 - Optional fields should be omitted when unknown (not set to null).
 - Tools should emit a stable order (modules by name; procedures by name) for deterministic diffs.
+- Metrics should only appear when the generator has been asked for them (e.g., `vba2json --infer-metrics`); omit the field otherwise.
 
 Example (Minimal)
 ```json
@@ -87,7 +90,6 @@ Example (Minimal)
             "name": "DoWork",
             "kind": "Sub",
             "access": "Public",
-            "params": [],
             "locs": { "file": "src/Module1.bas", "startLine": 10, "endLine": 20 },
             "calls": [ { "target": "Module2.OtherProc", "isDynamic": false, "site": { "module": "Module1", "file": "src/Module1.bas", "line": 15 } } ]
           }
@@ -104,9 +106,7 @@ Example (Minimal)
             "name": "OtherProc",
             "kind": "Sub",
             "access": "Public",
-            "params": [],
-            "locs": { "file": "src/Module2.bas", "startLine": 5, "endLine": 12 },
-            "calls": []
+            "locs": { "file": "src/Module2.bas", "startLine": 5, "endLine": 12 }
           }
         ]
       }
@@ -118,9 +118,13 @@ Example (Minimal)
 Mapping to Diagram JSON (Project Call Graph)
 - Node = `Module.Proc`, label `Module.Proc`.
 - Container = Module; tiers by `module.kind`: Forms | Classes | Modules.
-- Edge = `call` with `edges[].metadata.code.edge = "call"` and `edges[].metadata.call.site` from `call.site`.
+- Edge = `call` with:
+  - `edges[].metadata.code.edge = "call"`
+  - `edges[].metadata.code.site.module|file|line` copied from `call.site`
+  - `edges[].metadata.code.branch` when branch information is present
 - Add to `nodes[].metadata`:
-  - `code.module`, `code.proc`, `code.kind`, `code.access`, `code.locs.file`, `code.locs.startLine`, `code.locs.endLine`.
+  - `code.module`, `code.proc`, `code.kind`, `code.access`
+  - `code.locs.file`, `code.locs.startLine`, `code.locs.endLine`
 
 Future Extensions
 - Additional call metadata (arity, inferred targets for dynamics), attributes for forms/classes, module references.

@@ -44,6 +44,7 @@
           "items": { "type": "string" },
           "default": []
         },
+        "metrics": { "$ref": "#/$defs/metrics" },
         "procedures": {
           "type": "array",
           "items": { "$ref": "#/$defs/procedure" },
@@ -108,6 +109,7 @@
       "properties": {
         "target": { "type": "string", "minLength": 1 },
         "isDynamic": { "type": "boolean" },
+        "branch": { "type": "string" },
         "site": {
           "type": "object",
           "additionalProperties": true,

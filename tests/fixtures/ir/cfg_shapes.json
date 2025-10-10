@@ -14,12 +14,32 @@
         "file": "ModuleCfg.bas",
         "procedures": [
           {
+            "id": "ModuleCfg.HelperA",
+            "name": "HelperA",
+            "kind": "Sub",
+            "access": "Public",
+            "locs": {
+              "file": "ModuleCfg.bas",
+              "startLine": 19,
+              "endLine": 20
+            }
+          },
+          {
+            "id": "ModuleCfg.HelperB",
+            "name": "HelperB",
+            "kind": "Sub",
+            "access": "Public",
+            "locs": {
+              "file": "ModuleCfg.bas",
+              "startLine": 22,
+              "endLine": 23
+            }
+          },
+          {
             "id": "ModuleCfg.WithIf",
             "name": "WithIf",
             "kind": "Sub",
             "access": "Public",
-            "static": false,
-            "params": [],
             "locs": {
               "file": "ModuleCfg.bas",
               "startLine": 4,
@@ -47,9 +67,6 @@
                 "branch": "else"
               }
             ],
-            "metrics": {
-              "lines": 7
-            },
             "tags": [
               "hasIf"
             ]
@@ -59,8 +76,6 @@
             "name": "WithLoop",
             "kind": "Sub",
             "access": "Public",
-            "static": false,
-            "params": [],
             "locs": {
               "file": "ModuleCfg.bas",
               "startLine": 12,
@@ -78,48 +93,9 @@
                 "branch": "loop"
               }
             ],
-            "metrics": {
-              "lines": 6
-            },
             "tags": [
               "hasLoop"
             ]
-          },
-          {
-            "id": "ModuleCfg.HelperA",
-            "name": "HelperA",
-            "kind": "Sub",
-            "access": "Public",
-            "static": false,
-            "params": [],
-            "locs": {
-              "file": "ModuleCfg.bas",
-              "startLine": 19,
-              "endLine": 20
-            },
-            "calls": [],
-            "metrics": {
-              "lines": 2
-            },
-            "tags": []
-          },
-          {
-            "id": "ModuleCfg.HelperB",
-            "name": "HelperB",
-            "kind": "Sub",
-            "access": "Public",
-            "static": false,
-            "params": [],
-            "locs": {
-              "file": "ModuleCfg.bas",
-              "startLine": 22,
-              "endLine": 23
-            },
-            "calls": [],
-            "metrics": {
-              "lines": 2
-            },
-            "tags": []
           }
         ]
       }

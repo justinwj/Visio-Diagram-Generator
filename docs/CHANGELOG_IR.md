@@ -2,6 +2,9 @@
 
 All notable changes to the VBA IR (Intermediate Representation) will be documented in this file.
 
+## Unreleased
+- Added optional `module.metrics` object (lines, cyclomatic) so generators can opt-in to module-level metrics (e.g., `vba2json --infer-metrics`).
+
 ## 0.1 — Initial draft
 - Top-level envelope with `irSchemaVersion` and optional `generator` metadata.
 - Project surface: `project { name, modules[] }`.

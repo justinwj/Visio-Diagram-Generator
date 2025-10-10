@@ -22,24 +22,50 @@ $nodes = @()
 $edges = @()
 $containers = @()
 
-foreach ($m in $ir.project.modules) {
+$orderedModules = @($ir.project.modules | Sort-Object -Property `
+  @{ Expression = { ([string]$_.name).ToLowerInvariant() } }, `
+  @{ Expression = { ([string]$_.id).ToLowerInvariant() } })
+
+foreach ($m in $orderedModules) {
   $tier = TierForKind $m.kind
   $containers += [ordered]@{
     id = $m.id
     label = $m.name
     tier = $tier
   }
-  foreach ($p in $m.procedures) {
+  $orderedProcedures = @($m.procedures | Sort-Object -Property `
+    @{ Expression = { ([string]$_.name).ToLowerInvariant() } }, `
+    @{ Expression = { ([string]$_.id).ToLowerInvariant() } })
+
+  foreach ($p in $orderedProcedures) {
+    $nodeMeta = [ordered]@{}
+    if ($m.name) { $nodeMeta['code.module'] = $m.name }
+    if ($p.name) { $nodeMeta['code.proc'] = $p.name }
+    if ($p.kind) { $nodeMeta['code.kind'] = $p.kind }
+    if ($p.access) { $nodeMeta['code.access'] = $p.access }
+    if ($p.locs) {
+      if ($p.locs.file) { $nodeMeta['code.locs.file'] = $p.locs.file }
+      if ($p.locs.startLine) { $nodeMeta['code.locs.startLine'] = [string]$p.locs.startLine }
+      if ($p.locs.endLine) { $nodeMeta['code.locs.endLine'] = [string]$p.locs.endLine }
+    }
+    $label = if ($p.name) { $p.name } else { $p.id }
     $nodes += [ordered]@{
       id = $p.id
-      label = $p.id
+      label = $label
       tier = $tier
       containerId = $m.id
-      metadata = @{ 'code.module'=$m.name; 'code.proc'=$p.name; 'code.kind'=$p.kind; 'code.access'=$p.access }
+      metadata = $nodeMeta
     }
-    foreach ($c in $p.calls) {
+    foreach ($c in ($p.calls ?? @())) {
       if (-not [string]::IsNullOrWhiteSpace($c.target) -and $c.target -ne '~unknown') {
-        $edges += [ordered]@{ sourceId=$p.id; targetId=$c.target; label='call'; metadata=@{ 'code.edge'='call' } }
+        $edgeMeta = [ordered]@{ 'code.edge' = 'call' }
+        if ($c.branch) { $edgeMeta['code.branch'] = $c.branch }
+        if ($c.site) {
+          if ($c.site.module) { $edgeMeta['code.site.module'] = $c.site.module }
+          if ($c.site.file) { $edgeMeta['code.site.file'] = $c.site.file }
+          if ($c.site.line) { $edgeMeta['code.site.line'] = [string]$c.site.line }
+        }
+        $edges += [ordered]@{ sourceId = $p.id; targetId = $c.target; label = 'call'; metadata = $edgeMeta }
       }
     }
   }

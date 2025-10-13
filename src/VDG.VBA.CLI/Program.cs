@@ -68,7 +68,7 @@ internal static class Program
         Console.Error.WriteLine("     --glob <pattern>       Limit inputs using * / ? wildcards relative to --in (repeatable).");
         Console.Error.WriteLine("     --root <path>          Base path for emitted module file paths (defaults to --in).");
         Console.Error.WriteLine("     --infer-metrics        Include simple line-count metrics in the IR payload.");
-        Console.Error.WriteLine("  ir2diagram --in <ir.json> [--out <diagram.json>] [--mode <callgraph|module-structure|module-callmap|event-wiring|proc-cfg>] [--include-unknown] [--timeout <ms>]");
+        Console.Error.WriteLine("  ir2diagram --in <ir.json> [--out <diagram.json>] [--mode <callgraph|module-structure|module-callmap|event-wiring|proc-cfg>] [--include-unknown] [--timeout <ms>] [--strict-validate]");
         Console.Error.WriteLine("  render --in <folder> --out <diagram.vsdx> [--mode <callgraph|module-structure|module-callmap>] [--cli <VDG.CLI.exe>] [--diagram-json <path>]");
     }
 
@@ -243,7 +243,7 @@ internal static class Program
 
     private static int RunIr2Diagram(string[] args)
     {
-        string? input = null; string? output = null; string mode = "callgraph"; bool includeUnknown = false; int? timeoutMs = null;
+        string? input = null; string? output = null; string mode = "callgraph"; bool includeUnknown = false; int? timeoutMs = null; bool strictValidate = false;
         for (int i = 0; i < args.Length; i++)
         {
             var a = args[i];
@@ -257,6 +257,8 @@ internal static class Program
             { includeUnknown = true; }
             else if (string.Equals(a, "--timeout", StringComparison.OrdinalIgnoreCase))
             { if (i + 1 >= args.Length) throw new UsageException("--timeout requires milliseconds value."); if (!int.TryParse(args[++i], NumberStyles.Integer, CultureInfo.InvariantCulture, out var t)) throw new UsageException("--timeout must be an integer (milliseconds)."); timeoutMs = t; }
+            else if (string.Equals(a, "--strict-validate", StringComparison.OrdinalIgnoreCase))
+            { strictValidate = true; }
             else throw new UsageException($"Unknown option '{a}' for ir2diagram.");
         }
         if (string.IsNullOrWhiteSpace(input)) throw new UsageException("ir2diagram requires --in <ir.json>.");
@@ -274,6 +276,43 @@ internal static class Program
         }
 
         var tiers = new[] { "Forms", "Classes", "Modules" };
+        if (strictValidate)
+        {
+            string[] allowedKinds = new[] { "Module", "Class", "Form" };
+            if (root.Project is null) throw new UsageException("IR missing 'project'.");
+            if (root.Project.Modules is null || root.Project.Modules.Count == 0) throw new UsageException("IR contains no modules.");
+            int procCount = 0;
+            foreach (var m in root.Project.Modules)
+            {
+                if (string.IsNullOrWhiteSpace(m.Id)) throw new UsageException("Module missing id.");
+                if (string.IsNullOrWhiteSpace(m.Name)) throw new UsageException($"Module '{m.Id}' missing name.");
+                if (string.IsNullOrWhiteSpace(m.Kind) || !allowedKinds.Contains(m.Kind, StringComparer.OrdinalIgnoreCase)) throw new UsageException($"Module '{m.Id}' has invalid kind '{m.Kind}'.");
+                if (string.IsNullOrWhiteSpace(m.File)) throw new UsageException($"Module '{m.Id}' missing file path.");
+                if (m.Procedures is null || m.Procedures.Count == 0) throw new UsageException($"Module '{m.Id}' contains no procedures.");
+                foreach (var p in m.Procedures)
+                {
+                    procCount++;
+                    if (string.IsNullOrWhiteSpace(p.Id) || string.IsNullOrWhiteSpace(p.Name)) throw new UsageException($"Procedure missing id/name in module '{m.Id}'.");
+                    if (p.Locs is null || string.IsNullOrWhiteSpace(p.Locs.File) || p.Locs.StartLine <= 0 || p.Locs.EndLine < p.Locs.StartLine)
+                        throw new UsageException($"Procedure '{p.Id}' has invalid locs.");
+                    foreach (var c in p.Calls ?? new())
+                    {
+                        if (string.IsNullOrWhiteSpace(c.Target)) throw new UsageException($"Call in '{p.Id}' missing target.");
+                        if (string.Equals(c.Target, "~unknown", StringComparison.Ordinal) && !c.IsDynamic)
+                            throw new UsageException($"Call in '{p.Id}' has '~unknown' target but isDynamic=false.");
+                        if (c.Site is null || string.IsNullOrWhiteSpace(c.Site.Module) || string.IsNullOrWhiteSpace(c.Site.File) || c.Site.Line <= 0)
+                            throw new UsageException($"Call in '{p.Id}' missing site information.");
+                    }
+                }
+            }
+            if (procCount == 0) throw new UsageException("IR contains no procedures.");
+        }
+        // Basic IR sanity: require at least one module and one procedure overall
+        var incomingModules = root.Project?.Modules ?? new List<ModuleIr>();
+        if (incomingModules.Count == 0)
+            throw new UsageException("IR contains no modules.");
+        if (!incomingModules.Any(m => (m.Procedures?.Count ?? 0) > 0))
+            throw new UsageException("IR contains no procedures.");
         var sw = System.Diagnostics.Stopwatch.StartNew();
         void CheckTimeout()
         {

@@ -306,6 +306,114 @@ public class ParserSmokeTests
     }
 
     [Fact]
+    public void Ir2DiagramFailsOnMalformedIr()
+    {
+        var bad = Path.Combine(Path.GetTempPath(), $"vdg_bad_{Guid.NewGuid():N}.json");
+        try
+        {
+            File.WriteAllText(bad, "not json");
+            var (code, _out, err) = RunCliProcess("ir2diagram", "--in", bad, "--out", bad + ".out.json", "--mode", "callgraph");
+            Assert.Equal(65, code);
+            Assert.Contains("Invalid IR JSON.", err);
+        }
+        finally { if (File.Exists(bad)) File.Delete(bad); var outp = bad + ".out.json"; if (File.Exists(outp)) File.Delete(outp); }
+    }
+
+    [Fact]
+    public void Ir2DiagramFailsOnEmptyModules()
+    {
+        var empty = Path.Combine(Path.GetTempPath(), $"vdg_empty_{Guid.NewGuid():N}.json");
+        try
+        {
+            var content = "{\"irSchemaVersion\":\"0.1\",\"project\":{\"name\":\"X\",\"modules\":[]}}";
+            File.WriteAllText(empty, content);
+            var (code, _out, err) = RunCliProcess("ir2diagram", "--in", empty, "--out", empty + ".out.json", "--mode", "callgraph");
+            Assert.Equal(65, code);
+            Assert.Contains("IR contains no modules.", err + _out);
+        }
+        finally { if (File.Exists(empty)) File.Delete(empty); var outp = empty + ".out.json"; if (File.Exists(outp)) File.Delete(outp); }
+    }
+
+    [Fact]
+    public void CallgraphEdgesCarryBranchTags()
+    {
+        using var diagram = GenerateDiagram("cfg_shapes", "callgraph");
+        var edges = diagram.RootElement.GetProperty("edges").EnumerateArray().ToList();
+        var thenEdge = edges.FirstOrDefault(e => e.GetProperty("targetId").GetString() == "ModuleCfg.HelperA");
+        var elseEdge = edges.FirstOrDefault(e => e.GetProperty("targetId").GetString() == "ModuleCfg.HelperB");
+        Assert.NotEqual(JsonValueKind.Undefined, thenEdge.ValueKind);
+        Assert.NotEqual(JsonValueKind.Undefined, elseEdge.ValueKind);
+        Assert.Equal("then", thenEdge.GetProperty("metadata").GetProperty("code.branch").GetString());
+        Assert.Equal("else", elseEdge.GetProperty("metadata").GetProperty("code.branch").GetString());
+    }
+
+    [Fact]
+    public void Ir2Diagram_StrictValidate_Passes_OnValidIr()
+    {
+        var ir = Path.GetTempFileName(); var dj = Path.GetTempFileName();
+        try
+        {
+            File.Delete(ir); File.Delete(dj);
+            RunCli("vba2json", "--in", Path.Combine("tests", "fixtures", "vba", "cross_module_calls"), "--out", ir);
+            var (code, _out, err) = RunCliProcess("ir2diagram", "--in", ir, "--out", dj, "--mode", "callgraph", "--strict-validate");
+            Assert.Equal(0, code);
+        }
+        finally { if (File.Exists(ir)) File.Delete(ir); if (File.Exists(dj)) File.Delete(dj); }
+    }
+
+    [Fact]
+    public void Ir2Diagram_StrictValidate_Fails_OnBadCall()
+    {
+        var bad = Path.Combine(Path.GetTempPath(), $"vdg_bad_{Guid.NewGuid():N}.json"); var dj = Path.GetTempFileName();
+        try
+        {
+            File.Delete(dj);
+            var invalidRoot = new JsonObject
+            {
+                ["irSchemaVersion"] = "0.1",
+                ["project"] = new JsonObject
+                {
+                    ["name"] = "Bad",
+                    ["modules"] = new JsonArray
+                    {
+                        new JsonObject
+                        {
+                            ["id"] = "M1",
+                            ["name"] = "M1",
+                            ["kind"] = "Module",
+                            ["file"] = "M1.bas",
+                            ["procedures"] = new JsonArray
+                            {
+                                new JsonObject
+                                {
+                                    ["id"] = "M1.P",
+                                    ["name"] = "P",
+                                    ["kind"] = "Sub",
+                                    ["locs"] = new JsonObject { ["file"] = "M1.bas", ["startLine"] = 1, ["endLine"] = 2 },
+                                    ["calls"] = new JsonArray
+                                    {
+                                        new JsonObject
+                                        {
+                                            ["target"] = "~unknown",
+                                            ["isDynamic"] = false,
+                                            ["site"] = new JsonObject { ["module"] = "M1", ["file"] = "M1.bas", ["line"] = 1 }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+            File.WriteAllText(bad, invalidRoot.ToJsonString());
+            var (code, _out, err) = RunCliProcess("ir2diagram", "--in", bad, "--out", dj, "--mode", "callgraph", "--strict-validate");
+            Assert.Equal(65, code);
+            Assert.Contains("has '~unknown' target but isDynamic=false", err + _out);
+        }
+        finally { if (File.Exists(bad)) File.Delete(bad); if (File.Exists(dj)) File.Delete(dj); }
+    }
+
+    [Fact]
     public void CallgraphDiagram_ValidatesAgainst_DiagramSchema()
     {
         var ir = Path.GetTempFileName(); var dj = Path.GetTempFileName();
@@ -339,6 +447,104 @@ public class ParserSmokeTests
             Assert.Contains("Diagram OK:", stdout);
         }
         finally { if (File.Exists(ir)) File.Delete(ir); if (File.Exists(dj)) File.Delete(dj); }
+    }
+
+    [Fact]
+    public void GeneratedIr_ValidatesAgainst_IrSchema()
+    {
+        var fixtures = new[]
+        {
+            "hello_world",
+            "cross_module_calls",
+            "events_and_forms",
+            "alias_and_chain",
+            "cfg_shapes",
+            "cfg_nested"
+        };
+
+        foreach (var f in fixtures)
+        {
+            var ir = Path.Combine(Path.GetTempPath(), $"vdg_ir_{Guid.NewGuid():N}.json");
+            try
+            {
+                var fxDir = Path.Combine(RepoRoot, "tests", "fixtures", "vba", f);
+                RunCli("vba2json", "--in", fxDir, "--out", ir);
+
+                var scriptPath = Path.Combine(RepoRoot, "tools", "ir-validate.ps1");
+                Assert.True(File.Exists(scriptPath), $"ir-validate.ps1 missing at {scriptPath}");
+
+                var ps = new ProcessStartInfo("pwsh")
+                {
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    WorkingDirectory = RepoRoot
+                };
+                ps.ArgumentList.Add(scriptPath);
+                ps.ArgumentList.Add("-InputPath");
+                ps.ArgumentList.Add(ir);
+                using var p = Process.Start(ps)!;
+                var stdout = p.StandardOutput.ReadToEnd();
+                var stderr = p.StandardError.ReadToEnd();
+                p.WaitForExit();
+                Assert.True(p.ExitCode == 0, $"ir-validate failed: {stderr}\n{stdout}");
+                Assert.Contains("IR OK:", stdout);
+            }
+            finally { if (File.Exists(ir)) File.Delete(ir); }
+        }
+    }
+
+    [Fact]
+    public void DynamicUnknownCounts_Match_FixtureExpectations()
+    {
+        var ir = Path.GetTempFileName(); var dj1 = Path.GetTempFileName(); var dj2 = Path.GetTempFileName();
+        try
+        {
+            File.Delete(ir); File.Delete(dj1); File.Delete(dj2);
+            // Fixture has two dynamic calls: Application.Run and CallByName
+            RunCli("vba2json", "--in", Path.Combine("tests", "fixtures", "vba", "dynamic_calls"), "--out", ir);
+
+            var out1 = RunCli("ir2diagram", "--in", ir, "--out", dj1, "--mode", "callgraph");
+            var m1 = System.Text.RegularExpressions.Regex.Match(out1, "dynamicSkipped:(?<ds>\\d+)");
+            Assert.True(m1.Success, "Expected dynamicSkipped in summary output");
+            Assert.Equal("2", m1.Groups["ds"].Value);
+
+            var out2 = RunCli("ir2diagram", "--in", ir, "--out", dj2, "--mode", "callgraph", "--include-unknown");
+            var m2 = System.Text.RegularExpressions.Regex.Match(out2, "dynamicIncluded:(?<di>\\d+)");
+            Assert.True(m2.Success, "Expected dynamicIncluded in summary output");
+            Assert.Equal("2", m2.Groups["di"].Value);
+        }
+        finally { if (File.Exists(ir)) File.Delete(ir); if (File.Exists(dj1)) File.Delete(dj1); if (File.Exists(dj2)) File.Delete(dj2); }
+    }
+
+    [Fact]
+    public void Vba2Json_DynamicCalls_AreRecordedWithIsDynamic()
+    {
+        using var irDoc = GenerateIrDocument("dynamic_calls");
+        var root = irDoc.RootElement;
+        var modules = root.GetProperty("project").GetProperty("modules").EnumerateArray().ToList();
+        int dynCount = 0; int unkCount = 0;
+        foreach (var m in modules)
+        {
+            foreach (var p in m.GetProperty("procedures").EnumerateArray())
+            {
+                if (!p.TryGetProperty("calls", out var calls) || calls.ValueKind != JsonValueKind.Array) continue;
+                foreach (var c in calls.EnumerateArray())
+                {
+                    if (c.TryGetProperty("isDynamic", out var d) && d.ValueKind is JsonValueKind.True)
+                    {
+                        dynCount++;
+                    }
+                    if (c.TryGetProperty("target", out var t) && t.GetString() == "~unknown")
+                    {
+                        unkCount++;
+                    }
+                }
+            }
+        }
+        Assert.Equal(2, dynCount);
+        Assert.Equal(2, unkCount);
     }
 
     [Fact]

@@ -2,7 +2,8 @@ Param(
   [string]$In = 'tests/fixtures/vba/cross_module_calls',
   [string]$Mode = 'callgraph',
   [switch]$IncludeUnknown,
-  [int]$TimeoutMs = 0
+  [int]$TimeoutMs = 0,
+  [string]$OutJson = 'out/perf/perf.json'
 )
 
 Set-StrictMode -Version Latest
@@ -22,6 +23,9 @@ function Run-Cli {
 }
 
 New-Item -ItemType Directory -Force -Path out/tmp | Out-Null
+$outDir = Split-Path -Parent $OutJson
+if ([string]::IsNullOrWhiteSpace($outDir)) { $outDir = 'out/perf' }
+New-Item -ItemType Directory -Force -Path $outDir | Out-Null
 $ir = 'out/tmp/perf_ir.json'
 $dj = 'out/tmp/perf_diag.json'
 
@@ -40,7 +44,53 @@ Write-Host ("ir2diagram: {0} ms (exit {1})" -f $r2.Ms, $r2.ExitCode)
 if ($r2.ExitCode -ne 0) { Write-Error "ir2diagram failed: $($r2.Stderr)"; exit $r2.ExitCode }
 
 # Rough memory snapshot (process working set)
-$ws = (Get-Process -Id $PID).WorkingSet64
+$proc = Get-Process -Id $PID
+$ws = $proc.WorkingSet64
 Write-Host ("pwsh working set: {0:N0} bytes" -f $ws)
-Write-Host "Done. Outputs in out/tmp" -ForegroundColor Green
 
+# Parse summary metrics from ir2diagram stdout if present
+$modules = $null; $procedures = $null; $edges = $null; $dynSkipped = $null; $dynIncluded = $null
+$m = [regex]::Match($r2.Stdout, 'modules:(?<m>\d+)\s+procedures:(?<p>\d+)\s+edges:(?<e>\d+)\s+dynamicSkipped:(?<ds>\d+)\s+dynamicIncluded:(?<di>\d+)', 'IgnoreCase')
+if ($m.Success) {
+  $modules = [int]$m.Groups['m'].Value
+  $procedures = [int]$m.Groups['p'].Value
+  $edges = [int]$m.Groups['e'].Value
+  $dynSkipped = [int]$m.Groups['ds'].Value
+  $dynIncluded = [int]$m.Groups['di'].Value
+}
+
+# File sizes and diagram counts
+$irSize = (Get-Item $ir).Length
+$djSize = (Get-Item $dj).Length
+$nodesCount = $null; $edgesCount = $null
+try {
+  $djObj = Get-Content -Raw -Path $dj | ConvertFrom-Json
+  $nodesCount = @($djObj.nodes).Count
+  $edgesCount = @($djObj.edges).Count
+} catch { }
+
+$payload = [ordered]@{
+  timestampUtc = (Get-Date).ToUniversalTime().ToString('o')
+  input = $In
+  mode = $Mode
+  includeUnknown = [bool]$IncludeUnknown
+  timeoutMs = if ($TimeoutMs -gt 0) { $TimeoutMs } else { $null }
+  vba2json = [ordered]@{ ms = $r1.Ms; exit = $r1.ExitCode; outBytes = $irSize }
+  ir2diagram = [ordered]@{
+    ms = $r2.Ms; exit = $r2.ExitCode; outBytes = $djSize
+    summary = if ($m.Success) { [ordered]@{ modules = $modules; procedures = $procedures; edges = $edges; dynamicSkipped = $dynSkipped; dynamicIncluded = $dynIncluded } } else { $null }
+    counts = if ($nodesCount -ne $null -or $edgesCount -ne $null) { [ordered]@{ nodes = $nodesCount; edges = $edgesCount } } else { $null }
+  }
+  process = [ordered]@{
+    pid = $PID
+    workingSetBytes = $ws
+    machine = $env:COMPUTERNAME
+    os = $env:OS
+    pwshVersion = $PSVersionTable.PSVersion.ToString()
+  }
+}
+
+$json = ($payload | ConvertTo-Json -Depth 6)
+Set-Content -Path $OutJson -Value $json -Encoding UTF8
+Write-Host "Wrote metrics JSON: $OutJson"
+Write-Host "Done. Outputs in out/tmp" -ForegroundColor Green

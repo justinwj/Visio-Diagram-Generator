@@ -10,6 +10,12 @@ VDG.VBA.CLI
   - Behavior: carries `code.*` metadata, skips `~unknown` targets by default; `--include-unknown` includes sentinel edges; `--timeout` aborts long runs.
   - Exit codes: 0 OK; 65 invalid input (bad args/IR); 70 internal error/timeout.
 
+  ### Validation Options
+  - `--strict-validate`: Enable stricter IR validation (fails on inconsistent or incomplete IR fields).
+    - Enforces module/procedure presence, valid kinds, well‑formed `locs`, and consistent dynamic call metadata (e.g., `target == "~unknown"` must have `isDynamic = true`).
+    - Recommended for production pipelines where IR quality assurance is critical.
+    - Example: `dotnet run --project src/VDG.VBA.CLI -- ir2diagram --strict-validate --in out/tmp/project.ir.json --out out/tmp/project.diagram.json`
+
 - `render`: Convenience — Sources → IR → Diagram → VSDX (calls `VDG.CLI`)
   - Usage: `dotnet run --project src/VDG.VBA.CLI -- render --in <folder> --out <diagram.vsdx> [--mode <callgraph|module-structure|module-callmap>] [--cli <VDG.CLI.exe>]`
 

@@ -2,7 +2,13 @@
 
 Generate Microsoft Visio diagrams from declarative JSON. The project ships with a Windows-only .NET Framework runner that drives Visio through COM automation, plus shared core libraries and layout helpers that can be reused by other front-ends.
 
-![.NET CI](https://github.com/justinwj/Visio-Diagram-Generator/actions/workflows/dotnet.yml/badge.svg)
+![.NET CI](https://github.com/justinwj/Visio-Diagram-Generator/actions/workflows/dotnet.yml/badge.svg) [![Perf Smoke](https://github.com/justinwj/Visio-Diagram-Generator/actions/workflows/dotnet.yml/badge.svg)](https://github.com/justinwj/Visio-Diagram-Generator/actions/workflows/dotnet.yml)
+
+CI Notes
+- The main workflow runs unit tests across projects and validates Diagram JSON against schema 1.2.
+- A validation matrix job runs `ir2diagram` in both default and `--strict-validate` modes to prevent regressions.
+- A perf-smoke job emits timing and counts for IR→Diagram conversions and uploads metrics (`out/perf/perf.json`).
+ - The perf-smoke job writes a Job Summary with key metrics (vba2json/ir2diagram ms, nodes, edges, dynamicSkipped/dynamicIncluded). Open any workflow run and click the “perf-smoke” job to view the summary and download artifacts.
 
 ## What You Get
 - `VDG.CLI` – Windows CLI (`net48`) that opens Visio via COM and renders diagrams described in JSON.

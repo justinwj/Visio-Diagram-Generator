@@ -55,6 +55,28 @@ Notes
 - Invalid IR (malformed JSON) is reported as a usage error with exit code 65.
 - `--timeout <ms>` aborts long IR→Diagram conversions gracefully with a clear error.
 
+### Validation Options
+- `--strict-validate`: Enable stricter IR validation.
+  - Enforces module/procedure presence, valid `module.kind`, well‑formed `locs`, and consistent dynamic call metadata (e.g., `target == "~unknown"` must include `isDynamic = true`).
+  - Use in production/enterprise pipelines where IR quality is critical.
+  - Example:
+    ```powershell
+    dotnet run --project src/VDG.VBA.CLI -- ir2diagram --strict-validate --in out/tmp/project.ir.json --out out/tmp/project.diagram.json --mode callgraph
+    ```
+
+### Troubleshooting
+- When to use strict vs default:
+  - Default mode is flexible and tolerant (skips unknown dynamic targets and missing optional fields). Use this for iterative development or exploratory parsing.
+  - `--strict-validate` is for production pipelines and CI gates where IR quality must be guaranteed.
+- Common validation failures (strict mode):
+  - "IR contains no modules/procedures" → Ensure your input folder/globs produced content; verify you’re pointing `--in` at the exported `.bas/.cls/.frm` root.
+  - "Module has invalid kind/missing file" → Confirm `Attribute VB_Name` was parsed and `.bas/.cls/.frm` are mapped to `Module|Class|Form` with known relative file paths.
+  - "Procedure has invalid locs" → Line positions must be present and sane (1-based, endLine ≥ startLine); re-export sources if line mapping drifted.
+  - "Call has '~unknown' target but isDynamic=false" → For `CallByName`/`Application.Run` ensure IR sets `isDynamic=true`; this is automatic in the current generator.
+  - "Call missing site information" → Each call must include `site.module|file|line`; re-run vba2json on original exports.
+- Performance implications:
+  - Strict validation adds linear checks over modules/procedures/calls; impact is small for most projects (<5–10% in local smoke). Prefer enabling only in CI/production if you are very latency‑sensitive during local iterations.
+
 ### Examples (Milestone 8 additions)
 
 ```powershell
@@ -81,4 +103,4 @@ dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in tests/fixtures/ir/invali
   ```powershell
   pwsh ./tools/perf-smoke.ps1 -In tests/fixtures/vba/cross_module_calls -Mode callgraph -TimeoutMs 15000
   ```
-- Output: writes IR/Diagram to `out/tmp`, prints elapsed ms for `vba2json` and `ir2diagram`, and shows the shell working set; can be wired in CI (see `.github/workflows/dotnet.yml`, job `perf-smoke`).
+- Output: writes IR/Diagram to `out/tmp`, prints elapsed ms for `vba2json` and `ir2diagram`, shows shell working set, and emits structured JSON metrics to `out/perf/perf.json` (included as a CI artifact; see `.github/workflows/dotnet.yml`, job `perf-smoke`). The CI job also publishes a Job Summary with key metrics for quick inspection.

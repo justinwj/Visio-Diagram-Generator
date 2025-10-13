@@ -20,6 +20,11 @@ Scope
   - `schemaVersion = "1.2"`.
 - [ ] Unknown dynamic targets: skip edges where `call.target == "~unknown"` (log/debug counter only; revisit in later milestone for stubs/annotations).
 
+**Complexity & Performance**
+- [ ] Performance benchmarks for large projects (500+ procedures).
+- [ ] Memory usage profiling during IR → Diagram conversion.
+- [ ] Timeout/cancellation strategy for complex call graph analysis.
+
 Out of Scope (this milestone)
 - Advanced semantic grouping beyond `Forms|Classes|Modules`.
 - Additional diagram modes (Module Structure, Module Call Map, Event Wiring, Procedure CFG) — tracked separately.
@@ -30,11 +35,23 @@ CLI
 - End-to-end helper: `render` combines `vba2json + ir2diagram + VDG.CLI`.
   - `dotnet run --project src/VDG.VBA.CLI -- render --in <folder> --out <diagram.vsdx> [--mode callgraph] [--cli <VDG.CLI.exe>]`
 
+CLI Enhancements (UX)
+- [ ] `--include-unknown` flag to optionally include edges for dynamic unknown targets (e.g., dashed to a sentinel node) for debugging.
+- [ ] Progress reporting for large IR conversions (periodic counters: modules processed, procedures visited, edges emitted).
+- [ ] Help text: enrich `--help` with examples and option descriptions; add quick-start for `render`.
+- [ ] Validation warnings for suspicious call patterns (e.g., self-calls, high fan-out hot spots) surfaced as non-fatal notices.
+
 Artifacts
 - [ ] `src/VDG.VBA.CLI/Program.cs`: finalize `ir2diagram` callgraph mapping and edge metadata (`code.dynamic`).
 - [ ] `docs/VBA_IR.md`: ensure Mapping section references dynamic flag propagation (callgraph mode).
 - [ ] `docs/VDG_VBA_CLI.md`: confirm examples for `ir2diagram` and `render` include callgraph mode.
 - [ ] Sample output: `samples/vba_callgraph.diagram.json` generated from `tests/fixtures/vba/cross_module_calls`.
+
+Integration & Validation
+- [ ] Validate generated Diagram JSON against `shared/Config/diagramConfig.schema.json` (schema 1.2).
+- [ ] Round-trip sanity: ensure output renders with current `VDG.CLI` (no schema/feature drift).
+- [ ] Smoke coverage that M5 diagnostics run cleanly against generated diagrams (lane/page crowding metrics computed as expected).
+- [ ] Establish performance baseline for end-to-end render pipeline (IR → Diagram → VSDX) on medium/large inputs.
 
 Tests
 - [ ] Cross-module calls appear in edges; edge metadata carries call site:
@@ -45,6 +62,9 @@ Tests
   - Unknown dynamic (`target = "~unknown"`) produces no edge and does not throw.
   - If a dynamic call has a concrete `target`, include the edge with `metadata.code.dynamic = true`.
 - [ ] Stable ordering for nodes/edges across runs (modules/procedures sorted as specified).
+- [ ] Summary metrics printed: total modules/procedures, edges emitted, dynamic calls skipped (and included, when `--include-unknown`).
+- [ ] Integration tests: `ir2diagram` output validates against diagram schema; `VDG.CLI` consumes the output without errors.
+- [ ] Malformed IR inputs produce descriptive errors and exit code 65 (invalid input), not crashes.
 
 Acceptance Criteria
 - [ ] `ir2diagram --mode callgraph` produces schema-valid Diagram JSON (`schemaVersion: 1.2`).
@@ -52,12 +72,31 @@ Acceptance Criteria
 - [ ] Lanes reflect module kinds; containers present for each module.
 - [ ] Dynamic call metadata (`code.dynamic`) present when applicable; unknown dynamic calls do not render edges.
 - [ ] End-to-end `render` produces a `.vsdx` for fixtures without errors.
+- [ ] Diagram JSON validates against schema 1.2; current `VDG.CLI` renders without feature gaps.
+- [ ] Summary metrics report dynamic-call skip counts; `--include-unknown` toggles inclusion behavior.
+- [ ] Malformed IR yields a clear error message and exit code 65.
 
 Implementation Notes
 - Use `Forms|Classes|Modules` tier order; compute `tier` from module `kind`.
 - Prefer deterministic order to enable stable diffs and reliable tests.
 - Keep optional fields omitted rather than set to null in emitted JSON.
 - For now, omit edges with `target == "~unknown"` to avoid orphan nodes; consider future visualization (e.g., dashed edges to a sentinel) if useful.
+
+Dynamic Calls
+- Skipped edges should be counted and surfaced in a summary (stdout) so users understand missing relationships.
+- When `--include-unknown` is set, either:
+  - emit edges to a sentinel node `~unknown` with dashed style and `metadata.code.dynamic=true`, or
+  - include in summary metrics only (configurable; start with sentinel approach for visibility).
+
+Container IDs & Collisions
+- Container IDs derive from IR `module.id`; labels from `module.name`.
+- If IR duplicates exist (should be prevented upstream), surface a descriptive error and refuse to proceed; do not invent container IDs here.
+- When names are similar but IDs are unique, containers remain distinct; metadata should carry both `id` and `label` to avoid confusion.
+
+Metadata Completeness & Fallbacks
+- Validate presence of `code.module` and `code.proc` on nodes; if missing, fall back to `module.id`/`proc.id`.
+- Only emit `code.access`, `code.kind`, and `code.locs.*` when present in IR; avoid nulls.
+- Add a pre-emit validation step that warns when required `code.*` metadata is missing for many nodes (possible upstream IR issue).
 
 Usage Examples
 ```powershell
@@ -76,3 +115,17 @@ Risks & Mitigations
 Next Steps
 - Surface additional modes: Module Call Map, Event Wiring, Procedure CFG (tracked separately) and experiment with semantic grouping within tiers.
 
+Expected Outputs
+- Diagram JSON with `nodes/edges/containers` and `layout.tiers = ["Forms","Classes","Modules"]`.
+- Edges have `metadata.code.edge = "call"` and call-site fields; dynamic edges include `metadata.code.dynamic = true`.
+- Summary line: `modules: N, procedures: M, edges: E, dynamicSkipped: D` (and `dynamicIncluded: X` when `--include-unknown`).
+
+Troubleshooting
+- Schema errors: validate against `shared/Config/diagramConfig.schema.json`; check for missing required `nodes[].id/label`.
+- Missing edges: inspect summary metrics; enable `--include-unknown` to visualize dynamic calls.
+- Large inputs: consider running with pagination-friendly VDG options and monitor memory via `DOTNET_GCHeapHardLimit` or external profilers.
+
+Versioning & Compatibility
+- IR schema evolution: accept IR v0.1 and ignore unknown fields; document migration when IR minor bumps appear.
+- Backward compatibility: fail fast with a clear message if a breaking IR major version is detected.
+- CI/CD: add schema validation and end-to-end render smoke tests to catch regressions early.

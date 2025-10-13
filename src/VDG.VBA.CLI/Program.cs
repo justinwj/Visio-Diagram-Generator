@@ -68,7 +68,7 @@ internal static class Program
         Console.Error.WriteLine("     --glob <pattern>       Limit inputs using * / ? wildcards relative to --in (repeatable).");
         Console.Error.WriteLine("     --root <path>          Base path for emitted module file paths (defaults to --in).");
         Console.Error.WriteLine("     --infer-metrics        Include simple line-count metrics in the IR payload.");
-        Console.Error.WriteLine("  ir2diagram --in <ir.json> [--out <diagram.json>] [--mode <callgraph|module-structure|module-callmap|event-wiring|proc-cfg>]");
+        Console.Error.WriteLine("  ir2diagram --in <ir.json> [--out <diagram.json>] [--mode <callgraph|module-structure|module-callmap|event-wiring|proc-cfg>] [--include-unknown] [--timeout <ms>]");
         Console.Error.WriteLine("  render --in <folder> --out <diagram.vsdx> [--mode <callgraph|module-structure|module-callmap>] [--cli <VDG.CLI.exe>] [--diagram-json <path>]");
     }
 
@@ -243,7 +243,7 @@ internal static class Program
 
     private static int RunIr2Diagram(string[] args)
     {
-        string? input = null; string? output = null; string mode = "callgraph";
+        string? input = null; string? output = null; string mode = "callgraph"; bool includeUnknown = false; int? timeoutMs = null;
         for (int i = 0; i < args.Length; i++)
         {
             var a = args[i];
@@ -253,15 +253,35 @@ internal static class Program
             { if (i + 1 >= args.Length) throw new UsageException("--out requires a json path."); output = args[++i]; }
             else if (string.Equals(a, "--mode", StringComparison.OrdinalIgnoreCase))
             { if (i + 1 >= args.Length) throw new UsageException("--mode requires callgraph|module-structure|module-callmap."); mode = args[++i]; }
+            else if (string.Equals(a, "--include-unknown", StringComparison.OrdinalIgnoreCase))
+            { includeUnknown = true; }
+            else if (string.Equals(a, "--timeout", StringComparison.OrdinalIgnoreCase))
+            { if (i + 1 >= args.Length) throw new UsageException("--timeout requires milliseconds value."); if (!int.TryParse(args[++i], NumberStyles.Integer, CultureInfo.InvariantCulture, out var t)) throw new UsageException("--timeout must be an integer (milliseconds)."); timeoutMs = t; }
             else throw new UsageException($"Unknown option '{a}' for ir2diagram.");
         }
         if (string.IsNullOrWhiteSpace(input)) throw new UsageException("ir2diagram requires --in <ir.json>.");
         if (!File.Exists(input!)) throw new UsageException($"IR file not found: {input}");
 
-        var root = JsonSerializer.Deserialize<IrRoot>(File.ReadAllText(input!), new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+        IrRoot root;
+        try
+        {
+            root = JsonSerializer.Deserialize<IrRoot>(File.ReadAllText(input!), new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
                    ?? throw new UsageException("Invalid IR JSON.");
+        }
+        catch (JsonException)
+        {
+            throw new UsageException("Invalid IR JSON.");
+        }
 
         var tiers = new[] { "Forms", "Classes", "Modules" };
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        void CheckTimeout()
+        {
+            if (timeoutMs.HasValue && sw.ElapsedMilliseconds > timeoutMs.Value)
+            {
+                throw new Exception($"ir2diagram timeout exceeded after {sw.ElapsedMilliseconds} ms (limit {timeoutMs.Value} ms)");
+            }
+        }
         string TierFor(string k) => string.Equals(k, "Form", StringComparison.OrdinalIgnoreCase) ? "Forms"
                                             : string.Equals(k, "Class", StringComparison.OrdinalIgnoreCase) ? "Classes"
                                             : "Modules";
@@ -270,6 +290,8 @@ internal static class Program
         var edges = new List<object>();
         var containers = new List<object>();
 
+        int totalModules = 0, totalProcedures = 0, dynamicSkipped = 0, dynamicIncluded = 0;
+
         var orderedModules = (root.Project.Modules ?? new())
             .OrderBy(m => m.Name, StringComparer.OrdinalIgnoreCase)
             .ThenBy(m => m.Id, StringComparer.Ordinal)
@@ -277,6 +299,7 @@ internal static class Program
 
         foreach (var m in orderedModules)
         {
+            CheckTimeout();
             var tier = TierFor(m.Kind ?? "Module");
             containers.Add(new { id = m.Id, label = m.Name, tier });
             var orderedProcedures = (m.Procedures ?? new())
@@ -286,6 +309,7 @@ internal static class Program
 
             foreach (var p in orderedProcedures)
             {
+                CheckTimeout();
                 var nodeMeta = new Dictionary<string, string>();
                 if (!string.IsNullOrWhiteSpace(m.Name)) nodeMeta["code.module"] = m.Name;
                 if (!string.IsNullOrWhiteSpace(p.Name)) nodeMeta["code.proc"] = p.Name;
@@ -302,10 +326,12 @@ internal static class Program
                 if (!mode.Equals("callgraph", StringComparison.OrdinalIgnoreCase)) continue;
                 foreach (var c in p.Calls ?? new())
                 {
+                    CheckTimeout();
                     if (!string.IsNullOrWhiteSpace(c.Target) && c.Target != "~unknown")
                     {
                         var edgeMeta = new Dictionary<string, string> { ["code.edge"] = "call" };
                         if (!string.IsNullOrWhiteSpace(c.Branch)) edgeMeta["code.branch"] = c.Branch!;
+                        if (c.IsDynamic) edgeMeta["code.dynamic"] = "true";
                         if (c.Site is { } site)
                         {
                             if (!string.IsNullOrWhiteSpace(site.Module)) edgeMeta["code.site.module"] = site.Module;
@@ -314,8 +340,37 @@ internal static class Program
                         }
                         edges.Add(new { sourceId = p.Id, targetId = c.Target, label = "call", metadata = edgeMeta });
                     }
+                    else if (!string.IsNullOrWhiteSpace(c.Target) && c.Target == "~unknown")
+                    {
+                        if (includeUnknown)
+                        {
+                            var edgeMeta = new Dictionary<string, string> { ["code.edge"] = "call", ["code.dynamic"] = "true" };
+                            if (!string.IsNullOrWhiteSpace(c.Branch)) edgeMeta["code.branch"] = c.Branch!;
+                            if (c.Site is { } site)
+                            {
+                                if (!string.IsNullOrWhiteSpace(site.Module)) edgeMeta["code.site.module"] = site.Module;
+                                if (!string.IsNullOrWhiteSpace(site.File)) edgeMeta["code.site.file"] = site.File;
+                                if (site.Line > 0) edgeMeta["code.site.line"] = site.Line.ToString(CultureInfo.InvariantCulture);
+                            }
+                            edges.Add(new { sourceId = p.Id, targetId = c.Target, label = "call", metadata = edgeMeta });
+                            dynamicIncluded++;
+                        }
+                        else
+                        {
+                            dynamicSkipped++;
+                        }
+                    }
                 }
+                totalProcedures++;
             }
+            totalModules++;
+        }
+
+        // Include sentinel container/node for '~unknown' if any such edges were added
+        if (includeUnknown && dynamicIncluded > 0)
+        {
+            containers.Add(new { id = "~unknown_module", label = "~unknown", tier = "Modules" });
+            nodes.Add(new { id = "~unknown", label = "~unknown", tier = "Modules", containerId = "~unknown_module", metadata = new Dictionary<string, string>() });
         }
 
         if (mode.Equals("event-wiring", StringComparison.OrdinalIgnoreCase))
@@ -552,7 +607,7 @@ internal static class Program
 
         var json = JsonSerializer.Serialize(diagram, JsonOpts);
         if (string.IsNullOrWhiteSpace(output)) Console.WriteLine(json);
-        else { Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(output!)) ?? "."); File.WriteAllText(output!, json); }
+        else { Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(output!)) ?? "."); File.WriteAllText(output!, json); Console.WriteLine($"modules:{totalModules} procedures:{totalProcedures} edges:{edges.Count} dynamicSkipped:{dynamicSkipped} dynamicIncluded:{dynamicIncluded}"); }
         return ExitCodes.Ok;
     }
 

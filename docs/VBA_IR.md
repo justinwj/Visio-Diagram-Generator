@@ -122,9 +122,14 @@ Mapping to Diagram JSON (Project Call Graph)
   - `edges[].metadata.code.edge = "call"`
   - `edges[].metadata.code.site.module|file|line` copied from `call.site`
   - `edges[].metadata.code.branch` when branch information is present
+  - `edges[].metadata.code.dynamic = "true"` when IR `call.isDynamic = true`
 - Add to `nodes[].metadata`:
   - `code.module`, `code.proc`, `code.kind`, `code.access`
   - `code.locs.file`, `code.locs.startLine`, `code.locs.endLine`
+
+Dynamic calls and unknown targets
+- IR may include calls with `isDynamic = true`. These propagate to diagram edges via `metadata.code.dynamic = "true"`.
+- When the IR target cannot be resolved (`target = "~unknown"`), converters should skip emitting the edge by default to avoid noise. Tools may offer an opt-in to include such edges (e.g., `--include-unknown`) and can render them to a sentinel node `~unknown` for debugging.
 
 Future Extensions
 - Additional call metadata (arity, inferred targets for dynamics), attributes for forms/classes, module references.

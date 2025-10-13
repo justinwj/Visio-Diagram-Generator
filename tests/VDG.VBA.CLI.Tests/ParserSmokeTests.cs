@@ -243,6 +243,173 @@ public class ParserSmokeTests
         Assert.Equal(first, second);
     }
 
+    private static (int ExitCode, string Stdout, string Stderr) RunCliProcess(params string[] args)
+    {
+        var start = new ProcessStartInfo("dotnet")
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            WorkingDirectory = RepoRoot
+        };
+        start.ArgumentList.Add("run");
+        start.ArgumentList.Add("--project");
+        start.ArgumentList.Add(CliProjectPath);
+        start.ArgumentList.Add("--");
+        foreach (var arg in args) start.ArgumentList.Add(arg);
+        using var p = Process.Start(start)!;
+        var stdout = p.StandardOutput.ReadToEnd();
+        var stderr = p.StandardError.ReadToEnd();
+        p.WaitForExit();
+        return (p.ExitCode, stdout, stderr);
+    }
+
+    [Fact]
+    public void DynamicUnknownEdges_AreSkippedByDefault_AndIncludedWithFlag()
+    {
+        var ir = Path.GetTempFileName(); var dj1 = Path.GetTempFileName(); var dj2 = Path.GetTempFileName();
+        try
+        {
+            File.Delete(ir); File.Delete(dj1); File.Delete(dj2);
+            // Generate IR from dynamic calls fixture
+            RunCli("vba2json", "--in", Path.Combine("tests", "fixtures", "vba", "dynamic_calls"), "--out", ir);
+
+            // Without --include-unknown: expect no '~unknown' node or edges
+            var out1 = RunCli("ir2diagram", "--in", ir, "--out", dj1, "--mode", "callgraph");
+            Assert.Contains("dynamicSkipped:", out1);
+            using (var d1 = JsonDocument.Parse(File.ReadAllText(dj1)))
+            {
+                var root1 = d1.RootElement;
+                var nodes1 = root1.GetProperty("nodes").EnumerateArray().ToList();
+                Assert.DoesNotContain(nodes1, n => n.GetProperty("id").GetString() == "~unknown");
+                var edges1 = root1.GetProperty("edges").EnumerateArray().ToList();
+                Assert.DoesNotContain(edges1, e => e.GetProperty("targetId").GetString() == "~unknown");
+            }
+
+            // With --include-unknown: expect '~unknown' node and edges with code.dynamic=true
+            var out2 = RunCli("ir2diagram", "--in", ir, "--out", dj2, "--mode", "callgraph", "--include-unknown");
+            Assert.Contains("dynamicIncluded:", out2);
+            using (var d2 = JsonDocument.Parse(File.ReadAllText(dj2)))
+            {
+                var root2 = d2.RootElement;
+                var nodes2 = root2.GetProperty("nodes").EnumerateArray().ToList();
+                Assert.Contains(nodes2, n => n.GetProperty("id").GetString() == "~unknown");
+                var edges2 = root2.GetProperty("edges").EnumerateArray().ToList();
+                var unkEdge = edges2.FirstOrDefault(e => e.GetProperty("targetId").GetString() == "~unknown");
+                Assert.NotEqual(JsonValueKind.Undefined, unkEdge.ValueKind);
+                Assert.Equal("call", unkEdge.GetProperty("metadata").GetProperty("code.edge").GetString());
+                Assert.Equal("true", unkEdge.GetProperty("metadata").GetProperty("code.dynamic").GetString());
+            }
+        }
+        finally { if (File.Exists(ir)) File.Delete(ir); if (File.Exists(dj1)) File.Delete(dj1); if (File.Exists(dj2)) File.Delete(dj2); }
+    }
+
+    [Fact]
+    public void CallgraphDiagram_ValidatesAgainst_DiagramSchema()
+    {
+        var ir = Path.GetTempFileName(); var dj = Path.GetTempFileName();
+        try
+        {
+            File.Delete(ir); File.Delete(dj);
+            // Generate IR and diagram
+            RunCli("vba2json", "--in", Path.Combine("tests", "fixtures", "vba", "cross_module_calls"), "--out", ir);
+            RunCli("ir2diagram", "--in", ir, "--out", dj, "--mode", "callgraph");
+
+            // Run the diagram schema validator PowerShell script
+            var scriptPath = Path.Combine(RepoRoot, "tools", "diagram-validate.ps1");
+            Assert.True(File.Exists(scriptPath), $"diagram-validate.ps1 missing at {scriptPath}");
+
+            var ps = new ProcessStartInfo("pwsh")
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                WorkingDirectory = RepoRoot
+            };
+            ps.ArgumentList.Add(scriptPath);
+            ps.ArgumentList.Add("-InputPath");
+            ps.ArgumentList.Add(dj);
+            using var p = Process.Start(ps)!;
+            var stdout = p.StandardOutput.ReadToEnd();
+            var stderr = p.StandardError.ReadToEnd();
+            p.WaitForExit();
+            Assert.True(p.ExitCode == 0, $"diagram-validate failed: {stderr}\n{stdout}");
+            Assert.Contains("Diagram OK:", stdout);
+        }
+        finally { if (File.Exists(ir)) File.Delete(ir); if (File.Exists(dj)) File.Delete(dj); }
+    }
+
+    [Fact]
+    public void RenderSmoke_SkipsVisio_WhenVDG_SKIP_RUNNER()
+    {
+        var ir = Path.GetTempFileName(); var dj = Path.GetTempFileName(); var vsdx = Path.Combine(Path.GetTempPath(), $"vdg_smoke_{Guid.NewGuid():N}.vsdx");
+        try
+        {
+            File.Delete(ir); File.Delete(dj); if (File.Exists(vsdx)) File.Delete(vsdx);
+
+            // Prepare a tiny diagram via our CLI pipeline
+            RunCli("vba2json", "--in", Path.Combine("tests", "fixtures", "vba", "hello_world"), "--out", ir);
+            RunCli("ir2diagram", "--in", ir, "--out", dj, "--mode", "callgraph");
+
+            // Locate VDG.CLI.exe (Debug/Release)
+            string LocateCli()
+            {
+                var d1 = Path.Combine(RepoRoot, "src", "VDG.CLI", "bin", "Debug", "net48", "VDG.CLI.exe");
+                if (File.Exists(d1)) return d1;
+                var d2 = Path.Combine(RepoRoot, "src", "VDG.CLI", "bin", "Release", "net48", "VDG.CLI.exe");
+                if (File.Exists(d2)) return d2;
+                throw new FileNotFoundException("VDG.CLI.exe not found in expected build output.");
+            }
+
+            var exe = LocateCli();
+            var start = new ProcessStartInfo(exe)
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                WorkingDirectory = RepoRoot
+            };
+            start.Environment["VDG_SKIP_RUNNER"] = "1";
+            start.ArgumentList.Add(dj);
+            start.ArgumentList.Add(vsdx);
+            using var p = Process.Start(start)!;
+            var stdout = p.StandardOutput.ReadToEnd();
+            var stderr = p.StandardError.ReadToEnd();
+            p.WaitForExit();
+
+            Assert.True(p.ExitCode == 0, $"VDG.CLI exited {p.ExitCode}: {stderr}\n{stdout}");
+            Assert.True(File.Exists(vsdx), "Expected output VSDX placeholder to exist.");
+            var content = File.ReadAllText(vsdx);
+            Assert.Contains("VDG_SKIP_RUNNER", content);
+        }
+        finally { if (File.Exists(ir)) File.Delete(ir); if (File.Exists(dj)) File.Delete(dj); if (File.Exists(vsdx)) File.Delete(vsdx); }
+    }
+
+    [Fact]
+    public void Vba2JsonFailsOnDuplicateModuleNames()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), $"vdg_dupes_{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            var m1 = Path.Combine(tempDir, "ModA.bas");
+            var m2 = Path.Combine(tempDir, "ModB.bas");
+            File.WriteAllText(m1, "Attribute VB_Name = \"Module1\"\r\nOption Explicit\r\nPublic Sub A(): End Sub\r\n");
+            File.WriteAllText(m2, "Attribute VB_Name = \"Module1\"\r\nOption Explicit\r\nPublic Sub B(): End Sub\r\n");
+
+            var (code, _out, err) = RunCliProcess("vba2json", "--in", tempDir, "--out", Path.Combine(tempDir, "out.json"));
+            Assert.Equal(65, code);
+            Assert.Contains("Duplicate module name", err);
+        }
+        finally
+        {
+            try { Directory.Delete(tempDir, recursive: true); } catch { /* ignore */ }
+        }
+    }
+
     [Fact]
     public void Vba2JsonSortsModulesAndProcedures()
     {

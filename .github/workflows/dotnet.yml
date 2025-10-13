@@ -43,3 +43,68 @@ jobs:
           path: |
             **/TestResults/**/*.xml
             **/TestResults/**/*.cobertura.xml
+
+      - name: Generate diagram (callgraph) for schema validation
+        run: |
+          dotnet run --project src/VDG.VBA.CLI -- vba2json --in tests/fixtures/vba/cross_module_calls --out out/tmp/ci_ir.json
+          dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in out/tmp/ci_ir.json --out out/tmp/ci_diag.json --mode callgraph
+
+      - name: Validate diagram schema (1.2)
+        shell: pwsh
+        run: ./tools/diagram-validate.ps1 -InputPath out/tmp/ci_diag.json
+
+  render-smoke:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore Visio-Diagram-Generator.sln
+
+      - name: Build (Release)
+        run: dotnet build Visio-Diagram-Generator.sln -c Release -v minimal --no-restore
+
+      - name: Generate IR and diagram
+        run: |
+          dotnet run --project src/VDG.VBA.CLI -- vba2json --in tests/fixtures/vba/hello_world --out out/tmp/ci_ir.json
+          dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in out/tmp/ci_ir.json --out out/tmp/ci_diag.json --mode callgraph
+
+      - name: Run VDG.CLI with VDG_SKIP_RUNNER
+        env:
+          VDG_SKIP_RUNNER: "1"
+        run: |
+          .\src\VDG.CLI\bin\Release\net48\VDG.CLI.exe out\tmp\ci_diag.json out\tmp\ci_smoke.vsdx
+          type out\tmp\ci_smoke.vsdx
+
+  perf-smoke:
+    runs-on: ubuntu-latest
+    needs: build-test
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore Visio-Diagram-Generator.sln
+
+      - name: Build (Release)
+        run: dotnet build Visio-Diagram-Generator.sln -c Release -v minimal --no-restore
+
+      - name: Perf smoke (callgraph)
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path out/perf | Out-Null
+          ./tools/perf-smoke.ps1 -In tests/fixtures/vba/cross_module_calls -Mode callgraph -TimeoutMs 15000 | Tee-Object -FilePath out/perf/perf.log
+
+      - name: Upload perf artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-smoke
+          path: out/perf

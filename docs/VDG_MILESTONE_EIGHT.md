@@ -27,8 +27,16 @@ Scope
 
 Out of Scope (this milestone)
 - Advanced semantic grouping beyond `Forms|Classes|Modules`.
-- Additional diagram modes (Module Structure, Module Call Map, Event Wiring, Procedure CFG) — tracked separately.
+- Additional diagram modes (Module Structure, Module Call Map, Event Wiring, Procedure CFG) - tracked separately.
 - Enrichment of dynamic call inference beyond the current IR surface.
+
+Related Docs & Schemas
+- IR Spec and mapping guidance: `docs/VBA_IR.md`
+- IR milestone context: `docs/VDG_MILESTONE_SIX.md`
+- IR JSON Schema (v0.1): `shared/Config/vbaIr.schema.json`
+- Diagram JSON Schema (1.2): `shared/Config/diagramConfig.schema.json`
+- CLI reference and examples: `docs/VDG_VBA_CLI.md`
+- IR governance/versioning: `docs/IR_Governance.md`
 
 CLI
 - `dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in <ir.json> [--out <diagram.json>] [--mode callgraph]`
@@ -87,6 +95,7 @@ Dynamic Calls
 - When `--include-unknown` is set, either:
   - emit edges to a sentinel node `~unknown` with dashed style and `metadata.code.dynamic=true`, or
   - include in summary metrics only (configurable; start with sentinel approach for visibility).
+ - Reference: see `docs/VBA_IR.md` (Mapping → Dynamic calls and unknown targets) for canonical field mapping and include-unknown behavior.
 
 Container IDs & Collisions
 - Container IDs derive from IR `module.id`; labels from `module.name`.
@@ -115,6 +124,24 @@ Risks & Mitigations
 Next Steps
 - Surface additional modes: Module Call Map, Event Wiring, Procedure CFG (tracked separately) and experiment with semantic grouping within tiers.
 
+Bad Scenarios (expected behavior)
+```powershell
+# 1) Invalid IR file (malformed JSON or wrong shape)
+dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in tests/fixtures/ir/invalid.json
+# stderr: "usage: Invalid IR JSON." (or schema mismatch diagnostic)
+# exit code: 65 (invalid input)
+
+# 2) Module name collision detected during extraction
+dotnet run --project src/VDG.VBA.CLI -- vba2json --in path/to/fixtures/with_duplicate_modules
+# stderr: "Duplicate module name detected: 'Module1' (IDs: Module1, Module1 (2))"
+# exit code: 65 (invalid input)
+
+# 3) Unknown dynamic calls present in IR (skipped by default)
+dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in out/tmp/ir_with_dynamic.json --out out/tmp/diag.json
+# stdout (summary): modules:N procedures:M edges:E dynamicSkipped:D
+# Use --include-unknown to visualize dynamic calls to '~unknown'
+```
+
 Expected Outputs
 - Diagram JSON with `nodes/edges/containers` and `layout.tiers = ["Forms","Classes","Modules"]`.
 - Edges have `metadata.code.edge = "call"` and call-site fields; dynamic edges include `metadata.code.dynamic = true`.
@@ -129,3 +156,18 @@ Versioning & Compatibility
 - IR schema evolution: accept IR v0.1 and ignore unknown fields; document migration when IR minor bumps appear.
 - Backward compatibility: fail fast with a clear message if a breaking IR major version is detected.
 - CI/CD: add schema validation and end-to-end render smoke tests to catch regressions early.
+
+Testing Matrix
+
+| Case / Artifact | Expectation | Coverage |
+|---|---|---|
+| Module kinds (Module/Class/Form) | Tier mapping → Forms/Classes/Modules; containers by module | Covered by tests/fixtures (`events_and_forms`, `cross_module_calls`) |
+| Procedure kinds (Sub/Function/PropertyGet/Let/Set) | Nodes with `code.kind` and IDs `Module.Proc` | Covered for Sub/Function; Property* partially covered (add targeted fixture) |
+| Cross-module calls | `edges[].metadata.code.edge = "call"`, site copied | Covered by `ParserSmokeTests.CrossModuleCalls_Appear_In_Callgraph_Diagram` |
+| Dynamic calls (unknown targets) | Skipped by default; summary counts; `--include-unknown` renders sentinel edges | Covered by code; tests planned (fixture with `CallByName`/`Application.Run`) |
+| Dynamic calls (known targets) | Edge emitted with `metadata.code.dynamic = true` | Covered by code; tests planned |
+| Branch tags on calls (`then/else/loop`) | Edge `metadata.code.branch` when IR provides it | Partially covered (CFG mode); add callgraph assertion |
+| Container collisions (duplicate module names) | Descriptive error; exit 65 | Planned (add negative fixture) |
+| Missing `code.*` fields (locs/access) | Omit optional fields; warn when many missing | Covered by code; warn-level checks planned |
+| Schema conformance (diagram 1.2) | Output validates against schema | Planned integration test |
+| Large project performance | Summary metrics; no OOM; optional timeout/cancel | Benchmark planned |

@@ -47,3 +47,38 @@ Notes
 - Return type lookups rely on explicit `As Type` in the signature; late-bound factories or Property Let/Set cannot yet feed alias inference.
 - CFG mode (`--mode proc-cfg`) emits decision (`#dec`) and loop (`#loop`) scaffolds, and now surfaces combined loop-with-branch patterns with explicit `Else` nodes/back edges (see `tests/fixtures/vba/cfg_nested`); deeper nesting remains on the roadmap.
 
+## Updates (Milestone 8)
+
+- ir2diagram usage now supports modes and unknown-edge inclusion:
+  - `dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in <ir.json> [--out <diagram.json>] [--mode <callgraph|module-structure|module-callmap|event-wiring|proc-cfg>] [--include-unknown] [--timeout <ms>]`
+- When `--out` is used, ir2diagram prints a summary line to stdout: `modules:N procedures:M edges:E dynamicSkipped:D dynamicIncluded:X`.
+- Invalid IR (malformed JSON) is reported as a usage error with exit code 65.
+- `--timeout <ms>` aborts long IR→Diagram conversions gracefully with a clear error.
+
+### Examples (Milestone 8 additions)
+
+```powershell
+# Callgraph mode with explicit --mode
+dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in out/tmp/ir_cross.json --out out/tmp/ir_cross.diagram.json --mode callgraph
+
+# Include unknown dynamic calls for debugging
+dotnet run --project src/VDG.VBA.CLI -- vba2json --in tests/fixtures/vba/dynamic_calls --out out/tmp/ir_dynamic.json
+dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in out/tmp/ir_dynamic.json --out out/tmp/ir_dynamic.diagram.json --mode callgraph --include-unknown
+# stdout summary (when --out is used):
+# modules:N procedures:M edges:E dynamicSkipped:D dynamicIncluded:X
+
+# Bad scenario: invalid IR path or malformed JSON
+dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in tests/fixtures/ir/invalid.json
+# stderr: usage: Invalid IR JSON.
+# exit code: 65
+```
+
+### Performance Smoke
+
+- Script: `tools/perf-smoke.ps1`
+- Purpose: quick timing/memory snapshot for IR→Diagram conversion.
+- Usage:
+  ```powershell
+  pwsh ./tools/perf-smoke.ps1 -In tests/fixtures/vba/cross_module_calls -Mode callgraph -TimeoutMs 15000
+  ```
+- Output: writes IR/Diagram to `out/tmp`, prints elapsed ms for `vba2json` and `ir2diagram`, and shows the shell working set; can be wired in CI (see `.github/workflows/dotnet.yml`, job `perf-smoke`).

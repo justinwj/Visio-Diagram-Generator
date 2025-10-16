@@ -22,7 +22,8 @@ Scope
 
 **Complexity & Performance**
 - [ ] Performance benchmarks for large projects (500+ procedures).
-  - Planning captured in `docs/perf/IR2Diagram_PerfPlan.md` (fixture strategy, metrics, harness outline).
+  - Planning captured in docs/perf/IR2Diagram_PerfPlan.md (fixture strategy, metrics, harness outline).
+  - Synthetic benchmark fixture (benchmarks/vba/massive_callgraph) and harness refresh (tools/perf-smoke.ps1, tools/benchmarks/New-MassiveCallgraph.ps1).
 - [ ] Memory usage profiling during IR â†’ Diagram conversion.
 - [x] Timeout/cancellation strategy for complex call graph analysis.
 
@@ -180,3 +181,6 @@ CI Integration
 - Windows render smoke using `VDG_SKIP_RUNNER` to avoid COM, asserts clean exit and stub output.
 - Perf smoke job emits structured metrics to `out/perf/perf.json` and publishes a job summary (timings, node/edge counts, dynamic skip/include counts).
 - Validation matrix runs `ir2diagram` in both default and `--strict-validate` modes; strict mode also asserts a crafted bad IR fails as expected.
+
+
+

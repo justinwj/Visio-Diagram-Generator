@@ -266,6 +266,15 @@ public class ParserSmokeTests
         return (p.ExitCode, stdout, stderr);
     }
 
+    private static string LocateVdgCli()
+    {
+        var debugPath = Path.Combine(RepoRoot, "src", "VDG.CLI", "bin", "Debug", "net48", "VDG.CLI.exe");
+        if (File.Exists(debugPath)) return debugPath;
+        var releasePath = Path.Combine(RepoRoot, "src", "VDG.CLI", "bin", "Release", "net48", "VDG.CLI.exe");
+        if (File.Exists(releasePath)) return releasePath;
+        throw new FileNotFoundException("VDG.CLI.exe not found in expected build output. Build src/VDG.CLI first.");
+    }
+
     private static (int ExitCode, string Stdout, string Stderr) RunPowerShellScript(string scriptPath, params string[] args)
     {
         if (string.IsNullOrWhiteSpace(scriptPath)) throw new ArgumentException("scriptPath must be provided.", nameof(scriptPath));
@@ -691,17 +700,7 @@ public class ParserSmokeTests
             RunCli("vba2json", "--in", Path.Combine("tests", "fixtures", "vba", "hello_world"), "--out", ir);
             RunCli("ir2diagram", "--in", ir, "--out", dj, "--mode", "callgraph");
 
-            // Locate VDG.CLI.exe (Debug/Release)
-            string LocateCli()
-            {
-                var d1 = Path.Combine(RepoRoot, "src", "VDG.CLI", "bin", "Debug", "net48", "VDG.CLI.exe");
-                if (File.Exists(d1)) return d1;
-                var d2 = Path.Combine(RepoRoot, "src", "VDG.CLI", "bin", "Release", "net48", "VDG.CLI.exe");
-                if (File.Exists(d2)) return d2;
-                throw new FileNotFoundException("VDG.CLI.exe not found in expected build output.");
-            }
-
-            var exe = LocateCli();
+            var exe = LocateVdgCli();
             var start = new ProcessStartInfo(exe)
             {
                 RedirectStandardOutput = true,
@@ -724,6 +723,79 @@ public class ParserSmokeTests
             Assert.Contains("VDG_SKIP_RUNNER", content);
         }
         finally { if (File.Exists(ir)) File.Delete(ir); if (File.Exists(dj)) File.Delete(dj); if (File.Exists(vsdx)) File.Delete(vsdx); }
+    }
+
+    [Fact]
+    public void M5DiagnosticsSmoke_EmitsMetricsAndIssues()
+    {
+        var ir = Path.Combine(Path.GetTempPath(), $"vdg_ir_{Guid.NewGuid():N}.json");
+        var diagram = Path.Combine(Path.GetTempPath(), $"vdg_diag_{Guid.NewGuid():N}.json");
+        var vsdx = Path.Combine(Path.GetTempPath(), $"vdg_diag_smoke_{Guid.NewGuid():N}.vsdx");
+        var diagJsonPath = vsdx + ".diagnostics.json";
+        try
+        {
+            RunCli("vba2json", "--in", Path.Combine("tests", "fixtures", "vba", "cross_module_calls"), "--out", ir);
+            RunCli("ir2diagram", "--in", ir, "--out", diagram, "--mode", "callgraph");
+
+            var exe = LocateVdgCli();
+            var start = new ProcessStartInfo(exe)
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                WorkingDirectory = RepoRoot
+            };
+            start.Environment["VDG_SKIP_RUNNER"] = "1";
+            start.ArgumentList.Add("--diag-json");
+            start.ArgumentList.Add("--diag-lane-warn");
+            start.ArgumentList.Add("0.01");
+            start.ArgumentList.Add("--diag-page-warn");
+            start.ArgumentList.Add("0.01");
+            start.ArgumentList.Add("--diag-cross-warn");
+            start.ArgumentList.Add("0");
+            start.ArgumentList.Add("--diag-util-warn");
+            start.ArgumentList.Add("80");
+            start.ArgumentList.Add(diagram);
+            start.ArgumentList.Add(vsdx);
+
+            using var process = Process.Start(start)!;
+            var stdout = process.StandardOutput.ReadToEnd();
+            var stderr = process.StandardError.ReadToEnd();
+            process.WaitForExit();
+
+            Assert.True(process.ExitCode == 0, $"VDG.CLI exited {process.ExitCode}: {stderr}\n{stdout}");
+            Assert.True(File.Exists(vsdx), "Expected VDG.CLI to write a stub VSDX when VDG_SKIP_RUNNER=1.");
+            Assert.True(File.Exists(diagJsonPath), $"Expected diagnostics JSON at {diagJsonPath}.");
+
+            using var doc = JsonDocument.Parse(File.ReadAllText(diagJsonPath));
+            var root = doc.RootElement;
+            var metrics = root.GetProperty("Metrics");
+            Assert.True(metrics.GetProperty("ConnectorCount").GetInt32() > 0);
+            Assert.True(metrics.GetProperty("StraightLineCrossings").GetInt32() >= 0);
+
+            var lanePages = metrics.GetProperty("LanePages").EnumerateArray().ToList();
+            Assert.NotEmpty(lanePages);
+            Assert.True(lanePages.First().GetProperty("OccupancyRatio").GetDouble() >= 0.0);
+
+            var containerMetrics = metrics.GetProperty("Containers").EnumerateArray().ToList();
+            Assert.NotEmpty(containerMetrics);
+            Assert.True(containerMetrics.First().GetProperty("OccupancyRatio").GetDouble() >= 0.0);
+
+            var issues = root.GetProperty("Issues").EnumerateArray().Select(i => i.GetProperty("Code").GetString() ?? string.Empty).ToList();
+            Assert.Contains("LaneCrowding", issues);
+            Assert.Contains("PageCrowding", issues);
+            Assert.Contains("ContainerCrowding", issues);
+
+            Assert.Contains("diagnostics JSON written", stdout);
+        }
+        finally
+        {
+            if (File.Exists(ir)) File.Delete(ir);
+            if (File.Exists(diagram)) File.Delete(diagram);
+            if (File.Exists(vsdx)) File.Delete(vsdx);
+            if (File.Exists(diagJsonPath)) File.Delete(diagJsonPath);
+        }
     }
 
     [Fact]

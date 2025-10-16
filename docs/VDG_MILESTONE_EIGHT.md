@@ -1,4 +1,4 @@
-**VDG MILESTONE EIGHT - IR → Diagram Converter (Project Call Graph)**
+﻿**VDG MILESTONE EIGHT - IR â†’ Diagram Converter (Project Call Graph)**
 
 Goal
 - [x] Convert VBA IR v0.1 into Diagram JSON for the project call graph, with stable mapping, lanes by artifact type, and rich metadata to power navigation and diagnostics.
@@ -6,10 +6,10 @@ Goal
 Scope
 - [x] CLI `ir2diagram` command reads IR (`shared/Config/vbaIr.schema.json`) and emits Diagram JSON (schemaVersion `1.2`).
 - [x] Mapping for first mode (Project Call Graph):
-  - Node = `Module.Proc`; label = `Module.Proc` (or `Proc` when viewing within container); container = Module; tier by module kind → `Forms | Classes | Modules`.
+  - Node = `Module.Proc`; label = `Module.Proc` (or `Proc` when viewing within container); container = Module; tier by module kind â†’ `Forms | Classes | Modules`.
   - Edge = `call` for each resolved `procedure.calls[]` item.
   - Deterministic ordering: modules by `name` (then `id`), procedures by `name` (then `id`).
-- [x] Lanes by artifact type: map module `kind` → `Forms | Classes | Modules`.
+- [x] Lanes by artifact type: map module `kind` â†’ `Forms | Classes | Modules`.
 - [x] Metadata carried:
   - Nodes: `code.module`, `code.proc`, `code.kind`, `code.access`, `code.locs.file`, `code.locs.startLine`, `code.locs.endLine`.
   - Edges: `code.edge = call`, `code.site.module|file|line` from `call.site`, optional `code.branch` when present, and `code.dynamic=true` when `isDynamic`.
@@ -22,7 +22,8 @@ Scope
 
 **Complexity & Performance**
 - [ ] Performance benchmarks for large projects (500+ procedures).
-- [ ] Memory usage profiling during IR → Diagram conversion.
+  - Planning captured in `docs/perf/IR2Diagram_PerfPlan.md` (fixture strategy, metrics, harness outline).
+- [ ] Memory usage profiling during IR â†’ Diagram conversion.
 - [x] Timeout/cancellation strategy for complex call graph analysis.
 
 Out of Scope (this milestone)
@@ -59,12 +60,13 @@ Artifacts
 Integration & Validation
 - [x] Validate generated Diagram JSON against `shared/Config/diagramConfig.schema.json` (schema 1.2).
 - [x] Round-trip sanity: ensure output renders with current `VDG.CLI` (no schema/feature drift).
-- [ ] Smoke coverage that M5 diagnostics run cleanly against generated diagrams (lane/page crowding metrics computed as expected).
-- [x] Establish performance baseline for end-to-end render pipeline (IR → Diagram → VSDX) on medium/large inputs.
+- [x] Smoke coverage that M5 diagnostics run cleanly against generated diagrams (lane/page crowding metrics computed as expected).
+  - Covered by ParserSmokeTests.M5DiagnosticsSmoke_EmitsMetricsAndIssues (VDG_SKIP_RUNNER, diagnostics JSON metrics/issues).
+- [x] Establish performance baseline for end-to-end render pipeline (IR â†’ Diagram â†’ VSDX) on medium/large inputs.
 
 Tests
 - [x] Cross-module calls appear in edges; edge metadata carries call site:
-  - Source: `Module1.Caller` → Target: `Module2.Work`; `edges[].metadata.code.site.*` populated.
+  - Source: `Module1.Caller` â†’ Target: `Module2.Work`; `edges[].metadata.code.site.*` populated.
 - [x] Node metadata mirrors IR:
   - `code.module`, `code.proc`, and `code.locs.*` present; access/kind when available.
 - [x] Dynamic calls handling:
@@ -96,7 +98,7 @@ Dynamic Calls
 - When `--include-unknown` is set, either:
   - emit edges to a sentinel node `~unknown` with dashed style and `metadata.code.dynamic=true`, or
   - include in summary metrics only (configurable; start with sentinel approach for visibility).
- - Reference: see `docs/VBA_IR.md` (Mapping → Dynamic calls and unknown targets) for canonical field mapping and include-unknown behavior.
+ - Reference: see `docs/VBA_IR.md` (Mapping â†’ Dynamic calls and unknown targets) for canonical field mapping and include-unknown behavior.
 
 Container IDs & Collisions
 - Container IDs derive from IR `module.id`; labels from `module.name`.
@@ -110,7 +112,7 @@ Metadata Completeness & Fallbacks
 
 Usage Examples
 ```powershell
-# IR → Diagram JSON (callgraph)
+# IR â†’ Diagram JSON (callgraph)
 dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in out/tmp/ir_cross.json --out out/tmp/ir_cross.diagram.json --mode callgraph
 
 # One-step render from sources
@@ -118,9 +120,9 @@ dotnet run --project src/VDG.VBA.CLI -- render --in tests/fixtures/vba/cross_mod
 ```
 
 Risks & Mitigations
-- Dynamic calls may be frequent in some projects → record `code.dynamic` and call-site to support later resolution; keep edges out for `~unknown` to reduce noise.
-- Large projects may create dense call graphs → rely on existing M3/M5 diagnostics to tune spacing/pagination; provide module-level aggregations in a later mode.
-- Module name collisions → defer to IR generator’s stable `id` policy; containers use module `id` and `name`.
+- Dynamic calls may be frequent in some projects â†’ record `code.dynamic` and call-site to support later resolution; keep edges out for `~unknown` to reduce noise.
+- Large projects may create dense call graphs â†’ rely on existing M3/M5 diagnostics to tune spacing/pagination; provide module-level aggregations in a later mode.
+- Module name collisions â†’ defer to IR generatorâ€™s stable `id` policy; containers use module `id` and `name`.
 
 Next Steps
 - Surface additional modes: Module Call Map, Event Wiring, Procedure CFG (tracked separately) and experiment with semantic grouping within tiers.
@@ -162,7 +164,7 @@ Testing Matrix
 
 | Case / Artifact | Expectation | Coverage |
 |---|---|---|
-| Module kinds (Module/Class/Form) | Tier mapping → Forms/Classes/Modules; containers by module | Covered by tests/fixtures (`events_and_forms`, `cross_module_calls`) |
+| Module kinds (Module/Class/Form) | Tier mapping â†’ Forms/Classes/Modules; containers by module | Covered by tests/fixtures (`events_and_forms`, `cross_module_calls`) |
 | Procedure kinds (Sub/Function/PropertyGet/Let/Set) | Nodes with `code.kind` and IDs `Module.Proc` | Covered for Sub/Function; Property* partially covered (add targeted fixture) |
 | Cross-module calls | `edges[].metadata.code.edge = "call"`, site copied | Covered by `ParserSmokeTests.CrossModuleCalls_Appear_In_Callgraph_Diagram` |
 | Dynamic calls (unknown targets) | Skipped by default; summary counts; `--include-unknown` renders sentinel edges | Covered by code; tests planned (fixture with `CallByName`/`Application.Run`) |

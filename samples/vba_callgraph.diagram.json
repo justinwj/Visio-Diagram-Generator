@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "1.2",
+  "layout": {
+    "tiers": [
+      "Forms",
+      "Classes",
+      "Modules"
+    ],
+    "spacing": {
+      "horizontal": 1.2,
+      "vertical": 0.6
+    },
+    "page": {
+      "heightIn": 8.5,
+      "marginIn": 0.5
+    },
+    "containers": {
+      "paddingIn": 0,
+      "cornerIn": 0.12
+    }
+  },
+  "nodes": [
+    {
+      "id": "Module1.Caller",
+      "label": "Module1.Caller",
+      "tier": "Modules",
+      "containerId": "Module1",
+      "metadata": {
+        "code.module": "Module1",
+        "code.proc": "Caller",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Module1.bas",
+        "code.locs.startLine": "4",
+        "code.locs.endLine": "6"
+      }
+    },
+    {
+      "id": "Module2.Work",
+      "label": "Module2.Work",
+      "tier": "Modules",
+      "containerId": "Module2",
+      "metadata": {
+        "code.module": "Module2",
+        "code.proc": "Work",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Module2.bas",
+        "code.locs.startLine": "4",
+        "code.locs.endLine": "6"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "sourceId": "Module1.Caller",
+      "targetId": "Module2.Work",
+      "label": "call",
+      "metadata": {
+        "code.edge": "call",
+        "code.site.module": "Module1",
+        "code.site.file": "Module1.bas",
+        "code.site.line": "5"
+      }
+    }
+  ],
+  "containers": [
+    {
+      "id": "Module1",
+      "label": "Module1",
+      "tier": "Modules"
+    },
+    {
+      "id": "Module2",
+      "label": "Module2",
+      "tier": "Modules"
+    }
+  ]
+}

@@ -45,15 +45,16 @@ CLI
 
 CLI Enhancements (UX)
 - [x] `--include-unknown` flag to optionally include edges for dynamic unknown targets (e.g., dashed to a sentinel node) for debugging.
-- [ ] Progress reporting for large IR conversions (periodic counters: modules processed, procedures visited, edges emitted).
-- [ ] Help text: enrich `--help` with examples and option descriptions; add quick-start for `render`.
-- [ ] Validation warnings for suspicious call patterns (e.g., self-calls, high fan-out hot spots) surfaced as non-fatal notices.
+- [x] Progress reporting for large IR conversions (periodic counters: modules processed, procedures visited, edges emitted).
+- [x] Help text: enrich `--help` with examples and option descriptions; add quick-start for `render`.
+- [x] Validation warnings for suspicious call patterns (e.g., self-calls, high fan-out hot spots) surfaced as non-fatal notices.
 
 Artifacts
 - [x] `src/VDG.VBA.CLI/Program.cs`: finalize `ir2diagram` callgraph mapping and edge metadata (`code.dynamic`).
 - [x] `docs/VBA_IR.md`: ensure Mapping section references dynamic flag propagation (callgraph mode).
 - [x] `docs/VDG_VBA_CLI.md`: confirm examples for `ir2diagram` and `render` include callgraph mode.
-- [ ] Sample output: `samples/vba_callgraph.diagram.json` generated from `tests/fixtures/vba/cross_module_calls`.
+- [x] Sample output: `samples/vba_callgraph.diagram.json` generated from `tests/fixtures/vba/cross_module_calls` (schema validated).
+  - Captures node metadata (`code.module`, `code.proc`, `code.locs.*`) and call-site summaries used across docs/tests.
 
 Integration & Validation
 - [x] Validate generated Diagram JSON against `shared/Config/diagramConfig.schema.json` (schema 1.2).
@@ -145,7 +146,7 @@ dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in out/tmp/ir_with_dynamic.
 Expected Outputs
 - Diagram JSON with `nodes/edges/containers` and `layout.tiers = ["Forms","Classes","Modules"]`.
 - Edges have `metadata.code.edge = "call"` and call-site fields; dynamic edges include `metadata.code.dynamic = true`.
-- Summary line: `modules:N procedures:M edges:E dynamicSkipped:D` (and `dynamicIncluded:X` when `--include-unknown`).
+- Summary line: `modules:N procedures:M edges:E dynamicSkipped:D dynamicIncluded:X progressEmits:Y progressLastMs:Z` (progress metrics always present; `dynamicIncluded` reflects `--include-unknown`).
 
 Troubleshooting
 - Schema errors: validate against `shared/Config/diagramConfig.schema.json`; check for missing required `nodes[].id/label`.

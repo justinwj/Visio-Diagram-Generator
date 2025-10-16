@@ -24,6 +24,32 @@ internal static class Program
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
+    private static readonly CallgraphDiagnosticsSettings CallgraphDiagnostics = BuildCallgraphDiagnostics();
+
+    private static CallgraphDiagnosticsSettings BuildCallgraphDiagnostics()
+    {
+        static int ParseThreshold(string? value, int fallback)
+        {
+            if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed) && parsed > 0)
+            {
+                return parsed;
+            }
+            return fallback;
+        }
+
+        var threshold = ParseThreshold(Environment.GetEnvironmentVariable("VDG_CALLGRAPH_FANOUT_THRESHOLD"), 30);
+        var selfSeverity = Environment.GetEnvironmentVariable("VDG_CALLGRAPH_SELF_CALL_SEVERITY");
+        var fanOutSeverity = Environment.GetEnvironmentVariable("VDG_CALLGRAPH_FANOUT_SEVERITY");
+
+        return new CallgraphDiagnosticsSettings(
+            threshold,
+            string.IsNullOrWhiteSpace(selfSeverity) ? "warning" : selfSeverity!,
+            string.IsNullOrWhiteSpace(fanOutSeverity) ? "warning" : fanOutSeverity!
+        );
+    }
+
+    private readonly record struct CallgraphDiagnosticsSettings(int HighFanOutThreshold, string SelfCallSeverity, string FanOutSeverity);
+
     public static int Main(string[] args)
     {
         try
@@ -65,11 +91,24 @@ internal static class Program
         Console.Error.WriteLine("VDG.VBA.CLI");
         Console.Error.WriteLine("Usage:");
         Console.Error.WriteLine("  vba2json --in <folder> [--glob <pattern> ...] [--out <ir.json>] [--project-name <name>] [--root <path>] [--infer-metrics]");
-        Console.Error.WriteLine("     --glob <pattern>       Limit inputs using * / ? wildcards relative to --in (repeatable).");
-        Console.Error.WriteLine("     --root <path>          Base path for emitted module file paths (defaults to --in).");
-        Console.Error.WriteLine("     --infer-metrics        Include simple line-count metrics in the IR payload.");
+        Console.Error.WriteLine("    Extracts VBA sources into IR JSON (schema v0.1).");
+        Console.Error.WriteLine("    --glob <pattern>       Limit inputs using * / ? wildcards relative to --in (repeatable).");
+        Console.Error.WriteLine("    --root <path>          Base path for emitted module file paths (defaults to --in).");
+        Console.Error.WriteLine("    --infer-metrics        Include simple line-count metrics in the IR payload.");
+        Console.Error.WriteLine("    Example: dotnet run --project src/VDG.VBA.CLI -- vba2json --in tests/fixtures/vba/cross_module_calls --out out/project.ir.json");
+        Console.Error.WriteLine();
         Console.Error.WriteLine("  ir2diagram --in <ir.json> [--out <diagram.json>] [--mode <callgraph|module-structure|module-callmap|event-wiring|proc-cfg>] [--include-unknown] [--timeout <ms>] [--strict-validate]");
+        Console.Error.WriteLine("    Converts IR JSON into Diagram JSON (schema 1.2). Defaults to callgraph mode with tiered lanes.");
+        Console.Error.WriteLine("    --include-unknown      Emit sentinel edges for '~unknown' dynamic calls.");
+        Console.Error.WriteLine("    --timeout <ms>         Abort conversion if processing exceeds the provided timeout in milliseconds.");
+        Console.Error.WriteLine("    --strict-validate      Enforce strict IR invariants before conversion (fails fast on issues).");
+        Console.Error.WriteLine("    Example: dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in out/project.ir.json --out out/project.callgraph.json");
+        Console.Error.WriteLine();
         Console.Error.WriteLine("  render --in <folder> --out <diagram.vsdx> [--mode <callgraph|module-structure|module-callmap>] [--cli <VDG.CLI.exe>] [--diagram-json <path>]");
+        Console.Error.WriteLine("    Runs vba2json + ir2diagram and renders with VDG.CLI.");
+        Console.Error.WriteLine("    --diagram-json         Keep the intermediate Diagram JSON instead of using a temp path.");
+        Console.Error.WriteLine("    --cli <VDG.CLI.exe>    Provide an explicit path to VDG.CLI (defaults to env or discovery).");
+        Console.Error.WriteLine("    Example: dotnet run --project src/VDG.VBA.CLI -- render --in tests/fixtures/vba/cross_module_calls --out out/project.vsdx");
     }
 
     private static int RunVba2Json(string[] args)
@@ -330,8 +369,56 @@ internal static class Program
         var containers = new List<object>();
 
         int totalModules = 0, totalProcedures = 0, dynamicSkipped = 0, dynamicIncluded = 0;
+        var diagConfig = CallgraphDiagnostics;
+        bool progressEnabled = string.Equals(mode, "callgraph", StringComparison.OrdinalIgnoreCase);
 
-        var orderedModules = (root.Project.Modules ?? new())
+        var warnings = new List<(string Severity, string Message)>();
+        var warningKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        var progressStopwatch = System.Diagnostics.Stopwatch.StartNew();
+        TimeSpan lastProgressAt = TimeSpan.Zero;
+        int lastProgressModules = 0, lastProgressProcedures = 0, lastProgressEdges = 0;
+        int progressEmits = 0;
+        TimeSpan lastProgressElapsed = TimeSpan.Zero;
+
+        void AddWarning(string severity, string message)
+        {
+            var key = $"{severity}:{message}";
+            if (warningKeys.Add(key))
+            {
+                warnings.Add((severity, message));
+            }
+        }
+
+        void EmitProgress(bool force = false)
+        {
+            if (!progressEnabled)
+            {
+                return;
+            }
+            if (!force)
+            {
+                bool moduleStep = totalModules - lastProgressModules >= 5 && totalModules > lastProgressModules;
+                bool procedureStep = totalProcedures - lastProgressProcedures >= 25 && totalProcedures > lastProgressProcedures;
+                bool edgeStep = edges.Count - lastProgressEdges >= 100 && edges.Count > lastProgressEdges;
+                bool timeStep = progressStopwatch.Elapsed - lastProgressAt >= TimeSpan.FromSeconds(1);
+                if (!(moduleStep || procedureStep || edgeStep || timeStep))
+                {
+                    return;
+                }
+            }
+
+            lastProgressAt = progressStopwatch.Elapsed;
+            lastProgressModules = totalModules;
+            lastProgressProcedures = totalProcedures;
+            lastProgressEdges = edges.Count;
+
+            Console.WriteLine($"modules:{totalModules} procedures:{totalProcedures} edges:{edges.Count} (progress)");
+            progressEmits++;
+            lastProgressElapsed = progressStopwatch.Elapsed;
+        }
+
+        var orderedModules = (root.Project?.Modules ?? new List<ModuleIr>())
             .OrderBy(m => m.Name, StringComparer.OrdinalIgnoreCase)
             .ThenBy(m => m.Id, StringComparer.Ordinal)
             .ToList();
@@ -340,12 +427,12 @@ internal static class Program
         {
             CheckTimeout();
             var tier = TierFor(m.Kind ?? "Module");
-            containers.Add(new { id = m.Id, label = m.Name, tier });
+            var moduleLabel = string.IsNullOrWhiteSpace(m.Name) ? m.Id : m.Name;
+            containers.Add(new { id = m.Id, label = moduleLabel, tier });
             var orderedProcedures = (m.Procedures ?? new())
                 .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
                 .ThenBy(p => p.Id, StringComparer.Ordinal)
                 .ToList();
-
             foreach (var p in orderedProcedures)
             {
                 CheckTimeout();
@@ -362,12 +449,24 @@ internal static class Program
                 }
                 var label = mode.Equals("module-structure", StringComparison.OrdinalIgnoreCase) ? (p.Name ?? p.Id) : p.Id;
                 nodes.Add(new { id = p.Id, label, tier, containerId = m.Id, metadata = nodeMeta });
-                if (!mode.Equals("callgraph", StringComparison.OrdinalIgnoreCase)) continue;
-                foreach (var c in p.Calls ?? new())
+                var procedureCalls = p.Calls ?? new List<CallIr>();
+                if (!mode.Equals("callgraph", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+                bool notedSelfCall = false;
+                var fanOutTargets = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                foreach (var c in procedureCalls)
                 {
                     CheckTimeout();
                     if (!string.IsNullOrWhiteSpace(c.Target) && c.Target != "~unknown")
                     {
+                        fanOutTargets.Add(c.Target);
+                        if (!notedSelfCall && string.Equals(c.Target, p.Id, StringComparison.OrdinalIgnoreCase))
+                        {
+                            AddWarning(diagConfig.SelfCallSeverity, $"Procedure '{p.Id}' calls itself.");
+                            notedSelfCall = true;
+                        }
                         var edgeMeta = new Dictionary<string, string> { ["code.edge"] = "call" };
                         if (!string.IsNullOrWhiteSpace(c.Branch)) edgeMeta["code.branch"] = c.Branch!;
                         if (c.IsDynamic) edgeMeta["code.dynamic"] = "true";
@@ -400,9 +499,15 @@ internal static class Program
                         }
                     }
                 }
+                if (fanOutTargets.Count >= diagConfig.HighFanOutThreshold)
+                {
+                    AddWarning(diagConfig.FanOutSeverity, $"Procedure '{p.Id}' has high fan-out ({fanOutTargets.Count} call targets).");
+                }
                 totalProcedures++;
+                EmitProgress();
             }
             totalModules++;
+            EmitProgress();
         }
 
         // Include sentinel container/node for '~unknown' if any such edges were added
@@ -410,6 +515,16 @@ internal static class Program
         {
             containers.Add(new { id = "~unknown_module", label = "~unknown", tier = "Modules" });
             nodes.Add(new { id = "~unknown", label = "~unknown", tier = "Modules", containerId = "~unknown_module", metadata = new Dictionary<string, string>() });
+        }
+
+        EmitProgress(force: true);
+
+        if (warnings.Count > 0)
+        {
+            foreach (var warning in warnings)
+            {
+                Console.Error.WriteLine($"{warning.Severity}: {warning.Message}");
+            }
         }
 
         if (mode.Equals("event-wiring", StringComparison.OrdinalIgnoreCase))
@@ -646,7 +761,15 @@ internal static class Program
 
         var json = JsonSerializer.Serialize(diagram, JsonOpts);
         if (string.IsNullOrWhiteSpace(output)) Console.WriteLine(json);
-        else { Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(output!)) ?? "."); File.WriteAllText(output!, json); Console.WriteLine($"modules:{totalModules} procedures:{totalProcedures} edges:{edges.Count} dynamicSkipped:{dynamicSkipped} dynamicIncluded:{dynamicIncluded}"); }
+        else
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(output!)) ?? ".");
+            File.WriteAllText(output!, json);
+            var progressLastMs = progressEmits > 0
+                ? (int)Math.Round(lastProgressElapsed.TotalMilliseconds)
+                : (int)Math.Round(progressStopwatch.Elapsed.TotalMilliseconds);
+            Console.WriteLine($"modules:{totalModules} procedures:{totalProcedures} edges:{edges.Count} dynamicSkipped:{dynamicSkipped} dynamicIncluded:{dynamicIncluded} progressEmits:{progressEmits} progressLastMs:{progressLastMs}");
+        }
         return ExitCodes.Ok;
     }
 

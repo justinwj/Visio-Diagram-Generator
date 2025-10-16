@@ -50,13 +50,20 @@ Write-Host ("pwsh working set: {0:N0} bytes" -f $ws)
 
 # Parse summary metrics from ir2diagram stdout if present
 $modules = $null; $procedures = $null; $edges = $null; $dynSkipped = $null; $dynIncluded = $null
-$m = [regex]::Match($r2.Stdout, 'modules:(?<m>\d+)\s+procedures:(?<p>\d+)\s+edges:(?<e>\d+)\s+dynamicSkipped:(?<ds>\d+)\s+dynamicIncluded:(?<di>\d+)', 'IgnoreCase')
+$progressEmits = $null; $progressLastMs = $null
+$m = [regex]::Match(
+  $r2.Stdout,
+  'modules:(?<m>\d+)\s+procedures:(?<p>\d+)\s+edges:(?<e>\d+)\s+dynamicSkipped:(?<ds>\d+)\s+dynamicIncluded:(?<di>\d+)(?:\s+progressEmits:(?<pe>\d+)\s+progressLastMs:(?<pl>\d+))?',
+  'IgnoreCase'
+)
 if ($m.Success) {
   $modules = [int]$m.Groups['m'].Value
   $procedures = [int]$m.Groups['p'].Value
   $edges = [int]$m.Groups['e'].Value
   $dynSkipped = [int]$m.Groups['ds'].Value
   $dynIncluded = [int]$m.Groups['di'].Value
+  if ($m.Groups['pe'].Success) { $progressEmits = [int]$m.Groups['pe'].Value }
+  if ($m.Groups['pl'].Success) { $progressLastMs = [int]$m.Groups['pl'].Value }
 }
 
 # File sizes and diagram counts
@@ -78,7 +85,18 @@ $payload = [ordered]@{
   vba2json = [ordered]@{ ms = $r1.Ms; exit = $r1.ExitCode; outBytes = $irSize }
   ir2diagram = [ordered]@{
     ms = $r2.Ms; exit = $r2.ExitCode; outBytes = $djSize
-    summary = if ($m.Success) { [ordered]@{ modules = $modules; procedures = $procedures; edges = $edges; dynamicSkipped = $dynSkipped; dynamicIncluded = $dynIncluded } } else { $null }
+    summary = if ($m.Success) {
+      $summary = [ordered]@{
+        modules = $modules; procedures = $procedures; edges = $edges; dynamicSkipped = $dynSkipped; dynamicIncluded = $dynIncluded
+      }
+      if ($progressEmits -ne $null -or $progressLastMs -ne $null) {
+        $summary['progress'] = [ordered]@{
+          emits = $progressEmits
+          lastMs = $progressLastMs
+        }
+      }
+      $summary
+    } else { $null }
     counts = if ($nodesCount -ne $null -or $edgesCount -ne $null) { [ordered]@{ nodes = $nodesCount; edges = $edgesCount } } else { $null }
   }
   process = [ordered]@{

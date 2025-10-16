@@ -51,9 +51,10 @@ Notes
 
 - ir2diagram usage now supports modes and unknown-edge inclusion:
   - `dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in <ir.json> [--out <diagram.json>] [--mode <callgraph|module-structure|module-callmap|event-wiring|proc-cfg>] [--include-unknown] [--timeout <ms>]`
-- When `--out` is used, ir2diagram prints a summary line to stdout: `modules:N procedures:M edges:E dynamicSkipped:D dynamicIncluded:X`.
+- When `--out` is used, ir2diagram prints a summary line to stdout: `modules:N procedures:M edges:E dynamicSkipped:D dynamicIncluded:X progressEmits:Y progressLastMs:Z`.
 - Invalid IR (malformed JSON) is reported as a usage error with exit code 65.
-- `--timeout <ms>` aborts long IR→Diagram conversions gracefully with a clear error.
+- `--timeout <ms>` aborts long IR-to-Diagram conversions gracefully with a clear error.
+- Callgraph diagnostics can be tuned via environment variables: `VDG_CALLGRAPH_FANOUT_THRESHOLD`, `VDG_CALLGRAPH_SELF_CALL_SEVERITY`, and `VDG_CALLGRAPH_FANOUT_SEVERITY`.
 
 ### Validation Options
 - `--strict-validate`: Enable stricter IR validation.
@@ -87,13 +88,21 @@ dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in out/tmp/ir_cross.json --
 dotnet run --project src/VDG.VBA.CLI -- vba2json --in tests/fixtures/vba/dynamic_calls --out out/tmp/ir_dynamic.json
 dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in out/tmp/ir_dynamic.json --out out/tmp/ir_dynamic.diagram.json --mode callgraph --include-unknown
 # stdout summary (when --out is used):
-# modules:N procedures:M edges:E dynamicSkipped:D dynamicIncluded:X
+# modules:N procedures:M edges:E dynamicSkipped:D dynamicIncluded:X progressEmits:Y progressLastMs:Z
 
 # Bad scenario: invalid IR path or malformed JSON
 dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in tests/fixtures/ir/invalid.json
 # stderr: usage: Invalid IR JSON.
 # exit code: 65
 ```
+
+### Sample Callgraph Diagram
+
+- Path: `samples/vba_callgraph.diagram.json` (generated from `tests/fixtures/vba/cross_module_calls` via `ir2diagram --mode callgraph`).
+- Schema: validated against `shared/Config/diagramConfig.schema.json` (1.2).
+- Highlights: node metadata includes `code.module`, `code.proc`, `code.kind`, `code.access`, and `code.locs.*`; call edges carry `code.edge` and `code.site.*`.
+- Generation summary metrics: `modules:2 procedures:2 edges:1 dynamicSkipped:0 dynamicIncluded:0 progressEmits:1 progressLastMs:<ms>` (values recorded when producing the sample).
+- Tests ensure the sample stays in sync with CLI output and surface metadata expectations (`ParserSmokeTests.SampleCallgraphDiagram_MatchesFixture`).
 
 ### Performance Smoke
 
@@ -104,3 +113,4 @@ dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in tests/fixtures/ir/invali
   pwsh ./tools/perf-smoke.ps1 -In tests/fixtures/vba/cross_module_calls -Mode callgraph -TimeoutMs 15000
   ```
 - Output: writes IR/Diagram to `out/tmp`, prints elapsed ms for `vba2json` and `ir2diagram`, shows shell working set, and emits structured JSON metrics to `out/perf/perf.json` (included as a CI artifact; see `.github/workflows/dotnet.yml`, job `perf-smoke`). The CI job also publishes a Job Summary with key metrics for quick inspection.
+- Perf artifact summary now includes progress metadata (`progress.emits`, `progress.lastMs`) sourced from ir2diagram progress reporting.

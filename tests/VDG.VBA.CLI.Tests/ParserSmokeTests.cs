@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Runtime.InteropServices;
 using Xunit;
 
 public class ParserSmokeTests
@@ -265,6 +266,118 @@ public class ParserSmokeTests
         return (p.ExitCode, stdout, stderr);
     }
 
+    private static (int ExitCode, string Stdout, string Stderr) RunPowerShellScript(string scriptPath, params string[] args)
+    {
+        if (string.IsNullOrWhiteSpace(scriptPath)) throw new ArgumentException("scriptPath must be provided.", nameof(scriptPath));
+        var psi = CreatePowerShellProcess(scriptPath, args);
+        using var process = Process.Start(psi) ?? throw new InvalidOperationException($"Failed to start PowerShell process '{psi.FileName}'.");
+        var stdout = process.StandardOutput.ReadToEnd();
+        var stderr = process.StandardError.ReadToEnd();
+        process.WaitForExit();
+        return (process.ExitCode, stdout, stderr);
+    }
+
+    private static ProcessStartInfo CreatePowerShellProcess(string scriptPath, params string[] args)
+    {
+        var powerShellExe = ResolvePowerShellExecutable()
+            ?? throw new InvalidOperationException("PowerShell executable not found. Install PowerShell Core (pwsh) or ensure powershell.exe is available, or set VDG_PWSH to an explicit path.");
+
+        var psi = new ProcessStartInfo(powerShellExe)
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            WorkingDirectory = RepoRoot
+        };
+        psi.ArgumentList.Add("-NoLogo");
+        psi.ArgumentList.Add("-NoProfile");
+        psi.ArgumentList.Add("-File");
+        psi.ArgumentList.Add(scriptPath);
+        if (args is { Length: > 0 })
+        {
+            foreach (var arg in args)
+            {
+                psi.ArgumentList.Add(arg);
+            }
+        }
+        return psi;
+    }
+
+    private static string? ResolvePowerShellExecutable()
+    {
+        static string? NormalizeAndCheck(string? candidate)
+        {
+            if (string.IsNullOrWhiteSpace(candidate)) return null;
+            var trimmed = candidate.Trim().Trim('"');
+            if (Path.IsPathRooted(trimmed))
+            {
+                return File.Exists(trimmed) ? trimmed : null;
+            }
+            return ResolveExecutableOnPath(trimmed);
+        }
+
+        var overrideCandidate = NormalizeAndCheck(Environment.GetEnvironmentVariable("VDG_PWSH"));
+        if (!string.IsNullOrEmpty(overrideCandidate))
+        {
+            return overrideCandidate;
+        }
+
+        foreach (var name in new[] { "pwsh", "pwsh.exe", "powershell", "powershell.exe" })
+        {
+            var resolved = NormalizeAndCheck(name);
+            if (!string.IsNullOrEmpty(resolved))
+            {
+                return resolved;
+            }
+        }
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            var systemDir = Environment.GetFolderPath(Environment.SpecialFolder.System);
+            var fallback = Path.Combine(systemDir, "WindowsPowerShell", "v1.0", "powershell.exe");
+            if (File.Exists(fallback))
+            {
+                return fallback;
+            }
+        }
+
+        return null;
+    }
+
+    private static string? ResolveExecutableOnPath(string candidate)
+    {
+        if (string.IsNullOrWhiteSpace(candidate)) return null;
+
+        var pathEnv = Environment.GetEnvironmentVariable("PATH");
+        if (string.IsNullOrEmpty(pathEnv))
+        {
+            return null;
+        }
+
+        foreach (var segment in pathEnv.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
+        {
+            var dir = segment.Trim();
+            if (string.IsNullOrEmpty(dir)) continue;
+            var full = Path.Combine(dir, candidate);
+            if (File.Exists(full))
+            {
+                return full;
+            }
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && !candidate.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+            {
+                var withExe = full + ".exe";
+                if (File.Exists(withExe))
+                {
+                    return withExe;
+                }
+            }
+        }
+
+        return null;
+    }
+
     [Fact]
     public void DynamicUnknownEdges_AreSkippedByDefault_AndIncludedWithFlag()
     {
@@ -278,6 +391,7 @@ public class ParserSmokeTests
             // Without --include-unknown: expect no '~unknown' node or edges
             var out1 = RunCli("ir2diagram", "--in", ir, "--out", dj1, "--mode", "callgraph");
             Assert.Contains("dynamicSkipped:", out1);
+            Assert.Contains("progressEmits:", out1);
             using (var d1 = JsonDocument.Parse(File.ReadAllText(dj1)))
             {
                 var root1 = d1.RootElement;
@@ -290,6 +404,7 @@ public class ParserSmokeTests
             // With --include-unknown: expect '~unknown' node and edges with code.dynamic=true
             var out2 = RunCli("ir2diagram", "--in", ir, "--out", dj2, "--mode", "callgraph", "--include-unknown");
             Assert.Contains("dynamicIncluded:", out2);
+            Assert.Contains("progressEmits:", out2);
             using (var d2 = JsonDocument.Parse(File.ReadAllText(dj2)))
             {
                 var root2 = d2.RootElement;
@@ -428,25 +543,54 @@ public class ParserSmokeTests
             var scriptPath = Path.Combine(RepoRoot, "tools", "diagram-validate.ps1");
             Assert.True(File.Exists(scriptPath), $"diagram-validate.ps1 missing at {scriptPath}");
 
-            var ps = new ProcessStartInfo("pwsh")
-            {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                WorkingDirectory = RepoRoot
-            };
-            ps.ArgumentList.Add(scriptPath);
-            ps.ArgumentList.Add("-InputPath");
-            ps.ArgumentList.Add(dj);
-            using var p = Process.Start(ps)!;
-            var stdout = p.StandardOutput.ReadToEnd();
-            var stderr = p.StandardError.ReadToEnd();
-            p.WaitForExit();
-            Assert.True(p.ExitCode == 0, $"diagram-validate failed: {stderr}\n{stdout}");
+            var (exitCode, stdout, stderr) = RunPowerShellScript(scriptPath, "-InputPath", dj);
+            Assert.True(exitCode == 0, $"diagram-validate failed: {stderr}\n{stdout}");
             Assert.Contains("Diagram OK:", stdout);
         }
         finally { if (File.Exists(ir)) File.Delete(ir); if (File.Exists(dj)) File.Delete(dj); }
+    }
+
+    [Fact]
+    public void SampleCallgraphDiagram_MatchesFixture()
+    {
+        var samplePath = Path.Combine(RepoRoot, "samples", "vba_callgraph.diagram.json");
+        Assert.True(File.Exists(samplePath), $"Expected sample diagram at {samplePath}");
+
+        var irPath = Path.Combine(Path.GetTempPath(), $"vdg_ir_{Guid.NewGuid():N}.json");
+        var diagPath = Path.Combine(Path.GetTempPath(), $"vdg_diag_{Guid.NewGuid():N}.json");
+        try
+        {
+            var fixtureDir = Path.Combine("tests", "fixtures", "vba", "cross_module_calls");
+            RunCli("vba2json", "--in", fixtureDir, "--out", irPath);
+            RunCli("ir2diagram", "--in", irPath, "--out", diagPath, "--mode", "callgraph");
+
+            var sampleNode = JsonNode.Parse(File.ReadAllText(samplePath))!;
+            var generatedNode = JsonNode.Parse(File.ReadAllText(diagPath))!;
+
+            Assert.True(
+                JsonNode.DeepEquals(sampleNode, generatedNode),
+                "Sample callgraph diagram is out of date; regenerate via ir2diagram using the cross_module_calls fixture."
+            );
+
+            var nodes = generatedNode["nodes"]!.AsArray();
+            var caller = nodes.Single(n => n?["id"]?.GetValue<string>() == "Module1.Caller")!;
+            var metadata = caller["metadata"]!.AsObject();
+            Assert.Equal("Module1", metadata["code.module"]!.GetValue<string>());
+            Assert.Equal("Caller", metadata["code.proc"]!.GetValue<string>());
+            Assert.Equal("Module1.bas", metadata["code.locs.file"]!.GetValue<string>());
+
+            var edges = generatedNode["edges"]!.AsArray();
+            var callEdge = edges.Single(e => e?["sourceId"]?.GetValue<string>() == "Module1.Caller")!;
+            var edgeMeta = callEdge["metadata"]!.AsObject();
+            Assert.Equal("call", edgeMeta["code.edge"]!.GetValue<string>());
+            Assert.Equal("Module1.bas", edgeMeta["code.site.file"]!.GetValue<string>());
+            Assert.Equal("5", edgeMeta["code.site.line"]!.GetValue<string>());
+        }
+        finally
+        {
+            if (File.Exists(irPath)) File.Delete(irPath);
+            if (File.Exists(diagPath)) File.Delete(diagPath);
+        }
     }
 
     [Fact]
@@ -473,22 +617,8 @@ public class ParserSmokeTests
                 var scriptPath = Path.Combine(RepoRoot, "tools", "ir-validate.ps1");
                 Assert.True(File.Exists(scriptPath), $"ir-validate.ps1 missing at {scriptPath}");
 
-                var ps = new ProcessStartInfo("pwsh")
-                {
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    WorkingDirectory = RepoRoot
-                };
-                ps.ArgumentList.Add(scriptPath);
-                ps.ArgumentList.Add("-InputPath");
-                ps.ArgumentList.Add(ir);
-                using var p = Process.Start(ps)!;
-                var stdout = p.StandardOutput.ReadToEnd();
-                var stderr = p.StandardError.ReadToEnd();
-                p.WaitForExit();
-                Assert.True(p.ExitCode == 0, $"ir-validate failed: {stderr}\n{stdout}");
+                var (exitCode, stdout, stderr) = RunPowerShellScript(scriptPath, "-InputPath", ir);
+                Assert.True(exitCode == 0, $"ir-validate failed: {stderr}\n{stdout}");
                 Assert.Contains("IR OK:", stdout);
             }
             finally { if (File.Exists(ir)) File.Delete(ir); }
@@ -509,11 +639,13 @@ public class ParserSmokeTests
             var m1 = System.Text.RegularExpressions.Regex.Match(out1, "dynamicSkipped:(?<ds>\\d+)");
             Assert.True(m1.Success, "Expected dynamicSkipped in summary output");
             Assert.Equal("2", m1.Groups["ds"].Value);
+            Assert.Contains("progressEmits:", out1);
 
             var out2 = RunCli("ir2diagram", "--in", ir, "--out", dj2, "--mode", "callgraph", "--include-unknown");
             var m2 = System.Text.RegularExpressions.Regex.Match(out2, "dynamicIncluded:(?<di>\\d+)");
             Assert.True(m2.Success, "Expected dynamicIncluded in summary output");
             Assert.Equal("2", m2.Groups["di"].Value);
+            Assert.Contains("progressEmits:", out2);
         }
         finally { if (File.Exists(ir)) File.Delete(ir); if (File.Exists(dj1)) File.Delete(dj1); if (File.Exists(dj2)) File.Delete(dj2); }
     }

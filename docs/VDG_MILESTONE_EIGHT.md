@@ -82,14 +82,14 @@ Tests
 - [x] Malformed IR inputs produce descriptive errors and exit code 65 (invalid input), not crashes.
 
 Acceptance Criteria
-- [ ] `ir2diagram --mode callgraph` produces schema-valid Diagram JSON (`schemaVersion: 1.2`).
-- [ ] Nodes and edges contain the specified `code.*` metadata; call-site info is preserved.
-- [ ] Lanes reflect module kinds; containers present for each module.
-- [ ] Dynamic call metadata (`code.dynamic`) present when applicable; unknown dynamic calls do not render edges.
-- [ ] End-to-end `render` produces a `.vsdx` for fixtures without errors.
-- [ ] Diagram JSON validates against schema 1.2; current `VDG.CLI` renders without feature gaps.
-- [ ] Summary metrics report dynamic-call skip counts; `--include-unknown` toggles inclusion behavior.
-- [ ] Malformed IR yields a clear error message and exit code 65.
+- [x] `ir2diagram --mode callgraph` produces schema-valid Diagram JSON (`schemaVersion: 1.2`).
+- [x] Nodes and edges contain the specified `code.*` metadata; call-site info is preserved.
+- [x] Lanes reflect module kinds; containers present for each module.
+- [x] Dynamic call metadata (`code.dynamic`) present when applicable; unknown dynamic calls do not render edges.
+- [x] End-to-end `render` produces a `.vsdx` for fixtures without errors.
+- [x] Diagram JSON validates against schema 1.2; current `VDG.CLI` renders without feature gaps.
+- [x] Summary metrics report dynamic-call skip counts; `--include-unknown` toggles inclusion behavior.
+- [x] Malformed IR yields a clear error message and exit code 65.
 
 Implementation Notes
 - Use `Forms|Classes|Modules` tier order; compute `tier` from module `kind`.
@@ -191,6 +191,8 @@ CI Integration
 - Windows render smoke using `VDG_SKIP_RUNNER` to avoid COM, asserts clean exit and stub output.
 - Perf smoke job emits structured metrics to `out/perf/perf.json` and publishes a job summary (timings, node/edge counts, dynamic skip/include counts).
 - Validation matrix runs `ir2diagram` in both default and `--strict-validate` modes; strict mode also asserts a crafted bad IR fails as expected.
+
+
 
 
 

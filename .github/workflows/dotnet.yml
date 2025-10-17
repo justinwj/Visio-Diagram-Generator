@@ -68,17 +68,22 @@ jobs:
       - name: Build (Release)
         run: dotnet build Visio-Diagram-Generator.sln -c Release -v minimal --no-restore
 
-      - name: Generate IR and diagram
-        run: |
-          dotnet run --project src/VDG.VBA.CLI -- vba2json --in tests/fixtures/vba/hello_world --out out/tmp/ci_ir.json
-          dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in out/tmp/ci_ir.json --out out/tmp/ci_diag.json --mode callgraph
+      - name: Render smoke (callgraph)
+        shell: pwsh
+        run: ./tools/render-smoke.ps1
 
-      - name: Run VDG.CLI with VDG_SKIP_RUNNER
-        env:
-          VDG_SKIP_RUNNER: "1"
+      - name: Show render diagnostics summary
+        shell: pwsh
         run: |
-          .\src\VDG.CLI\bin\Release\net48\VDG.CLI.exe out\tmp\ci_diag.json out\tmp\ci_smoke.vsdx
-          type out\tmp\ci_smoke.vsdx
+          Get-Content -Raw out/perf/render_diagnostics.json | ConvertFrom-Json | Format-List
+
+      - name: Upload render diagnostics
+        uses: actions/upload-artifact@v4
+        with:
+          name: render-diagnostics
+          path: |
+            out/perf/render_diagnostics.json
+            out/perf/render_diagnostics.raw.json
 
   perf-smoke:
     runs-on: ubuntu-latest

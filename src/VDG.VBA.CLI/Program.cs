@@ -104,9 +104,10 @@ internal static class Program
         Console.Error.WriteLine("    --strict-validate      Enforce strict IR invariants before conversion (fails fast on issues).");
         Console.Error.WriteLine("    Example: dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in out/project.ir.json --out out/project.callgraph.json");
         Console.Error.WriteLine();
-        Console.Error.WriteLine("  render --in <folder> --out <diagram.vsdx> [--mode <callgraph|module-structure|module-callmap>] [--cli <VDG.CLI.exe>] [--diagram-json <path>]");
+        Console.Error.WriteLine("  render --in <folder> --out <diagram.vsdx> [--mode <callgraph|module-structure|module-callmap>] [--cli <VDG.CLI.exe>] [--diagram-json <path>] [--diag-json <path>]");
         Console.Error.WriteLine("    Runs vba2json + ir2diagram and renders with VDG.CLI.");
         Console.Error.WriteLine("    --diagram-json         Keep the intermediate Diagram JSON instead of using a temp path.");
+        Console.Error.WriteLine("    --diag-json            Emit diagnostics JSON from VDG.CLI to the provided path.");
         Console.Error.WriteLine("    --cli <VDG.CLI.exe>    Provide an explicit path to VDG.CLI (defaults to env or discovery).");
         Console.Error.WriteLine("    Example: dotnet run --project src/VDG.VBA.CLI -- render --in tests/fixtures/vba/cross_module_calls --out out/project.vsdx");
     }
@@ -314,7 +315,7 @@ internal static class Program
             throw new UsageException("Invalid IR JSON.");
         }
 
-        var tiers = new[] { "Forms", "Classes", "Modules" };
+        var tiers = new[] { "Forms", "Sheets", "Classes", "Modules" };
         if (strictValidate)
         {
             string[] allowedKinds = new[] { "Module", "Class", "Form" };
@@ -360,9 +361,39 @@ internal static class Program
                 throw new Exception($"ir2diagram timeout exceeded after {sw.ElapsedMilliseconds} ms (limit {timeoutMs.Value} ms)");
             }
         }
-        string TierFor(string k) => string.Equals(k, "Form", StringComparison.OrdinalIgnoreCase) ? "Forms"
-                                            : string.Equals(k, "Class", StringComparison.OrdinalIgnoreCase) ? "Classes"
-                                            : "Modules";
+        static bool LooksLikeSheetName(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return false;
+            return value.StartsWith("Sheet", StringComparison.OrdinalIgnoreCase) ||
+                   value.StartsWith("Chart", StringComparison.OrdinalIgnoreCase) ||
+                   value.Equals("ThisWorkbook", StringComparison.OrdinalIgnoreCase) ||
+                   value.Equals("ThisDocument", StringComparison.OrdinalIgnoreCase);
+        }
+
+        string TierFor(ModuleIr module)
+        {
+            if (module == null) return "Modules";
+            if (string.Equals(module.Kind, "Form", StringComparison.OrdinalIgnoreCase)) return "Forms";
+
+            if (string.Equals(module.Kind, "Class", StringComparison.OrdinalIgnoreCase))
+            {
+                var candidates = new List<string?>();
+                candidates.Add(module.Name);
+                candidates.Add(module.Id);
+                if (!string.IsNullOrWhiteSpace(module.File))
+                {
+                    try { candidates.Add(Path.GetFileNameWithoutExtension(module.File)); }
+                    catch { candidates.Add(module.File); }
+                }
+                if (candidates.Any(LooksLikeSheetName))
+                {
+                    return "Sheets";
+                }
+                return "Classes";
+            }
+
+            return "Modules";
+        }
 
         var nodes = new List<object>();
         var edges = new List<object>();
@@ -426,7 +457,7 @@ internal static class Program
         foreach (var m in orderedModules)
         {
             CheckTimeout();
-            var tier = TierFor(m.Kind ?? "Module");
+            var tier = TierFor(m);
             var moduleLabel = string.IsNullOrWhiteSpace(m.Name) ? m.Id : m.Name;
             containers.Add(new { id = m.Id, label = moduleLabel, tier });
             var orderedProcedures = (m.Procedures ?? new())
@@ -533,7 +564,8 @@ internal static class Program
             var formModules = orderedModules.Where(m => string.Equals(m.Kind, "Form", StringComparison.OrdinalIgnoreCase)).ToList();
             foreach (var m in formModules)
             {
-                containers.Add(new { id = m.Id, label = m.Name, tier = "Forms" });
+                var tier = TierFor(m);
+                containers.Add(new { id = m.Id, label = m.Name, tier });
                 var orderedProcedures = (m.Procedures ?? new())
                     .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
                     .ThenBy(p => p.Id, StringComparer.Ordinal)
@@ -547,9 +579,9 @@ internal static class Program
                     var ctl = mm.Groups["ctl"].Value;
                     var srcId = m.Id + "." + ctl;
                     // Source (control) node
-                    nodes.Add(new { id = srcId, label = srcId, tier = "Forms", containerId = m.Id });
+                    nodes.Add(new { id = srcId, label = srcId, tier, containerId = m.Id });
                     // Handler node
-                    nodes.Add(new { id = p.Id, label = p.Id, tier = "Forms", containerId = m.Id });
+                    nodes.Add(new { id = p.Id, label = p.Id, tier, containerId = m.Id });
                     var meta = new Dictionary<string, string> { ["code.edge"] = "event" };
                     edges.Add(new { sourceId = srcId, targetId = p.Id, label = mm.Groups["evt"].Value, metadata = meta });
                 }
@@ -563,7 +595,7 @@ internal static class Program
 
             foreach (var m in orderedModules)
             {
-                var tier = TierFor(m.Kind ?? "Module");
+                var tier = TierFor(m);
                 var orderedProcedures = (m.Procedures ?? new())
                     .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
                     .ThenBy(p => p.Id, StringComparer.Ordinal)
@@ -715,7 +747,7 @@ internal static class Program
             // Replace with module-level call map
             nodes.Clear(); edges.Clear(); containers.Clear();
             foreach (var m in orderedModules)
-                nodes.Add(new { id = m.Id, label = m.Name, tier = TierFor(m.Kind ?? "Module") });
+                nodes.Add(new { id = m.Id, label = m.Name, tier = TierFor(m) });
             var agg = new Dictionary<(string src, string dst), int>();
             foreach (var m in orderedModules)
             {
@@ -1177,7 +1209,7 @@ internal static class Program
 
     private static int RunRender(string[] args)
     {
-        string? inputFolder = null; string? outVsdx = null; string mode = "callgraph"; string? cliPath = null; string? diagramJson = null;
+        string? inputFolder = null; string? outVsdx = null; string mode = "callgraph"; string? cliPath = null; string? diagramJson = null; string? diagnosticsJson = null;
         for (int i = 0; i < args.Length; i++)
         {
             var a = args[i];
@@ -1186,6 +1218,7 @@ internal static class Program
             else if (string.Equals(a, "--mode", StringComparison.OrdinalIgnoreCase)) { if (i + 1 >= args.Length) throw new UsageException("--mode requires callgraph|module-structure|module-callmap"); mode = args[++i]; }
             else if (string.Equals(a, "--cli", StringComparison.OrdinalIgnoreCase)) { if (i + 1 >= args.Length) throw new UsageException("--cli requires path to VDG.CLI.exe"); cliPath = args[++i]; }
             else if (string.Equals(a, "--diagram-json", StringComparison.OrdinalIgnoreCase)) { if (i + 1 >= args.Length) throw new UsageException("--diagram-json requires path"); diagramJson = args[++i]; }
+            else if (string.Equals(a, "--diag-json", StringComparison.OrdinalIgnoreCase)) { if (i + 1 >= args.Length) throw new UsageException("--diag-json requires path"); diagnosticsJson = args[++i]; }
             else throw new UsageException($"Unknown option '{a}' for render.");
         }
         if (string.IsNullOrWhiteSpace(inputFolder) || string.IsNullOrWhiteSpace(outVsdx)) throw new UsageException("render requires --in <folder> and --out <diagram.vsdx>");
@@ -1196,7 +1229,25 @@ internal static class Program
 
         var cli = FindCli(cliPath);
         if (string.IsNullOrWhiteSpace(cli)) throw new UsageException("VDG.CLI.exe not found. Provide --cli <path> or set VDG_CLI env.");
-        var psi = new System.Diagnostics.ProcessStartInfo(cli!, $"\"{diagPath}\" \"{outVsdx}\"") { UseShellExecute = false };
+        if (!string.IsNullOrWhiteSpace(diagnosticsJson))
+        {
+            var dir = Path.GetDirectoryName(diagnosticsJson);
+            if (!string.IsNullOrWhiteSpace(dir)) Directory.CreateDirectory(dir);
+        }
+
+        var argsBuilder = new List<string>();
+        if (!string.IsNullOrWhiteSpace(diagnosticsJson))
+        {
+            argsBuilder.Add("--diag-json");
+            argsBuilder.Add($"\"{diagnosticsJson}\"");
+        }
+        argsBuilder.Add($"\"{diagPath}\"");
+        argsBuilder.Add($"\"{outVsdx}\"");
+        var psi = new System.Diagnostics.ProcessStartInfo(cli!, string.Join(" ", argsBuilder))
+        {
+            UseShellExecute = false
+        };
+        Console.WriteLine($"info: invoking {cli} {psi.Arguments}");
         using var p = System.Diagnostics.Process.Start(psi)!; p.WaitForExit();
         if (p.ExitCode != 0) throw new Exception($"VDG.CLI exited with {p.ExitCode}");
         Console.WriteLine($"Saved diagram: {outVsdx}");

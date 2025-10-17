@@ -107,6 +107,22 @@ public class ParserSmokeTests
     }
 
     [Fact]
+    public void SheetModules_AppearInSheetsTier()
+    {
+        using var diagram = GenerateDiagram("sheets_and_classes", "callgraph");
+        var containers = diagram.RootElement.GetProperty("containers").EnumerateArray().ToList();
+
+        var sheet = containers.Single(c => c.GetProperty("id").GetString() == "SheetCustomers");
+        Assert.Equal("Sheets", sheet.GetProperty("tier").GetString());
+
+        var klass = containers.Single(c => c.GetProperty("id").GetString() == "CustomerClass");
+        Assert.Equal("Classes", klass.GetProperty("tier").GetString());
+
+        var module = containers.Single(c => c.GetProperty("id").GetString() == "Module1");
+        Assert.Equal("Modules", module.GetProperty("tier").GetString());
+    }
+
+    [Fact]
     public void ProcCfgBuildsLinearFlowForSimpleProcedures()
     {
         using var diagram = GenerateDiagram("cross_module_calls", "proc-cfg");

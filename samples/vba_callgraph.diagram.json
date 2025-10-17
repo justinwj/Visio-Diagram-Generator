@@ -3,6 +3,7 @@
   "layout": {
     "tiers": [
       "Forms",
+      "Sheets",
       "Classes",
       "Modules"
     ],

@@ -18,6 +18,17 @@ Commands
   - Outputs: Diagram JSON to stdout if `--out` omitted; writes to file when provided
   - Exit codes: 0 success; 65 invalid input; 70 internal error
 
+- render: Pipeline helper that runs `vba2json`, `ir2diagram`, and `VDG.CLI`
+  - Usage:
+    - `dotnet run --project src/VDG.VBA.CLI -- render --in <folder> --out <diagram.vsdx> [--mode <callgraph|module-structure|module-callmap>] [--cli <VDG.CLI.exe>] [--diagram-json <path>] [--diag-json <path>]`
+  - Outputs: `.vsdx` (and optional diagram JSON / diagnostics JSON when the extra paths are provided)
+  - Exit codes: 0 success; 65 invalid input; 70 internal error
+  - When `--diag-json <path>` is provided, the command forwards the request to `VDG.CLI` so that structured diagnostics land alongside the diagram.
+  - Environment overrides honoured during render:
+    - `VDG_DIAG_LANE_WARN`, `VDG_DIAG_LANE_ERR`, `VDG_DIAG_PAGE_WARN` – tweak lane/page crowding ratios (0..1).
+    - `VDG_DIAG_FAIL_LEVEL` (or legacy `VDG_DIAG_FAIL_ON`) – fail the render when diagnostics reach `warning` or `error`.
+    - `VDG_SKIP_RUNNER=1` – skip the Visio COM automation (used in CI smoke runs).
+
 Flags & Behavior
 - `--in` and `--out` are positional as shown. When `--out` is omitted, the tool prints JSON to stdout (for streaming workflows).
 - `--project-name` overrides the project name detected from input folder (vba2json only).
@@ -28,13 +39,20 @@ Flags & Behavior
 
 Examples
 ```powershell
-# 1) Sources → IR → Validate
+# 1) Sources -> IR -> Validate
 dotnet run --project src/VDG.VBA.CLI -- vba2json --in tests/fixtures/vba/cross_module_calls --out out/tmp/ir_cross.json
 ./tools/ir-validate.ps1 -InputPath out/tmp/ir_cross.json
 
-# 2) IR → Diagram JSON → Render
+# 2) IR -> Diagram JSON -> Render
 dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in out/tmp/ir_cross.json --out out/tmp/ir_cross.diagram.json
 & "src\VDG.CLI\bin\Debug\net48\VDG.CLI.exe" out/tmp/ir_cross.diagram.json out/tmp/ir_cross.vsdx
+
+# 3) Single command render + diagnostics
+dotnet run --project src/VDG.VBA.CLI -- render --in tests/fixtures/vba/cross_module_calls --out out/tmp/render.vsdx --mode callgraph --diagram-json out/tmp/render.diagram.json --diag-json out/tmp/render.diagnostics.json
+
+# Optional: fail the build when diagnostics escalate to error
+$env:VDG_DIAG_FAIL_LEVEL = "error"
+dotnet run --project src/VDG.VBA.CLI -- render --in tests/fixtures/vba/cross_module_calls --out out/tmp/render_strict.vsdx --diag-json out/tmp/render_strict.diagnostics.json
 ```
 
 Notes
@@ -114,3 +132,17 @@ dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in tests/fixtures/ir/invali
   ```
 - Output: writes IR/Diagram to `out/tmp`, prints elapsed ms for `vba2json` and `ir2diagram`, shows shell working set, and emits structured JSON metrics to `out/perf/perf.json` (included as a CI artifact; see `.github/workflows/dotnet.yml`, job `perf-smoke`). The CI job also publishes a Job Summary with key metrics for quick inspection.
 - Perf artifact summary now includes progress metadata (`progress.emits`, `progress.lastMs`) sourced from ir2diagram progress reporting.
+
+### Render Diagnostics Thresholds (Milestone 9)
+
+- Defaults: lane crowding warning at >= 0.85 occupancy, lane overcrowding error at >= 0.95, page crowding warning at >= 0.90.
+- Environment overrides: set `VDG_DIAG_LANE_WARN`, `VDG_DIAG_LANE_ERR`, or `VDG_DIAG_PAGE_WARN` (ratios 0..1) before running `VDG.CLI` to adjust thresholds without editing Diagram JSON.
+- Fail-level control: leave unset for warn-only CI, or set `VDG_DIAG_FAIL_LEVEL=warning|error` to exit with code 65 when diagnostics reach that severity.
+- Example:
+  ```powershell
+  $env:VDG_DIAG_LANE_WARN = "0.80"
+  $env:VDG_DIAG_FAIL_LEVEL = "error"
+  dotnet run --project src/VDG.VBA.CLI -- render --in tests/fixtures/vba/cross_module_calls --out out/tmp/render.vsdx
+  ```
+- CI guidance: defaults keep pipelines informational; opt into failure only once thresholds are tuned.
+- Smoke regression: `tools/render-smoke.ps1` exercises the entire pipeline, writes `out/perf/render_diagnostics.json`, and compares against `tests/baselines/render_diagnostics.json` with a ±5% tolerance for identical fixtures. Use `-UpdateBaseline` after intentional styling/layout changes.

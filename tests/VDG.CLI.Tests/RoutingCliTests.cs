@@ -16,25 +16,25 @@ public class RoutingCliTests
         return path;
     }
 
-    private static string RunMainCaptureOut(params string[] args)
+    private static (int ExitCode, string Output) RunMainWithExit(params string[] args)
     {
         var originalOut = Console.Out;
         var originalErr = Console.Error;
         var sw = new StringWriter();
         var se = new StringWriter();
-        Console.SetOut(sw);
-        Console.SetError(se);
 
         string? originalSkip = Environment.GetEnvironmentVariable("VDG_SKIP_RUNNER", EnvironmentVariableTarget.Process);
+        int exitCode = -1;
         try
         {
+            Console.SetOut(sw);
+            Console.SetError(se);
             Environment.SetEnvironmentVariable("VDG_SKIP_RUNNER", "1", EnvironmentVariableTarget.Process);
             var cliAsm = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == "VDG.CLI")
                          ?? Assembly.Load("VDG.CLI");
             var programType = cliAsm.GetType("VDG.CLI.Program", throwOnError: true)!;
             var mainMethod = programType.GetMethod("Main", BindingFlags.Static | BindingFlags.NonPublic)!;
-            var exit = mainMethod.Invoke(null, new object[] { args }) as int?;
-            Assert.Equal(0, exit.GetValueOrDefault(-1));
+            exitCode = (mainMethod.Invoke(null, new object[] { args }) as int?) ?? -1;
         }
         finally
         {
@@ -42,7 +42,15 @@ public class RoutingCliTests
             Console.SetError(originalErr);
             Environment.SetEnvironmentVariable("VDG_SKIP_RUNNER", originalSkip, EnvironmentVariableTarget.Process);
         }
-        return sw.ToString() + se.ToString();
+        var output = sw.ToString() + se.ToString();
+        return (exitCode, output);
+    }
+
+    private static string RunMainCaptureOut(params string[] args)
+    {
+        var (exitCode, output) = RunMainWithExit(args);
+        Assert.Equal(0, exitCode);
+        return output;
     }
 
     [Fact]
@@ -243,6 +251,88 @@ public class RoutingCliTests
         }
         finally
         {
+            if (File.Exists(input)) File.Delete(input);
+            if (File.Exists(output)) File.Delete(output);
+        }
+    }
+
+    [Fact]
+    public void Diagnostics_LaneWarn_EnvironmentOverridesThreshold()
+    {
+        var json = """
+        {
+          "schemaVersion": "1.2",
+          "layout": {
+            "tiers": ["Alpha"],
+            "page": { "heightIn": 2.0, "marginIn": 0.1 }
+          },
+          "nodes": [
+            { "id": "A", "label": "A", "tier": "Alpha" }
+          ],
+          "edges": []
+        }
+        """;
+        var input = CreateTempModelJson(json);
+        var output = Path.ChangeExtension(input, ".vsdx");
+
+        var originalWarn = Environment.GetEnvironmentVariable("VDG_DIAG_LANE_WARN", EnvironmentVariableTarget.Process);
+        try
+        {
+            Environment.SetEnvironmentVariable("VDG_DIAG_LANE_WARN", null, EnvironmentVariableTarget.Process);
+            var baseline = RunMainCaptureOut(input, output);
+            Assert.DoesNotContain("lane crowded", baseline, StringComparison.OrdinalIgnoreCase);
+            if (File.Exists(output)) File.Delete(output);
+
+            Environment.SetEnvironmentVariable("VDG_DIAG_LANE_WARN", "0.50", EnvironmentVariableTarget.Process);
+            var (exitCode, overridden) = RunMainWithExit(input, output);
+            Assert.Equal(0, exitCode);
+            Assert.Contains("lane crowded", overridden, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("VDG_DIAG_LANE_WARN", originalWarn, EnvironmentVariableTarget.Process);
+            if (File.Exists(input)) File.Delete(input);
+            if (File.Exists(output)) File.Delete(output);
+        }
+    }
+
+    [Fact]
+    public void Diagnostics_FailLevel_Error_ExitsWhenThresholdBreached()
+    {
+        var json = """
+        {
+          "schemaVersion": "1.2",
+          "layout": {
+            "tiers": ["Alpha"],
+            "page": { "heightIn": 6.0, "marginIn": 0.25 }
+          },
+          "nodes": [
+            { "id": "N1", "label": "N1", "tier": "Alpha" }
+          ],
+          "edges": []
+        }
+        """;
+        var input = CreateTempModelJson(json);
+        var output = Path.ChangeExtension(input, ".vsdx");
+
+        var originalLaneErr = Environment.GetEnvironmentVariable("VDG_DIAG_LANE_ERR", EnvironmentVariableTarget.Process);
+        var originalFailLevel = Environment.GetEnvironmentVariable("VDG_DIAG_FAIL_LEVEL", EnvironmentVariableTarget.Process);
+        var originalFailOn = Environment.GetEnvironmentVariable("VDG_DIAG_FAIL_ON", EnvironmentVariableTarget.Process);
+        try
+        {
+            Environment.SetEnvironmentVariable("VDG_DIAG_LANE_ERR", "0.05", EnvironmentVariableTarget.Process);
+            Environment.SetEnvironmentVariable("VDG_DIAG_FAIL_LEVEL", "error", EnvironmentVariableTarget.Process);
+            Environment.SetEnvironmentVariable("VDG_DIAG_FAIL_ON", null, EnvironmentVariableTarget.Process);
+
+            var (exitCode, outputText) = RunMainWithExit(input, output);
+            Assert.Equal(65, exitCode);
+            Assert.Contains("lane overcrowded", outputText, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("VDG_DIAG_LANE_ERR", originalLaneErr, EnvironmentVariableTarget.Process);
+            Environment.SetEnvironmentVariable("VDG_DIAG_FAIL_LEVEL", originalFailLevel, EnvironmentVariableTarget.Process);
+            Environment.SetEnvironmentVariable("VDG_DIAG_FAIL_ON", originalFailOn, EnvironmentVariableTarget.Process);
             if (File.Exists(input)) File.Delete(input);
             if (File.Exists(output)) File.Delete(output);
         }

@@ -1,0 +1,27 @@
+﻿{
+    "generatedAtUtc":  "2025-10-17T16:38:54.8610421Z",
+    "input":  "tests/fixtures/vba/hello_world",
+    "mode":  "callgraph",
+    "connectorCount":  0,
+    "straightLineCrossings":  0,
+    "lanePages":  [
+                      {
+                          "tier":  "Modules",
+                          "page":  1,
+                          "occupancyRatio":  0.13333,
+                          "nodes":  1
+                      }
+                  ],
+    "containers":  [
+                       {
+                           "id":  "Module1",
+                           "tier":  "Modules",
+                           "page":  1,
+                           "occupancyRatio":  0.13333,
+                           "nodes":  1
+                       }
+                   ],
+    "issues":  [
+
+               ]
+}

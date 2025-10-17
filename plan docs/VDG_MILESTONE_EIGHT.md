@@ -31,13 +31,13 @@ Scope
 - [x] Timeout/cancellation strategy for complex call graph analysis.
 
 Out of Scope (this milestone)
-- Advanced semantic grouping beyond `Forms|Classes|Modules`.
+- Advanced semantic grouping beyond `Forms|Sheets|Classes|Modules`.
 - Additional Diagram modes (Module Structure, Module Call Map, Event Wiring, Procedure CFG) - tracked separately.
 - Enrichment of dynamic call inference beyond the current IR surface.
 
 Related Docs & Schemas
 - IR Spec and mapping guidance: `docs/VBA_IR.md`
-- IR milestone context: `docs/VDG_MILESTONE_SIX.md`
+- IR milestone context: `plan docs/VDG_MILESTONE_SIX.md`
 - IR JSON Schema (v0.1): `shared/Config/vbaIr.schema.json`
 - Diagram JSON Schema (1.2): `shared/Config/diagramConfig.schema.json`
 - CLI reference and examples: `docs/VDG_VBA_CLI.md`
@@ -92,7 +92,7 @@ Acceptance Criteria
 - [x] Malformed IR yields a clear error message and exit code 65.
 
 Implementation Notes
-- Use `Forms|Classes|Modules` tier order; compute `tier` from module `kind`.
+- Use `Forms|Sheets|Classes|Modules` tier order; compute `tier` from module `kind`.
 - Prefer deterministic order to enable stable diffs and reliable tests.
 - Keep optional fields omitted rather than set to null in emitted JSON.
 - For now, omit edges with `target == "~unknown"` to avoid orphan nodes; consider future visualization (e.g., dashed edges to a sentinel) if useful.

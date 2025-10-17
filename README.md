@@ -236,8 +236,8 @@ out/                           // Build + generated diagrams
 ```
 
 ## Roadmap
-- Milestone 2 (current): tiered layout, spacing, pagination/banding, title banner, diagnostics. See `docs/VDG_MILESTONE_TWO.md`.
-- Milestone 3 (next): improved connector routing (orthogonal), bundling, and reserved channels to reduce overlap. Plan in `docs/VDG_MILESTONE_THREE.md`.
+- Milestone 2 (current): tiered layout, spacing, pagination/banding, title banner, diagnostics. See `plan docs/VDG_MILESTONE_TWO.md`.
+- Milestone 3 (next): improved connector routing (orthogonal), bundling, and reserved channels to reduce overlap. Plan in `plan docs/VDG_MILESTONE_THREE.md`.
 
 ## Contributing
 Issues and pull requests are welcome. Please run `dotnet test` before submitting and include reproduction steps for Visio automation issues. The automation layer is sensitive to environment differences, so details about Visio version and Windows build help significantly.

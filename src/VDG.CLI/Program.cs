@@ -381,7 +381,23 @@ namespace VDG.CLI
                     model.Metadata["layout.diagnostics.jsonPath"] = defaultJson;
                 }
                 var layout = LayoutEngine.compute(model);
-                EmitDiagnostics(model, layout, diagHeightOverride, diagLaneMaxOverride);
+                var diagnosticsRank = EmitDiagnostics(model, layout, diagHeightOverride, diagLaneMaxOverride);
+
+                var failLevelEnv = Environment.GetEnvironmentVariable("VDG_DIAG_FAIL_LEVEL");
+                if (string.IsNullOrWhiteSpace(failLevelEnv))
+                {
+                    failLevelEnv = Environment.GetEnvironmentVariable("VDG_DIAG_FAIL_ON");
+                }
+                if (!string.IsNullOrWhiteSpace(failLevelEnv))
+                {
+                    var normalizedFail = failLevelEnv.Trim();
+                    var failRank = DiagRank(normalizedFail);
+                    if (failRank > 0 && diagnosticsRank >= failRank)
+                    {
+                        Console.Error.WriteLine($"diagnostics reached '{normalizedFail}' severity; failing render (set by environment).");
+                        return ExitCodes.InvalidInput;
+                    }
+                }
 
                 // Allow tests/CI to skip Visio automation and still succeed
                 var skipRunnerEnv = Environment.GetEnvironmentVariable("VDG_SKIP_RUNNER");
@@ -473,6 +489,10 @@ namespace VDG.CLI
             Console.Error.WriteLine("  --diag-cross-err <n>       Planned crossings error threshold");
             Console.Error.WriteLine("  --diag-util-warn <0..100>  Corridor utilization warn minimum (%)");
             Console.Error.WriteLine("  --diag-json [path]         Emit structured diagnostics JSON (optional path)");
+            Console.Error.WriteLine();
+            Console.Error.WriteLine("Environment overrides:");
+            Console.Error.WriteLine("  VDG_DIAG_LANE_WARN / VDG_DIAG_LANE_ERR / VDG_DIAG_PAGE_WARN  Override crowding ratios (0..1).");
+            Console.Error.WriteLine("  VDG_DIAG_FAIL_LEVEL=<warning|error>   Fail when diagnostics reach level (default warn-only).");
             Console.Error.WriteLine("  -h, --help              Show this help");
         }
 
@@ -835,7 +855,8 @@ namespace VDG.CLI
         private static int DiagRank(string level)
         {
             if (string.Equals(level, "error", StringComparison.OrdinalIgnoreCase)) return 2;
-            if (string.Equals(level, "warning", StringComparison.OrdinalIgnoreCase)) return 1;
+            if (string.Equals(level, "warning", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(level, "warn", StringComparison.OrdinalIgnoreCase)) return 1;
             return 0; // info and unknown
         }
 
@@ -849,8 +870,10 @@ namespace VDG.CLI
             return DiagRank(level) >= DiagRank(min);
         }
 
-        private static void EmitDiagnostics(DiagramModel model, LayoutResult layout, double? pageHeightOverride = null, int? laneMaxOverride = null)
+        private static int EmitDiagnostics(DiagramModel model, LayoutResult layout, double? pageHeightOverride = null, int? laneMaxOverride = null)
         {
+            int highestRank = 0;
+
             // Diagnostics level gating (info|warning|error); default info
             string minLevel = "info";
             if (model.Metadata.TryGetValue("layout.diagnostics.level", out var lvl) && !string.IsNullOrWhiteSpace(lvl))
@@ -870,6 +893,7 @@ namespace VDG.CLI
                 int r = LevelRank(level);
                 if (r >= minRank)
                 {
+                    if (r > highestRank) highestRank = r;
                     Console.WriteLine($"{level}: {message}");
                 }
             }
@@ -878,8 +902,10 @@ namespace VDG.CLI
             var gatedIssues = new List<DiagIssue>();
             void AddIssue(string code, string level, string message, string? lane = null, int? page = null)
             {
-                if (LevelRank(level) >= minRank)
+                var rank = LevelRank(level);
+                if (rank >= minRank)
                 {
+                    if (rank > highestRank) highestRank = rank;
                     gatedIssues.Add(new DiagIssue { Code = code, Level = level, Message = message, Lane = lane, Page = page });
                 }
             }
@@ -935,7 +961,7 @@ namespace VDG.CLI
             {
                 if (bool.TryParse(enabledRaw, out var b)) enabled = b;
             }
-            if (!enabled) return;
+            if (!enabled) return highestRank;
 
             // M3: minimal routing diagnostics
             var routeMode = (model.Metadata.TryGetValue("layout.routing.mode", out var rm) && !string.IsNullOrWhiteSpace(rm)) ? rm.Trim() : "orthogonal";
@@ -1057,17 +1083,34 @@ namespace VDG.CLI
                 var pageHeight = GetPageHeight(model) ?? pageHeightOverride ?? 0.0;
                 if (pageHeight > 0)
                 {
-                    var margin2 = GetPageMargin(model) ?? Margin;
-                    var title2 = GetTitleHeight(model);
-                    var usable = pageHeight - (2 * margin2) - title2;
-                    if (usable > 0 && IsFinite(usable))
-                    {
-                        double laneWarn = 0.85, laneErr = 0.95, pageWarn = 0.90;
-                        if (model.Metadata.TryGetValue("layout.diagnostics.laneCrowdWarnRatio", out var lw) && double.TryParse(lw, NumberStyles.Float, CultureInfo.InvariantCulture, out var lwv)) laneWarn = lwv;
-                        if (model.Metadata.TryGetValue("layout.diagnostics.laneCrowdErrorRatio", out var le) && double.TryParse(le, NumberStyles.Float, CultureInfo.InvariantCulture, out var lev)) laneErr = lev;
-                        if (model.Metadata.TryGetValue("layout.diagnostics.pageCrowdWarnRatio", out var pw) && double.TryParse(pw, NumberStyles.Float, CultureInfo.InvariantCulture, out var pwv)) pageWarn = pwv;
+                      var margin2 = GetPageMargin(model) ?? Margin;
+                      var title2 = GetTitleHeight(model);
+                      var usable = pageHeight - (2 * margin2) - title2;
+                      if (usable > 0 && IsFinite(usable))
+                      {
+                          static double? ReadRatioEnv(string key)
+                          {
+                              var raw = Environment.GetEnvironmentVariable(key);
+                              if (string.IsNullOrWhiteSpace(raw)) return null;
+                              if (double.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out var value) && value >= 0 && value <= 1)
+                              {
+                                  return value;
+                              }
+                              return null;
+                          }
 
-                        var vs = 0.6; if (model.Metadata.TryGetValue("layout.spacing.vertical", out var vsv) && double.TryParse(vsv, NumberStyles.Float, CultureInfo.InvariantCulture, out var vparsed)) vs = vparsed;
+                          double laneWarn = 0.85, laneErr = 0.95, pageWarn = 0.90;
+                          var envLaneWarn = ReadRatioEnv("VDG_DIAG_LANE_WARN");
+                          if (envLaneWarn.HasValue) laneWarn = envLaneWarn.Value;
+                          var envLaneErr = ReadRatioEnv("VDG_DIAG_LANE_ERR");
+                          if (envLaneErr.HasValue) laneErr = envLaneErr.Value;
+                          var envPageWarn = ReadRatioEnv("VDG_DIAG_PAGE_WARN");
+                          if (envPageWarn.HasValue) pageWarn = envPageWarn.Value;
+                          if (model.Metadata.TryGetValue("layout.diagnostics.laneCrowdWarnRatio", out var lw) && double.TryParse(lw, NumberStyles.Float, CultureInfo.InvariantCulture, out var lwv)) laneWarn = lwv;
+                          if (model.Metadata.TryGetValue("layout.diagnostics.laneCrowdErrorRatio", out var le) && double.TryParse(le, NumberStyles.Float, CultureInfo.InvariantCulture, out var lev)) laneErr = lev;
+                          if (model.Metadata.TryGetValue("layout.diagnostics.pageCrowdWarnRatio", out var pw) && double.TryParse(pw, NumberStyles.Float, CultureInfo.InvariantCulture, out var pwv)) pageWarn = pwv;
+
+                          var vs = 0.6; if (model.Metadata.TryGetValue("layout.spacing.vertical", out var vsv) && double.TryParse(vsv, NumberStyles.Float, CultureInfo.InvariantCulture, out var vparsed)) vs = vparsed;
 
                         var (minLeft2, minBottom2, _, _) = ComputeLayoutBounds(layout);
                         var perPageTier = new Dictionary<(int page, string tier), (double sumH, int count)>(new PerPageTierComparer());
@@ -1704,20 +1747,22 @@ namespace VDG.CLI
                     catch { }
 
                     // Attach gated issues collected during diagnostics
-                    if (gatedIssues.Count > 0)
-                    {
-                        payload.Issues.AddRange(gatedIssues);
-                    }
+                      if (gatedIssues.Count > 0)
+                      {
+                          payload.Issues.AddRange(gatedIssues);
+                      }
 
-                    var json = System.Text.Json.JsonSerializer.Serialize(payload, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
-                    var target = string.IsNullOrWhiteSpace(outPath) ? Path.Combine("out", "diagnostics.json") : Path.GetFullPath(outPath!);
-                    var dir = Path.GetDirectoryName(target);
-                    if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-                    File.WriteAllText(target, json);
-                    Emit("info", $"diagnostics JSON written: {target}");
-                }
-            }
-            catch { }
+                      var json = System.Text.Json.JsonSerializer.Serialize(payload, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+                      var target = string.IsNullOrWhiteSpace(outPath) ? Path.Combine("out", "diagnostics.json") : Path.GetFullPath(outPath!);
+                      var dir = Path.GetDirectoryName(target);
+                      if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+                      File.WriteAllText(target, json);
+                      Emit("info", $"diagnostics JSON written: {target}");
+                  }
+              }
+              catch { }
+
+              return highestRank;
         }
 
         private static double Orientation(double ax, double ay, double bx, double by, double cx, double cy)

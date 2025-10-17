@@ -18,8 +18,6 @@
             "name": "Caller",
             "kind": "Sub",
             "access": "Public",
-            "static": false,
-            "params": [],
             "locs": {
               "file": "Module1.bas",
               "startLine": 4,
@@ -35,11 +33,7 @@
                   "line": 5
                 }
               }
-            ],
-            "metrics": {
-              "lines": 3
-            },
-            "tags": []
+            ]
           }
         ]
       },
@@ -54,18 +48,11 @@
             "name": "Work",
             "kind": "Sub",
             "access": "Public",
-            "static": false,
-            "params": [],
             "locs": {
               "file": "Module2.bas",
               "startLine": 4,
               "endLine": 6
-            },
-            "calls": [],
-            "metrics": {
-              "lines": 3
-            },
-            "tags": []
+            }
           }
         ]
       }

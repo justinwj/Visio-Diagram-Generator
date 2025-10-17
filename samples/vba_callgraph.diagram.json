@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "1.2",
+  "layout": {
+    "tiers": [
+      "Forms",
+      "Sheets",
+      "Classes",
+      "Modules"
+    ],
+    "spacing": {
+      "horizontal": 1.2,
+      "vertical": 0.6
+    },
+    "page": {
+      "heightIn": 8.5,
+      "marginIn": 0.5
+    },
+    "containers": {
+      "paddingIn": 0,
+      "cornerIn": 0.12
+    }
+  },
+  "nodes": [
+    {
+      "id": "Module1.Hello",
+      "label": "Module1.Hello",
+      "tier": "Modules",
+      "containerId": "Module1",
+      "metadata": {
+        "code.module": "Module1",
+        "code.proc": "Hello",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Module1.bas",
+        "code.locs.startLine": "4",
+        "code.locs.endLine": "6"
+      }
+    }
+  ],
+  "edges": [],
+  "containers": [
+    {
+      "id": "Module1",
+      "label": "Module1",
+      "tier": "Modules"
+    }
+  ]
+}

@@ -40,21 +40,21 @@ IR Surface (v0.1)
 
 Conventions
 - [x] Field casing lowerCamel; enum casing Pascal.
-- [ ] IDs: `Module.Proc` unique; modules unique by `name` within project.
-- [ ] Optional fields omitted (not null); additive evolution preferred.
-- [ ] Stable ordering for determinism (modules, then procedures by name).
+- [x] IDs: `Module.Proc` unique; modules unique by `name` within project. (Guarded by `ParserSmokeTests.GoldenIrFixturesValidateAgainstSchema`.)
+- [x] Optional fields omitted (not null); additive evolution preferred. (See `ParserSmokeTests.Vba2JsonMatchesGoldenFixture`.)
+- [x] Stable ordering for determinism (modules, then procedures by name). (See `ParserSmokeTests.Vba2JsonSortsModulesAndProcedures`.)
 
 Versioning
-- [ ] `irSchemaVersion`: `0.1` (SemVer `major.minor`).
-- [ ] Minor = additive only; tooling ignores unknown fields.
-- [ ] Major = breaking changes with migration notes in `docs/CHANGELOG_IR.md`.
-- [ ] Embed generator metadata: `{ generator: { name: "vba2json", version: "x.y.z" } }`.
+- [x] `irSchemaVersion`: `0.1` (SemVer `major.minor`). (`ParserSmokeTests.Vba2JsonEmitsRequiredFields`)
+- [x] Minor = additive only; tooling ignores unknown fields. (`docs/IR_Governance.md`)
+- [x] Major = breaking changes with migration notes in `docs/CHANGELOG_IR.md`.
+- [x] Embed generator metadata: `{ generator: { name: "vba2json", version: "x.y.z" } }`.
 
 Mapping Guidance (IR → Diagram JSON)
-- [ ] First mode: Project Call Graph.
+- [x] First mode: Project Call Graph.
   - Node: `Module.Proc` (label same); Container: module; Tier by artifact type: Forms | Classes | Modules.
-  - Edge: `call`; carry `call.site` into `edges[].metadata`.
-  - Carry IR context into `nodes[].metadata` (`code.module`, `code.proc`, `code.kind`, `code.access`, `code.locs`).
+  - Edge: `call`; carry `call.site` into `edges[].metadata`. (Validated by `ParserSmokeTests.CrossModuleCalls_Appear_In_Callgraph_Diagram`)
+  - Carry IR context into `nodes[].metadata` (`code.module`, `code.proc`, `code.kind`, `code.access`, `code.locs`). (Validated by `ParserSmokeTests.CrossModuleCalls_Appear_In_Callgraph_Diagram`)
 
 Validation & Tests
 - [x] Fixtures in `tests/fixtures/vba/`:
@@ -65,13 +65,13 @@ Validation & Tests
   - `cfg_shapes` (If/Else + For loop scaffolds)
   - `cfg_nested` (loop containing branch; nested CFG coverage)
 - [x] Golden IRs in `tests/fixtures/ir/`.
-- [ ] Schema validation tests (IR conforms to `vbaIr.schema.json`).
-- [ ] Determinism tests (stable IDs/ordering).
-- [ ] Minimal content checks (modules, procedures, calls exist as expected).
-- [ ] Optional: `tools/ir-validate.ps1` used by a CI step.
+- [x] Schema validation tests (IR conforms to `vbaIr.schema.json`). (`ParserSmokeTests.GoldenIrFixturesValidateAgainstSchema`)
+- [x] Determinism tests (stable IDs/ordering). (`ParserSmokeTests.Vba2JsonOutputIsDeterministic`)
+- [x] Minimal content checks (modules, procedures, calls exist as expected). (`ParserSmokeTests.Vba2JsonEmitsRequiredFields`)
+- [x] Optional: `tools/ir-validate.ps1` used by a CI step.
 
 Acceptance Criteria
-- [ ] Spec and schema published with examples and FAQ; repository lints/validates them in CI.
+- [x] Spec and schema published with examples and FAQ; repository lints/validates them in CI. (CI: `.github/workflows/ir-validate.yml`)
 - [x] Three fixtures produce IRs that validate (via `tools/ir-validate.ps1`).
 - [x] IR contains sufficient data to draw a project call graph with VDG.
 - [x] Versioning policy documented; tools tolerate unknown fields.
@@ -92,7 +92,7 @@ Work Breakdown
  - [x] `docs/CHANGELOG_IR.md` scaffold with v0.1 entry.
  - [x] IR FAQ (IDs, dynamic calls, property procedures, line numbers).
 5) Governance
- - [ ] Define PR guidance for IR changes (additive only for minors; deprecations policy).
+ - [ ] Define PR guidance for IR changes (additive only for minors; deprecations policy). - *skipped, come back to it later when it becomes relevant.*
 6) Parser Hardening & Symbol Table (Step 3)
 - [x] Extract params (name/type/ByRef) and returns from signatures.
 - [x] Track local variable types and `Set … = New …` constructions.
@@ -109,7 +109,37 @@ Work Breakdown
 6) Scaffolds (optional within this milestone)
 - [x] Add `tools/vba2json.ps1` skeleton (signatures/calls, not a full parser).
 - [x] Add `tools/vba-ir2diagram.ps1` skeleton (project call graph mapping).
-- [ ] Wire a sample end-to-end doc snippet ([vba2json](docs/Glossary.md#vba2json) -> ir-validate -> ir2diagram -> [VDG.CLI](docs/Glossary.md#cli)).
+- [x] Wire a sample end-to-end doc snippet ([vba2json](docs/Glossary.md#vba2json) -> ir-validate -> ir2diagram -> [VDG.CLI](docs/Glossary.md#cli)).
+
+### Sample End-to-End Workflow
+
+This walkthrough uses the committed fixtures to demonstrate the complete pipeline from VBA sources to a rendered diagram. Adjust paths as needed for your environment; the commands assume repository root as the working directory.
+
+1. **Convert VBA sources to IR (Intermediate Representation)**
+   ```powershell
+   dotnet run --project src/VDG.VBA.CLI -- vba2json --in tests/fixtures/vba/cross_module_calls --out out/tmp/cross.ir.json
+   ```
+   Generates `out/tmp/cross.ir.json`. The tool surface is described in [vba2json](docs/Glossary.md#vba2json).
+
+2. **Validate the IR against the schema**
+   ```powershell
+   pwsh ./tools/ir-validate.ps1 -InputPath out/tmp/cross.ir.json
+   ```
+   Expected output: `IR OK: out/tmp/cross.ir.json`, confirming the file matches `shared/Config/vbaIr.schema.json`.
+
+3. **Convert IR to diagram JSON**
+   ```powershell
+   dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in out/tmp/cross.ir.json --out out/tmp/cross.diagram.json --mode callgraph
+   ```
+   Produces `out/tmp/cross.diagram.json`, ready for rendering. See [VDG CLI](docs/Glossary.md#cli) for additional modes and metadata.
+
+4. **Render or post-process the diagram**
+   ```powershell
+   dotnet run --project src/VDG.CLI -- out/tmp/cross.diagram.json out/tmp/cross.vsdx
+   ```
+   This saves a Visio file at `out/tmp/cross.vsdx` that can be opened directly or further automated with [VDG CLI](docs/Glossary.md#cli).
+
+For additional reference inputs, consult the golden IR fixtures under `tests/fixtures/ir/` and the schema contract in `shared/Config/vbaIr.schema.json`.
 
 Risks & Mitigations
 - Ambiguity for dynamic calls → mark `isDynamic`, record call site; resolve later if possible.

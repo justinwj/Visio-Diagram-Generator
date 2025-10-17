@@ -18,18 +18,11 @@
             "name": "Hello",
             "kind": "Sub",
             "access": "Public",
-            "static": false,
-            "params": [],
             "locs": {
               "file": "Module1.bas",
               "startLine": 4,
               "endLine": 6
-            },
-            "calls": [],
-            "metrics": {
-              "lines": 3
-            },
-            "tags": []
+            }
           }
         ]
       }

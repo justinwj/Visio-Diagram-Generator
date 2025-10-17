@@ -18,18 +18,11 @@
             "name": "Command1_Click",
             "kind": "Sub",
             "access": "Private",
-            "static": false,
-            "params": [],
             "locs": {
               "file": "Form1.frm",
               "startLine": 8,
               "endLine": 10
-            },
-            "calls": [],
-            "metrics": {
-              "lines": 3
-            },
-            "tags": []
+            }
           }
         ]
       }

@@ -18,37 +18,23 @@
             "name": "RunAll",
             "kind": "Sub",
             "access": "Public",
-            "static": false,
-            "params": [],
             "locs": {
               "file": "Helper.cls",
               "startLine": 8,
               "endLine": 9
-            },
-            "calls": [],
-            "metrics": {
-              "lines": 2
-            },
-            "tags": []
+            }
           },
           {
             "id": "Helper.RunFactory",
             "name": "RunFactory",
             "kind": "Function",
             "access": "Public",
-            "static": false,
-            "params": [],
             "returns": "Helper",
             "locs": {
               "file": "Helper.cls",
               "startLine": 11,
               "endLine": 13
-            },
-            "calls": [],
-            "metrics": {
-              "lines": 3
-            },
-            "tags": []
+            }
           }
         ]
       },
@@ -63,8 +49,6 @@
             "name": "Caller",
             "kind": "Sub",
             "access": "Public",
-            "static": false,
-            "params": [],
             "locs": {
               "file": "ModuleAlias.bas",
               "startLine": 4,
@@ -161,11 +145,7 @@
                   "line": 23
                 }
               }
-            ],
-            "metrics": {
-              "lines": 22
-            },
-            "tags": []
+            ]
           }
         ]
       },
@@ -180,25 +160,17 @@
             "name": "DoWork",
             "kind": "Sub",
             "access": "Public",
-            "static": false,
-            "params": [],
             "locs": {
               "file": "Worker.cls",
               "startLine": 8,
               "endLine": 9
-            },
-            "calls": [],
-            "metrics": {
-              "lines": 2
-            },
-            "tags": []
+            }
           },
           {
             "id": "Worker.Factory",
             "name": "Factory",
             "kind": "Function",
             "access": "Public",
-            "static": false,
             "params": [
               {
                 "name": "count",
@@ -216,31 +188,19 @@
               "file": "Worker.cls",
               "startLine": 11,
               "endLine": 13
-            },
-            "calls": [],
-            "metrics": {
-              "lines": 3
-            },
-            "tags": []
+            }
           },
           {
             "id": "Worker.RunFactory",
             "name": "RunFactory",
             "kind": "Function",
             "access": "Public",
-            "static": false,
-            "params": [],
             "returns": "Helper",
             "locs": {
               "file": "Worker.cls",
               "startLine": 15,
               "endLine": 17
-            },
-            "calls": [],
-            "metrics": {
-              "lines": 3
-            },
-            "tags": []
+            }
           }
         ]
       }

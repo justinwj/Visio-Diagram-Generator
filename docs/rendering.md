@@ -20,11 +20,15 @@ dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in out/tmp/hello.ir.json --
 # 3) Render diagram (skip Visio, emit diagnostics JSON)
 $env:VDG_SKIP_RUNNER = "1"
 src\VDG.CLI\bin\Release\net48\VDG.CLI.exe --diag-json out/tmp/hello.diagnostics.json out/tmp/hello.diagram.json out/tmp/hello.vsdx
+
+# 4) One-command pipeline (IR + Diagram + Render)
+dotnet run --project src/VDG.VBA.CLI -- render --in tests/fixtures/vba/hello_world --out out/tmp/hello_full.vsdx --mode callgraph --diagram-json out/tmp/hello_full.diagram.json --diag-json out/tmp/hello_full.diagnostics.json
 ```
 
 Notes:
 - `--diag-json` writes rich diagnostics payloads (crowding, crossings, utilization). The defaults emit warnings; set `VDG_DIAG_FAIL_LEVEL=error` to gate builds once thresholds are tuned.
 - Diagram styling honours the palette documented in `docs/StylingDefaults.md` with legend asset `docs/render_legend.png`.
+- A styled sample diagram (`samples/vba_callgraph_styled.vsdx`) and its JSON counterpart (`samples/vba_callgraph.diagram.json`) are kept current with the defaults—regenerate via the commands above whenever styling changes.
 
 ## Diagnostics Policy Snapshot
 
@@ -60,6 +64,17 @@ The `render-smoke` job in `.github/workflows/dotnet.yml` calls the smoke script 
 - Override lane/page thresholds via workflow `env` entries (for example `VDG_DIAG_LANE_WARN: "0.80"`).
 - Enable failure on warnings by setting `VDG_DIAG_FAIL_LEVEL: warning` once the team is ready to enforce limits.
 - Add fixtures by invoking `./tools/render-smoke.ps1 -In <fixture>` and capturing corresponding baselines under `tests/baselines`.
+- The script also tightens thresholds once per run to ensure diagnostics fail-level gating works (`VDG_DIAG_FAIL_LEVEL=warning`), so CI will fail if warnings no longer trip the guard.
+
+## Appendix: Large Diagram Troubleshooting
+
+- Prefer landscape layouts for huge callgraphs: rerun `render` with `--page-width 14 --page-height 8.5` (legal) or 17×11 for tabloid-scale exports.
+- Tighten vertical spacing on tall diagrams via `--spacing-v 0.45`; complement with `--diag-height <in>` to receive early overflow warnings when experimenting.
+- If lane crowding keeps tripping errors, split the module set across multiple export passes (e.g., one render per VBA project area) or enable pagination (`--paginate true`) so `VDG.CLI` injects additional virtual sheets.
+- Large-sheet troubleshooting checklist:
+  1. Inspect `out/perf/render_diagnostics.json` for `PageCrowding`/`LaneCrowding` metrics—values >95% mean you should widen spacing or increase page size.
+  2. Use `VDG_DIAG_FAIL_LEVEL=warning` temporarily to stop builds while you iterate on layout changes.
+  3. Re-run the single-command pipeline after each adjustment to confirm schema validity and `.vsdx` generation remain intact.
 
 ## Troubleshooting
 

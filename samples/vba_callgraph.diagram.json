@@ -22,58 +22,26 @@
   },
   "nodes": [
     {
-      "id": "Module1.Caller",
-      "label": "Module1.Caller",
+      "id": "Module1.Hello",
+      "label": "Module1.Hello",
       "tier": "Modules",
       "containerId": "Module1",
       "metadata": {
         "code.module": "Module1",
-        "code.proc": "Caller",
+        "code.proc": "Hello",
         "code.kind": "Sub",
         "code.access": "Public",
         "code.locs.file": "Module1.bas",
         "code.locs.startLine": "4",
         "code.locs.endLine": "6"
       }
-    },
-    {
-      "id": "Module2.Work",
-      "label": "Module2.Work",
-      "tier": "Modules",
-      "containerId": "Module2",
-      "metadata": {
-        "code.module": "Module2",
-        "code.proc": "Work",
-        "code.kind": "Sub",
-        "code.access": "Public",
-        "code.locs.file": "Module2.bas",
-        "code.locs.startLine": "4",
-        "code.locs.endLine": "6"
-      }
     }
   ],
-  "edges": [
-    {
-      "sourceId": "Module1.Caller",
-      "targetId": "Module2.Work",
-      "label": "call",
-      "metadata": {
-        "code.edge": "call",
-        "code.site.module": "Module1",
-        "code.site.file": "Module1.bas",
-        "code.site.line": "5"
-      }
-    }
-  ],
+  "edges": [],
   "containers": [
     {
       "id": "Module1",
       "label": "Module1",
-      "tier": "Modules"
-    },
-    {
-      "id": "Module2",
-      "label": "Module2",
       "tier": "Modules"
     }
   ]

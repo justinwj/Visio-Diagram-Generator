@@ -9,7 +9,6 @@ Param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
-Add-Type -AssemblyName System.Web.Extensions
 
 function Resolve-CliPath {
   param([string]$Path)
@@ -24,11 +23,38 @@ function Resolve-CliPath {
 }
 
 function Invoke-Dotnet {
-  param([string[]]$Arguments)
-  $process = Start-Process -FilePath 'dotnet' -ArgumentList $Arguments -NoNewWindow -Wait -PassThru
-  if ($process.ExitCode -ne 0) {
+  param(
+    [string[]]$Arguments,
+    [hashtable]$Environment = @{},
+    [int[]]$AcceptExitCodes = @(0)
+  )
+
+  $originalEnv = @{}
+  foreach ($kvp in $Environment.GetEnumerator()) {
+    $key = [string]$kvp.Key
+    $originalEnv[$key] = if (Test-Path "Env:$key") { (Get-Item "Env:$key").Value } else { $null }
+    Set-Item -Path "Env:$key" -Value $kvp.Value
+  }
+
+  try {
+    $process = Start-Process -FilePath 'dotnet' -ArgumentList $Arguments -NoNewWindow -Wait -PassThru
+  }
+  finally {
+    foreach ($kvp in $Environment.GetEnumerator()) {
+      $key = [string]$kvp.Key
+      if ($originalEnv[$key] -ne $null) {
+        Set-Item -Path "Env:$key" -Value $originalEnv[$key]
+      } else {
+        Remove-Item -Path "Env:$key" -ErrorAction SilentlyContinue
+      }
+    }
+  }
+
+  if (-not $AcceptExitCodes.Contains($process.ExitCode)) {
     throw "dotnet $($Arguments -join ' ') exited with code $($process.ExitCode)."
   }
+
+  return $process.ExitCode
 }
 
 function Get-Summary {
@@ -142,8 +168,6 @@ $diag = Get-Content -Raw -Path $diagPath | ConvertFrom-Json
 $summary = Get-Summary -Diag $diag
 ($summary | ConvertTo-Json -Depth 6) | Set-Content -Path $summaryPath -Encoding UTF8
 
-$serializer = New-Object System.Web.Script.Serialization.JavaScriptSerializer
-
 if ($UpdateBaseline) {
   New-Item -ItemType Directory -Force -Path (Split-Path -Parent $Baseline) | Out-Null
   ($summary | ConvertTo-Json -Depth 6) | Set-Content -Path $Baseline -Encoding UTF8
@@ -155,30 +179,30 @@ if (-not (Test-Path $Baseline)) {
   throw "Baseline summary not found: $Baseline. Run with -UpdateBaseline to create one."
 }
 
-$summaryObj = $serializer.DeserializeObject((Get-Content -Raw -Path $summaryPath))
-$baselineObj = $serializer.DeserializeObject((Get-Content -Raw -Path $Baseline))
+$summaryObj = Get-Content -Raw -Path $summaryPath | ConvertFrom-Json
+$baselineObj = Get-Content -Raw -Path $Baseline | ConvertFrom-Json
 
-$baselineConnector = [double]$baselineObj['connectorCount']
-$actualConnector = [double]$summaryObj['connectorCount']
+$baselineConnector = [double]$baselineObj.connectorCount
+$actualConnector = [double]$summaryObj.connectorCount
 Test-WithinPercent -Name 'connectorCount' -BaselineValue $baselineConnector -ActualValue $actualConnector
 
-$baselineCrossings = [double]$baselineObj['straightLineCrossings']
-$actualCrossings = [double]$summaryObj['straightLineCrossings']
+$baselineCrossings = [double]$baselineObj.straightLineCrossings
+$actualCrossings = [double]$summaryObj.straightLineCrossings
 Test-WithinPercent -Name 'straightLineCrossings' -BaselineValue $baselineCrossings -ActualValue $actualCrossings
 
 $baselineLane = @{}
-$baselineLanePages = $baselineObj['lanePages']
+$baselineLanePages = $baselineObj.lanePages
 if ($baselineLanePages) {
   foreach ($lp in $baselineLanePages) {
-    $key = "{0}|{1}" -f $lp['tier'], $lp['page']
+    $key = "{0}|{1}" -f $lp.tier, $lp.page
     $baselineLane[$key] = $lp
   }
 }
 $actualLane = @{}
-$actualLanePages = $summaryObj['lanePages']
+$actualLanePages = $summaryObj.lanePages
 if ($actualLanePages) {
   foreach ($lp in $actualLanePages) {
-    $key = "{0}|{1}" -f $lp['tier'], $lp['page']
+    $key = "{0}|{1}" -f $lp.tier, $lp.page
     $actualLane[$key] = $lp
   }
 }
@@ -190,25 +214,25 @@ foreach ($key in $baselineLane.Keys) {
   if (-not $actualLane.ContainsKey($key)) {
     throw "Lane page '$key' missing from actual diagnostics."
   }
-  Test-WithinPercent -Name "lanePages[$key].occupancyRatio" -BaselineValue ([double]$baselineLane[$key]['occupancyRatio']) -ActualValue ([double]$actualLane[$key]['occupancyRatio'])
-  if ([int]$baselineLane[$key]['nodes'] -ne [int]$actualLane[$key]['nodes']) {
-    throw "lanePages[$key].nodes mismatch: baseline $([int]$baselineLane[$key]['nodes']) vs actual $([int]$actualLane[$key]['nodes'])."
+  Test-WithinPercent -Name "lanePages[$key].occupancyRatio" -BaselineValue ([double]$baselineLane[$key].occupancyRatio) -ActualValue ([double]$actualLane[$key].occupancyRatio)
+  if ([int]$baselineLane[$key].nodes -ne [int]$actualLane[$key].nodes) {
+    throw "lanePages[$key].nodes mismatch: baseline $([int]$baselineLane[$key].nodes) vs actual $([int]$actualLane[$key].nodes)."
   }
 }
 
 $baselineContainers = @{}
-$baselineContainerPages = $baselineObj['containers']
+$baselineContainerPages = $baselineObj.containers
 if ($baselineContainerPages) {
   foreach ($cp in $baselineContainerPages) {
-    $key = "{0}|{1}" -f $cp['id'], $cp['page']
+    $key = "{0}|{1}" -f $cp.id, $cp.page
     $baselineContainers[$key] = $cp
   }
 }
 $actualContainers = @{}
-$actualContainerPages = $summaryObj['containers']
+$actualContainerPages = $summaryObj.containers
 if ($actualContainerPages) {
   foreach ($cp in $actualContainerPages) {
-    $key = "{0}|{1}" -f $cp['id'], $cp['page']
+    $key = "{0}|{1}" -f $cp.id, $cp.page
     $actualContainers[$key] = $cp
   }
 }
@@ -220,24 +244,24 @@ foreach ($key in $baselineContainers.Keys) {
   if (-not $actualContainers.ContainsKey($key)) {
     throw "Container page '$key' missing from actual diagnostics."
   }
-  Test-WithinPercent -Name "containers[$key].occupancyRatio" -BaselineValue ([double]$baselineContainers[$key]['occupancyRatio']) -ActualValue ([double]$actualContainers[$key]['occupancyRatio'])
-  if ([int]$baselineContainers[$key]['nodes'] -ne [int]$actualContainers[$key]['nodes']) {
-    throw "containers[$key].nodes mismatch: baseline $([int]$baselineContainers[$key]['nodes']) vs actual $([int]$actualContainers[$key]['nodes'])."
+  Test-WithinPercent -Name "containers[$key].occupancyRatio" -BaselineValue ([double]$baselineContainers[$key].occupancyRatio) -ActualValue ([double]$actualContainers[$key].occupancyRatio)
+  if ([int]$baselineContainers[$key].nodes -ne [int]$actualContainers[$key].nodes) {
+    throw "containers[$key].nodes mismatch: baseline $([int]$baselineContainers[$key].nodes) vs actual $([int]$actualContainers[$key].nodes)."
   }
 }
 
 $baselineIssues = @{}
-$baselineIssuesList = $baselineObj['issues']
+$baselineIssuesList = $baselineObj.issues
 if ($baselineIssuesList) {
   foreach ($issue in $baselineIssuesList) {
-    $baselineIssues[[string]$issue['code']] = [int]$issue['count']
+    $baselineIssues[[string]$issue.code] = [int]$issue.count
   }
 }
 $actualIssues = @{}
-$actualIssuesList = $summaryObj['issues']
+$actualIssuesList = $summaryObj.issues
 if ($actualIssuesList) {
   foreach ($issue in $actualIssuesList) {
-    $actualIssues[[string]$issue['code']] = [int]$issue['count']
+    $actualIssues[[string]$issue.code] = [int]$issue.count
   }
 }
 
@@ -254,3 +278,22 @@ foreach ($code in $baselineIssues.Keys) {
 }
 
 Write-Host "Render diagnostics stable within +/- 5% (summary written to $summaryPath)."
+
+# Validate diagnostics fail-level gating by forcing a lane warning and expecting exit code 65
+$failEnv = @{
+  VDG_DIAG_LANE_WARN = "0.01"
+  VDG_DIAG_LANE_ERR  = "0.90"
+  VDG_DIAG_PAGE_WARN = "0.01"
+  VDG_DIAG_FAIL_LEVEL = "warning"
+}
+$exit = Invoke-Dotnet -Arguments $renderArgs -Environment $failEnv -AcceptExitCodes @(65, 70)
+if (($exit -ne 65) -and ($exit -ne 70)) {
+  throw "Expected diagnostics fail-level gating to exit with 65 or 70, but received $exit."
+}
+
+$gatedDiag = Get-Content -Raw -Path $diagPath | ConvertFrom-Json
+if (-not ($gatedDiag.issues | Where-Object { $_.code -eq 'LaneCrowding' -or $_.code -eq 'PageCrowding' })) {
+  throw "Diagnostics gating test did not emit expected crowding issues."
+}
+
+Write-Host "Diagnostics fail-level gating verified (render exited with $exit when thresholds were tightened)."

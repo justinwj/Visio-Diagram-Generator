@@ -11,7 +11,7 @@ Status
 - [x] Large synthetic benchmark fixture (`benchmarks/vba/massive_callgraph`) exists with perf harness scripts.
 - [x] Styling defaults for Visio layers/tiers documented (`docs/StylingDefaults.md`) with legend + sample assets staged.
 - [x] Diagnostic threshold policy documented: warn >=85%, error >=95%, page warn 90%, warn-only default with `VDG_DIAG_*` overrides.
-- [ ] Documentation follow-up: large-sheet guidance refresh still pending (render quick start live in `docs/rendering.md`).
+- [x] Wrap-up polish tracked (sample refresh outstanding).
 
 Scope
 - [x] Pipeline integration: bundle `vba2json`, `ir2diagram`, and `VDG.CLI` into ready-to-copy commands (docs + smoke tests).
@@ -41,20 +41,27 @@ Artifacts
 Acceptance Criteria
 - [ ] `dotnet run --project src/VDG.VBA.CLI -- render ...` produces a schema-valid Diagram and `.vsdx` for supported fixtures with no unexpected errors.
   - [x] Verified during Milestone Eight end-to-end smoke runs.
-  - [ ] Reconfirm after styling adjustments.
+  - [x] Reconfirm after styling adjustments (2025-10-17 render + smoke reruns logged via PowerShell 7.5.3).
 - [ ] M5 diagnostics emit lane/page/container crowding summaries; crossing/utilization metrics appear with documented thresholds.
   - [x] Metrics currently emitted and captured in smoke JSON outputs.
   - [x] Threshold policy captured (lane warn >=85%, lane error >=95%, page warn >=90%), warn-only default with `VDG_DIAG_FAIL_LEVEL` opt-in for failures.
 - [ ] Default tiers/styling documented (modules/forms/classes) and reflected in rendered sample diagrams.
   - [x] Baseline tiers documented in `ir2diagram` outputs.
-  - [ ] Update Visio samples to reflect finalized default styling.
-- [ ] CI smoke (VDG_SKIP_RUNNER=1) exercises end-to-end pipeline and validates diagnostics JSON.
+- [ ] Update Visio samples to reflect finalized default styling.
+- [x] CI smoke (VDG_SKIP_RUNNER=1) exercises end-to-end pipeline and validates diagnostics JSON.
   - [x] Existing smoke suite covers render + diagnostics validation.
-  - [ ] Extend assertions for threshold severity handling.
-- [ ] Docs updated with example commands, troubleshooting, and sheet-size guidance for large diagrams.
+  - [x] Extend assertions for threshold severity handling (`tools/render-smoke.ps1` fail-level gating check added 2025-10-17).
+- [x] Docs updated with example commands, troubleshooting, and sheet-size guidance for large diagrams.
   - [x] Initial large-sheet hints and render quick-start published previously.
-  - [ ] Add consolidated single-step pipeline example and troubleshooting refresh.
+  - [x] Add consolidated single-step pipeline example and troubleshooting refresh (see `docs/rendering.md`).
 
 Open Questions
 - Should we add additional tiers/columns for huge callgraphs before shipping the render story, or defer expanded tier groupings to Milestone Ten+?
 - When should CI flip `VDG_DIAG_FAIL_LEVEL` from warn-only to error gating (Milestone Ten validation story)?
+
+Remaining Polish
+- Refresh sample `.vsdx` exports so visuals reflect the final tier palette and legend (pending).
+
+Assessment
+- Feature work is complete; the render pipeline, diagnostics thresholds, and styling defaults are locked.
+- Remaining actions are carried forward into Milestone Ten; milestone nine can be considered closed from a feature perspective (all smoke tests passing under PowerShell 7.5.3).

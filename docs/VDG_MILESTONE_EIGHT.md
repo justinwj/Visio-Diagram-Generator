@@ -1,4 +1,4 @@
-﻿**VDG MILESTONE EIGHT - IR â†’ Diagram Converter (Project Call Graph)**
+﻿**VDG MILESTONE EIGHT - IR->Diagram Converter (Project Call Graph)**
 
 Goal
 - [x] Convert VBA IR v0.1 into Diagram JSON for the project call graph, with stable mapping, lanes by artifact type, and rich metadata to power navigation and diagnostics.
@@ -21,15 +21,18 @@ Scope
 - [x] Unknown dynamic targets: skip edges where `call.target == "~unknown"` (log/debug counter only; revisit in later milestone for stubs/annotations).
 
 **Complexity & Performance**
-- [ ] Performance benchmarks for large projects (500+ procedures).
-  - Planning captured in docs/perf/IR2Diagram_PerfPlan.md (fixture strategy, metrics, harness outline).
-  - Synthetic benchmark fixture (benchmarks/vba/massive_callgraph) and harness refresh (tools/perf-smoke.ps1, tools/benchmarks/New-MassiveCallgraph.ps1).
-- [ ] Memory usage profiling during IR â†’ Diagram conversion.
+- [x] Performance benchmarks for large projects (500+ procedures).
+  - Harness captured in docs/perf/IR2Diagram_PerfPlan.md with presets for regression and large-scale inputs.
+  - Synthetic benchmark fixture (`benchmarks/vba/massive_callgraph`, 24 modules / 600 procedures) with refreshed tooling (`tools/perf-smoke.ps1`, `tools/benchmarks/New-MassiveCallgraph.ps1`).
+  - Latest run (JWJZENBOOK, .NET 8, 2025-10-16): vba2json 2.0s, ir2diagram 2.0s, diagram 449 KB, nodes/edges 600/600.
+- [x] Memory usage profiling during IR->Diagram conversion.
+  - Perf harness records working/private bytes; massive benchmark peaked at ~82 MB working set (Windows PowerShell 5.1).
+  - Follow-up: integrate GC/allocation counters via dotnet-counters when available in CI.
 - [x] Timeout/cancellation strategy for complex call graph analysis.
 
 Out of Scope (this milestone)
 - Advanced semantic grouping beyond `Forms|Classes|Modules`.
-- Additional diagram modes (Module Structure, Module Call Map, Event Wiring, Procedure CFG) - tracked separately.
+- Additional Diagram modes (Module Structure, Module Call Map, Event Wiring, Procedure CFG) - tracked separately.
 - Enrichment of dynamic call inference beyond the current IR surface.
 
 Related Docs & Schemas
@@ -61,7 +64,7 @@ Artifacts
 Integration & Validation
 - [x] Validate generated Diagram JSON against `shared/Config/diagramConfig.schema.json` (schema 1.2).
 - [x] Round-trip sanity: ensure output renders with current `VDG.CLI` (no schema/feature drift).
-- [x] Smoke coverage that M5 diagnostics run cleanly against generated diagrams (lane/page crowding metrics computed as expected).
+- [x] Smoke coverage that M5 diagnostics run cleanly against generated Diagrams (lane/page crowding metrics computed as expected).
   - Covered by ParserSmokeTests.M5DiagnosticsSmoke_EmitsMetricsAndIssues (VDG_SKIP_RUNNER, diagnostics JSON metrics/issues).
 - [x] Establish performance baseline for end-to-end render pipeline (IR â†’ Diagram â†’ VSDX) on medium/large inputs.
 
@@ -75,7 +78,7 @@ Tests
   - If a dynamic call has a concrete `target`, include the edge with `metadata.code.dynamic = true`.
 - [x] Stable ordering for nodes/edges across runs (modules/procedures sorted as specified).
 - [x] Summary metrics printed: total modules/procedures, edges emitted, dynamic calls skipped (and included, when `--include-unknown`).
-- [x] Integration tests: `ir2diagram` output validates against diagram schema; `VDG.CLI` consumes the output without errors.
+- [x] Integration tests: `ir2diagram` output validates against Diagram schema; `VDG.CLI` consumes the output without errors.
 - [x] Malformed IR inputs produce descriptive errors and exit code 65 (invalid input), not crashes.
 
 Acceptance Criteria
@@ -127,6 +130,13 @@ Risks & Mitigations
 
 Next Steps
 - Surface additional modes: Module Call Map, Event Wiring, Procedure CFG (tracked separately) and experiment with semantic grouping within tiers.
+
+
+**Acceptance Criteria**
+- Harness captures perf + memory metrics via `tools/perf-smoke.ps1` for at least 500 procedures.
+- `vba2json` and `ir2diagram` each complete <= 2.5s on the massive benchmark (24 modules / 600 procedures).
+- Working set remains <= 120 MB during callgraph generation on the massive benchmark.
+- Diagram output validates (schema + VDG.CLI run) with diagnostics limited to known crowding notices.
 
 Bad Scenarios (expected behavior)
 ```powershell
@@ -181,6 +191,11 @@ CI Integration
 - Windows render smoke using `VDG_SKIP_RUNNER` to avoid COM, asserts clean exit and stub output.
 - Perf smoke job emits structured metrics to `out/perf/perf.json` and publishes a job summary (timings, node/edge counts, dynamic skip/include counts).
 - Validation matrix runs `ir2diagram` in both default and `--strict-validate` modes; strict mode also asserts a crafted bad IR fails as expected.
+
+
+
+
+
 
 
 

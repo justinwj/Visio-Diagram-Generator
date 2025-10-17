@@ -17,18 +17,22 @@ Scope
   - [ ] Finalize copy/paste command set + CI smoke orchestration in docs.
 - [ ] Diagnostics surfacing: ensure M5 metrics (lane/page/container crowding, crossings, utilization) run on renderer output with actionable thresholds.
   - [x] Metrics emitted during existing smoke runs with documented JSON payloads.
-  - [ ] Define severity thresholds and CLI/Docs messaging for each diagnostic.
+  - [ ] Define severity thresholds and CLI/Docs messaging for each diagnostic (e.g., lane crowding warn >= 85%, error >= 95%).
+  - [ ] Document default CI behavior (warn-only by default; opt-in failure when thresholds exceeded) and surface env overrides (`VDG_DIAG_LANE_WARN`, `VDG_DIAG_LANE_ERR`, etc.).
 - [ ] Styling defaults: lock down callgraph tiers/formatting so rendered diagrams match published guidance.
   - [x] Baseline tiers `["Forms","Classes","Modules"]` established in `ir2diagram` output.
   - [ ] Visio styling pass (lane colors, container padding, legend) and documentation update.
+  - [ ] Styling audit: finalize layer themes (lane color palette, container line weights, font stack), add legend asset placeholder (`docs/render_legend.png`), and validate branding consistency with refreshed sample `.vsdx`.
 
 Artifacts
 - [ ] Update CLI docs with end-to-end render command, large-sheet hints, and diagnostic interpretation.
   - [x] Render quick-start and option descriptions published in Milestone Eight (`docs/VDG_VBA_CLI.md`).
   - [ ] Expand docs with single-step pipeline example and diagnostic interpretation table.
+  - [ ] Publish user-facing render quick start at `docs/rendering.md` covering the IR -> Diagram -> Visio flow.
 - [ ] Add a regression fixture (reuse `benchmarks/vba/massive_callgraph` or trimmed variant) for render smoke + diagnostics assertions.
   - [x] Fixture and perf harness available under `benchmarks/vba/massive_callgraph`.
   - [ ] Add render smoke assertions + diagnostics baseline artifacts.
+  - [ ] Ensure render smoke job captures diagnostic summary counts in `out/perf/render_diagnostics.json` and gate changes when metrics drift more than +/- 5% on identical inputs.
 - [ ] Acceptance criteria + checklist capturing diag expectations and render success cases.
 
 Acceptance Criteria
@@ -49,5 +53,5 @@ Acceptance Criteria
   - [ ] Add consolidated single-step pipeline example and troubleshooting refresh.
 
 Open Questions
-- Should we add additional tiers/columns for huge callgraphs before shipping the render story?
-- Do we gate builds on specific diagnostic thresholds (e.g., fail when lane crowding > 95%) or treat them as warnings?
+- Should we add additional tiers/columns for huge callgraphs before shipping the render story, or defer expanded tier groupings to Milestone Ten+?
+- Do we gate builds on specific diagnostic thresholds (e.g., fail when lane crowding > 95%) or treat them as warnings (with validation deferred to Milestone Ten+)?

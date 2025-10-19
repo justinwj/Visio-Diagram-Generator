@@ -37,6 +37,7 @@ pwsh ./tools/render-fixture.ps1 -Update -Note "reason for refresh"
 - CI calls `render-fixture.ps1` in check mode to block drift.
 - On failure, it uploads the actual artifacts for inspection.
 - Do not hand-edit fixture outputs; always regenerate through the script.
+- Intentional baseline updates are self-reviewed: run `-Update`, confirm ledger + metadata entries, and capture the reason in the note field.
 
 ## Quick Reference
 - Fixture ledger: `plan docs/fixtures_log.md`.
@@ -45,3 +46,5 @@ pwsh ./tools/render-fixture.ps1 -Update -Note "reason for refresh"
 - Metadata snapshot: `plan docs/fixtures_metadata.json` (commit hash + commands).
 
 Keep this guide updated as the fixture matrix or regeneration process evolves.
+
+Baseline golden fixture updates are self-reviewed and logged by the project maintainer. Any changes must be intentional and annotated with a sanitized note via the update script.

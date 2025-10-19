@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Tests.Common;
 using System.Runtime.InteropServices;
 using Xunit;
 
@@ -258,6 +259,51 @@ public class ParserSmokeTests
         var first = Normalize(GenerateIrJson("cross_module_calls"));
         var second = Normalize(GenerateIrJson("cross_module_calls"));
         Assert.Equal(first, second);
+    }
+
+    [Fact]
+    public void FixtureHashesMatchMetadataSnapshot()
+    {
+        var snapshot = FixtureSnapshotVerifier.LoadSnapshot(RepoRoot);
+        Assert.NotEmpty(snapshot);
+
+        foreach (var mode in snapshot)
+        {
+            Assert.Equal(mode.HashIr, FixtureSnapshotVerifier.ComputeSha256(mode.GoldenIrPath));
+            Assert.Equal(mode.HashDiagram, FixtureSnapshotVerifier.ComputeSha256(mode.GoldenDiagramPath));
+            Assert.Equal(mode.HashDiagnostics, FixtureSnapshotVerifier.ComputeSha256(mode.GoldenDiagnosticsPath));
+            Assert.Equal(mode.HashVsdx, FixtureSnapshotVerifier.ComputeSha256(mode.GoldenVsdxPath));
+        }
+    }
+
+    [Fact]
+    public void FixtureMetadataCoversExpectedModeMatrix()
+    {
+        var snapshot = FixtureSnapshotVerifier.LoadSnapshot(RepoRoot);
+        var fixtures = snapshot
+            .GroupBy(m => m.Fixture, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(
+                g => g.Key,
+                g => g.Select(m => m.Mode).ToHashSet(StringComparer.OrdinalIgnoreCase),
+                StringComparer.OrdinalIgnoreCase);
+
+        var expected = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["hello_world"] = new[] { "callgraph" },
+            ["cross_module_calls"] = new[] { "callgraph", "module-structure" },
+            ["events_and_forms"] = new[] { "callgraph" },
+        };
+
+        Assert.Equal(expected.Keys.OrderBy(k => k), fixtures.Keys.OrderBy(k => k));
+
+        foreach (var kvp in expected)
+        {
+            Assert.True(fixtures.TryGetValue(kvp.Key, out var actualModes), $"Metadata missing fixture '{kvp.Key}'.");
+            Assert.Equal(
+                kvp.Value.OrderBy(m => m, StringComparer.OrdinalIgnoreCase),
+                actualModes.OrderBy(m => m, StringComparer.OrdinalIgnoreCase),
+                StringComparer.OrdinalIgnoreCase);
+        }
     }
 
     private static (int ExitCode, string Stdout, string Stderr) RunCliProcess(params string[] args)

@@ -1,7 +1,7 @@
 {
-  "generatedAtUtc": "2025-10-19T22:21:35.2058944Z",
-  "commit": "5bc75d28e0374bed21993d093ed83dfde731db56",
-  "note": "metadata snapshot (depth fix)",
+  "generatedAtUtc": "2025-10-19T22:46:35.2512473Z",
+  "commit": "4a48d21f92902aee0f87109384da1ddfa477e5e4",
+  "note": "ci hash verification setup",
   "fixtures": [
     {
       "name": "cross_module_calls",

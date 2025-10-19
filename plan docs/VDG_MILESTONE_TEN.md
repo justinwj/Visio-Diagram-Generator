@@ -24,7 +24,7 @@ Artifacts / Deliverables
 - [x] Golden outputs (IR, Diagram JSON, diagnostics, `.vsdx` stubs) under `tests/fixtures` and `samples/`.
 - [x] `tools/render-fixture.ps1` helper (check vs regenerate) with hashes plus timestamp ledger (`plan docs/fixtures_log.md`).
 - [x] CI jobs publishing test/fixture artifacts for debugging and linking to the ledger.
-- [ ] Baseline policy note: intentional fixture updates are self-reviewed, documented alongside ledger entries, and CI is trusted to report any drift for manual inspection—no extra peer review gate.
+- [x] Baseline policy note: intentional fixture updates are self-reviewed, documented alongside ledger entries, and CI is trusted to report any drift for manual inspection-no extra peer review gate.
 
 Acceptance Criteria
 - [ ] `dotnet test` passes on PowerShell 7.5.3 with deterministic hashes for key fixtures.

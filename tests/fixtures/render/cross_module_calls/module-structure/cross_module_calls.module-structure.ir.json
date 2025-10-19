@@ -1,0 +1,61 @@
+{
+  "irSchemaVersion": "0.1",
+  "generator": {
+    "name": "vba2json",
+    "version": "0.1.0"
+  },
+  "project": {
+    "name": "cross_module_calls",
+    "modules": [
+      {
+        "id": "Module1",
+        "name": "Module1",
+        "kind": "Module",
+        "file": "Module1.bas",
+        "procedures": [
+          {
+            "id": "Module1.Caller",
+            "name": "Caller",
+            "kind": "Sub",
+            "access": "Public",
+            "locs": {
+              "file": "Module1.bas",
+              "startLine": 4,
+              "endLine": 6
+            },
+            "calls": [
+              {
+                "target": "Module2.Work",
+                "isDynamic": false,
+                "site": {
+                  "module": "Module1",
+                  "file": "Module1.bas",
+                  "line": 5
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "Module2",
+        "name": "Module2",
+        "kind": "Module",
+        "file": "Module2.bas",
+        "procedures": [
+          {
+            "id": "Module2.Work",
+            "name": "Work",
+            "kind": "Sub",
+            "access": "Public",
+            "locs": {
+              "file": "Module2.bas",
+              "startLine": 4,
+              "endLine": 6
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

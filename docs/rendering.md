@@ -28,7 +28,21 @@ dotnet run --project src/VDG.VBA.CLI -- render --in tests/fixtures/vba/hello_wor
 Notes:
 - `--diag-json` writes rich diagnostics payloads (crowding, crossings, utilization). The defaults emit warnings; set `VDG_DIAG_FAIL_LEVEL=error` to gate builds once thresholds are tuned.
 - Diagram styling honours the palette documented in `docs/StylingDefaults.md` with legend asset `docs/render_legend.png`.
-- A styled sample diagram (`samples/vba_callgraph_styled.vsdx`) and its JSON counterpart (`samples/vba_callgraph.diagram.json`) are kept current with the defaults—regenerate via the commands above whenever styling changes.
+- A styled sample diagram (`samples/vba_callgraph_styled.vsdx`) and its JSON counterpart (`samples/vba_callgraph.diagram.json`) are kept current with the defaults-regenerate via the commands above whenever styling changes.
+
+## Fixture Baselines
+
+End-to-end fixture outputs (`hello_world`, `cross_module_calls`, `events_and_forms`) are tracked under `tests/fixtures/render/` with deterministic hashes. Use `tools/render-fixture.ps1` to verify or refresh the baselines:
+
+```powershell
+# Check hashes against golden baselines (fails on drift)
+pwsh ./tools/render-fixture.ps1
+
+# Regenerate goldens after an intentional behavioural change
+pwsh ./tools/render-fixture.ps1 -Update -Note "reason for refresh"
+```
+
+The script writes regenerated artifacts to `out/fixtures/`, compares SHA256 hashes, and appends ledger entries to `plan docs/fixtures_log.md` when `-Update` is used. See `docs/FixtureGuide.md` for the full regeneration and troubleshooting workflow.
 
 ## Diagnostics Policy Snapshot
 

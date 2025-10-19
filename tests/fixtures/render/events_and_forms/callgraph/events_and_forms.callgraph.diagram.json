@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "1.2",
+  "layout": {
+    "tiers": [
+      "Forms",
+      "Sheets",
+      "Classes",
+      "Modules"
+    ],
+    "spacing": {
+      "horizontal": 1.2,
+      "vertical": 0.6
+    },
+    "page": {
+      "heightIn": 8.5,
+      "marginIn": 0.5
+    },
+    "containers": {
+      "paddingIn": 0,
+      "cornerIn": 0.12
+    }
+  },
+  "nodes": [
+    {
+      "id": "Form1.Command1_Click",
+      "label": "Form1.Command1_Click",
+      "tier": "Forms",
+      "containerId": "Form1",
+      "metadata": {
+        "code.module": "Form1",
+        "code.proc": "Command1_Click",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Form1.frm",
+        "code.locs.startLine": "8",
+        "code.locs.endLine": "10"
+      }
+    }
+  ],
+  "edges": [],
+  "containers": [
+    {
+      "id": "Form1",
+      "label": "Form1",
+      "tier": "Forms"
+    }
+  ]
+}

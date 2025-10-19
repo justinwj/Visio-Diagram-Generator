@@ -1,0 +1,27 @@
+{
+  "Version": "1.0",
+  "Metrics": {
+    "ConnectorCount": 0,
+    "StraightLineCrossings": 0,
+    "PageHeight": 8.5,
+    "UsableHeight": 7.5,
+    "LanePages": [
+      {
+        "Tier": "Modules",
+        "Page": 1,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      }
+    ],
+    "Containers": [
+      {
+        "Id": "Module1",
+        "Tier": "Modules",
+        "Page": 1,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      }
+    ]
+  },
+  "Issues": []
+}

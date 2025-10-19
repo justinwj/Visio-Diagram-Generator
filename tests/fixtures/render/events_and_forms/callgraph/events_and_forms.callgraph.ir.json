@@ -1,0 +1,31 @@
+{
+  "irSchemaVersion": "0.1",
+  "generator": {
+    "name": "vba2json",
+    "version": "0.1.0"
+  },
+  "project": {
+    "name": "events_and_forms",
+    "modules": [
+      {
+        "id": "Form1",
+        "name": "Form1",
+        "kind": "Form",
+        "file": "Form1.frm",
+        "procedures": [
+          {
+            "id": "Form1.Command1_Click",
+            "name": "Command1_Click",
+            "kind": "Sub",
+            "access": "Private",
+            "locs": {
+              "file": "Form1.frm",
+              "startLine": 8,
+              "endLine": 10
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

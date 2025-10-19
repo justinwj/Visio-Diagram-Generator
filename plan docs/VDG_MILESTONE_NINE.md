@@ -60,8 +60,8 @@ Open Questions
 - When should CI flip `VDG_DIAG_FAIL_LEVEL` from warn-only to error gating (Milestone Ten validation story)?
 
 Remaining Polish
-- Refresh sample `.vsdx` exports so visuals reflect the final tier palette and legend (pending).
+- Refresh sample `.vsdx` exports so visuals reflect the final tier palette and legend (pending; palette automation deferred to Milestone Twelve).
 
 Assessment
 - Feature work is complete; the render pipeline, diagnostics thresholds, and styling defaults are locked.
-- Remaining actions are carried forward into Milestone Ten; milestone nine can be considered closed from a feature perspective (all smoke tests passing under PowerShell 7.5.3).
+- Remaining actions are carried forward into Milestone Ten (fixtures/tests) and Milestone Twelve (palette automation); milestone nine can be considered closed from a feature perspective (all smoke tests passing under PowerShell 7.5.3).

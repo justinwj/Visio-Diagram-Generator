@@ -31,13 +31,18 @@ $fixtureMatrix = @(
     Name   = 'events_and_forms'
     Source = 'tests/fixtures/vba/events_and_forms'
     Modes  = @('callgraph')
+  },
+  [pscustomobject]@{
+    Name   = 'invSys'
+    Source = 'samples/invSys'
+    Modes  = @('callgraph')
   }
 )
 
 if ($FixtureName -and $FixtureName.Length -gt 0) {
   $selectedNames = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
   foreach ($name in $FixtureName) { $null = $selectedNames.Add($name) }
-  $fixtureMatrix = $fixtureMatrix | Where-Object { $selectedNames.Contains($_.Name) }
+  $fixtureMatrix = @($fixtureMatrix | Where-Object { $selectedNames.Contains($_.Name) })
   if ($fixtureMatrix.Count -eq 0) {
     throw "No fixtures matched selection: $FixtureName"
   }

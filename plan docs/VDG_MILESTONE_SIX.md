@@ -1,7 +1,7 @@
 **VDG MILESTONE SIX — Define VBA IR + Versioning**
 
 Goal
-- [x] Produce a documented, versioned, and test‑validated JSON [IR](docs/Glossary.md#ir) for VBA projects that downstream tools can convert into diagram JSON and render via [VDG](docs/Glossary.md#vdg).
+- [x] Produce a documented, versioned, and test‑validated JSON [IR](/docs/Glossary.md#ir) for VBA projects that downstream tools can convert into diagram JSON and render via [VDG](/docs/Glossary.md#vdg).
 
 Scope
 - [x] IR design and JSON Schema (v0.1).
@@ -75,7 +75,7 @@ Acceptance Criteria
 - [x] Three fixtures produce IRs that validate (via `tools/ir-validate.ps1`).
 - [x] IR contains sufficient data to draw a project call graph with VDG.
 - [x] Versioning policy documented; tools tolerate unknown fields.
-- [x] [CLI](docs/Glossary.md#cli) can render call graph from sources in one step (`render`).
+- [x] [CLI](/docs/Glossary.md#cli) can render call graph from sources in one step (`render`).
 
 Work Breakdown
 1) Spec & Schema
@@ -109,7 +109,7 @@ Work Breakdown
 6) Scaffolds (optional within this milestone)
 - [x] Add `tools/vba2json.ps1` skeleton (signatures/calls, not a full parser).
 - [x] Add `tools/vba-ir2diagram.ps1` skeleton (project call graph mapping).
-- [x] Wire a sample end-to-end doc snippet ([vba2json](docs/Glossary.md#vba2json) -> ir-validate -> ir2diagram -> [VDG.CLI](docs/Glossary.md#cli)).
+- [x] Wire a sample end-to-end doc snippet ([vba2json](/docs/Glossary.md#vba2json) -> ir-validate -> ir2diagram -> [VDG.CLI](/docs/Glossary.md#cli)).
 
 ### Sample End-to-End Workflow
 
@@ -119,7 +119,7 @@ This walkthrough uses the committed fixtures to demonstrate the complete pipelin
    ```powershell
    dotnet run --project src/VDG.VBA.CLI -- vba2json --in tests/fixtures/vba/cross_module_calls --out out/tmp/cross.ir.json
    ```
-   Generates `out/tmp/cross.ir.json`. The tool surface is described in [vba2json](docs/Glossary.md#vba2json).
+   Generates `out/tmp/cross.ir.json`. The tool surface is described in [vba2json](/docs/Glossary.md#vba2json).
 
 2. **Validate the IR against the schema**
    ```powershell
@@ -131,13 +131,13 @@ This walkthrough uses the committed fixtures to demonstrate the complete pipelin
    ```powershell
    dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in out/tmp/cross.ir.json --out out/tmp/cross.diagram.json --mode callgraph
    ```
-   Produces `out/tmp/cross.diagram.json`, ready for rendering. See [VDG CLI](docs/Glossary.md#cli) for additional modes and metadata.
+   Produces `out/tmp/cross.diagram.json`, ready for rendering. See [VDG CLI](/docs/Glossary.md#cli) for additional modes and metadata.
 
 4. **Render or post-process the diagram**
    ```powershell
    dotnet run --project src/VDG.CLI -- out/tmp/cross.diagram.json out/tmp/cross.vsdx
    ```
-   This saves a Visio file at `out/tmp/cross.vsdx` that can be opened directly or further automated with [VDG CLI](docs/Glossary.md#cli).
+   This saves a Visio file at `out/tmp/cross.vsdx` that can be opened directly or further automated with [VDG CLI](/docs/Glossary.md#cli).
 
 For additional reference inputs, consult the golden IR fixtures under `tests/fixtures/ir/` and the schema contract in `shared/Config/vbaIr.schema.json`.
 

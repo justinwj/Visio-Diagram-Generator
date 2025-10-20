@@ -1,7 +1,7 @@
-# VDG VBA Intermediate Representation ([IR](docs/Glossary.md#ir)) v0.1
+# VDG VBA Intermediate Representation ([IR](/docs/Glossary.md#ir)) v0.1
 
 Purpose
-- A small, stable JSON format that captures the structure of a VBA project (modules, procedures, and calls) so downstream tools can convert it to diagram JSON and render via [VDG](docs/Glossary.md#vdg).
+- A small, stable JSON format that captures the structure of a VBA project (modules, procedures, and calls) so downstream tools can convert it to diagram JSON and render via [VDG](/docs/Glossary.md#vdg).
 
 Versioning
 - `irSchemaVersion`: `0.1` (SemVer `major.minor`).
@@ -133,7 +133,7 @@ Dynamic calls and unknown targets
 
 Future Extensions
 - Additional call metadata (arity, inferred targets for dynamics), attributes for forms/classes, module references.
-- Additional diagram modes: Module Structure, per-procedure [CFG](docs/Glossary.md#cfg), Event Wiring.
+- Additional diagram modes: Module Structure, per-procedure [CFG](/docs/Glossary.md#cfg), Event Wiring.
 
 FAQ
 

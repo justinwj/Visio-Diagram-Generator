@@ -29,3 +29,9 @@ Repository script that walks exported VBA sources and emits the IR JSON payload 
 ### vba-ir2diagram
 Repository script that maps IR JSON into diagram JSON consumable by `VDG.CLI`.
 
+### SLOC
+Source Lines of Code; counts executable lines in a procedure or module (excluding blank and comment-only lines). Used to size features and rank diagram nodes.
+
+### Cyclomatic Complexity
+Measures the number of independent execution paths through a procedure. Computed as `edges - nodes + 2` (approximated from branching keywords in the exporter) and used to signal complexity in IR and diagram hints.
+

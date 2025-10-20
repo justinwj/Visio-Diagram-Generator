@@ -35,7 +35,7 @@ $fixtureMatrix = @(
   [pscustomobject]@{
     Name   = 'invSys'
     Source = 'samples/invSys'
-    Modes  = @('callgraph')
+    Modes  = @('callgraph', 'module-structure', 'event-wiring', 'proc-cfg')
   }
 )
 
@@ -250,7 +250,7 @@ foreach ($fixtureEntry in $fixtureMatrix) {
       }
     }
 
-    Invoke-Dotnet -Arguments @('run', '--project', 'src/VDG.VBA.CLI', '--', 'vba2json', '--in', $sourcePath, '--out', $irPath)
+    Invoke-Dotnet -Arguments @('run', '--project', 'src/VDG.VBA.CLI', '--', 'vba2json', '--in', $sourcePath, '--out', $irPath, '--infer-metrics')
     Invoke-Dotnet -Arguments @('run', '--project', 'src/VDG.VBA.CLI', '--', 'ir2diagram', '--in', $irPath, '--out', $diagramPath, '--mode', $mode)
 
     $previousSkip = [System.Environment]::GetEnvironmentVariable('VDG_SKIP_RUNNER', [System.EnvironmentVariableTarget]::Process)

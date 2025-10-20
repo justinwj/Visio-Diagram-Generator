@@ -33,7 +33,13 @@
         "code.access": "Public",
         "code.locs.file": "Module1.bas",
         "code.locs.startLine": "4",
-        "code.locs.endLine": "6"
+        "code.locs.endLine": "6",
+        "code.source.file": "Module1.bas",
+        "code.source.module": "Module1",
+        "code.source.line": "4",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
       }
     },
     {
@@ -48,7 +54,13 @@
         "code.access": "Public",
         "code.locs.file": "Module2.bas",
         "code.locs.startLine": "4",
-        "code.locs.endLine": "6"
+        "code.locs.endLine": "6",
+        "code.source.file": "Module2.bas",
+        "code.source.module": "Module2",
+        "code.source.line": "4",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "1",
+        "code.metrics.cyclomatic": "1"
       }
     }
   ],
@@ -57,12 +69,34 @@
     {
       "id": "Module1",
       "label": "Module1",
-      "tier": "Modules"
+      "tier": "Modules",
+      "metadata": {
+        "code.module": "Module1",
+        "code.module.kind": "Module",
+        "code.file": "Module1.bas",
+        "code.source.file": "Module1.bas",
+        "code.source.module": "Module1",
+        "code.source.line": "1",
+        "code.metrics.lines": "7",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
     },
     {
       "id": "Module2",
       "label": "Module2",
-      "tier": "Modules"
+      "tier": "Modules",
+      "metadata": {
+        "code.module": "Module2",
+        "code.module.kind": "Module",
+        "code.file": "Module2.bas",
+        "code.source.file": "Module2.bas",
+        "code.source.module": "Module2",
+        "code.source.line": "1",
+        "code.metrics.lines": "7",
+        "code.metrics.sloc": "1",
+        "code.metrics.cyclomatic": "1"
+      }
     }
   ]
 }

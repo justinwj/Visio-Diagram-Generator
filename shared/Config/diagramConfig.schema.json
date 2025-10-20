@@ -263,7 +263,8 @@
           },
           "description": "Optional explicit bounds in layout coordinates (inches). If omitted, bounds are computed from member nodes."
         },
-        "style": { "$ref": "#/$defs/style" }
+        "style": { "$ref": "#/$defs/style" },
+        "metadata": { "$ref": "#/$defs/metadata" }
       },
       "description": "Explicit sub-container definition (milestone 4)."
     }

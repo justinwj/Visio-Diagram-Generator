@@ -4,7 +4,7 @@ Purpose
 - Reusable CLI for converting VBA sources → IR JSON (vba2json) and IR JSON → Diagram JSON (ir2diagram), suitable for automation and piping into `VDG.CLI`.
 
 Commands
-- vba2json: Parse exported VBA files and emit IR JSON v0.1
+- vba2json: Parse exported VBA files and emit IR JSON v0.2
   - Usage:
     - `dotnet run --project src/VDG.VBA.CLI -- vba2json --in <folder> [--glob <pattern> ...] [--out <ir.json>] [--project-name <name>] [--root <path>] [--infer-metrics]`
   - Inputs: folder containing `.bas/.cls/.frm`; optional glob patterns limit which files are included
@@ -146,3 +146,4 @@ dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in tests/fixtures/ir/invali
   ```
 - CI guidance: defaults keep pipelines informational; opt into failure only once thresholds are tuned.
 - Smoke regression: `tools/render-smoke.ps1` exercises the entire pipeline, writes `out/perf/render_diagnostics.json`, and compares against `tests/baselines/render_diagnostics.json` with a ±5% tolerance for identical fixtures. Use `-UpdateBaseline` after intentional styling/layout changes.
+

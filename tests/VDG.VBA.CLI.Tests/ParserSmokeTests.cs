@@ -49,7 +49,7 @@ public class ParserSmokeTests
         try
         {
             File.Delete(ir); File.Delete(dj);
-            RunCli("vba2json", "--in", "tests/fixtures/vba/cross_module_calls", "--out", ir);
+            RunCli("vba2json", "--in", "tests/fixtures/vba/cross_module_calls", "--out", ir, "--infer-metrics");
             RunCli("ir2diagram", "--in", ir, "--out", dj, "--mode", "callgraph");
             using var diagram = JsonDocument.Parse(File.ReadAllText(dj));
             var root = diagram.RootElement;
@@ -61,6 +61,12 @@ public class ParserSmokeTests
             Assert.Equal("Module1.bas", callerMeta.GetProperty("code.locs.file").GetString());
             Assert.Equal("4", callerMeta.GetProperty("code.locs.startLine").GetString());
             Assert.Equal("6", callerMeta.GetProperty("code.locs.endLine").GetString());
+            Assert.Equal("Module1.bas", callerMeta.GetProperty("code.source.file").GetString());
+            Assert.Equal("Module1", callerMeta.GetProperty("code.source.module").GetString());
+            Assert.Equal("4", callerMeta.GetProperty("code.source.line").GetString());
+            Assert.Equal("3", callerMeta.GetProperty("code.metrics.lines").GetString());
+            Assert.Equal("2", callerMeta.GetProperty("code.metrics.sloc").GetString());
+            Assert.Equal("1", callerMeta.GetProperty("code.metrics.cyclomatic").GetString());
 
             var edges = root.GetProperty("edges").EnumerateArray().ToList();
             var callEdge = edges.Single(e => e.GetProperty("sourceId").GetString() == "Module1.Caller" &&
@@ -96,15 +102,29 @@ public class ParserSmokeTests
     {
         using var diagram = GenerateDiagram("events_and_forms", "event-wiring");
         var nodes = diagram.RootElement.GetProperty("nodes").EnumerateArray().ToList();
-        Assert.Contains(nodes, n => n.GetProperty("id").GetString() == "Form1.Command1");
-        Assert.Contains(nodes, n => n.GetProperty("id").GetString() == "Form1.Command1_Click");
+        var controlNode = nodes.Single(n => n.GetProperty("id").GetString() == "Form1.Command1");
+        var handlerNode = nodes.Single(n => n.GetProperty("id").GetString() == "Form1.Command1_Click");
+
+        var controlMeta = controlNode.GetProperty("metadata");
+        Assert.Equal("Form1", controlMeta.GetProperty("code.module").GetString());
+        Assert.Equal("Command1", controlMeta.GetProperty("code.control").GetString());
+
+        var handlerMeta = handlerNode.GetProperty("metadata");
+        Assert.Equal("Form1", handlerMeta.GetProperty("code.module").GetString());
+        Assert.Equal("Command1_Click", handlerMeta.GetProperty("code.proc").GetString());
+        Assert.Equal("Form1.frm", handlerMeta.GetProperty("code.source.file").GetString());
+        Assert.Equal("Form1", handlerMeta.GetProperty("code.source.module").GetString());
+        Assert.Equal("8", handlerMeta.GetProperty("code.source.line").GetString());
 
         var edge = diagram.RootElement.GetProperty("edges").EnumerateArray()
             .FirstOrDefault(e => e.GetProperty("sourceId").GetString() == "Form1.Command1" &&
                                  e.GetProperty("targetId").GetString() == "Form1.Command1_Click");
         Assert.NotEqual(JsonValueKind.Undefined, edge.ValueKind);
         Assert.Equal("Click", edge.GetProperty("label").GetString());
-        Assert.Equal("event", edge.GetProperty("metadata").GetProperty("code.edge").GetString());
+        var edgeMeta = edge.GetProperty("metadata");
+        Assert.Equal("event", edgeMeta.GetProperty("code.edge").GetString());
+        Assert.Equal("Form1.frm", edgeMeta.GetProperty("code.target.file").GetString());
+        Assert.Equal("8", edgeMeta.GetProperty("code.target.line").GetString());
     }
 
     [Fact]
@@ -232,13 +252,50 @@ public class ParserSmokeTests
     [Fact]
     public void Vba2JsonMatchesGoldenFixture()
     {
-        var actual = JsonNode.Parse(GenerateIrJson("hello_world"));
+        var actual = JsonNode.Parse(GenerateIrJson("hello_world", "--infer-metrics"));
         var expectedPath = Path.Combine(RepoRoot, "tests", "fixtures", "ir", "hello_world.json");
         var expected = JsonNode.Parse(File.ReadAllText(expectedPath));
 
         Assert.NotNull(actual);
         Assert.NotNull(expected);
         Assert.True(JsonNode.DeepEquals(expected, actual!), "Generated IR diverges from golden fixture for hello_world.");
+    }
+
+    [Fact]
+    public void HyperlinkSummaryListsProceduresAndHandlers()
+    {
+        var fixtures = new[]
+        {
+            new { Name = "cross_module_calls", Mode = "callgraph", ExpectedEntries = 2, ExpectedRows = new[] { (Name: "Caller", Module: "Module1"), (Name: "Work", Module: "Module2") } },
+            new { Name = "events_and_forms", Mode = "event-wiring", ExpectedEntries = 1, ExpectedRows = new[] { (Name: "Command1_Click", Module: "Form1") } }
+        };
+
+        foreach (var fixture in fixtures)
+        {
+            var irPath = Path.Combine(Path.GetTempPath(), $"vdg_ir_{Guid.NewGuid():N}.json");
+            var diagPath = Path.Combine(Path.GetTempPath(), $"vdg_diag_{Guid.NewGuid():N}.json");
+            var summaryPath = Path.Combine(Path.GetTempPath(), $"vdg_summary_{Guid.NewGuid():N}.csv");
+            try
+            {
+                RunCli("vba2json", "--in", Path.Combine("tests", "fixtures", "vba", fixture.Name), "--out", irPath, "--infer-metrics");
+                var output = RunCli("ir2diagram", "--in", irPath, "--out", diagPath, "--mode", fixture.Mode, "--summary-log", summaryPath);
+                Assert.Contains("Hyperlink Summary", output, StringComparison.OrdinalIgnoreCase);
+                Assert.True(File.Exists(summaryPath), $"Missing hyperlink summary for fixture '{fixture.Name}'.");
+                var lines = File.ReadAllLines(summaryPath).Where(l => !string.IsNullOrWhiteSpace(l)).ToList();
+                Assert.True(lines.Count == fixture.ExpectedEntries + 1, $"Expected {fixture.ExpectedEntries} entries for '{fixture.Name}'.");
+                var rows = lines.Skip(1).Select(line => line.Split(',')).ToList();
+                foreach (var expected in fixture.ExpectedRows)
+                {
+                    Assert.Contains(rows, row => row.Length >= 3 && row[0].Equals(expected.Name, StringComparison.OrdinalIgnoreCase) && row[2].Equals(expected.Module, StringComparison.OrdinalIgnoreCase));
+                }
+            }
+            finally
+            {
+                if (File.Exists(irPath)) File.Delete(irPath);
+                if (File.Exists(diagPath)) File.Delete(diagPath);
+                if (File.Exists(summaryPath)) File.Delete(summaryPath);
+            }
+        }
     }
 
     [Fact]
@@ -256,8 +313,8 @@ public class ParserSmokeTests
     public void Vba2JsonOutputIsDeterministic()
     {
         static string Normalize(string text) => text.Replace("\r\n", "\n");
-        var first = Normalize(GenerateIrJson("cross_module_calls"));
-        var second = Normalize(GenerateIrJson("cross_module_calls"));
+        var first = Normalize(GenerateIrJson("cross_module_calls", "--infer-metrics"));
+        var second = Normalize(GenerateIrJson("cross_module_calls", "--infer-metrics"));
         Assert.Equal(first, second);
     }
 
@@ -292,6 +349,7 @@ public class ParserSmokeTests
             ["hello_world"] = new[] { "callgraph" },
             ["cross_module_calls"] = new[] { "callgraph", "module-structure" },
             ["events_and_forms"] = new[] { "callgraph" },
+            ["invSys"] = new[] { "callgraph", "module-structure", "event-wiring", "proc-cfg" },
         };
 
         Assert.Equal(expected.Keys.OrderBy(k => k), fixtures.Keys.OrderBy(k => k));
@@ -511,7 +569,7 @@ public class ParserSmokeTests
         var empty = Path.Combine(Path.GetTempPath(), $"vdg_empty_{Guid.NewGuid():N}.json");
         try
         {
-            var content = "{\"irSchemaVersion\":\"0.1\",\"project\":{\"name\":\"X\",\"modules\":[]}}";
+            var content = "{\"irSchemaVersion\":\"0.2\",\"project\":{\"name\":\"X\",\"modules\":[]}}";
             File.WriteAllText(empty, content);
             var (code, _out, err) = RunCliProcess("ir2diagram", "--in", empty, "--out", empty + ".out.json", "--mode", "callgraph");
             Assert.Equal(65, code);
@@ -540,7 +598,7 @@ public class ParserSmokeTests
         try
         {
             File.Delete(ir); File.Delete(dj);
-            RunCli("vba2json", "--in", Path.Combine("tests", "fixtures", "vba", "cross_module_calls"), "--out", ir);
+            RunCli("vba2json", "--in", Path.Combine("tests", "fixtures", "vba", "cross_module_calls"), "--out", ir, "--infer-metrics");
             var (code, _out, err) = RunCliProcess("ir2diagram", "--in", ir, "--out", dj, "--mode", "callgraph", "--strict-validate");
             Assert.Equal(0, code);
         }
@@ -556,7 +614,7 @@ public class ParserSmokeTests
             File.Delete(dj);
             var invalidRoot = new JsonObject
             {
-                ["irSchemaVersion"] = "0.1",
+                ["irSchemaVersion"] = "0.2",
                 ["project"] = new JsonObject
                 {
                     ["name"] = "Bad",
@@ -602,13 +660,20 @@ public class ParserSmokeTests
     [Fact]
     public void CallgraphDiagram_ValidatesAgainst_DiagramSchema()
     {
-        var ir = Path.GetTempFileName(); var dj = Path.GetTempFileName();
+        var ir = Path.GetTempFileName(); var dj = Path.GetTempFileName(); var summary = Path.Combine(Path.GetTempPath(), $"vdg_summary_{Guid.NewGuid():N}.csv");
         try
         {
             File.Delete(ir); File.Delete(dj);
             // Generate IR and diagram
-            RunCli("vba2json", "--in", Path.Combine("tests", "fixtures", "vba", "cross_module_calls"), "--out", ir);
-            RunCli("ir2diagram", "--in", ir, "--out", dj, "--mode", "callgraph");
+            RunCli("vba2json", "--in", Path.Combine("tests", "fixtures", "vba", "cross_module_calls"), "--out", ir, "--infer-metrics");
+            var output = RunCli("ir2diagram", "--in", ir, "--out", dj, "--mode", "callgraph", "--summary-log", summary);
+            Assert.Contains("Hyperlink Summary", output, StringComparison.OrdinalIgnoreCase);
+            Assert.True(File.Exists(summary), "Expected hyperlink summary CSV to be produced.");
+            var summaryLines = File.ReadAllLines(summary).Where(l => !string.IsNullOrWhiteSpace(l)).ToArray();
+            Assert.True(summaryLines.Length == 3, "Expected header plus two procedure rows in hyperlink summary.");
+            var dataRows = summaryLines.Skip(1).Select(line => line.Split(',')).ToList();
+            Assert.Contains(dataRows, row => row.Length >= 3 && row[0].Equals("Caller", StringComparison.OrdinalIgnoreCase) && row[2].Equals("Module1", StringComparison.OrdinalIgnoreCase));
+            Assert.Contains(dataRows, row => row.Length >= 3 && row[0].Equals("Work", StringComparison.OrdinalIgnoreCase) && row[2].Equals("Module2", StringComparison.OrdinalIgnoreCase));
 
             // Run the diagram schema validator PowerShell script
             var scriptPath = Path.Combine(RepoRoot, "tools", "diagram-validate.ps1");
@@ -618,7 +683,12 @@ public class ParserSmokeTests
             Assert.True(exitCode == 0, $"diagram-validate failed: {stderr}\n{stdout}");
             Assert.Contains("Diagram OK:", stdout);
         }
-        finally { if (File.Exists(ir)) File.Delete(ir); if (File.Exists(dj)) File.Delete(dj); }
+        finally
+        {
+            if (File.Exists(ir)) File.Delete(ir);
+            if (File.Exists(dj)) File.Delete(dj);
+            if (File.Exists(summary)) File.Delete(summary);
+        }
     }
 
     [Fact]
@@ -632,7 +702,7 @@ public class ParserSmokeTests
         try
         {
             var fixtureDir = Path.Combine("tests", "fixtures", "vba", "cross_module_calls");
-            RunCli("vba2json", "--in", fixtureDir, "--out", irPath);
+            RunCli("vba2json", "--in", fixtureDir, "--out", irPath, "--infer-metrics");
             RunCli("ir2diagram", "--in", irPath, "--out", diagPath, "--mode", "callgraph");
 
             var sampleNode = JsonNode.Parse(File.ReadAllText(samplePath))!;
@@ -906,7 +976,7 @@ public class ParserSmokeTests
         using var ir = GenerateIrDocument("events_and_forms");
         var root = ir.RootElement;
         Assert.True(root.TryGetProperty("irSchemaVersion", out var version));
-        Assert.Equal("0.1", version.GetString());
+        Assert.Equal("0.2", version.GetString());
 
         var project = root.GetProperty("project");
         Assert.False(string.IsNullOrWhiteSpace(project.GetProperty("name").GetString()));
@@ -1018,7 +1088,7 @@ public class ParserSmokeTests
     private static void ValidateIrSchema(JsonElement root, string fixtureName)
     {
         Assert.Equal(JsonValueKind.Object, root.ValueKind);
-        Assert.Equal("0.1", RequireString(root, "irSchemaVersion", fixtureName));
+        Assert.Equal("0.2", RequireString(root, "irSchemaVersion", fixtureName));
 
         if (root.TryGetProperty("generator", out var generator))
         {
@@ -1309,4 +1379,8 @@ public class ParserSmokeTests
         throw new InvalidOperationException("Unable to locate repository root.");
     }
 }
+
+
+
+
 

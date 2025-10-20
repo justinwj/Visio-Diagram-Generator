@@ -94,6 +94,7 @@ function Parse-Procedures([string[]]$lines, [string]$moduleName, [string]$filePa
       static    = $isStatic
       params    = @()
       locs      = @{ file=$filePath; startLine=$start; endLine=$end }
+      source    = @{ file=$filePath; module=$moduleName; line=$start }
       calls     = $calls
       metrics   = @{
         lines       = ($end - $start + 1)
@@ -136,8 +137,10 @@ foreach ($f in $files) {
     name = $modName
     kind = $kind
     file = $f.FullName.Replace($root, '').TrimStart('\','/')
+    source = @{ file = $f.FullName.Replace($root, '').TrimStart('\','/'); module = $modName; line = 1 }
     metrics = @{
       procedures = $procs.Count
+      lines = $lines.Length
       sloc = [int]($moduleSloc ?? 0)
       cyclomatic = [int]($moduleCyclomatic ?? 0)
     }
@@ -147,8 +150,8 @@ foreach ($f in $files) {
 
 $projectName = Split-Path -Leaf $root
 $obj = [ordered]@{
-  irSchemaVersion = '0.1'
-  generator = @{ name = 'vba2json'; version = '0.1.0' }
+  irSchemaVersion = '0.2'
+  generator = @{ name = 'vba2json'; version = '0.2.0' }
   project = @{ name = $projectName; modules = $modules }
 }
 

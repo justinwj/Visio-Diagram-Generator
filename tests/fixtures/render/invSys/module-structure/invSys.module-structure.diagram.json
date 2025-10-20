@@ -1,0 +1,5461 @@
+{
+  "schemaVersion": "1.2",
+  "layout": {
+    "tiers": [
+      "Forms",
+      "Sheets",
+      "Classes",
+      "Modules"
+    ],
+    "spacing": {
+      "horizontal": 1.2,
+      "vertical": 0.6
+    },
+    "page": {
+      "heightIn": 8.5,
+      "marginIn": 0.5
+    },
+    "containers": {
+      "paddingIn": 0,
+      "cornerIn": 0.12
+    }
+  },
+  "nodes": [
+    {
+      "id": "clsBulkSnapshot.class_initialize",
+      "label": "class_initialize",
+      "tier": "Classes",
+      "containerId": "clsBulkSnapshot",
+      "metadata": {
+        "code.module": "clsBulkSnapshot",
+        "code.proc": "class_initialize",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Class Modules/clsBulkSnapshot.cls",
+        "code.locs.startLine": "20",
+        "code.locs.endLine": "22",
+        "code.source.file": "Class Modules/clsBulkSnapshot.cls",
+        "code.source.module": "clsBulkSnapshot",
+        "code.source.line": "20",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "frmAdminControls.btnCreateDeleteUser_Click",
+      "label": "btnCreateDeleteUser_Click",
+      "tier": "Forms",
+      "containerId": "frmAdminControls",
+      "metadata": {
+        "code.module": "frmAdminControls",
+        "code.proc": "btnCreateDeleteUser_Click",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmAdminControls.frm",
+        "code.locs.startLine": "16",
+        "code.locs.endLine": "18",
+        "code.source.file": "Forms/frmAdminControls.frm",
+        "code.source.module": "frmAdminControls",
+        "code.source.line": "16",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "frmAdminControls.btnEditUser_Click",
+      "label": "btnEditUser_Click",
+      "tier": "Forms",
+      "containerId": "frmAdminControls",
+      "metadata": {
+        "code.module": "frmAdminControls",
+        "code.proc": "btnEditUser_Click",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmAdminControls.frm",
+        "code.locs.startLine": "19",
+        "code.locs.endLine": "21",
+        "code.source.file": "Forms/frmAdminControls.frm",
+        "code.source.module": "frmAdminControls",
+        "code.source.line": "19",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "frmCreateDeleteUser.btnCreateUser_Click",
+      "label": "btnCreateUser_Click",
+      "tier": "Forms",
+      "containerId": "frmCreateDeleteUser",
+      "metadata": {
+        "code.module": "frmCreateDeleteUser",
+        "code.proc": "btnCreateUser_Click",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmCreateDeleteUser.frm",
+        "code.locs.startLine": "20",
+        "code.locs.endLine": "72",
+        "code.source.file": "Forms/frmCreateDeleteUser.frm",
+        "code.source.module": "frmCreateDeleteUser",
+        "code.source.line": "20",
+        "code.metrics.lines": "53",
+        "code.metrics.sloc": "44",
+        "code.metrics.cyclomatic": "7"
+      }
+    },
+    {
+      "id": "frmCreateDeleteUser.btnDeleteUser_Click",
+      "label": "btnDeleteUser_Click",
+      "tier": "Forms",
+      "containerId": "frmCreateDeleteUser",
+      "metadata": {
+        "code.module": "frmCreateDeleteUser",
+        "code.proc": "btnDeleteUser_Click",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmCreateDeleteUser.frm",
+        "code.locs.startLine": "80",
+        "code.locs.endLine": "107",
+        "code.source.file": "Forms/frmCreateDeleteUser.frm",
+        "code.source.module": "frmCreateDeleteUser",
+        "code.source.line": "80",
+        "code.metrics.lines": "28",
+        "code.metrics.sloc": "21",
+        "code.metrics.cyclomatic": "5"
+      }
+    },
+    {
+      "id": "frmCreateDeleteUser.btnRandomPIN_Click",
+      "label": "btnRandomPIN_Click",
+      "tier": "Forms",
+      "containerId": "frmCreateDeleteUser",
+      "metadata": {
+        "code.module": "frmCreateDeleteUser",
+        "code.proc": "btnRandomPIN_Click",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmCreateDeleteUser.frm",
+        "code.locs.startLine": "73",
+        "code.locs.endLine": "79",
+        "code.source.file": "Forms/frmCreateDeleteUser.frm",
+        "code.source.module": "frmCreateDeleteUser",
+        "code.source.line": "73",
+        "code.metrics.lines": "7",
+        "code.metrics.sloc": "4",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "frmCreateDeleteUser.UserForm_Initialize",
+      "label": "UserForm_Initialize",
+      "tier": "Forms",
+      "containerId": "frmCreateDeleteUser",
+      "metadata": {
+        "code.module": "frmCreateDeleteUser",
+        "code.proc": "UserForm_Initialize",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmCreateDeleteUser.frm",
+        "code.locs.startLine": "16",
+        "code.locs.endLine": "19",
+        "code.source.file": "Forms/frmCreateDeleteUser.frm",
+        "code.source.module": "frmCreateDeleteUser",
+        "code.source.line": "16",
+        "code.metrics.lines": "4",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "frmEditUser.btnNewPIN_Click",
+      "label": "btnNewPIN_Click",
+      "tier": "Forms",
+      "containerId": "frmEditUser",
+      "metadata": {
+        "code.module": "frmEditUser",
+        "code.proc": "btnNewPIN_Click",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmEditUser.frm",
+        "code.locs.startLine": "80",
+        "code.locs.endLine": "86",
+        "code.source.file": "Forms/frmEditUser.frm",
+        "code.source.module": "frmEditUser",
+        "code.source.line": "80",
+        "code.metrics.lines": "7",
+        "code.metrics.sloc": "4",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "frmEditUser.btnUpdateUser_Click",
+      "label": "btnUpdateUser_Click",
+      "tier": "Forms",
+      "containerId": "frmEditUser",
+      "metadata": {
+        "code.module": "frmEditUser",
+        "code.proc": "btnUpdateUser_Click",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmEditUser.frm",
+        "code.locs.startLine": "22",
+        "code.locs.endLine": "79",
+        "code.source.file": "Forms/frmEditUser.frm",
+        "code.source.module": "frmEditUser",
+        "code.source.line": "22",
+        "code.metrics.lines": "58",
+        "code.metrics.sloc": "47",
+        "code.metrics.cyclomatic": "15"
+      }
+    },
+    {
+      "id": "frmEditUser.UserForm_Initialize",
+      "label": "UserForm_Initialize",
+      "tier": "Forms",
+      "containerId": "frmEditUser",
+      "metadata": {
+        "code.module": "frmEditUser",
+        "code.proc": "UserForm_Initialize",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmEditUser.frm",
+        "code.locs.startLine": "16",
+        "code.locs.endLine": "21",
+        "code.source.file": "Forms/frmEditUser.frm",
+        "code.source.module": "frmEditUser",
+        "code.source.line": "16",
+        "code.metrics.lines": "6",
+        "code.metrics.sloc": "3",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "frmItemSearch.BuildFirstCharIndex",
+      "label": "BuildFirstCharIndex",
+      "tier": "Forms",
+      "containerId": "frmItemSearch",
+      "metadata": {
+        "code.module": "frmItemSearch",
+        "code.proc": "BuildFirstCharIndex",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmItemSearch.frm",
+        "code.locs.startLine": "49",
+        "code.locs.endLine": "70",
+        "code.source.file": "Forms/frmItemSearch.frm",
+        "code.source.module": "frmItemSearch",
+        "code.source.line": "49",
+        "code.metrics.lines": "22",
+        "code.metrics.sloc": "16",
+        "code.metrics.cyclomatic": "7"
+      }
+    },
+    {
+      "id": "frmItemSearch.CommitSelectionAndClose",
+      "label": "CommitSelectionAndClose",
+      "tier": "Forms",
+      "containerId": "frmItemSearch",
+      "metadata": {
+        "code.module": "frmItemSearch",
+        "code.proc": "CommitSelectionAndClose",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Forms/frmItemSearch.frm",
+        "code.locs.startLine": "187",
+        "code.locs.endLine": "264",
+        "code.source.file": "Forms/frmItemSearch.frm",
+        "code.source.module": "frmItemSearch",
+        "code.source.line": "187",
+        "code.metrics.lines": "78",
+        "code.metrics.sloc": "62",
+        "code.metrics.cyclomatic": "14"
+      }
+    },
+    {
+      "id": "frmItemSearch.DeleteExistingDataForCell",
+      "label": "DeleteExistingDataForCell",
+      "tier": "Forms",
+      "containerId": "frmItemSearch",
+      "metadata": {
+        "code.module": "frmItemSearch",
+        "code.proc": "DeleteExistingDataForCell",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmItemSearch.frm",
+        "code.locs.startLine": "369",
+        "code.locs.endLine": "400",
+        "code.source.file": "Forms/frmItemSearch.frm",
+        "code.source.module": "frmItemSearch",
+        "code.source.line": "369",
+        "code.metrics.lines": "32",
+        "code.metrics.sloc": "25",
+        "code.metrics.cyclomatic": "11"
+      }
+    },
+    {
+      "id": "frmItemSearch.FillDataTableRow",
+      "label": "FillDataTableRow",
+      "tier": "Forms",
+      "containerId": "frmItemSearch",
+      "metadata": {
+        "code.module": "frmItemSearch",
+        "code.proc": "FillDataTableRow",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmItemSearch.frm",
+        "code.locs.startLine": "266",
+        "code.locs.endLine": "334",
+        "code.source.file": "Forms/frmItemSearch.frm",
+        "code.source.module": "frmItemSearch",
+        "code.source.line": "266",
+        "code.metrics.lines": "69",
+        "code.metrics.sloc": "61",
+        "code.metrics.cyclomatic": "31"
+      }
+    },
+    {
+      "id": "frmItemSearch.FindRowByValue",
+      "label": "FindRowByValue",
+      "tier": "Forms",
+      "containerId": "frmItemSearch",
+      "metadata": {
+        "code.module": "frmItemSearch",
+        "code.proc": "FindRowByValue",
+        "code.kind": "Function",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmItemSearch.frm",
+        "code.locs.startLine": "496",
+        "code.locs.endLine": "511",
+        "code.source.file": "Forms/frmItemSearch.frm",
+        "code.source.module": "frmItemSearch",
+        "code.source.line": "496",
+        "code.metrics.lines": "16",
+        "code.metrics.sloc": "14",
+        "code.metrics.cyclomatic": "6"
+      }
+    },
+    {
+      "id": "frmItemSearch.GetLocationByItem",
+      "label": "GetLocationByItem",
+      "tier": "Forms",
+      "containerId": "frmItemSearch",
+      "metadata": {
+        "code.module": "frmItemSearch",
+        "code.proc": "GetLocationByItem",
+        "code.kind": "Function",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmItemSearch.frm",
+        "code.locs.startLine": "336",
+        "code.locs.endLine": "367",
+        "code.source.file": "Forms/frmItemSearch.frm",
+        "code.source.module": "frmItemSearch",
+        "code.source.line": "336",
+        "code.metrics.lines": "32",
+        "code.metrics.sloc": "26",
+        "code.metrics.cyclomatic": "8"
+      }
+    },
+    {
+      "id": "frmItemSearch.GetVendorByItem",
+      "label": "GetVendorByItem",
+      "tier": "Forms",
+      "containerId": "frmItemSearch",
+      "metadata": {
+        "code.module": "frmItemSearch",
+        "code.proc": "GetVendorByItem",
+        "code.kind": "Function",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmItemSearch.frm",
+        "code.locs.startLine": "463",
+        "code.locs.endLine": "494",
+        "code.source.file": "Forms/frmItemSearch.frm",
+        "code.source.module": "frmItemSearch",
+        "code.source.line": "463",
+        "code.metrics.lines": "32",
+        "code.metrics.sloc": "26",
+        "code.metrics.cyclomatic": "8"
+      }
+    },
+    {
+      "id": "frmItemSearch.lstBox_Change",
+      "label": "lstBox_Change",
+      "tier": "Forms",
+      "containerId": "frmItemSearch",
+      "metadata": {
+        "code.module": "frmItemSearch",
+        "code.proc": "lstBox_Change",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmItemSearch.frm",
+        "code.locs.startLine": "158",
+        "code.locs.endLine": "160",
+        "code.source.file": "Forms/frmItemSearch.frm",
+        "code.source.module": "frmItemSearch",
+        "code.source.line": "158",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "frmItemSearch.lstBox_Click",
+      "label": "lstBox_Click",
+      "tier": "Forms",
+      "containerId": "frmItemSearch",
+      "metadata": {
+        "code.module": "frmItemSearch",
+        "code.proc": "lstBox_Click",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmItemSearch.frm",
+        "code.locs.startLine": "153",
+        "code.locs.endLine": "156",
+        "code.source.file": "Forms/frmItemSearch.frm",
+        "code.source.module": "frmItemSearch",
+        "code.source.line": "153",
+        "code.metrics.lines": "4",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "frmItemSearch.lstBox_DblClick",
+      "label": "lstBox_DblClick",
+      "tier": "Forms",
+      "containerId": "frmItemSearch",
+      "metadata": {
+        "code.module": "frmItemSearch",
+        "code.proc": "lstBox_DblClick",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmItemSearch.frm",
+        "code.locs.startLine": "183",
+        "code.locs.endLine": "185",
+        "code.source.file": "Forms/frmItemSearch.frm",
+        "code.source.module": "frmItemSearch",
+        "code.source.line": "183",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "frmItemSearch.lstBox_KeyDown",
+      "label": "lstBox_KeyDown",
+      "tier": "Forms",
+      "containerId": "frmItemSearch",
+      "metadata": {
+        "code.module": "frmItemSearch",
+        "code.proc": "lstBox_KeyDown",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmItemSearch.frm",
+        "code.locs.startLine": "176",
+        "code.locs.endLine": "181",
+        "code.source.file": "Forms/frmItemSearch.frm",
+        "code.source.module": "frmItemSearch",
+        "code.source.line": "176",
+        "code.metrics.lines": "6",
+        "code.metrics.sloc": "5",
+        "code.metrics.cyclomatic": "3"
+      }
+    },
+    {
+      "id": "frmItemSearch.lstBox_KeyPress",
+      "label": "lstBox_KeyPress",
+      "tier": "Forms",
+      "containerId": "frmItemSearch",
+      "metadata": {
+        "code.module": "frmItemSearch",
+        "code.proc": "lstBox_KeyPress",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmItemSearch.frm",
+        "code.locs.startLine": "169",
+        "code.locs.endLine": "174",
+        "code.source.file": "Forms/frmItemSearch.frm",
+        "code.source.module": "frmItemSearch",
+        "code.source.line": "169",
+        "code.metrics.lines": "6",
+        "code.metrics.sloc": "5",
+        "code.metrics.cyclomatic": "3"
+      }
+    },
+    {
+      "id": "frmItemSearch.PopulateListBox",
+      "label": "PopulateListBox",
+      "tier": "Forms",
+      "containerId": "frmItemSearch",
+      "metadata": {
+        "code.module": "frmItemSearch",
+        "code.proc": "PopulateListBox",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmItemSearch.frm",
+        "code.locs.startLine": "426",
+        "code.locs.endLine": "461",
+        "code.source.file": "Forms/frmItemSearch.frm",
+        "code.source.module": "frmItemSearch",
+        "code.source.line": "426",
+        "code.metrics.lines": "36",
+        "code.metrics.sloc": "28",
+        "code.metrics.cyclomatic": "8"
+      }
+    },
+    {
+      "id": "frmItemSearch.SetTallyRowNumber",
+      "label": "SetTallyRowNumber",
+      "tier": "Forms",
+      "containerId": "frmItemSearch",
+      "metadata": {
+        "code.module": "frmItemSearch",
+        "code.proc": "SetTallyRowNumber",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmItemSearch.frm",
+        "code.locs.startLine": "402",
+        "code.locs.endLine": "424",
+        "code.source.file": "Forms/frmItemSearch.frm",
+        "code.source.module": "frmItemSearch",
+        "code.source.line": "402",
+        "code.metrics.lines": "23",
+        "code.metrics.sloc": "19",
+        "code.metrics.cyclomatic": "7"
+      }
+    },
+    {
+      "id": "frmItemSearch.txtBox_Change",
+      "label": "txtBox_Change",
+      "tier": "Forms",
+      "containerId": "frmItemSearch",
+      "metadata": {
+        "code.module": "frmItemSearch",
+        "code.proc": "txtBox_Change",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmItemSearch.frm",
+        "code.locs.startLine": "72",
+        "code.locs.endLine": "151",
+        "code.source.file": "Forms/frmItemSearch.frm",
+        "code.source.module": "frmItemSearch",
+        "code.source.line": "72",
+        "code.metrics.lines": "80",
+        "code.metrics.sloc": "58",
+        "code.metrics.cyclomatic": "23"
+      }
+    },
+    {
+      "id": "frmItemSearch.txtBox_KeyDown",
+      "label": "txtBox_KeyDown",
+      "tier": "Forms",
+      "containerId": "frmItemSearch",
+      "metadata": {
+        "code.module": "frmItemSearch",
+        "code.proc": "txtBox_KeyDown",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmItemSearch.frm",
+        "code.locs.startLine": "162",
+        "code.locs.endLine": "167",
+        "code.source.file": "Forms/frmItemSearch.frm",
+        "code.source.module": "frmItemSearch",
+        "code.source.line": "162",
+        "code.metrics.lines": "6",
+        "code.metrics.sloc": "5",
+        "code.metrics.cyclomatic": "3"
+      }
+    },
+    {
+      "id": "frmItemSearch.UpdateDescription",
+      "label": "UpdateDescription",
+      "tier": "Forms",
+      "containerId": "frmItemSearch",
+      "metadata": {
+        "code.module": "frmItemSearch",
+        "code.proc": "UpdateDescription",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmItemSearch.frm",
+        "code.locs.startLine": "513",
+        "code.locs.endLine": "528",
+        "code.source.file": "Forms/frmItemSearch.frm",
+        "code.source.module": "frmItemSearch",
+        "code.source.line": "513",
+        "code.metrics.lines": "16",
+        "code.metrics.sloc": "9",
+        "code.metrics.cyclomatic": "5"
+      }
+    },
+    {
+      "id": "frmItemSearch.UserForm_Activate",
+      "label": "UserForm_Activate",
+      "tier": "Forms",
+      "containerId": "frmItemSearch",
+      "metadata": {
+        "code.module": "frmItemSearch",
+        "code.proc": "UserForm_Activate",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmItemSearch.frm",
+        "code.locs.startLine": "25",
+        "code.locs.endLine": "30",
+        "code.source.file": "Forms/frmItemSearch.frm",
+        "code.source.module": "frmItemSearch",
+        "code.source.line": "25",
+        "code.metrics.lines": "6",
+        "code.metrics.sloc": "4",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "frmItemSearch.UserForm_Initialize",
+      "label": "UserForm_Initialize",
+      "tier": "Forms",
+      "containerId": "frmItemSearch",
+      "metadata": {
+        "code.module": "frmItemSearch",
+        "code.proc": "UserForm_Initialize",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmItemSearch.frm",
+        "code.locs.startLine": "31",
+        "code.locs.endLine": "47",
+        "code.source.file": "Forms/frmItemSearch.frm",
+        "code.source.module": "frmItemSearch",
+        "code.source.line": "31",
+        "code.metrics.lines": "17",
+        "code.metrics.sloc": "12",
+        "code.metrics.cyclomatic": "3"
+      }
+    },
+    {
+      "id": "frmItemSearch.UserForm_KeyDown",
+      "label": "UserForm_KeyDown",
+      "tier": "Forms",
+      "containerId": "frmItemSearch",
+      "metadata": {
+        "code.module": "frmItemSearch",
+        "code.proc": "UserForm_KeyDown",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmItemSearch.frm",
+        "code.locs.startLine": "530",
+        "code.locs.endLine": "542",
+        "code.source.file": "Forms/frmItemSearch.frm",
+        "code.source.module": "frmItemSearch",
+        "code.source.line": "530",
+        "code.metrics.lines": "13",
+        "code.metrics.sloc": "9",
+        "code.metrics.cyclomatic": "5"
+      }
+    },
+    {
+      "id": "frmItemSearch.UserForm_MouseScroll",
+      "label": "UserForm_MouseScroll",
+      "tier": "Forms",
+      "containerId": "frmItemSearch",
+      "metadata": {
+        "code.module": "frmItemSearch",
+        "code.proc": "UserForm_MouseScroll",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmItemSearch.frm",
+        "code.locs.startLine": "22",
+        "code.locs.endLine": "24",
+        "code.source.file": "Forms/frmItemSearch.frm",
+        "code.source.module": "frmItemSearch",
+        "code.source.line": "22",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "frmLogin.btnCloseWorkbook_Click",
+      "label": "btnCloseWorkbook_Click",
+      "tier": "Forms",
+      "containerId": "frmLogin",
+      "metadata": {
+        "code.module": "frmLogin",
+        "code.proc": "btnCloseWorkbook_Click",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmLogin.frm",
+        "code.locs.startLine": "60",
+        "code.locs.endLine": "63",
+        "code.source.file": "Forms/frmLogin.frm",
+        "code.source.module": "frmLogin",
+        "code.source.line": "60",
+        "code.metrics.lines": "4",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "frmLogin.btnLogin_Click",
+      "label": "btnLogin_Click",
+      "tier": "Forms",
+      "containerId": "frmLogin",
+      "metadata": {
+        "code.module": "frmLogin",
+        "code.proc": "btnLogin_Click",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmLogin.frm",
+        "code.locs.startLine": "16",
+        "code.locs.endLine": "56",
+        "code.source.file": "Forms/frmLogin.frm",
+        "code.source.module": "frmLogin",
+        "code.source.line": "16",
+        "code.metrics.lines": "41",
+        "code.metrics.sloc": "31",
+        "code.metrics.cyclomatic": "7"
+      }
+    },
+    {
+      "id": "frmLogin.btnResetPIN_Click",
+      "label": "btnResetPIN_Click",
+      "tier": "Forms",
+      "containerId": "frmLogin",
+      "metadata": {
+        "code.module": "frmLogin",
+        "code.proc": "btnResetPIN_Click",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmLogin.frm",
+        "code.locs.startLine": "57",
+        "code.locs.endLine": "59",
+        "code.source.file": "Forms/frmLogin.frm",
+        "code.source.module": "frmLogin",
+        "code.source.line": "57",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "frmLogin.UserForm_Activate",
+      "label": "UserForm_Activate",
+      "tier": "Forms",
+      "containerId": "frmLogin",
+      "metadata": {
+        "code.module": "frmLogin",
+        "code.proc": "UserForm_Activate",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmLogin.frm",
+        "code.locs.startLine": "68",
+        "code.locs.endLine": "71",
+        "code.source.file": "Forms/frmLogin.frm",
+        "code.source.module": "frmLogin",
+        "code.source.line": "68",
+        "code.metrics.lines": "4",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "frmLogin.UserForm_Initialize",
+      "label": "UserForm_Initialize",
+      "tier": "Forms",
+      "containerId": "frmLogin",
+      "metadata": {
+        "code.module": "frmLogin",
+        "code.proc": "UserForm_Initialize",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmLogin.frm",
+        "code.locs.startLine": "64",
+        "code.locs.endLine": "67",
+        "code.source.file": "Forms/frmLogin.frm",
+        "code.source.module": "frmLogin",
+        "code.source.line": "64",
+        "code.metrics.lines": "4",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "frmReceivedTally.btnSend_Click",
+      "label": "btnSend_Click",
+      "tier": "Forms",
+      "containerId": "frmReceivedTally",
+      "metadata": {
+        "code.module": "frmReceivedTally",
+        "code.proc": "btnSend_Click",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmReceivedTally.frm",
+        "code.locs.startLine": "19",
+        "code.locs.endLine": "22",
+        "code.source.file": "Forms/frmReceivedTally.frm",
+        "code.source.module": "frmReceivedTally",
+        "code.source.line": "19",
+        "code.metrics.lines": "4",
+        "code.metrics.sloc": "3",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "frmReceivedTally.GetUOMFromDataTable",
+      "label": "GetUOMFromDataTable",
+      "tier": "Forms",
+      "containerId": "frmReceivedTally",
+      "metadata": {
+        "code.module": "frmReceivedTally",
+        "code.proc": "GetUOMFromDataTable",
+        "code.kind": "Function",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmReceivedTally.frm",
+        "code.locs.startLine": "110",
+        "code.locs.endLine": "147",
+        "code.source.file": "Forms/frmReceivedTally.frm",
+        "code.source.module": "frmReceivedTally",
+        "code.source.line": "110",
+        "code.metrics.lines": "38",
+        "code.metrics.sloc": "31",
+        "code.metrics.cyclomatic": "15"
+      }
+    },
+    {
+      "id": "frmReceivedTally.LogInventoryChange",
+      "label": "LogInventoryChange",
+      "tier": "Forms",
+      "containerId": "frmReceivedTally",
+      "metadata": {
+        "code.module": "frmReceivedTally",
+        "code.proc": "LogInventoryChange",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmReceivedTally.frm",
+        "code.locs.startLine": "104",
+        "code.locs.endLine": "108",
+        "code.source.file": "Forms/frmReceivedTally.frm",
+        "code.source.module": "frmReceivedTally",
+        "code.source.line": "104",
+        "code.metrics.lines": "5",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "frmReceivedTally.UpdateInventory",
+      "label": "UpdateInventory",
+      "tier": "Forms",
+      "containerId": "frmReceivedTally",
+      "metadata": {
+        "code.module": "frmReceivedTally",
+        "code.proc": "UpdateInventory",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmReceivedTally.frm",
+        "code.locs.startLine": "33",
+        "code.locs.endLine": "101",
+        "code.source.file": "Forms/frmReceivedTally.frm",
+        "code.source.module": "frmReceivedTally",
+        "code.source.line": "33",
+        "code.metrics.lines": "69",
+        "code.metrics.sloc": "58",
+        "code.metrics.cyclomatic": "11"
+      }
+    },
+    {
+      "id": "frmReceivedTally.UserForm_Initialize",
+      "label": "UserForm_Initialize",
+      "tier": "Forms",
+      "containerId": "frmReceivedTally",
+      "metadata": {
+        "code.module": "frmReceivedTally",
+        "code.proc": "UserForm_Initialize",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmReceivedTally.frm",
+        "code.locs.startLine": "24",
+        "code.locs.endLine": "30",
+        "code.source.file": "Forms/frmReceivedTally.frm",
+        "code.source.module": "frmReceivedTally",
+        "code.source.line": "24",
+        "code.metrics.lines": "7",
+        "code.metrics.sloc": "4",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "frmShipmentsTally.btnSend_Click",
+      "label": "btnSend_Click",
+      "tier": "Forms",
+      "containerId": "frmShipmentsTally",
+      "metadata": {
+        "code.module": "frmShipmentsTally",
+        "code.proc": "btnSend_Click",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmShipmentsTally.frm",
+        "code.locs.startLine": "25",
+        "code.locs.endLine": "29",
+        "code.source.file": "Forms/frmShipmentsTally.frm",
+        "code.source.module": "frmShipmentsTally",
+        "code.source.line": "25",
+        "code.metrics.lines": "5",
+        "code.metrics.sloc": "3",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "frmShipmentsTally.GetUOMFromDataTable",
+      "label": "GetUOMFromDataTable",
+      "tier": "Forms",
+      "containerId": "frmShipmentsTally",
+      "metadata": {
+        "code.module": "frmShipmentsTally",
+        "code.proc": "GetUOMFromDataTable",
+        "code.kind": "Function",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmShipmentsTally.frm",
+        "code.locs.startLine": "118",
+        "code.locs.endLine": "155",
+        "code.source.file": "Forms/frmShipmentsTally.frm",
+        "code.source.module": "frmShipmentsTally",
+        "code.source.line": "118",
+        "code.metrics.lines": "38",
+        "code.metrics.sloc": "31",
+        "code.metrics.cyclomatic": "15"
+      }
+    },
+    {
+      "id": "frmShipmentsTally.LogInventoryChange",
+      "label": "LogInventoryChange",
+      "tier": "Forms",
+      "containerId": "frmShipmentsTally",
+      "metadata": {
+        "code.module": "frmShipmentsTally",
+        "code.proc": "LogInventoryChange",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmShipmentsTally.frm",
+        "code.locs.startLine": "112",
+        "code.locs.endLine": "116",
+        "code.source.file": "Forms/frmShipmentsTally.frm",
+        "code.source.module": "frmShipmentsTally",
+        "code.source.line": "112",
+        "code.metrics.lines": "5",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "frmShipmentsTally.UpdateInventory",
+      "label": "UpdateInventory",
+      "tier": "Forms",
+      "containerId": "frmShipmentsTally",
+      "metadata": {
+        "code.module": "frmShipmentsTally",
+        "code.proc": "UpdateInventory",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmShipmentsTally.frm",
+        "code.locs.startLine": "41",
+        "code.locs.endLine": "109",
+        "code.source.file": "Forms/frmShipmentsTally.frm",
+        "code.source.module": "frmShipmentsTally",
+        "code.source.line": "41",
+        "code.metrics.lines": "69",
+        "code.metrics.sloc": "58",
+        "code.metrics.cyclomatic": "11"
+      }
+    },
+    {
+      "id": "frmShipmentsTally.UserForm_Initialize",
+      "label": "UserForm_Initialize",
+      "tier": "Forms",
+      "containerId": "frmShipmentsTally",
+      "metadata": {
+        "code.module": "frmShipmentsTally",
+        "code.proc": "UserForm_Initialize",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Forms/frmShipmentsTally.frm",
+        "code.locs.startLine": "31",
+        "code.locs.endLine": "39",
+        "code.source.file": "Forms/frmShipmentsTally.frm",
+        "code.source.module": "frmShipmentsTally",
+        "code.source.line": "31",
+        "code.metrics.lines": "9",
+        "code.metrics.sloc": "5",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "InventoryManagement.Worksheet_Change",
+      "label": "Worksheet_Change",
+      "tier": "Classes",
+      "containerId": "InventoryManagement",
+      "metadata": {
+        "code.module": "InventoryManagement",
+        "code.proc": "Worksheet_Change",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Sheets/InventoryManagement.cls",
+        "code.locs.startLine": "11",
+        "code.locs.endLine": "79",
+        "code.source.file": "Sheets/InventoryManagement.cls",
+        "code.source.module": "InventoryManagement",
+        "code.source.line": "11",
+        "code.metrics.lines": "69",
+        "code.metrics.sloc": "61",
+        "code.metrics.cyclomatic": "21"
+      }
+    },
+    {
+      "id": "InventoryManagement.Worksheet_TableUpdate",
+      "label": "Worksheet_TableUpdate",
+      "tier": "Classes",
+      "containerId": "InventoryManagement",
+      "metadata": {
+        "code.module": "InventoryManagement",
+        "code.proc": "Worksheet_TableUpdate",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Sheets/InventoryManagement.cls",
+        "code.locs.startLine": "81",
+        "code.locs.endLine": "87",
+        "code.source.file": "Sheets/InventoryManagement.cls",
+        "code.source.module": "InventoryManagement",
+        "code.source.line": "81",
+        "code.metrics.lines": "7",
+        "code.metrics.sloc": "5",
+        "code.metrics.cyclomatic": "3"
+      }
+    },
+    {
+      "id": "modAdmin.Admin_Click",
+      "label": "Admin_Click",
+      "tier": "Modules",
+      "containerId": "modAdmin",
+      "metadata": {
+        "code.module": "modAdmin",
+        "code.proc": "Admin_Click",
+        "code.kind": "Sub",
+        "code.locs.file": "Modules/modAdmin.bas",
+        "code.locs.startLine": "3",
+        "code.locs.endLine": "5",
+        "code.source.file": "Modules/modAdmin.bas",
+        "code.source.module": "modAdmin",
+        "code.source.line": "3",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "modAdmin.Open_CreateDeleteUser",
+      "label": "Open_CreateDeleteUser",
+      "tier": "Modules",
+      "containerId": "modAdmin",
+      "metadata": {
+        "code.module": "modAdmin",
+        "code.proc": "Open_CreateDeleteUser",
+        "code.kind": "Sub",
+        "code.locs.file": "Modules/modAdmin.bas",
+        "code.locs.startLine": "6",
+        "code.locs.endLine": "8",
+        "code.source.file": "Modules/modAdmin.bas",
+        "code.source.module": "modAdmin",
+        "code.source.line": "6",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "modErrorHandler.HandleError",
+      "label": "HandleError",
+      "tier": "Modules",
+      "containerId": "modErrorHandler",
+      "metadata": {
+        "code.module": "modErrorHandler",
+        "code.proc": "HandleError",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modErrorHandler.bas",
+        "code.locs.startLine": "23",
+        "code.locs.endLine": "27",
+        "code.source.file": "Modules/modErrorHandler.bas",
+        "code.source.module": "modErrorHandler",
+        "code.source.line": "23",
+        "code.metrics.lines": "5",
+        "code.metrics.sloc": "4",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "modErrorHandler.HandleItemCodeOverflow",
+      "label": "HandleItemCodeOverflow",
+      "tier": "Modules",
+      "containerId": "modErrorHandler",
+      "metadata": {
+        "code.module": "modErrorHandler",
+        "code.proc": "HandleItemCodeOverflow",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modErrorHandler.bas",
+        "code.locs.startLine": "41",
+        "code.locs.endLine": "43",
+        "code.source.file": "Modules/modErrorHandler.bas",
+        "code.source.module": "modErrorHandler",
+        "code.source.line": "41",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "modErrorHandler.LogAndHandleError",
+      "label": "LogAndHandleError",
+      "tier": "Modules",
+      "containerId": "modErrorHandler",
+      "metadata": {
+        "code.module": "modErrorHandler",
+        "code.proc": "LogAndHandleError",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modErrorHandler.bas",
+        "code.locs.startLine": "61",
+        "code.locs.endLine": "66",
+        "code.source.file": "Modules/modErrorHandler.bas",
+        "code.source.module": "modErrorHandler",
+        "code.source.line": "61",
+        "code.metrics.lines": "6",
+        "code.metrics.sloc": "5",
+        "code.metrics.cyclomatic": "3"
+      }
+    },
+    {
+      "id": "modErrorHandler.LogError",
+      "label": "LogError",
+      "tier": "Modules",
+      "containerId": "modErrorHandler",
+      "metadata": {
+        "code.module": "modErrorHandler",
+        "code.proc": "LogError",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modErrorHandler.bas",
+        "code.locs.startLine": "45",
+        "code.locs.endLine": "59",
+        "code.source.file": "Modules/modErrorHandler.bas",
+        "code.source.module": "modErrorHandler",
+        "code.source.line": "45",
+        "code.metrics.lines": "15",
+        "code.metrics.sloc": "10",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "modErrorHandler.SafeExecute",
+      "label": "SafeExecute",
+      "tier": "Modules",
+      "containerId": "modErrorHandler",
+      "metadata": {
+        "code.module": "modErrorHandler",
+        "code.proc": "SafeExecute",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modErrorHandler.bas",
+        "code.locs.startLine": "28",
+        "code.locs.endLine": "40",
+        "code.source.file": "Modules/modErrorHandler.bas",
+        "code.source.module": "modErrorHandler",
+        "code.source.line": "28",
+        "code.metrics.lines": "13",
+        "code.metrics.sloc": "12",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "modErrorHandler.ValidateAndProcessInput",
+      "label": "ValidateAndProcessInput",
+      "tier": "Modules",
+      "containerId": "modErrorHandler",
+      "metadata": {
+        "code.module": "modErrorHandler",
+        "code.proc": "ValidateAndProcessInput",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modErrorHandler.bas",
+        "code.locs.startLine": "5",
+        "code.locs.endLine": "22",
+        "code.source.file": "Modules/modErrorHandler.bas",
+        "code.source.module": "modErrorHandler",
+        "code.source.line": "5",
+        "code.metrics.lines": "18",
+        "code.metrics.sloc": "16",
+        "code.metrics.cyclomatic": "7"
+      }
+    },
+    {
+      "id": "modExportImportAll.ExportAllCodeToSingleFiles",
+      "label": "ExportAllCodeToSingleFiles",
+      "tier": "Modules",
+      "containerId": "modExportImportAll",
+      "metadata": {
+        "code.module": "modExportImportAll",
+        "code.proc": "ExportAllCodeToSingleFiles",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modExportImportAll.bas",
+        "code.locs.startLine": "398",
+        "code.locs.endLine": "464",
+        "code.source.file": "Modules/modExportImportAll.bas",
+        "code.source.module": "modExportImportAll",
+        "code.source.line": "398",
+        "code.metrics.lines": "67",
+        "code.metrics.sloc": "54",
+        "code.metrics.cyclomatic": "20"
+      }
+    },
+    {
+      "id": "modExportImportAll.ExportAllModules",
+      "label": "ExportAllModules",
+      "tier": "Modules",
+      "containerId": "modExportImportAll",
+      "metadata": {
+        "code.module": "modExportImportAll",
+        "code.proc": "ExportAllModules",
+        "code.kind": "Sub",
+        "code.locs.file": "Modules/modExportImportAll.bas",
+        "code.locs.startLine": "23",
+        "code.locs.endLine": "72",
+        "code.source.file": "Modules/modExportImportAll.bas",
+        "code.source.module": "modExportImportAll",
+        "code.source.line": "23",
+        "code.metrics.lines": "50",
+        "code.metrics.sloc": "36",
+        "code.metrics.cyclomatic": "13"
+      }
+    },
+    {
+      "id": "modExportImportAll.ExportTablesHeadersAndControls",
+      "label": "ExportTablesHeadersAndControls",
+      "tier": "Modules",
+      "containerId": "modExportImportAll",
+      "metadata": {
+        "code.module": "modExportImportAll",
+        "code.proc": "ExportTablesHeadersAndControls",
+        "code.kind": "Sub",
+        "code.locs.file": "Modules/modExportImportAll.bas",
+        "code.locs.startLine": "296",
+        "code.locs.endLine": "363",
+        "code.source.file": "Modules/modExportImportAll.bas",
+        "code.source.module": "modExportImportAll",
+        "code.source.line": "296",
+        "code.metrics.lines": "68",
+        "code.metrics.sloc": "62",
+        "code.metrics.cyclomatic": "22"
+      }
+    },
+    {
+      "id": "modExportImportAll.ExportUserFormControls",
+      "label": "ExportUserFormControls",
+      "tier": "Modules",
+      "containerId": "modExportImportAll",
+      "metadata": {
+        "code.module": "modExportImportAll",
+        "code.proc": "ExportUserFormControls",
+        "code.kind": "Sub",
+        "code.locs.file": "Modules/modExportImportAll.bas",
+        "code.locs.startLine": "364",
+        "code.locs.endLine": "393",
+        "code.source.file": "Modules/modExportImportAll.bas",
+        "code.source.module": "modExportImportAll",
+        "code.source.line": "364",
+        "code.metrics.lines": "30",
+        "code.metrics.sloc": "24",
+        "code.metrics.cyclomatic": "6"
+      }
+    },
+    {
+      "id": "modExportImportAll.ListSheetCodeNames",
+      "label": "ListSheetCodeNames",
+      "tier": "Modules",
+      "containerId": "modExportImportAll",
+      "metadata": {
+        "code.module": "modExportImportAll",
+        "code.proc": "ListSheetCodeNames",
+        "code.kind": "Sub",
+        "code.locs.file": "Modules/modExportImportAll.bas",
+        "code.locs.startLine": "466",
+        "code.locs.endLine": "473",
+        "code.source.file": "Modules/modExportImportAll.bas",
+        "code.source.module": "modExportImportAll",
+        "code.source.line": "466",
+        "code.metrics.lines": "8",
+        "code.metrics.sloc": "7",
+        "code.metrics.cyclomatic": "4"
+      }
+    },
+    {
+      "id": "modExportImportAll.ReplaceAllCodeFromFiles",
+      "label": "ReplaceAllCodeFromFiles",
+      "tier": "Modules",
+      "containerId": "modExportImportAll",
+      "metadata": {
+        "code.module": "modExportImportAll",
+        "code.proc": "ReplaceAllCodeFromFiles",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modExportImportAll.bas",
+        "code.locs.startLine": "74",
+        "code.locs.endLine": "80",
+        "code.source.file": "Modules/modExportImportAll.bas",
+        "code.source.module": "modExportImportAll",
+        "code.source.line": "74",
+        "code.metrics.lines": "7",
+        "code.metrics.sloc": "6",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "modExportImportAll.SyncClassModules",
+      "label": "SyncClassModules",
+      "tier": "Modules",
+      "containerId": "modExportImportAll",
+      "metadata": {
+        "code.module": "modExportImportAll",
+        "code.proc": "SyncClassModules",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modExportImportAll.bas",
+        "code.locs.startLine": "115",
+        "code.locs.endLine": "142",
+        "code.source.file": "Modules/modExportImportAll.bas",
+        "code.source.module": "modExportImportAll",
+        "code.source.line": "115",
+        "code.metrics.lines": "28",
+        "code.metrics.sloc": "21",
+        "code.metrics.cyclomatic": "5"
+      }
+    },
+    {
+      "id": "modExportImportAll.SyncFormsCodeBehind",
+      "label": "SyncFormsCodeBehind",
+      "tier": "Modules",
+      "containerId": "modExportImportAll",
+      "metadata": {
+        "code.module": "modExportImportAll",
+        "code.proc": "SyncFormsCodeBehind",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modExportImportAll.bas",
+        "code.locs.startLine": "145",
+        "code.locs.endLine": "199",
+        "code.source.file": "Modules/modExportImportAll.bas",
+        "code.source.module": "modExportImportAll",
+        "code.source.line": "145",
+        "code.metrics.lines": "55",
+        "code.metrics.sloc": "47",
+        "code.metrics.cyclomatic": "14"
+      }
+    },
+    {
+      "id": "modExportImportAll.SyncSheetsCodeBehind",
+      "label": "SyncSheetsCodeBehind",
+      "tier": "Modules",
+      "containerId": "modExportImportAll",
+      "metadata": {
+        "code.module": "modExportImportAll",
+        "code.proc": "SyncSheetsCodeBehind",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modExportImportAll.bas",
+        "code.locs.startLine": "202",
+        "code.locs.endLine": "257",
+        "code.source.file": "Modules/modExportImportAll.bas",
+        "code.source.module": "modExportImportAll",
+        "code.source.line": "202",
+        "code.metrics.lines": "56",
+        "code.metrics.sloc": "44",
+        "code.metrics.cyclomatic": "11"
+      }
+    },
+    {
+      "id": "modExportImportAll.SyncSheetsCodeBehind_Diagnostics",
+      "label": "SyncSheetsCodeBehind_Diagnostics",
+      "tier": "Modules",
+      "containerId": "modExportImportAll",
+      "metadata": {
+        "code.module": "modExportImportAll",
+        "code.proc": "SyncSheetsCodeBehind_Diagnostics",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modExportImportAll.bas",
+        "code.locs.startLine": "259",
+        "code.locs.endLine": "294",
+        "code.source.file": "Modules/modExportImportAll.bas",
+        "code.source.module": "modExportImportAll",
+        "code.source.line": "259",
+        "code.metrics.lines": "36",
+        "code.metrics.sloc": "29",
+        "code.metrics.cyclomatic": "10"
+      }
+    },
+    {
+      "id": "modExportImportAll.SyncStandardModules",
+      "label": "SyncStandardModules",
+      "tier": "Modules",
+      "containerId": "modExportImportAll",
+      "metadata": {
+        "code.module": "modExportImportAll",
+        "code.proc": "SyncStandardModules",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modExportImportAll.bas",
+        "code.locs.startLine": "82",
+        "code.locs.endLine": "112",
+        "code.source.file": "Modules/modExportImportAll.bas",
+        "code.source.module": "modExportImportAll",
+        "code.source.line": "82",
+        "code.metrics.lines": "31",
+        "code.metrics.sloc": "23",
+        "code.metrics.cyclomatic": "6"
+      }
+    },
+    {
+      "id": "modGlobals.CommitSelectionAndCloseWrapper",
+      "label": "CommitSelectionAndCloseWrapper",
+      "tier": "Modules",
+      "containerId": "modGlobals",
+      "metadata": {
+        "code.module": "modGlobals",
+        "code.proc": "CommitSelectionAndCloseWrapper",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modGlobals.bas",
+        "code.locs.startLine": "14",
+        "code.locs.endLine": "16",
+        "code.source.file": "Modules/modGlobals.bas",
+        "code.source.module": "modGlobals",
+        "code.source.line": "14",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "modGlobals.GetItemUOMByRowNum",
+      "label": "GetItemUOMByRowNum",
+      "tier": "Modules",
+      "containerId": "modGlobals",
+      "metadata": {
+        "code.module": "modGlobals",
+        "code.proc": "GetItemUOMByRowNum",
+        "code.kind": "Function",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modGlobals.bas",
+        "code.locs.startLine": "24",
+        "code.locs.endLine": "70",
+        "code.source.file": "Modules/modGlobals.bas",
+        "code.source.module": "modGlobals",
+        "code.source.line": "24",
+        "code.metrics.lines": "47",
+        "code.metrics.sloc": "39",
+        "code.metrics.cyclomatic": "16"
+      }
+    },
+    {
+      "id": "modGlobals.InitializeGlobalVariables",
+      "label": "InitializeGlobalVariables",
+      "tier": "Modules",
+      "containerId": "modGlobals",
+      "metadata": {
+        "code.module": "modGlobals",
+        "code.proc": "InitializeGlobalVariables",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modGlobals.bas",
+        "code.locs.startLine": "18",
+        "code.locs.endLine": "23",
+        "code.source.file": "Modules/modGlobals.bas",
+        "code.source.module": "modGlobals",
+        "code.source.line": "18",
+        "code.metrics.lines": "6",
+        "code.metrics.sloc": "4",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "modGlobals.IsFormLoaded",
+      "label": "IsFormLoaded",
+      "tier": "Modules",
+      "containerId": "modGlobals",
+      "metadata": {
+        "code.module": "modGlobals",
+        "code.proc": "IsFormLoaded",
+        "code.kind": "Function",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modGlobals.bas",
+        "code.locs.startLine": "78",
+        "code.locs.endLine": "89",
+        "code.source.file": "Modules/modGlobals.bas",
+        "code.source.module": "modGlobals",
+        "code.source.line": "78",
+        "code.metrics.lines": "12",
+        "code.metrics.sloc": "11",
+        "code.metrics.cyclomatic": "5"
+      }
+    },
+    {
+      "id": "modGlobals.OpenItemSearchForCurrentCell",
+      "label": "OpenItemSearchForCurrentCell",
+      "tier": "Modules",
+      "containerId": "modGlobals",
+      "metadata": {
+        "code.module": "modGlobals",
+        "code.proc": "OpenItemSearchForCurrentCell",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modGlobals.bas",
+        "code.locs.startLine": "71",
+        "code.locs.endLine": "76",
+        "code.source.file": "Modules/modGlobals.bas",
+        "code.source.module": "modGlobals",
+        "code.source.line": "71",
+        "code.metrics.lines": "6",
+        "code.metrics.sloc": "3",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "modImportExportAll.ExportAllCodeToSingleFiles",
+      "label": "ExportAllCodeToSingleFiles",
+      "tier": "Modules",
+      "containerId": "modImportExportAll",
+      "metadata": {
+        "code.module": "modImportExportAll",
+        "code.proc": "ExportAllCodeToSingleFiles",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modImportExportAll.bas",
+        "code.locs.startLine": "397",
+        "code.locs.endLine": "463",
+        "code.source.file": "Modules/modImportExportAll.bas",
+        "code.source.module": "modImportExportAll",
+        "code.source.line": "397",
+        "code.metrics.lines": "67",
+        "code.metrics.sloc": "54",
+        "code.metrics.cyclomatic": "20"
+      }
+    },
+    {
+      "id": "modImportExportAll.ExportAllModules",
+      "label": "ExportAllModules",
+      "tier": "Modules",
+      "containerId": "modImportExportAll",
+      "metadata": {
+        "code.module": "modImportExportAll",
+        "code.proc": "ExportAllModules",
+        "code.kind": "Sub",
+        "code.locs.file": "Modules/modImportExportAll.bas",
+        "code.locs.startLine": "22",
+        "code.locs.endLine": "71",
+        "code.source.file": "Modules/modImportExportAll.bas",
+        "code.source.module": "modImportExportAll",
+        "code.source.line": "22",
+        "code.metrics.lines": "50",
+        "code.metrics.sloc": "36",
+        "code.metrics.cyclomatic": "13"
+      }
+    },
+    {
+      "id": "modImportExportAll.ExportTablesHeadersAndControls",
+      "label": "ExportTablesHeadersAndControls",
+      "tier": "Modules",
+      "containerId": "modImportExportAll",
+      "metadata": {
+        "code.module": "modImportExportAll",
+        "code.proc": "ExportTablesHeadersAndControls",
+        "code.kind": "Sub",
+        "code.locs.file": "Modules/modImportExportAll.bas",
+        "code.locs.startLine": "295",
+        "code.locs.endLine": "362",
+        "code.source.file": "Modules/modImportExportAll.bas",
+        "code.source.module": "modImportExportAll",
+        "code.source.line": "295",
+        "code.metrics.lines": "68",
+        "code.metrics.sloc": "62",
+        "code.metrics.cyclomatic": "22"
+      }
+    },
+    {
+      "id": "modImportExportAll.ExportUserFormControls",
+      "label": "ExportUserFormControls",
+      "tier": "Modules",
+      "containerId": "modImportExportAll",
+      "metadata": {
+        "code.module": "modImportExportAll",
+        "code.proc": "ExportUserFormControls",
+        "code.kind": "Sub",
+        "code.locs.file": "Modules/modImportExportAll.bas",
+        "code.locs.startLine": "363",
+        "code.locs.endLine": "392",
+        "code.source.file": "Modules/modImportExportAll.bas",
+        "code.source.module": "modImportExportAll",
+        "code.source.line": "363",
+        "code.metrics.lines": "30",
+        "code.metrics.sloc": "24",
+        "code.metrics.cyclomatic": "6"
+      }
+    },
+    {
+      "id": "modImportExportAll.ListSheetCodeNames",
+      "label": "ListSheetCodeNames",
+      "tier": "Modules",
+      "containerId": "modImportExportAll",
+      "metadata": {
+        "code.module": "modImportExportAll",
+        "code.proc": "ListSheetCodeNames",
+        "code.kind": "Sub",
+        "code.locs.file": "Modules/modImportExportAll.bas",
+        "code.locs.startLine": "465",
+        "code.locs.endLine": "472",
+        "code.source.file": "Modules/modImportExportAll.bas",
+        "code.source.module": "modImportExportAll",
+        "code.source.line": "465",
+        "code.metrics.lines": "8",
+        "code.metrics.sloc": "7",
+        "code.metrics.cyclomatic": "4"
+      }
+    },
+    {
+      "id": "modImportExportAll.ReplaceAllCodeFromFiles",
+      "label": "ReplaceAllCodeFromFiles",
+      "tier": "Modules",
+      "containerId": "modImportExportAll",
+      "metadata": {
+        "code.module": "modImportExportAll",
+        "code.proc": "ReplaceAllCodeFromFiles",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modImportExportAll.bas",
+        "code.locs.startLine": "73",
+        "code.locs.endLine": "79",
+        "code.source.file": "Modules/modImportExportAll.bas",
+        "code.source.module": "modImportExportAll",
+        "code.source.line": "73",
+        "code.metrics.lines": "7",
+        "code.metrics.sloc": "6",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "modImportExportAll.SyncClassModules",
+      "label": "SyncClassModules",
+      "tier": "Modules",
+      "containerId": "modImportExportAll",
+      "metadata": {
+        "code.module": "modImportExportAll",
+        "code.proc": "SyncClassModules",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modImportExportAll.bas",
+        "code.locs.startLine": "114",
+        "code.locs.endLine": "141",
+        "code.source.file": "Modules/modImportExportAll.bas",
+        "code.source.module": "modImportExportAll",
+        "code.source.line": "114",
+        "code.metrics.lines": "28",
+        "code.metrics.sloc": "21",
+        "code.metrics.cyclomatic": "5"
+      }
+    },
+    {
+      "id": "modImportExportAll.SyncFormsCodeBehind",
+      "label": "SyncFormsCodeBehind",
+      "tier": "Modules",
+      "containerId": "modImportExportAll",
+      "metadata": {
+        "code.module": "modImportExportAll",
+        "code.proc": "SyncFormsCodeBehind",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modImportExportAll.bas",
+        "code.locs.startLine": "144",
+        "code.locs.endLine": "198",
+        "code.source.file": "Modules/modImportExportAll.bas",
+        "code.source.module": "modImportExportAll",
+        "code.source.line": "144",
+        "code.metrics.lines": "55",
+        "code.metrics.sloc": "47",
+        "code.metrics.cyclomatic": "14"
+      }
+    },
+    {
+      "id": "modImportExportAll.SyncSheetsCodeBehind",
+      "label": "SyncSheetsCodeBehind",
+      "tier": "Modules",
+      "containerId": "modImportExportAll",
+      "metadata": {
+        "code.module": "modImportExportAll",
+        "code.proc": "SyncSheetsCodeBehind",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modImportExportAll.bas",
+        "code.locs.startLine": "201",
+        "code.locs.endLine": "256",
+        "code.source.file": "Modules/modImportExportAll.bas",
+        "code.source.module": "modImportExportAll",
+        "code.source.line": "201",
+        "code.metrics.lines": "56",
+        "code.metrics.sloc": "44",
+        "code.metrics.cyclomatic": "11"
+      }
+    },
+    {
+      "id": "modImportExportAll.SyncSheetsCodeBehind_Diagnostics",
+      "label": "SyncSheetsCodeBehind_Diagnostics",
+      "tier": "Modules",
+      "containerId": "modImportExportAll",
+      "metadata": {
+        "code.module": "modImportExportAll",
+        "code.proc": "SyncSheetsCodeBehind_Diagnostics",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modImportExportAll.bas",
+        "code.locs.startLine": "258",
+        "code.locs.endLine": "293",
+        "code.source.file": "Modules/modImportExportAll.bas",
+        "code.source.module": "modImportExportAll",
+        "code.source.line": "258",
+        "code.metrics.lines": "36",
+        "code.metrics.sloc": "29",
+        "code.metrics.cyclomatic": "10"
+      }
+    },
+    {
+      "id": "modImportExportAll.SyncStandardModules",
+      "label": "SyncStandardModules",
+      "tier": "Modules",
+      "containerId": "modImportExportAll",
+      "metadata": {
+        "code.module": "modImportExportAll",
+        "code.proc": "SyncStandardModules",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modImportExportAll.bas",
+        "code.locs.startLine": "81",
+        "code.locs.endLine": "111",
+        "code.source.file": "Modules/modImportExportAll.bas",
+        "code.source.module": "modImportExportAll",
+        "code.source.line": "81",
+        "code.metrics.lines": "31",
+        "code.metrics.sloc": "23",
+        "code.metrics.cyclomatic": "6"
+      }
+    },
+    {
+      "id": "modInvLogs.LogMultipleInventoryChanges",
+      "label": "LogMultipleInventoryChanges",
+      "tier": "Modules",
+      "containerId": "modInvLogs",
+      "metadata": {
+        "code.module": "modInvLogs",
+        "code.proc": "LogMultipleInventoryChanges",
+        "code.kind": "Function",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modInvLogs.bas",
+        "code.locs.startLine": "6",
+        "code.locs.endLine": "34",
+        "code.source.file": "Modules/modInvLogs.bas",
+        "code.source.module": "modInvLogs",
+        "code.source.line": "6",
+        "code.metrics.lines": "29",
+        "code.metrics.sloc": "27",
+        "code.metrics.cyclomatic": "2"
+      }
+    },
+    {
+      "id": "modInvLogs.ReAddBulkLogEntries",
+      "label": "ReAddBulkLogEntries",
+      "tier": "Modules",
+      "containerId": "modInvLogs",
+      "metadata": {
+        "code.module": "modInvLogs",
+        "code.proc": "ReAddBulkLogEntries",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modInvLogs.bas",
+        "code.locs.startLine": "56",
+        "code.locs.endLine": "78",
+        "code.source.file": "Modules/modInvLogs.bas",
+        "code.source.module": "modInvLogs",
+        "code.source.line": "56",
+        "code.metrics.lines": "23",
+        "code.metrics.sloc": "22",
+        "code.metrics.cyclomatic": "2"
+      }
+    },
+    {
+      "id": "modInvLogs.RemoveLastBulkLogEntries",
+      "label": "RemoveLastBulkLogEntries",
+      "tier": "Modules",
+      "containerId": "modInvLogs",
+      "metadata": {
+        "code.module": "modInvLogs",
+        "code.proc": "RemoveLastBulkLogEntries",
+        "code.kind": "Function",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modInvLogs.bas",
+        "code.locs.startLine": "37",
+        "code.locs.endLine": "54",
+        "code.source.file": "Modules/modInvLogs.bas",
+        "code.source.module": "modInvLogs",
+        "code.source.line": "37",
+        "code.metrics.lines": "18",
+        "code.metrics.sloc": "16",
+        "code.metrics.cyclomatic": "2"
+      }
+    },
+    {
+      "id": "modInvMan.AddGoodsReceived_Click",
+      "label": "AddGoodsReceived_Click",
+      "tier": "Modules",
+      "containerId": "modInvMan",
+      "metadata": {
+        "code.module": "modInvMan",
+        "code.proc": "AddGoodsReceived_Click",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modInvMan.bas",
+        "code.locs.startLine": "3",
+        "code.locs.endLine": "72",
+        "code.source.file": "Modules/modInvMan.bas",
+        "code.source.module": "modInvMan",
+        "code.source.line": "3",
+        "code.metrics.lines": "70",
+        "code.metrics.sloc": "61",
+        "code.metrics.cyclomatic": "10"
+      }
+    },
+    {
+      "id": "modInvMan.AddMadeItems_Click",
+      "label": "AddMadeItems_Click",
+      "tier": "Modules",
+      "containerId": "modInvMan",
+      "metadata": {
+        "code.module": "modInvMan",
+        "code.proc": "AddMadeItems_Click",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modInvMan.bas",
+        "code.locs.startLine": "277",
+        "code.locs.endLine": "344",
+        "code.source.file": "Modules/modInvMan.bas",
+        "code.source.module": "modInvMan",
+        "code.source.line": "277",
+        "code.metrics.lines": "68",
+        "code.metrics.sloc": "60",
+        "code.metrics.cyclomatic": "10"
+      }
+    },
+    {
+      "id": "modInvMan.Adjustments_Click",
+      "label": "Adjustments_Click",
+      "tier": "Modules",
+      "containerId": "modInvMan",
+      "metadata": {
+        "code.module": "modInvMan",
+        "code.proc": "Adjustments_Click",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modInvMan.bas",
+        "code.locs.startLine": "209",
+        "code.locs.endLine": "276",
+        "code.source.file": "Modules/modInvMan.bas",
+        "code.source.module": "modInvMan",
+        "code.source.line": "209",
+        "code.metrics.lines": "68",
+        "code.metrics.sloc": "60",
+        "code.metrics.cyclomatic": "10"
+      }
+    },
+    {
+      "id": "modInvMan.DeductShipments_Click",
+      "label": "DeductShipments_Click",
+      "tier": "Modules",
+      "containerId": "modInvMan",
+      "metadata": {
+        "code.module": "modInvMan",
+        "code.proc": "DeductShipments_Click",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modInvMan.bas",
+        "code.locs.startLine": "141",
+        "code.locs.endLine": "208",
+        "code.source.file": "Modules/modInvMan.bas",
+        "code.source.module": "modInvMan",
+        "code.source.line": "141",
+        "code.metrics.lines": "68",
+        "code.metrics.sloc": "60",
+        "code.metrics.cyclomatic": "10"
+      }
+    },
+    {
+      "id": "modInvMan.DeductUsed_Click",
+      "label": "DeductUsed_Click",
+      "tier": "Modules",
+      "containerId": "modInvMan",
+      "metadata": {
+        "code.module": "modInvMan",
+        "code.proc": "DeductUsed_Click",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modInvMan.bas",
+        "code.locs.startLine": "73",
+        "code.locs.endLine": "140",
+        "code.source.file": "Modules/modInvMan.bas",
+        "code.source.module": "modInvMan",
+        "code.source.line": "73",
+        "code.metrics.lines": "68",
+        "code.metrics.sloc": "60",
+        "code.metrics.cyclomatic": "10"
+      }
+    },
+    {
+      "id": "modInvMan.DisplayMessage",
+      "label": "DisplayMessage",
+      "tier": "Modules",
+      "containerId": "modInvMan",
+      "metadata": {
+        "code.module": "modInvMan",
+        "code.proc": "DisplayMessage",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modInvMan.bas",
+        "code.locs.startLine": "345",
+        "code.locs.endLine": "360",
+        "code.source.file": "Modules/modInvMan.bas",
+        "code.source.module": "modInvMan",
+        "code.source.line": "345",
+        "code.metrics.lines": "16",
+        "code.metrics.sloc": "12",
+        "code.metrics.cyclomatic": "3"
+      }
+    },
+    {
+      "id": "modTestModule.TestBoundaryConditions",
+      "label": "TestBoundaryConditions",
+      "tier": "Modules",
+      "containerId": "modTestModule",
+      "metadata": {
+        "code.module": "modTestModule",
+        "code.proc": "TestBoundaryConditions",
+        "code.kind": "Sub",
+        "code.locs.file": "Modules/modTestModule.bas",
+        "code.locs.startLine": "65",
+        "code.locs.endLine": "103",
+        "code.source.file": "Modules/modTestModule.bas",
+        "code.source.module": "modTestModule",
+        "code.source.line": "65",
+        "code.metrics.lines": "39",
+        "code.metrics.sloc": "36",
+        "code.metrics.cyclomatic": "6"
+      }
+    },
+    {
+      "id": "modTestModule.TestDataIntegrity",
+      "label": "TestDataIntegrity",
+      "tier": "Modules",
+      "containerId": "modTestModule",
+      "metadata": {
+        "code.module": "modTestModule",
+        "code.proc": "TestDataIntegrity",
+        "code.kind": "Sub",
+        "code.locs.file": "Modules/modTestModule.bas",
+        "code.locs.startLine": "5",
+        "code.locs.endLine": "63",
+        "code.source.file": "Modules/modTestModule.bas",
+        "code.source.module": "modTestModule",
+        "code.source.line": "5",
+        "code.metrics.lines": "59",
+        "code.metrics.sloc": "53",
+        "code.metrics.cyclomatic": "12"
+      }
+    },
+    {
+      "id": "modTS_Data.AddBigSearchButton",
+      "label": "AddBigSearchButton",
+      "tier": "Modules",
+      "containerId": "modTS_Data",
+      "metadata": {
+        "code.module": "modTS_Data",
+        "code.proc": "AddBigSearchButton",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modTS_Data.bas",
+        "code.locs.startLine": "160",
+        "code.locs.endLine": "194",
+        "code.source.file": "Modules/modTS_Data.bas",
+        "code.source.module": "modTS_Data",
+        "code.source.line": "160",
+        "code.metrics.lines": "35",
+        "code.metrics.sloc": "32",
+        "code.metrics.cyclomatic": "5"
+      }
+    },
+    {
+      "id": "modTS_Data.ClearTableFilters",
+      "label": "ClearTableFilters",
+      "tier": "Modules",
+      "containerId": "modTS_Data",
+      "metadata": {
+        "code.module": "modTS_Data",
+        "code.proc": "ClearTableFilters",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modTS_Data.bas",
+        "code.locs.startLine": "138",
+        "code.locs.endLine": "159",
+        "code.source.file": "Modules/modTS_Data.bas",
+        "code.source.module": "modTS_Data",
+        "code.source.line": "138",
+        "code.metrics.lines": "22",
+        "code.metrics.sloc": "19",
+        "code.metrics.cyclomatic": "13"
+      }
+    },
+    {
+      "id": "modTS_Data.GenerateRowNumbers",
+      "label": "GenerateRowNumbers",
+      "tier": "Modules",
+      "containerId": "modTS_Data",
+      "metadata": {
+        "code.module": "modTS_Data",
+        "code.proc": "GenerateRowNumbers",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modTS_Data.bas",
+        "code.locs.startLine": "69",
+        "code.locs.endLine": "108",
+        "code.source.file": "Modules/modTS_Data.bas",
+        "code.source.module": "modTS_Data",
+        "code.source.line": "69",
+        "code.metrics.lines": "40",
+        "code.metrics.sloc": "34",
+        "code.metrics.cyclomatic": "10"
+      }
+    },
+    {
+      "id": "modTS_Data.IsInItemsColumn",
+      "label": "IsInItemsColumn",
+      "tier": "Modules",
+      "containerId": "modTS_Data",
+      "metadata": {
+        "code.module": "modTS_Data",
+        "code.proc": "IsInItemsColumn",
+        "code.kind": "Function",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modTS_Data.bas",
+        "code.locs.startLine": "109",
+        "code.locs.endLine": "136",
+        "code.source.file": "Modules/modTS_Data.bas",
+        "code.source.module": "modTS_Data",
+        "code.source.line": "109",
+        "code.metrics.lines": "28",
+        "code.metrics.sloc": "19",
+        "code.metrics.cyclomatic": "8"
+      }
+    },
+    {
+      "id": "modTS_Data.LoadItemList",
+      "label": "LoadItemList",
+      "tier": "Modules",
+      "containerId": "modTS_Data",
+      "metadata": {
+        "code.module": "modTS_Data",
+        "code.proc": "LoadItemList",
+        "code.kind": "Function",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modTS_Data.bas",
+        "code.locs.startLine": "7",
+        "code.locs.endLine": "68",
+        "code.source.file": "Modules/modTS_Data.bas",
+        "code.source.module": "modTS_Data",
+        "code.source.line": "7",
+        "code.metrics.lines": "62",
+        "code.metrics.sloc": "50",
+        "code.metrics.cyclomatic": "10"
+      }
+    },
+    {
+      "id": "modTS_Data.SetupAllHandlers",
+      "label": "SetupAllHandlers",
+      "tier": "Modules",
+      "containerId": "modTS_Data",
+      "metadata": {
+        "code.module": "modTS_Data",
+        "code.proc": "SetupAllHandlers",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modTS_Data.bas",
+        "code.locs.startLine": "195",
+        "code.locs.endLine": "204",
+        "code.source.file": "Modules/modTS_Data.bas",
+        "code.source.module": "modTS_Data",
+        "code.source.line": "195",
+        "code.metrics.lines": "10",
+        "code.metrics.sloc": "6",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "modTS_Launchers.LaunchReceivedTally",
+      "label": "LaunchReceivedTally",
+      "tier": "Modules",
+      "containerId": "modTS_Launchers",
+      "metadata": {
+        "code.module": "modTS_Launchers",
+        "code.proc": "LaunchReceivedTally",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modTS_Launchers.bas",
+        "code.locs.startLine": "15",
+        "code.locs.endLine": "19",
+        "code.source.file": "Modules/modTS_Launchers.bas",
+        "code.source.module": "modTS_Launchers",
+        "code.source.line": "15",
+        "code.metrics.lines": "5",
+        "code.metrics.sloc": "4",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "modTS_Launchers.LaunchShipmentsTally",
+      "label": "LaunchShipmentsTally",
+      "tier": "Modules",
+      "containerId": "modTS_Launchers",
+      "metadata": {
+        "code.module": "modTS_Launchers",
+        "code.proc": "LaunchShipmentsTally",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modTS_Launchers.bas",
+        "code.locs.startLine": "9",
+        "code.locs.endLine": "13",
+        "code.source.file": "Modules/modTS_Launchers.bas",
+        "code.source.module": "modTS_Launchers",
+        "code.source.line": "9",
+        "code.metrics.lines": "5",
+        "code.metrics.sloc": "4",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "modTS_Log.LogReceivedDetailed",
+      "label": "LogReceivedDetailed",
+      "tier": "Modules",
+      "containerId": "modTS_Log",
+      "metadata": {
+        "code.module": "modTS_Log",
+        "code.proc": "LogReceivedDetailed",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modTS_Log.bas",
+        "code.locs.startLine": "15",
+        "code.locs.endLine": "70",
+        "code.source.file": "Modules/modTS_Log.bas",
+        "code.source.module": "modTS_Log",
+        "code.source.line": "15",
+        "code.metrics.lines": "56",
+        "code.metrics.sloc": "50",
+        "code.metrics.cyclomatic": "24"
+      }
+    },
+    {
+      "id": "modTS_Received.AppendReceivedLogRecord",
+      "label": "AppendReceivedLogRecord",
+      "tier": "Modules",
+      "containerId": "modTS_Received",
+      "metadata": {
+        "code.module": "modTS_Received",
+        "code.proc": "AppendReceivedLogRecord",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modTS_Received.bas",
+        "code.locs.startLine": "239",
+        "code.locs.endLine": "264",
+        "code.source.file": "Modules/modTS_Received.bas",
+        "code.source.module": "modTS_Received",
+        "code.source.line": "239",
+        "code.metrics.lines": "26",
+        "code.metrics.sloc": "20",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "modTS_Received.GetReceivingDetails",
+      "label": "GetReceivingDetails",
+      "tier": "Modules",
+      "containerId": "modTS_Received",
+      "metadata": {
+        "code.module": "modTS_Received",
+        "code.proc": "GetReceivingDetails",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modTS_Received.bas",
+        "code.locs.startLine": "202",
+        "code.locs.endLine": "236",
+        "code.source.file": "Modules/modTS_Received.bas",
+        "code.source.module": "modTS_Received",
+        "code.source.line": "202",
+        "code.metrics.lines": "35",
+        "code.metrics.sloc": "27",
+        "code.metrics.cyclomatic": "4"
+      }
+    },
+    {
+      "id": "modTS_Received.GetUOMFromDataTable",
+      "label": "GetUOMFromDataTable",
+      "tier": "Modules",
+      "containerId": "modTS_Received",
+      "metadata": {
+        "code.module": "modTS_Received",
+        "code.proc": "GetUOMFromDataTable",
+        "code.kind": "Function",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modTS_Received.bas",
+        "code.locs.startLine": "266",
+        "code.locs.endLine": "307",
+        "code.source.file": "Modules/modTS_Received.bas",
+        "code.source.module": "modTS_Received",
+        "code.source.line": "266",
+        "code.metrics.lines": "42",
+        "code.metrics.sloc": "33",
+        "code.metrics.cyclomatic": "14"
+      }
+    },
+    {
+      "id": "modTS_Received.PopulateReceivedForm",
+      "label": "PopulateReceivedForm",
+      "tier": "Modules",
+      "containerId": "modTS_Received",
+      "metadata": {
+        "code.module": "modTS_Received",
+        "code.proc": "PopulateReceivedForm",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Modules/modTS_Received.bas",
+        "code.locs.startLine": "58",
+        "code.locs.endLine": "130",
+        "code.source.file": "Modules/modTS_Received.bas",
+        "code.source.module": "modTS_Received",
+        "code.source.line": "58",
+        "code.metrics.lines": "73",
+        "code.metrics.sloc": "57",
+        "code.metrics.cyclomatic": "10"
+      }
+    },
+    {
+      "id": "modTS_Received.ProcessReceivedBatch",
+      "label": "ProcessReceivedBatch",
+      "tier": "Modules",
+      "containerId": "modTS_Received",
+      "metadata": {
+        "code.module": "modTS_Received",
+        "code.proc": "ProcessReceivedBatch",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modTS_Received.bas",
+        "code.locs.startLine": "132",
+        "code.locs.endLine": "199",
+        "code.source.file": "Modules/modTS_Received.bas",
+        "code.source.module": "modTS_Received",
+        "code.source.line": "132",
+        "code.metrics.lines": "68",
+        "code.metrics.sloc": "55",
+        "code.metrics.cyclomatic": "4"
+      }
+    },
+    {
+      "id": "modTS_Received.TallyReceived",
+      "label": "TallyReceived",
+      "tier": "Modules",
+      "containerId": "modTS_Received",
+      "metadata": {
+        "code.module": "modTS_Received",
+        "code.proc": "TallyReceived",
+        "code.kind": "Sub",
+        "code.locs.file": "Modules/modTS_Received.bas",
+        "code.locs.startLine": "10",
+        "code.locs.endLine": "56",
+        "code.source.file": "Modules/modTS_Received.bas",
+        "code.source.module": "modTS_Received",
+        "code.source.line": "10",
+        "code.metrics.lines": "47",
+        "code.metrics.sloc": "38",
+        "code.metrics.cyclomatic": "7"
+      }
+    },
+    {
+      "id": "modTS_Shipments.GetUOMFromDataTable",
+      "label": "GetUOMFromDataTable",
+      "tier": "Modules",
+      "containerId": "modTS_Shipments",
+      "metadata": {
+        "code.module": "modTS_Shipments",
+        "code.proc": "GetUOMFromDataTable",
+        "code.kind": "Function",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modTS_Shipments.bas",
+        "code.locs.startLine": "202",
+        "code.locs.endLine": "243",
+        "code.source.file": "Modules/modTS_Shipments.bas",
+        "code.source.module": "modTS_Shipments",
+        "code.source.line": "202",
+        "code.metrics.lines": "42",
+        "code.metrics.sloc": "33",
+        "code.metrics.cyclomatic": "14"
+      }
+    },
+    {
+      "id": "modTS_Shipments.PopulateShipmentsForm",
+      "label": "PopulateShipmentsForm",
+      "tier": "Modules",
+      "containerId": "modTS_Shipments",
+      "metadata": {
+        "code.module": "modTS_Shipments",
+        "code.proc": "PopulateShipmentsForm",
+        "code.kind": "Sub",
+        "code.locs.file": "Modules/modTS_Shipments.bas",
+        "code.locs.startLine": "31",
+        "code.locs.endLine": "141",
+        "code.source.file": "Modules/modTS_Shipments.bas",
+        "code.source.module": "modTS_Shipments",
+        "code.source.line": "31",
+        "code.metrics.lines": "111",
+        "code.metrics.sloc": "93",
+        "code.metrics.cyclomatic": "28"
+      }
+    },
+    {
+      "id": "modTS_Shipments.ProcessShipmentsBatch",
+      "label": "ProcessShipmentsBatch",
+      "tier": "Modules",
+      "containerId": "modTS_Shipments",
+      "metadata": {
+        "code.module": "modTS_Shipments",
+        "code.proc": "ProcessShipmentsBatch",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modTS_Shipments.bas",
+        "code.locs.startLine": "143",
+        "code.locs.endLine": "200",
+        "code.source.file": "Modules/modTS_Shipments.bas",
+        "code.source.module": "modTS_Shipments",
+        "code.source.line": "143",
+        "code.metrics.lines": "58",
+        "code.metrics.sloc": "46",
+        "code.metrics.cyclomatic": "4"
+      }
+    },
+    {
+      "id": "modTS_Shipments.TallyShipments",
+      "label": "TallyShipments",
+      "tier": "Modules",
+      "containerId": "modTS_Shipments",
+      "metadata": {
+        "code.module": "modTS_Shipments",
+        "code.proc": "TallyShipments",
+        "code.kind": "Sub",
+        "code.locs.file": "Modules/modTS_Shipments.bas",
+        "code.locs.startLine": "5",
+        "code.locs.endLine": "29",
+        "code.source.file": "Modules/modTS_Shipments.bas",
+        "code.source.module": "modTS_Shipments",
+        "code.source.line": "5",
+        "code.metrics.lines": "25",
+        "code.metrics.sloc": "20",
+        "code.metrics.cyclomatic": "5"
+      }
+    },
+    {
+      "id": "modTS_Tally.ColumnIndex",
+      "label": "ColumnIndex",
+      "tier": "Modules",
+      "containerId": "modTS_Tally",
+      "metadata": {
+        "code.module": "modTS_Tally",
+        "code.proc": "ColumnIndex",
+        "code.kind": "Function",
+        "code.access": "Private",
+        "code.locs.file": "Modules/modTS_Tally.bas",
+        "code.locs.startLine": "31",
+        "code.locs.endLine": "40",
+        "code.source.file": "Modules/modTS_Tally.bas",
+        "code.source.module": "modTS_Tally",
+        "code.source.line": "31",
+        "code.metrics.lines": "10",
+        "code.metrics.sloc": "9",
+        "code.metrics.cyclomatic": "4"
+      }
+    },
+    {
+      "id": "modTS_Tally.FindRowByValue",
+      "label": "FindRowByValue",
+      "tier": "Modules",
+      "containerId": "modTS_Tally",
+      "metadata": {
+        "code.module": "modTS_Tally",
+        "code.proc": "FindRowByValue",
+        "code.kind": "Function",
+        "code.access": "Private",
+        "code.locs.file": "Modules/modTS_Tally.bas",
+        "code.locs.startLine": "67",
+        "code.locs.endLine": "84",
+        "code.source.file": "Modules/modTS_Tally.bas",
+        "code.source.module": "modTS_Tally",
+        "code.source.line": "67",
+        "code.metrics.lines": "18",
+        "code.metrics.sloc": "16",
+        "code.metrics.cyclomatic": "7"
+      }
+    },
+    {
+      "id": "modTS_Tally.GetInvSysValue",
+      "label": "GetInvSysValue",
+      "tier": "Modules",
+      "containerId": "modTS_Tally",
+      "metadata": {
+        "code.module": "modTS_Tally",
+        "code.proc": "GetInvSysValue",
+        "code.kind": "Function",
+        "code.access": "Private",
+        "code.locs.file": "Modules/modTS_Tally.bas",
+        "code.locs.startLine": "50",
+        "code.locs.endLine": "64",
+        "code.source.file": "Modules/modTS_Tally.bas",
+        "code.source.module": "modTS_Tally",
+        "code.source.line": "50",
+        "code.metrics.lines": "15",
+        "code.metrics.sloc": "14",
+        "code.metrics.cyclomatic": "4"
+      }
+    },
+    {
+      "id": "modTS_Tally.GetItemUOMByRowNum",
+      "label": "GetItemUOMByRowNum",
+      "tier": "Modules",
+      "containerId": "modTS_Tally",
+      "metadata": {
+        "code.module": "modTS_Tally",
+        "code.proc": "GetItemUOMByRowNum",
+        "code.kind": "Function",
+        "code.access": "Private",
+        "code.locs.file": "Modules/modTS_Tally.bas",
+        "code.locs.startLine": "45",
+        "code.locs.endLine": "47",
+        "code.source.file": "Modules/modTS_Tally.bas",
+        "code.source.module": "modTS_Tally",
+        "code.source.line": "45",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "modTS_Tally.GetUOMFromInvSys",
+      "label": "GetUOMFromInvSys",
+      "tier": "Modules",
+      "containerId": "modTS_Tally",
+      "metadata": {
+        "code.module": "modTS_Tally",
+        "code.proc": "GetUOMFromInvSys",
+        "code.kind": "Function",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modTS_Tally.bas",
+        "code.locs.startLine": "86",
+        "code.locs.endLine": "124",
+        "code.source.file": "Modules/modTS_Tally.bas",
+        "code.source.module": "modTS_Tally",
+        "code.source.line": "86",
+        "code.metrics.lines": "39",
+        "code.metrics.sloc": "33",
+        "code.metrics.cyclomatic": "14"
+      }
+    },
+    {
+      "id": "modTS_Tally.lstBox_DblClick",
+      "label": "lstBox_DblClick",
+      "tier": "Modules",
+      "containerId": "modTS_Tally",
+      "metadata": {
+        "code.module": "modTS_Tally",
+        "code.proc": "lstBox_DblClick",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Modules/modTS_Tally.bas",
+        "code.locs.startLine": "26",
+        "code.locs.endLine": "28",
+        "code.source.file": "Modules/modTS_Tally.bas",
+        "code.source.module": "modTS_Tally",
+        "code.source.line": "26",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "modTS_Tally.lstBox_KeyDown",
+      "label": "lstBox_KeyDown",
+      "tier": "Modules",
+      "containerId": "modTS_Tally",
+      "metadata": {
+        "code.module": "modTS_Tally",
+        "code.proc": "lstBox_KeyDown",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Modules/modTS_Tally.bas",
+        "code.locs.startLine": "18",
+        "code.locs.endLine": "23",
+        "code.source.file": "Modules/modTS_Tally.bas",
+        "code.source.module": "modTS_Tally",
+        "code.source.line": "18",
+        "code.metrics.lines": "6",
+        "code.metrics.sloc": "5",
+        "code.metrics.cyclomatic": "3"
+      }
+    },
+    {
+      "id": "modTS_Tally.NormalizeText",
+      "label": "NormalizeText",
+      "tier": "Modules",
+      "containerId": "modTS_Tally",
+      "metadata": {
+        "code.module": "modTS_Tally",
+        "code.proc": "NormalizeText",
+        "code.kind": "Function",
+        "code.access": "Private",
+        "code.locs.file": "Modules/modTS_Tally.bas",
+        "code.locs.startLine": "10",
+        "code.locs.endLine": "15",
+        "code.source.file": "Modules/modTS_Tally.bas",
+        "code.source.module": "modTS_Tally",
+        "code.source.line": "10",
+        "code.metrics.lines": "6",
+        "code.metrics.sloc": "4",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "modUR_ExcelIntegration.DisableEvents",
+      "label": "DisableEvents",
+      "tier": "Modules",
+      "containerId": "modUR_ExcelIntegration",
+      "metadata": {
+        "code.module": "modUR_ExcelIntegration",
+        "code.proc": "DisableEvents",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Modules/modUR_ExcelIntegration.bas",
+        "code.locs.startLine": "14",
+        "code.locs.endLine": "17",
+        "code.source.file": "Modules/modUR_ExcelIntegration.bas",
+        "code.source.module": "modUR_ExcelIntegration",
+        "code.source.line": "14",
+        "code.metrics.lines": "4",
+        "code.metrics.sloc": "3",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "modUR_ExcelIntegration.EnableEvents",
+      "label": "EnableEvents",
+      "tier": "Modules",
+      "containerId": "modUR_ExcelIntegration",
+      "metadata": {
+        "code.module": "modUR_ExcelIntegration",
+        "code.proc": "EnableEvents",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Modules/modUR_ExcelIntegration.bas",
+        "code.locs.startLine": "18",
+        "code.locs.endLine": "21",
+        "code.source.file": "Modules/modUR_ExcelIntegration.bas",
+        "code.source.module": "modUR_ExcelIntegration",
+        "code.source.line": "18",
+        "code.metrics.lines": "4",
+        "code.metrics.sloc": "3",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "modUR_ExcelIntegration.Workbook_Open",
+      "label": "Workbook_Open",
+      "tier": "Modules",
+      "containerId": "modUR_ExcelIntegration",
+      "metadata": {
+        "code.module": "modUR_ExcelIntegration",
+        "code.proc": "Workbook_Open",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Modules/modUR_ExcelIntegration.bas",
+        "code.locs.startLine": "23",
+        "code.locs.endLine": "26",
+        "code.source.file": "Modules/modUR_ExcelIntegration.bas",
+        "code.source.module": "modUR_ExcelIntegration",
+        "code.source.line": "23",
+        "code.metrics.lines": "4",
+        "code.metrics.sloc": "3",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "modUR_ExcelIntegration.Worksheet_Change",
+      "label": "Worksheet_Change",
+      "tier": "Modules",
+      "containerId": "modUR_ExcelIntegration",
+      "metadata": {
+        "code.module": "modUR_ExcelIntegration",
+        "code.proc": "Worksheet_Change",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Modules/modUR_ExcelIntegration.bas",
+        "code.locs.startLine": "10",
+        "code.locs.endLine": "12",
+        "code.source.file": "Modules/modUR_ExcelIntegration.bas",
+        "code.source.module": "modUR_ExcelIntegration",
+        "code.source.line": "10",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "1",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "modUR_Snapshot.CaptureSnapshot",
+      "label": "CaptureSnapshot",
+      "tier": "Modules",
+      "containerId": "modUR_Snapshot",
+      "metadata": {
+        "code.module": "modUR_Snapshot",
+        "code.proc": "CaptureSnapshot",
+        "code.kind": "Function",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modUR_Snapshot.bas",
+        "code.locs.startLine": "10",
+        "code.locs.endLine": "40",
+        "code.source.file": "Modules/modUR_Snapshot.bas",
+        "code.source.module": "modUR_Snapshot",
+        "code.source.line": "10",
+        "code.metrics.lines": "31",
+        "code.metrics.sloc": "30",
+        "code.metrics.cyclomatic": "8"
+      }
+    },
+    {
+      "id": "modUR_Snapshot.GenerateGUID",
+      "label": "GenerateGUID",
+      "tier": "Modules",
+      "containerId": "modUR_Snapshot",
+      "metadata": {
+        "code.module": "modUR_Snapshot",
+        "code.proc": "GenerateGUID",
+        "code.kind": "Function",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modUR_Snapshot.bas",
+        "code.locs.startLine": "82",
+        "code.locs.endLine": "92",
+        "code.source.file": "Modules/modUR_Snapshot.bas",
+        "code.source.module": "modUR_Snapshot",
+        "code.source.line": "82",
+        "code.metrics.lines": "11",
+        "code.metrics.sloc": "10",
+        "code.metrics.cyclomatic": "2"
+      }
+    },
+    {
+      "id": "modUR_Snapshot.GetInventoryTable",
+      "label": "GetInventoryTable",
+      "tier": "Modules",
+      "containerId": "modUR_Snapshot",
+      "metadata": {
+        "code.module": "modUR_Snapshot",
+        "code.proc": "GetInventoryTable",
+        "code.kind": "Function",
+        "code.access": "Private",
+        "code.locs.file": "Modules/modUR_Snapshot.bas",
+        "code.locs.startLine": "74",
+        "code.locs.endLine": "81",
+        "code.source.file": "Modules/modUR_Snapshot.bas",
+        "code.source.module": "modUR_Snapshot",
+        "code.source.line": "74",
+        "code.metrics.lines": "8",
+        "code.metrics.sloc": "7",
+        "code.metrics.cyclomatic": "3"
+      }
+    },
+    {
+      "id": "modUR_Snapshot.GetSchemaHash",
+      "label": "GetSchemaHash",
+      "tier": "Modules",
+      "containerId": "modUR_Snapshot",
+      "metadata": {
+        "code.module": "modUR_Snapshot",
+        "code.proc": "GetSchemaHash",
+        "code.kind": "Function",
+        "code.access": "Private",
+        "code.locs.file": "Modules/modUR_Snapshot.bas",
+        "code.locs.startLine": "93",
+        "code.locs.endLine": "115",
+        "code.source.file": "Modules/modUR_Snapshot.bas",
+        "code.source.module": "modUR_Snapshot",
+        "code.source.line": "93",
+        "code.metrics.lines": "23",
+        "code.metrics.sloc": "22",
+        "code.metrics.cyclomatic": "5"
+      }
+    },
+    {
+      "id": "modUR_Snapshot.InitializeSnapshots",
+      "label": "InitializeSnapshots",
+      "tier": "Modules",
+      "containerId": "modUR_Snapshot",
+      "metadata": {
+        "code.module": "modUR_Snapshot",
+        "code.proc": "InitializeSnapshots",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Modules/modUR_Snapshot.bas",
+        "code.locs.startLine": "6",
+        "code.locs.endLine": "9",
+        "code.source.file": "Modules/modUR_Snapshot.bas",
+        "code.source.module": "modUR_Snapshot",
+        "code.source.line": "6",
+        "code.metrics.lines": "4",
+        "code.metrics.sloc": "3",
+        "code.metrics.cyclomatic": "3"
+      }
+    },
+    {
+      "id": "modUR_Snapshot.RestoreSnapshot",
+      "label": "RestoreSnapshot",
+      "tier": "Modules",
+      "containerId": "modUR_Snapshot",
+      "metadata": {
+        "code.module": "modUR_Snapshot",
+        "code.proc": "RestoreSnapshot",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modUR_Snapshot.bas",
+        "code.locs.startLine": "41",
+        "code.locs.endLine": "73",
+        "code.source.file": "Modules/modUR_Snapshot.bas",
+        "code.source.module": "modUR_Snapshot",
+        "code.source.line": "41",
+        "code.metrics.lines": "33",
+        "code.metrics.sloc": "32",
+        "code.metrics.cyclomatic": "7"
+      }
+    },
+    {
+      "id": "modUR_Transaction.BeginTransaction",
+      "label": "BeginTransaction",
+      "tier": "Modules",
+      "containerId": "modUR_Transaction",
+      "metadata": {
+        "code.module": "modUR_Transaction",
+        "code.proc": "BeginTransaction",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modUR_Transaction.bas",
+        "code.locs.startLine": "34",
+        "code.locs.endLine": "41",
+        "code.source.file": "Modules/modUR_Transaction.bas",
+        "code.source.module": "modUR_Transaction",
+        "code.source.line": "34",
+        "code.metrics.lines": "8",
+        "code.metrics.sloc": "6",
+        "code.metrics.cyclomatic": "2"
+      }
+    },
+    {
+      "id": "modUR_Transaction.CommitTransaction",
+      "label": "CommitTransaction",
+      "tier": "Modules",
+      "containerId": "modUR_Transaction",
+      "metadata": {
+        "code.module": "modUR_Transaction",
+        "code.proc": "CommitTransaction",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modUR_Transaction.bas",
+        "code.locs.startLine": "42",
+        "code.locs.endLine": "63",
+        "code.source.file": "Modules/modUR_Transaction.bas",
+        "code.source.module": "modUR_Transaction",
+        "code.source.line": "42",
+        "code.metrics.lines": "22",
+        "code.metrics.sloc": "21",
+        "code.metrics.cyclomatic": "5"
+      }
+    },
+    {
+      "id": "modUR_Transaction.GetCurrentTransactionID",
+      "label": "GetCurrentTransactionID",
+      "tier": "Modules",
+      "containerId": "modUR_Transaction",
+      "metadata": {
+        "code.module": "modUR_Transaction",
+        "code.proc": "GetCurrentTransactionID",
+        "code.kind": "Function",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modUR_Transaction.bas",
+        "code.locs.startLine": "69",
+        "code.locs.endLine": "71",
+        "code.source.file": "Modules/modUR_Transaction.bas",
+        "code.source.module": "modUR_Transaction",
+        "code.source.line": "69",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "modUR_Transaction.IsInTransaction",
+      "label": "IsInTransaction",
+      "tier": "Modules",
+      "containerId": "modUR_Transaction",
+      "metadata": {
+        "code.module": "modUR_Transaction",
+        "code.proc": "IsInTransaction",
+        "code.kind": "Function",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modUR_Transaction.bas",
+        "code.locs.startLine": "65",
+        "code.locs.endLine": "67",
+        "code.source.file": "Modules/modUR_Transaction.bas",
+        "code.source.module": "modUR_Transaction",
+        "code.source.line": "65",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "modUR_Transaction.RollbackTransaction",
+      "label": "RollbackTransaction",
+      "tier": "Modules",
+      "containerId": "modUR_Transaction",
+      "metadata": {
+        "code.module": "modUR_Transaction",
+        "code.proc": "RollbackTransaction",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modUR_Transaction.bas",
+        "code.locs.startLine": "76",
+        "code.locs.endLine": "83",
+        "code.source.file": "Modules/modUR_Transaction.bas",
+        "code.source.module": "modUR_Transaction",
+        "code.source.line": "76",
+        "code.metrics.lines": "8",
+        "code.metrics.sloc": "6",
+        "code.metrics.cyclomatic": "2"
+      }
+    },
+    {
+      "id": "modUR_Transaction.SetCurrentTransactionLogCount",
+      "label": "SetCurrentTransactionLogCount",
+      "tier": "Modules",
+      "containerId": "modUR_Transaction",
+      "metadata": {
+        "code.module": "modUR_Transaction",
+        "code.proc": "SetCurrentTransactionLogCount",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modUR_Transaction.bas",
+        "code.locs.startLine": "73",
+        "code.locs.endLine": "75",
+        "code.source.file": "Modules/modUR_Transaction.bas",
+        "code.source.module": "modUR_Transaction",
+        "code.source.line": "73",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "modUR_Transaction.TrackTransactionChange",
+      "label": "TrackTransactionChange",
+      "tier": "Modules",
+      "containerId": "modUR_Transaction",
+      "metadata": {
+        "code.module": "modUR_Transaction",
+        "code.proc": "TrackTransactionChange",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modUR_Transaction.bas",
+        "code.locs.startLine": "8",
+        "code.locs.endLine": "33",
+        "code.source.file": "Modules/modUR_Transaction.bas",
+        "code.source.module": "modUR_Transaction",
+        "code.source.line": "8",
+        "code.metrics.lines": "26",
+        "code.metrics.sloc": "25",
+        "code.metrics.cyclomatic": "7"
+      }
+    },
+    {
+      "id": "modUR_UndoRedo.AddToUndoStack",
+      "label": "AddToUndoStack",
+      "tier": "Modules",
+      "containerId": "modUR_UndoRedo",
+      "metadata": {
+        "code.module": "modUR_UndoRedo",
+        "code.proc": "AddToUndoStack",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modUR_UndoRedo.bas",
+        "code.locs.startLine": "62",
+        "code.locs.endLine": "66",
+        "code.source.file": "Modules/modUR_UndoRedo.bas",
+        "code.source.module": "modUR_UndoRedo",
+        "code.source.line": "62",
+        "code.metrics.lines": "5",
+        "code.metrics.sloc": "4",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "modUR_UndoRedo.ClearRedoStack",
+      "label": "ClearRedoStack",
+      "tier": "Modules",
+      "containerId": "modUR_UndoRedo",
+      "metadata": {
+        "code.module": "modUR_UndoRedo",
+        "code.proc": "ClearRedoStack",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modUR_UndoRedo.bas",
+        "code.locs.startLine": "67",
+        "code.locs.endLine": "69",
+        "code.source.file": "Modules/modUR_UndoRedo.bas",
+        "code.source.module": "modUR_UndoRedo",
+        "code.source.line": "67",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "modUR_UndoRedo.GetUndoStack",
+      "label": "GetUndoStack",
+      "tier": "Modules",
+      "containerId": "modUR_UndoRedo",
+      "metadata": {
+        "code.module": "modUR_UndoRedo",
+        "code.proc": "GetUndoStack",
+        "code.kind": "Function",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modUR_UndoRedo.bas",
+        "code.locs.startLine": "70",
+        "code.locs.endLine": "72",
+        "code.source.file": "Modules/modUR_UndoRedo.bas",
+        "code.source.module": "modUR_UndoRedo",
+        "code.source.line": "70",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "modUR_UndoRedo.PruneUndoStack",
+      "label": "PruneUndoStack",
+      "tier": "Modules",
+      "containerId": "modUR_UndoRedo",
+      "metadata": {
+        "code.module": "modUR_UndoRedo",
+        "code.proc": "PruneUndoStack",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Modules/modUR_UndoRedo.bas",
+        "code.locs.startLine": "57",
+        "code.locs.endLine": "61",
+        "code.source.file": "Modules/modUR_UndoRedo.bas",
+        "code.source.module": "modUR_UndoRedo",
+        "code.source.line": "57",
+        "code.metrics.lines": "5",
+        "code.metrics.sloc": "4",
+        "code.metrics.cyclomatic": "3"
+      }
+    },
+    {
+      "id": "modUR_UndoRedo.RedoLastAction",
+      "label": "RedoLastAction",
+      "tier": "Modules",
+      "containerId": "modUR_UndoRedo",
+      "metadata": {
+        "code.module": "modUR_UndoRedo",
+        "code.proc": "RedoLastAction",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modUR_UndoRedo.bas",
+        "code.locs.startLine": "39",
+        "code.locs.endLine": "56",
+        "code.source.file": "Modules/modUR_UndoRedo.bas",
+        "code.source.module": "modUR_UndoRedo",
+        "code.source.line": "39",
+        "code.metrics.lines": "18",
+        "code.metrics.sloc": "17",
+        "code.metrics.cyclomatic": "6"
+      }
+    },
+    {
+      "id": "modUR_UndoRedo.TrackChange",
+      "label": "TrackChange",
+      "tier": "Modules",
+      "containerId": "modUR_UndoRedo",
+      "metadata": {
+        "code.module": "modUR_UndoRedo",
+        "code.proc": "TrackChange",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modUR_UndoRedo.bas",
+        "code.locs.startLine": "6",
+        "code.locs.endLine": "19",
+        "code.source.file": "Modules/modUR_UndoRedo.bas",
+        "code.source.module": "modUR_UndoRedo",
+        "code.source.line": "6",
+        "code.metrics.lines": "14",
+        "code.metrics.sloc": "13",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "modUR_UndoRedo.UndoLastAction",
+      "label": "UndoLastAction",
+      "tier": "Modules",
+      "containerId": "modUR_UndoRedo",
+      "metadata": {
+        "code.module": "modUR_UndoRedo",
+        "code.proc": "UndoLastAction",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/modUR_UndoRedo.bas",
+        "code.locs.startLine": "20",
+        "code.locs.endLine": "38",
+        "code.source.file": "Modules/modUR_UndoRedo.bas",
+        "code.source.module": "modUR_UndoRedo",
+        "code.source.line": "20",
+        "code.metrics.lines": "19",
+        "code.metrics.sloc": "17",
+        "code.metrics.cyclomatic": "6"
+      }
+    },
+    {
+      "id": "MouseOverControl.Class_Terminate",
+      "label": "Class_Terminate",
+      "tier": "Classes",
+      "containerId": "MouseOverControl",
+      "metadata": {
+        "code.module": "MouseOverControl",
+        "code.proc": "Class_Terminate",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Class Modules/MouseOverControl.cls",
+        "code.locs.startLine": "213",
+        "code.locs.endLine": "215",
+        "code.source.file": "Class Modules/MouseOverControl.cls",
+        "code.source.module": "MouseOverControl",
+        "code.source.line": "213",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "2"
+      }
+    },
+    {
+      "id": "MouseOverControl.CreateFromControl",
+      "label": "CreateFromControl",
+      "tier": "Classes",
+      "containerId": "MouseOverControl",
+      "metadata": {
+        "code.module": "MouseOverControl",
+        "code.proc": "CreateFromControl",
+        "code.kind": "Function",
+        "code.access": "Public",
+        "code.locs.file": "Class Modules/MouseOverControl.cls",
+        "code.locs.startLine": "93",
+        "code.locs.endLine": "101",
+        "code.source.file": "Class Modules/MouseOverControl.cls",
+        "code.source.module": "MouseOverControl",
+        "code.source.line": "93",
+        "code.metrics.lines": "9",
+        "code.metrics.sloc": "8",
+        "code.metrics.cyclomatic": "2"
+      }
+    },
+    {
+      "id": "MouseOverControl.CreateFromForm",
+      "label": "CreateFromForm",
+      "tier": "Classes",
+      "containerId": "MouseOverControl",
+      "metadata": {
+        "code.module": "MouseOverControl",
+        "code.proc": "CreateFromForm",
+        "code.kind": "Function",
+        "code.access": "Public",
+        "code.locs.file": "Class Modules/MouseOverControl.cls",
+        "code.locs.startLine": "103",
+        "code.locs.endLine": "111",
+        "code.source.file": "Class Modules/MouseOverControl.cls",
+        "code.source.module": "MouseOverControl",
+        "code.source.line": "103",
+        "code.metrics.lines": "9",
+        "code.metrics.sloc": "8",
+        "code.metrics.cyclomatic": "2"
+      }
+    },
+    {
+      "id": "MouseOverControl.FormHandle",
+      "label": "FormHandle",
+      "tier": "Classes",
+      "containerId": "MouseOverControl",
+      "metadata": {
+        "code.module": "MouseOverControl",
+        "code.proc": "FormHandle",
+        "code.kind": "PropertyGet",
+        "code.access": "Public",
+        "code.locs.file": "Class Modules/MouseOverControl.cls",
+        "code.locs.startLine": "204",
+        "code.locs.endLine": "209",
+        "code.source.file": "Class Modules/MouseOverControl.cls",
+        "code.source.module": "MouseOverControl",
+        "code.source.line": "204",
+        "code.metrics.lines": "6",
+        "code.metrics.sloc": "5",
+        "code.metrics.cyclomatic": "2"
+      }
+    },
+    {
+      "id": "MouseOverControl.GetControl",
+      "label": "GetControl",
+      "tier": "Classes",
+      "containerId": "MouseOverControl",
+      "metadata": {
+        "code.module": "MouseOverControl",
+        "code.proc": "GetControl",
+        "code.kind": "Function",
+        "code.access": "Public",
+        "code.locs.file": "Class Modules/MouseOverControl.cls",
+        "code.locs.startLine": "200",
+        "code.locs.endLine": "202",
+        "code.source.file": "Class Modules/MouseOverControl.cls",
+        "code.source.module": "MouseOverControl",
+        "code.source.line": "200",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "MouseOverControl.InitFromControl",
+      "label": "InitFromControl",
+      "tier": "Classes",
+      "containerId": "MouseOverControl",
+      "metadata": {
+        "code.module": "MouseOverControl",
+        "code.proc": "InitFromControl",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Class Modules/MouseOverControl.cls",
+        "code.locs.startLine": "113",
+        "code.locs.endLine": "133",
+        "code.source.file": "Class Modules/MouseOverControl.cls",
+        "code.source.module": "MouseOverControl",
+        "code.source.line": "113",
+        "code.metrics.lines": "21",
+        "code.metrics.sloc": "20",
+        "code.metrics.cyclomatic": "15"
+      }
+    },
+    {
+      "id": "MouseOverControl.InitFromForm",
+      "label": "InitFromForm",
+      "tier": "Classes",
+      "containerId": "MouseOverControl",
+      "metadata": {
+        "code.module": "MouseOverControl",
+        "code.proc": "InitFromForm",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Class Modules/MouseOverControl.cls",
+        "code.locs.startLine": "135",
+        "code.locs.endLine": "142",
+        "code.source.file": "Class Modules/MouseOverControl.cls",
+        "code.source.module": "MouseOverControl",
+        "code.source.line": "135",
+        "code.metrics.lines": "8",
+        "code.metrics.sloc": "7",
+        "code.metrics.cyclomatic": "2"
+      }
+    },
+    {
+      "id": "MouseOverControl.IsAsyncCallback",
+      "label": "IsAsyncCallback",
+      "tier": "Classes",
+      "containerId": "MouseOverControl",
+      "metadata": {
+        "code.module": "MouseOverControl",
+        "code.proc": "IsAsyncCallback",
+        "code.kind": "PropertyLet",
+        "code.access": "Public",
+        "code.locs.file": "Class Modules/MouseOverControl.cls",
+        "code.locs.startLine": "210",
+        "code.locs.endLine": "212",
+        "code.source.file": "Class Modules/MouseOverControl.cls",
+        "code.source.module": "MouseOverControl",
+        "code.source.line": "210",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "MouseOverControl.m_CheckBox_MouseMove",
+      "label": "m_CheckBox_MouseMove",
+      "tier": "Classes",
+      "containerId": "MouseOverControl",
+      "metadata": {
+        "code.module": "MouseOverControl",
+        "code.proc": "m_CheckBox_MouseMove",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Class Modules/MouseOverControl.cls",
+        "code.locs.startLine": "144",
+        "code.locs.endLine": "146",
+        "code.source.file": "Class Modules/MouseOverControl.cls",
+        "code.source.module": "MouseOverControl",
+        "code.source.line": "144",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "MouseOverControl.m_ComboBox_MouseMove",
+      "label": "m_ComboBox_MouseMove",
+      "tier": "Classes",
+      "containerId": "MouseOverControl",
+      "metadata": {
+        "code.module": "MouseOverControl",
+        "code.proc": "m_ComboBox_MouseMove",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Class Modules/MouseOverControl.cls",
+        "code.locs.startLine": "147",
+        "code.locs.endLine": "149",
+        "code.source.file": "Class Modules/MouseOverControl.cls",
+        "code.source.module": "MouseOverControl",
+        "code.source.line": "147",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "MouseOverControl.m_CommandButton_MouseMove",
+      "label": "m_CommandButton_MouseMove",
+      "tier": "Classes",
+      "containerId": "MouseOverControl",
+      "metadata": {
+        "code.module": "MouseOverControl",
+        "code.proc": "m_CommandButton_MouseMove",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Class Modules/MouseOverControl.cls",
+        "code.locs.startLine": "150",
+        "code.locs.endLine": "152",
+        "code.source.file": "Class Modules/MouseOverControl.cls",
+        "code.source.module": "MouseOverControl",
+        "code.source.line": "150",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "MouseOverControl.m_Frame_MouseMove",
+      "label": "m_Frame_MouseMove",
+      "tier": "Classes",
+      "containerId": "MouseOverControl",
+      "metadata": {
+        "code.module": "MouseOverControl",
+        "code.proc": "m_Frame_MouseMove",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Class Modules/MouseOverControl.cls",
+        "code.locs.startLine": "153",
+        "code.locs.endLine": "155",
+        "code.source.file": "Class Modules/MouseOverControl.cls",
+        "code.source.module": "MouseOverControl",
+        "code.source.line": "153",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "MouseOverControl.m_Frame_Scroll",
+      "label": "m_Frame_Scroll",
+      "tier": "Classes",
+      "containerId": "MouseOverControl",
+      "metadata": {
+        "code.module": "MouseOverControl",
+        "code.proc": "m_Frame_Scroll",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Class Modules/MouseOverControl.cls",
+        "code.locs.startLine": "192",
+        "code.locs.endLine": "195",
+        "code.source.file": "Class Modules/MouseOverControl.cls",
+        "code.source.module": "MouseOverControl",
+        "code.source.line": "192",
+        "code.metrics.lines": "4",
+        "code.metrics.sloc": "3",
+        "code.metrics.cyclomatic": "3"
+      }
+    },
+    {
+      "id": "MouseOverControl.m_Image_MouseMove",
+      "label": "m_Image_MouseMove",
+      "tier": "Classes",
+      "containerId": "MouseOverControl",
+      "metadata": {
+        "code.module": "MouseOverControl",
+        "code.proc": "m_Image_MouseMove",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Class Modules/MouseOverControl.cls",
+        "code.locs.startLine": "156",
+        "code.locs.endLine": "158",
+        "code.source.file": "Class Modules/MouseOverControl.cls",
+        "code.source.module": "MouseOverControl",
+        "code.source.line": "156",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "MouseOverControl.m_Label_MouseMove",
+      "label": "m_Label_MouseMove",
+      "tier": "Classes",
+      "containerId": "MouseOverControl",
+      "metadata": {
+        "code.module": "MouseOverControl",
+        "code.proc": "m_Label_MouseMove",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Class Modules/MouseOverControl.cls",
+        "code.locs.startLine": "159",
+        "code.locs.endLine": "161",
+        "code.source.file": "Class Modules/MouseOverControl.cls",
+        "code.source.module": "MouseOverControl",
+        "code.source.line": "159",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "MouseOverControl.m_ListBox_MouseMove",
+      "label": "m_ListBox_MouseMove",
+      "tier": "Classes",
+      "containerId": "MouseOverControl",
+      "metadata": {
+        "code.module": "MouseOverControl",
+        "code.proc": "m_ListBox_MouseMove",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Class Modules/MouseOverControl.cls",
+        "code.locs.startLine": "162",
+        "code.locs.endLine": "164",
+        "code.source.file": "Class Modules/MouseOverControl.cls",
+        "code.source.module": "MouseOverControl",
+        "code.source.line": "162",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "MouseOverControl.m_ListView_MouseMove",
+      "label": "m_ListView_MouseMove",
+      "tier": "Classes",
+      "containerId": "MouseOverControl",
+      "metadata": {
+        "code.module": "MouseOverControl",
+        "code.proc": "m_ListView_MouseMove",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Class Modules/MouseOverControl.cls",
+        "code.locs.startLine": "165",
+        "code.locs.endLine": "167",
+        "code.source.file": "Class Modules/MouseOverControl.cls",
+        "code.source.module": "MouseOverControl",
+        "code.source.line": "165",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "MouseOverControl.m_MultiPage_MouseMove",
+      "label": "m_MultiPage_MouseMove",
+      "tier": "Classes",
+      "containerId": "MouseOverControl",
+      "metadata": {
+        "code.module": "MouseOverControl",
+        "code.proc": "m_MultiPage_MouseMove",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Class Modules/MouseOverControl.cls",
+        "code.locs.startLine": "168",
+        "code.locs.endLine": "170",
+        "code.source.file": "Class Modules/MouseOverControl.cls",
+        "code.source.module": "MouseOverControl",
+        "code.source.line": "168",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "MouseOverControl.m_MultiPage_Scroll",
+      "label": "m_MultiPage_Scroll",
+      "tier": "Classes",
+      "containerId": "MouseOverControl",
+      "metadata": {
+        "code.module": "MouseOverControl",
+        "code.proc": "m_MultiPage_Scroll",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Class Modules/MouseOverControl.cls",
+        "code.locs.startLine": "196",
+        "code.locs.endLine": "199",
+        "code.source.file": "Class Modules/MouseOverControl.cls",
+        "code.source.module": "MouseOverControl",
+        "code.source.line": "196",
+        "code.metrics.lines": "4",
+        "code.metrics.sloc": "3",
+        "code.metrics.cyclomatic": "3"
+      }
+    },
+    {
+      "id": "MouseOverControl.m_OptionButton_MouseMove",
+      "label": "m_OptionButton_MouseMove",
+      "tier": "Classes",
+      "containerId": "MouseOverControl",
+      "metadata": {
+        "code.module": "MouseOverControl",
+        "code.proc": "m_OptionButton_MouseMove",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Class Modules/MouseOverControl.cls",
+        "code.locs.startLine": "171",
+        "code.locs.endLine": "173",
+        "code.source.file": "Class Modules/MouseOverControl.cls",
+        "code.source.module": "MouseOverControl",
+        "code.source.line": "171",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "MouseOverControl.M_TabStrip_MouseMove",
+      "label": "M_TabStrip_MouseMove",
+      "tier": "Classes",
+      "containerId": "MouseOverControl",
+      "metadata": {
+        "code.module": "MouseOverControl",
+        "code.proc": "M_TabStrip_MouseMove",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Class Modules/MouseOverControl.cls",
+        "code.locs.startLine": "174",
+        "code.locs.endLine": "176",
+        "code.source.file": "Class Modules/MouseOverControl.cls",
+        "code.source.module": "MouseOverControl",
+        "code.source.line": "174",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "MouseOverControl.m_TextBox_MouseMove",
+      "label": "m_TextBox_MouseMove",
+      "tier": "Classes",
+      "containerId": "MouseOverControl",
+      "metadata": {
+        "code.module": "MouseOverControl",
+        "code.proc": "m_TextBox_MouseMove",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Class Modules/MouseOverControl.cls",
+        "code.locs.startLine": "177",
+        "code.locs.endLine": "179",
+        "code.source.file": "Class Modules/MouseOverControl.cls",
+        "code.source.module": "MouseOverControl",
+        "code.source.line": "177",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "MouseOverControl.m_ToggleButton_MouseMove",
+      "label": "m_ToggleButton_MouseMove",
+      "tier": "Classes",
+      "containerId": "MouseOverControl",
+      "metadata": {
+        "code.module": "MouseOverControl",
+        "code.proc": "m_ToggleButton_MouseMove",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Class Modules/MouseOverControl.cls",
+        "code.locs.startLine": "180",
+        "code.locs.endLine": "182",
+        "code.source.file": "Class Modules/MouseOverControl.cls",
+        "code.source.module": "MouseOverControl",
+        "code.source.line": "180",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "MouseOverControl.m_UserForm_MouseMove",
+      "label": "m_UserForm_MouseMove",
+      "tier": "Classes",
+      "containerId": "MouseOverControl",
+      "metadata": {
+        "code.module": "MouseOverControl",
+        "code.proc": "m_UserForm_MouseMove",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Class Modules/MouseOverControl.cls",
+        "code.locs.startLine": "183",
+        "code.locs.endLine": "185",
+        "code.source.file": "Class Modules/MouseOverControl.cls",
+        "code.source.module": "MouseOverControl",
+        "code.source.line": "183",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "MouseOverControl.m_UserForm_Scroll",
+      "label": "m_UserForm_Scroll",
+      "tier": "Classes",
+      "containerId": "MouseOverControl",
+      "metadata": {
+        "code.module": "MouseOverControl",
+        "code.proc": "m_UserForm_Scroll",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Class Modules/MouseOverControl.cls",
+        "code.locs.startLine": "188",
+        "code.locs.endLine": "191",
+        "code.source.file": "Class Modules/MouseOverControl.cls",
+        "code.source.module": "MouseOverControl",
+        "code.source.line": "188",
+        "code.metrics.lines": "4",
+        "code.metrics.sloc": "3",
+        "code.metrics.cyclomatic": "3"
+      }
+    },
+    {
+      "id": "MouseScroll.AddForm",
+      "label": "AddForm",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "AddForm",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "341",
+        "code.locs.endLine": "371",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "341",
+        "code.metrics.lines": "31",
+        "code.metrics.sloc": "24",
+        "code.metrics.cyclomatic": "7"
+      }
+    },
+    {
+      "id": "MouseScroll.CollectionHasKey",
+      "label": "CollectionHasKey",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "CollectionHasKey",
+        "code.kind": "Function",
+        "code.access": "Private",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "439",
+        "code.locs.endLine": "444",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "439",
+        "code.metrics.lines": "6",
+        "code.metrics.sloc": "5",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "MouseScroll.DisableMouseScroll",
+      "label": "DisableMouseScroll",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "DisableMouseScroll",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "68",
+        "code.locs.endLine": "269",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "68",
+        "code.metrics.lines": "202",
+        "code.metrics.sloc": "148",
+        "code.metrics.cyclomatic": "13"
+      }
+    },
+    {
+      "id": "MouseScroll.EnableMouseScroll",
+      "label": "EnableMouseScroll",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "EnableMouseScroll",
+        "code.kind": "Function",
+        "code.access": "Public",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "66",
+        "code.locs.endLine": "67",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "66",
+        "code.metrics.lines": "2",
+        "code.metrics.sloc": "1",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "MouseScroll.GetCallbackPtr",
+      "label": "GetCallbackPtr",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "GetCallbackPtr",
+        "code.kind": "Function",
+        "code.access": "Private",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "294",
+        "code.locs.endLine": "301",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "294",
+        "code.metrics.lines": "8",
+        "code.metrics.sloc": "7",
+        "code.metrics.cyclomatic": "3"
+      }
+    },
+    {
+      "id": "MouseScroll.GetControlType",
+      "label": "GetControlType",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "GetControlType",
+        "code.kind": "Function",
+        "code.access": "Private",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "1041",
+        "code.locs.endLine": "1066",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "1041",
+        "code.metrics.lines": "26",
+        "code.metrics.sloc": "25",
+        "code.metrics.cyclomatic": "13"
+      }
+    },
+    {
+      "id": "MouseScroll.GetFormHandle",
+      "label": "GetFormHandle",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "GetFormHandle",
+        "code.kind": "Function",
+        "code.access": "Private",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "1072",
+        "code.locs.endLine": "1074",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "1072",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "MouseScroll.GetParent",
+      "label": "GetParent",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "GetParent",
+        "code.kind": "Function",
+        "code.access": "Private",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "881",
+        "code.locs.endLine": "893",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "881",
+        "code.metrics.lines": "13",
+        "code.metrics.sloc": "11",
+        "code.metrics.cyclomatic": "4"
+      }
+    },
+    {
+      "id": "MouseScroll.GetScrollAction",
+      "label": "GetScrollAction",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "GetScrollAction",
+        "code.kind": "Function",
+        "code.access": "Private",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "601",
+        "code.locs.endLine": "619",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "601",
+        "code.metrics.lines": "19",
+        "code.metrics.sloc": "18",
+        "code.metrics.cyclomatic": "9"
+      }
+    },
+    {
+      "id": "MouseScroll.GetScrollAmount",
+      "label": "GetScrollAmount",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "GetScrollAmount",
+        "code.kind": "Function",
+        "code.access": "Private",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "639",
+        "code.locs.endLine": "650",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "639",
+        "code.metrics.lines": "12",
+        "code.metrics.sloc": "9",
+        "code.metrics.cyclomatic": "3"
+      }
+    },
+    {
+      "id": "MouseScroll.GetUserScrollLines",
+      "label": "GetUserScrollLines",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "GetUserScrollLines",
+        "code.kind": "Function",
+        "code.access": "Private",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "655",
+        "code.locs.endLine": "660",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "655",
+        "code.metrics.lines": "6",
+        "code.metrics.sloc": "4",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "MouseScroll.GetWheelDelta",
+      "label": "GetWheelDelta",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "GetWheelDelta",
+        "code.kind": "Function",
+        "code.access": "Private",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "625",
+        "code.locs.endLine": "627",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "625",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "MouseScroll.GetWindowCaption",
+      "label": "GetWindowCaption",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "GetWindowCaption",
+        "code.kind": "Function",
+        "code.access": "Private",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "592",
+        "code.locs.endLine": "596",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "592",
+        "code.metrics.lines": "5",
+        "code.metrics.sloc": "4",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "MouseScroll.GetWindowUnderCursor",
+      "label": "GetWindowUnderCursor",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "GetWindowUnderCursor",
+        "code.kind": "Function",
+        "code.access": "Private",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "1095",
+        "code.locs.endLine": "1105",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "1095",
+        "code.metrics.lines": "11",
+        "code.metrics.sloc": "9",
+        "code.metrics.cyclomatic": "3"
+      }
+    },
+    {
+      "id": "MouseScroll.HiWord",
+      "label": "HiWord",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "HiWord",
+        "code.kind": "Function",
+        "code.access": "Private",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "632",
+        "code.locs.endLine": "634",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "632",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "MouseScroll.HookMouse",
+      "label": "HookMouse",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "HookMouse",
+        "code.kind": "Function",
+        "code.access": "Private",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "284",
+        "code.locs.endLine": "293",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "284",
+        "code.metrics.lines": "10",
+        "code.metrics.sloc": "7",
+        "code.metrics.cyclomatic": "3"
+      }
+    },
+    {
+      "id": "MouseScroll.IsControlKeyDown",
+      "label": "IsControlKeyDown",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "IsControlKeyDown",
+        "code.kind": "Function",
+        "code.access": "Private",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "1086",
+        "code.locs.endLine": "1090",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "1086",
+        "code.metrics.lines": "5",
+        "code.metrics.sloc": "3",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "MouseScroll.IsShiftKeyDown",
+      "label": "IsShiftKeyDown",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "IsShiftKeyDown",
+        "code.kind": "Function",
+        "code.access": "Private",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "1081",
+        "code.locs.endLine": "1085",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "1081",
+        "code.metrics.lines": "5",
+        "code.metrics.sloc": "3",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "MouseScroll.ListScrollX",
+      "label": "ListScrollX",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "ListScrollX",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "963",
+        "code.locs.endLine": "983",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "963",
+        "code.metrics.lines": "21",
+        "code.metrics.sloc": "16",
+        "code.metrics.cyclomatic": "4"
+      }
+    },
+    {
+      "id": "MouseScroll.ListScrollY",
+      "label": "ListScrollY",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "ListScrollY",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "730",
+        "code.locs.endLine": "770",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "730",
+        "code.metrics.lines": "41",
+        "code.metrics.sloc": "34",
+        "code.metrics.cyclomatic": "16"
+      }
+    },
+    {
+      "id": "MouseScroll.MouseOverControl",
+      "label": "MouseOverControl",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "MouseOverControl",
+        "code.kind": "Function",
+        "code.access": "Private",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "372",
+        "code.locs.endLine": "376",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "372",
+        "code.metrics.lines": "5",
+        "code.metrics.sloc": "4",
+        "code.metrics.cyclomatic": "2"
+      }
+    },
+    {
+      "id": "MouseScroll.MouseProc",
+      "label": "MouseProc",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "MouseProc",
+        "code.kind": "Function",
+        "code.access": "Private",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "324",
+        "code.locs.endLine": "334",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "324",
+        "code.metrics.lines": "11",
+        "code.metrics.sloc": "9",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "MouseScroll.ProcessMouseData",
+      "label": "ProcessMouseData",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "ProcessMouseData",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "482",
+        "code.locs.endLine": "587",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "482",
+        "code.metrics.lines": "106",
+        "code.metrics.sloc": "79",
+        "code.metrics.cyclomatic": "35"
+      }
+    },
+    {
+      "id": "MouseScroll.RemoteAssign",
+      "label": "RemoteAssign",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "RemoteAssign",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "426",
+        "code.locs.endLine": "430",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "426",
+        "code.metrics.lines": "5",
+        "code.metrics.sloc": "4",
+        "code.metrics.cyclomatic": "2"
+      }
+    },
+    {
+      "id": "MouseScroll.RemoveDestroyedForms",
+      "label": "RemoveDestroyedForms",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "RemoveDestroyedForms",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "394",
+        "code.locs.endLine": "421",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "394",
+        "code.metrics.lines": "28",
+        "code.metrics.sloc": "23",
+        "code.metrics.cyclomatic": "7"
+      }
+    },
+    {
+      "id": "MouseScroll.RemoveForm",
+      "label": "RemoveForm",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "RemoveForm",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "381",
+        "code.locs.endLine": "389",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "381",
+        "code.metrics.lines": "9",
+        "code.metrics.sloc": "8",
+        "code.metrics.cyclomatic": "4"
+      }
+    },
+    {
+      "id": "MouseScroll.ResetLast",
+      "label": "ResetLast",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "ResetLast",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "274",
+        "code.locs.endLine": "277",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "274",
+        "code.metrics.lines": "4",
+        "code.metrics.sloc": "3",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "MouseScroll.ScrollX",
+      "label": "ScrollX",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "ScrollX",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "900",
+        "code.locs.endLine": "958",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "900",
+        "code.metrics.lines": "59",
+        "code.metrics.sloc": "44",
+        "code.metrics.cyclomatic": "21"
+      }
+    },
+    {
+      "id": "MouseScroll.ScrollY",
+      "label": "ScrollY",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "ScrollY",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "665",
+        "code.locs.endLine": "725",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "665",
+        "code.metrics.lines": "61",
+        "code.metrics.sloc": "46",
+        "code.metrics.cyclomatic": "22"
+      }
+    },
+    {
+      "id": "MouseScroll.SetHoveredControl",
+      "label": "SetHoveredControl",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "SetHoveredControl",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "449",
+        "code.locs.endLine": "464",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "449",
+        "code.metrics.lines": "16",
+        "code.metrics.sloc": "15",
+        "code.metrics.cyclomatic": "5"
+      }
+    },
+    {
+      "id": "MouseScroll.TBoxScrollY",
+      "label": "TBoxScrollY",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "TBoxScrollY",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "775",
+        "code.locs.endLine": "880",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "775",
+        "code.metrics.lines": "106",
+        "code.metrics.sloc": "83",
+        "code.metrics.cyclomatic": "23"
+      }
+    },
+    {
+      "id": "MouseScroll.UnHookMouse",
+      "label": "UnHookMouse",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "UnHookMouse",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "306",
+        "code.locs.endLine": "316",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "306",
+        "code.metrics.lines": "11",
+        "code.metrics.sloc": "10",
+        "code.metrics.cyclomatic": "3"
+      }
+    },
+    {
+      "id": "MouseScroll.UpdateLastCombo",
+      "label": "UpdateLastCombo",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "UpdateLastCombo",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "470",
+        "code.locs.endLine": "477",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "470",
+        "code.metrics.lines": "8",
+        "code.metrics.sloc": "7",
+        "code.metrics.cyclomatic": "3"
+      }
+    },
+    {
+      "id": "MouseScroll.Zoom",
+      "label": "Zoom",
+      "tier": "Modules",
+      "containerId": "MouseScroll",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.proc": "Zoom",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Modules/MouseScroll.bas",
+        "code.locs.startLine": "988",
+        "code.locs.endLine": "1036",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "988",
+        "code.metrics.lines": "49",
+        "code.metrics.sloc": "35",
+        "code.metrics.cyclomatic": "18"
+      }
+    },
+    {
+      "id": "ReceivedTally.Worksheet_SelectionChange",
+      "label": "Worksheet_SelectionChange",
+      "tier": "Classes",
+      "containerId": "ReceivedTally",
+      "metadata": {
+        "code.module": "ReceivedTally",
+        "code.proc": "Worksheet_SelectionChange",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Sheets/ReceivedTally.cls",
+        "code.locs.startLine": "15",
+        "code.locs.endLine": "27",
+        "code.source.file": "Sheets/ReceivedTally.cls",
+        "code.source.module": "ReceivedTally",
+        "code.source.line": "15",
+        "code.metrics.lines": "13",
+        "code.metrics.sloc": "8",
+        "code.metrics.cyclomatic": "6"
+      }
+    },
+    {
+      "id": "ShipmentsTally.Worksheet_SelectionChange",
+      "label": "Worksheet_SelectionChange",
+      "tier": "Classes",
+      "containerId": "ShipmentsTally",
+      "metadata": {
+        "code.module": "ShipmentsTally",
+        "code.proc": "Worksheet_SelectionChange",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Sheets/ShipmentsTally.cls",
+        "code.locs.startLine": "16",
+        "code.locs.endLine": "28",
+        "code.source.file": "Sheets/ShipmentsTally.cls",
+        "code.source.module": "ShipmentsTally",
+        "code.source.line": "16",
+        "code.metrics.lines": "13",
+        "code.metrics.sloc": "8",
+        "code.metrics.cyclomatic": "6"
+      }
+    },
+    {
+      "id": "TestSummary.RunTest_Click",
+      "label": "RunTest_Click",
+      "tier": "Classes",
+      "containerId": "TestSummary",
+      "metadata": {
+        "code.module": "TestSummary",
+        "code.proc": "RunTest_Click",
+        "code.kind": "Sub",
+        "code.locs.file": "Sheets/TestSummary.cls",
+        "code.locs.startLine": "11",
+        "code.locs.endLine": "12",
+        "code.source.file": "Sheets/TestSummary.cls",
+        "code.source.module": "TestSummary",
+        "code.source.line": "11",
+        "code.metrics.lines": "2",
+        "code.metrics.sloc": "1",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "ThisWorkbook.CheckForHiddenPasswords",
+      "label": "CheckForHiddenPasswords",
+      "tier": "Sheets",
+      "containerId": "ThisWorkbook",
+      "metadata": {
+        "code.module": "ThisWorkbook",
+        "code.proc": "CheckForHiddenPasswords",
+        "code.kind": "Sub",
+        "code.locs.file": "Sheets/ThisWorkbook.cls",
+        "code.locs.startLine": "25",
+        "code.locs.endLine": "30",
+        "code.source.file": "Sheets/ThisWorkbook.cls",
+        "code.source.module": "ThisWorkbook",
+        "code.source.line": "25",
+        "code.metrics.lines": "6",
+        "code.metrics.sloc": "5",
+        "code.metrics.cyclomatic": "2"
+      }
+    },
+    {
+      "id": "ThisWorkbook.Workbook_Open",
+      "label": "Workbook_Open",
+      "tier": "Sheets",
+      "containerId": "ThisWorkbook",
+      "metadata": {
+        "code.module": "ThisWorkbook",
+        "code.proc": "Workbook_Open",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Sheets/ThisWorkbook.cls",
+        "code.locs.startLine": "11",
+        "code.locs.endLine": "18",
+        "code.source.file": "Sheets/ThisWorkbook.cls",
+        "code.source.module": "ThisWorkbook",
+        "code.source.line": "11",
+        "code.metrics.lines": "8",
+        "code.metrics.sloc": "4",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "ThisWorkbook.Workbook_SheetActivate",
+      "label": "Workbook_SheetActivate",
+      "tier": "Sheets",
+      "containerId": "ThisWorkbook",
+      "metadata": {
+        "code.module": "ThisWorkbook",
+        "code.proc": "Workbook_SheetActivate",
+        "code.kind": "Sub",
+        "code.access": "Private",
+        "code.locs.file": "Sheets/ThisWorkbook.cls",
+        "code.locs.startLine": "19",
+        "code.locs.endLine": "24",
+        "code.source.file": "Sheets/ThisWorkbook.cls",
+        "code.source.module": "ThisWorkbook",
+        "code.source.line": "19",
+        "code.metrics.lines": "6",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    }
+  ],
+  "edges": [],
+  "containers": [
+    {
+      "id": "clsBulkSnapshot",
+      "label": "clsBulkSnapshot",
+      "tier": "Classes",
+      "metadata": {
+        "code.module": "clsBulkSnapshot",
+        "code.module.kind": "Class",
+        "code.file": "Class Modules/clsBulkSnapshot.cls",
+        "code.source.file": "Class Modules/clsBulkSnapshot.cls",
+        "code.source.module": "clsBulkSnapshot",
+        "code.source.line": "1",
+        "code.metrics.lines": "23",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "clsUndoAction",
+      "label": "clsUndoAction",
+      "tier": "Classes",
+      "metadata": {
+        "code.module": "clsUndoAction",
+        "code.module.kind": "Class",
+        "code.file": "Class Modules/clsUndoAction.cls",
+        "code.source.file": "Class Modules/clsUndoAction.cls",
+        "code.source.module": "clsUndoAction",
+        "code.source.line": "1",
+        "code.metrics.lines": "24",
+        "code.metrics.sloc": "0",
+        "code.metrics.cyclomatic": "0"
+      }
+    },
+    {
+      "id": "Codes",
+      "label": "Codes",
+      "tier": "Classes",
+      "metadata": {
+        "code.module": "Codes",
+        "code.module.kind": "Class",
+        "code.file": "Sheets/Codes.cls",
+        "code.source.file": "Sheets/Codes.cls",
+        "code.source.module": "Codes",
+        "code.source.line": "1",
+        "code.metrics.lines": "10",
+        "code.metrics.sloc": "0",
+        "code.metrics.cyclomatic": "0"
+      }
+    },
+    {
+      "id": "CreateRecipe",
+      "label": "CreateRecipe",
+      "tier": "Classes",
+      "metadata": {
+        "code.module": "CreateRecipe",
+        "code.module.kind": "Class",
+        "code.file": "Sheets/CreateRecipe.cls",
+        "code.source.file": "Sheets/CreateRecipe.cls",
+        "code.source.module": "CreateRecipe",
+        "code.source.line": "1",
+        "code.metrics.lines": "10",
+        "code.metrics.sloc": "0",
+        "code.metrics.cyclomatic": "0"
+      }
+    },
+    {
+      "id": "Emails",
+      "label": "Emails",
+      "tier": "Classes",
+      "metadata": {
+        "code.module": "Emails",
+        "code.module.kind": "Class",
+        "code.file": "Sheets/Emails.cls",
+        "code.source.file": "Sheets/Emails.cls",
+        "code.source.module": "Emails",
+        "code.source.line": "1",
+        "code.metrics.lines": "10",
+        "code.metrics.sloc": "0",
+        "code.metrics.cyclomatic": "0"
+      }
+    },
+    {
+      "id": "ErrorLog",
+      "label": "ErrorLog",
+      "tier": "Classes",
+      "metadata": {
+        "code.module": "ErrorLog",
+        "code.module.kind": "Class",
+        "code.file": "Sheets/ErrorLog.cls",
+        "code.source.file": "Sheets/ErrorLog.cls",
+        "code.source.module": "ErrorLog",
+        "code.source.line": "1",
+        "code.metrics.lines": "10",
+        "code.metrics.sloc": "0",
+        "code.metrics.cyclomatic": "0"
+      }
+    },
+    {
+      "id": "frmAdminControls",
+      "label": "frmAdminControls",
+      "tier": "Forms",
+      "metadata": {
+        "code.module": "frmAdminControls",
+        "code.module.kind": "Form",
+        "code.file": "Forms/frmAdminControls.frm",
+        "code.source.file": "Forms/frmAdminControls.frm",
+        "code.source.module": "frmAdminControls",
+        "code.source.line": "1",
+        "code.metrics.lines": "21",
+        "code.metrics.sloc": "4",
+        "code.metrics.cyclomatic": "2"
+      }
+    },
+    {
+      "id": "frmAdminEmail",
+      "label": "frmAdminEmail",
+      "tier": "Forms",
+      "metadata": {
+        "code.module": "frmAdminEmail",
+        "code.module.kind": "Form",
+        "code.file": "Forms/frmAdminEmail.frm",
+        "code.source.file": "Forms/frmAdminEmail.frm",
+        "code.source.module": "frmAdminEmail",
+        "code.source.line": "1",
+        "code.metrics.lines": "15",
+        "code.metrics.sloc": "0",
+        "code.metrics.cyclomatic": "0"
+      }
+    },
+    {
+      "id": "frmCreateDeleteUser",
+      "label": "frmCreateDeleteUser",
+      "tier": "Forms",
+      "metadata": {
+        "code.module": "frmCreateDeleteUser",
+        "code.module.kind": "Form",
+        "code.file": "Forms/frmCreateDeleteUser.frm",
+        "code.source.file": "Forms/frmCreateDeleteUser.frm",
+        "code.source.module": "frmCreateDeleteUser",
+        "code.source.line": "1",
+        "code.metrics.lines": "108",
+        "code.metrics.sloc": "71",
+        "code.metrics.cyclomatic": "14"
+      }
+    },
+    {
+      "id": "frmCreateRecipeTable",
+      "label": "frmCreateRecipeTable",
+      "tier": "Forms",
+      "metadata": {
+        "code.module": "frmCreateRecipeTable",
+        "code.module.kind": "Form",
+        "code.file": "Forms/frmCreateRecipeTable.frm",
+        "code.source.file": "Forms/frmCreateRecipeTable.frm",
+        "code.source.module": "frmCreateRecipeTable",
+        "code.source.line": "1",
+        "code.metrics.lines": "16",
+        "code.metrics.sloc": "0",
+        "code.metrics.cyclomatic": "0"
+      }
+    },
+    {
+      "id": "frmCreateSubstitutionList",
+      "label": "frmCreateSubstitutionList",
+      "tier": "Forms",
+      "metadata": {
+        "code.module": "frmCreateSubstitutionList",
+        "code.module.kind": "Form",
+        "code.file": "Forms/frmCreateSubstitutionList.frm",
+        "code.source.file": "Forms/frmCreateSubstitutionList.frm",
+        "code.source.module": "frmCreateSubstitutionList",
+        "code.source.line": "1",
+        "code.metrics.lines": "16",
+        "code.metrics.sloc": "0",
+        "code.metrics.cyclomatic": "0"
+      }
+    },
+    {
+      "id": "frmEditUser",
+      "label": "frmEditUser",
+      "tier": "Forms",
+      "metadata": {
+        "code.module": "frmEditUser",
+        "code.module.kind": "Form",
+        "code.file": "Forms/frmEditUser.frm",
+        "code.source.file": "Forms/frmEditUser.frm",
+        "code.source.module": "frmEditUser",
+        "code.source.line": "1",
+        "code.metrics.lines": "87",
+        "code.metrics.sloc": "54",
+        "code.metrics.cyclomatic": "17"
+      }
+    },
+    {
+      "id": "frmIngredientPalette",
+      "label": "frmIngredientPalette",
+      "tier": "Forms",
+      "metadata": {
+        "code.module": "frmIngredientPalette",
+        "code.module.kind": "Form",
+        "code.file": "Forms/frmIngredientPalette.frm",
+        "code.source.file": "Forms/frmIngredientPalette.frm",
+        "code.source.module": "frmIngredientPalette",
+        "code.source.line": "1",
+        "code.metrics.lines": "16",
+        "code.metrics.sloc": "0",
+        "code.metrics.cyclomatic": "0"
+      }
+    },
+    {
+      "id": "frmItemSearch",
+      "label": "frmItemSearch",
+      "tier": "Forms",
+      "metadata": {
+        "code.module": "frmItemSearch",
+        "code.module.kind": "Form",
+        "code.file": "Forms/frmItemSearch.frm",
+        "code.source.file": "Forms/frmItemSearch.frm",
+        "code.source.module": "frmItemSearch",
+        "code.source.line": "1",
+        "code.metrics.lines": "544",
+        "code.metrics.sloc": "392",
+        "code.metrics.cyclomatic": "150"
+      }
+    },
+    {
+      "id": "frmLogin",
+      "label": "frmLogin",
+      "tier": "Forms",
+      "metadata": {
+        "code.module": "frmLogin",
+        "code.module.kind": "Form",
+        "code.file": "Forms/frmLogin.frm",
+        "code.source.file": "Forms/frmLogin.frm",
+        "code.source.module": "frmLogin",
+        "code.source.line": "1",
+        "code.metrics.lines": "72",
+        "code.metrics.sloc": "39",
+        "code.metrics.cyclomatic": "11"
+      }
+    },
+    {
+      "id": "frmProduction",
+      "label": "frmProduction",
+      "tier": "Forms",
+      "metadata": {
+        "code.module": "frmProduction",
+        "code.module.kind": "Form",
+        "code.file": "Forms/frmProduction.frm",
+        "code.source.file": "Forms/frmProduction.frm",
+        "code.source.module": "frmProduction",
+        "code.source.line": "1",
+        "code.metrics.lines": "22",
+        "code.metrics.sloc": "0",
+        "code.metrics.cyclomatic": "0"
+      }
+    },
+    {
+      "id": "frmReceivedTally",
+      "label": "frmReceivedTally",
+      "tier": "Forms",
+      "metadata": {
+        "code.module": "frmReceivedTally",
+        "code.module.kind": "Form",
+        "code.file": "Forms/frmReceivedTally.frm",
+        "code.source.file": "Forms/frmReceivedTally.frm",
+        "code.source.module": "frmReceivedTally",
+        "code.source.line": "1",
+        "code.metrics.lines": "150",
+        "code.metrics.sloc": "98",
+        "code.metrics.cyclomatic": "29"
+      }
+    },
+    {
+      "id": "frmReceivingSavedList",
+      "label": "frmReceivingSavedList",
+      "tier": "Forms",
+      "metadata": {
+        "code.module": "frmReceivingSavedList",
+        "code.module.kind": "Form",
+        "code.file": "Forms/frmReceivingSavedList.frm",
+        "code.source.file": "Forms/frmReceivingSavedList.frm",
+        "code.source.module": "frmReceivingSavedList",
+        "code.source.line": "1",
+        "code.metrics.lines": "16",
+        "code.metrics.sloc": "0",
+        "code.metrics.cyclomatic": "0"
+      }
+    },
+    {
+      "id": "frmShipmentsTally",
+      "label": "frmShipmentsTally",
+      "tier": "Forms",
+      "metadata": {
+        "code.module": "frmShipmentsTally",
+        "code.module.kind": "Form",
+        "code.file": "Forms/frmShipmentsTally.frm",
+        "code.source.file": "Forms/frmShipmentsTally.frm",
+        "code.source.module": "frmShipmentsTally",
+        "code.source.line": "1",
+        "code.metrics.lines": "156",
+        "code.metrics.sloc": "99",
+        "code.metrics.cyclomatic": "29"
+      }
+    },
+    {
+      "id": "frmShippingCreateList",
+      "label": "frmShippingCreateList",
+      "tier": "Forms",
+      "metadata": {
+        "code.module": "frmShippingCreateList",
+        "code.module.kind": "Form",
+        "code.file": "Forms/frmShippingCreateList.frm",
+        "code.source.file": "Forms/frmShippingCreateList.frm",
+        "code.source.module": "frmShippingCreateList",
+        "code.source.line": "1",
+        "code.metrics.lines": "15",
+        "code.metrics.sloc": "0",
+        "code.metrics.cyclomatic": "0"
+      }
+    },
+    {
+      "id": "frmShippingSavedList",
+      "label": "frmShippingSavedList",
+      "tier": "Forms",
+      "metadata": {
+        "code.module": "frmShippingSavedList",
+        "code.module.kind": "Form",
+        "code.file": "Forms/frmShippingSavedList.frm",
+        "code.source.file": "Forms/frmShippingSavedList.frm",
+        "code.source.module": "frmShippingSavedList",
+        "code.source.line": "1",
+        "code.metrics.lines": "16",
+        "code.metrics.sloc": "0",
+        "code.metrics.cyclomatic": "0"
+      }
+    },
+    {
+      "id": "frmSubstitution",
+      "label": "frmSubstitution",
+      "tier": "Forms",
+      "metadata": {
+        "code.module": "frmSubstitution",
+        "code.module.kind": "Form",
+        "code.file": "Forms/frmSubstitution.frm",
+        "code.source.file": "Forms/frmSubstitution.frm",
+        "code.source.module": "frmSubstitution",
+        "code.source.line": "1",
+        "code.metrics.lines": "16",
+        "code.metrics.sloc": "0",
+        "code.metrics.cyclomatic": "0"
+      }
+    },
+    {
+      "id": "IngredientsPalette",
+      "label": "IngredientsPalette",
+      "tier": "Classes",
+      "metadata": {
+        "code.module": "IngredientsPalette",
+        "code.module.kind": "Class",
+        "code.file": "Sheets/IngredientsPalette.cls",
+        "code.source.file": "Sheets/IngredientsPalette.cls",
+        "code.source.module": "IngredientsPalette",
+        "code.source.line": "1",
+        "code.metrics.lines": "10",
+        "code.metrics.sloc": "0",
+        "code.metrics.cyclomatic": "0"
+      }
+    },
+    {
+      "id": "InventoryLog",
+      "label": "InventoryLog",
+      "tier": "Classes",
+      "metadata": {
+        "code.module": "InventoryLog",
+        "code.module.kind": "Class",
+        "code.file": "Sheets/InventoryLog.cls",
+        "code.source.file": "Sheets/InventoryLog.cls",
+        "code.source.module": "InventoryLog",
+        "code.source.line": "1",
+        "code.metrics.lines": "10",
+        "code.metrics.sloc": "0",
+        "code.metrics.cyclomatic": "0"
+      }
+    },
+    {
+      "id": "InventoryManagement",
+      "label": "InventoryManagement",
+      "tier": "Classes",
+      "metadata": {
+        "code.module": "InventoryManagement",
+        "code.module.kind": "Class",
+        "code.file": "Sheets/InventoryManagement.cls",
+        "code.source.file": "Sheets/InventoryManagement.cls",
+        "code.source.module": "InventoryManagement",
+        "code.source.line": "1",
+        "code.metrics.lines": "88",
+        "code.metrics.sloc": "66",
+        "code.metrics.cyclomatic": "24"
+      }
+    },
+    {
+      "id": "modAdmin",
+      "label": "modAdmin",
+      "tier": "Modules",
+      "metadata": {
+        "code.module": "modAdmin",
+        "code.module.kind": "Module",
+        "code.file": "Modules/modAdmin.bas",
+        "code.source.file": "Modules/modAdmin.bas",
+        "code.source.module": "modAdmin",
+        "code.source.line": "1",
+        "code.metrics.lines": "22",
+        "code.metrics.sloc": "4",
+        "code.metrics.cyclomatic": "2"
+      }
+    },
+    {
+      "id": "modDiagnostics",
+      "label": "modDiagnostics",
+      "tier": "Modules",
+      "metadata": {
+        "code.module": "modDiagnostics",
+        "code.module.kind": "Module",
+        "code.file": "Modules/modDiagnostics.bas",
+        "code.source.file": "Modules/modDiagnostics.bas",
+        "code.source.module": "modDiagnostics",
+        "code.source.line": "1",
+        "code.metrics.lines": "4",
+        "code.metrics.sloc": "0",
+        "code.metrics.cyclomatic": "0"
+      }
+    },
+    {
+      "id": "modDynamicForms",
+      "label": "modDynamicForms",
+      "tier": "Modules",
+      "metadata": {
+        "code.module": "modDynamicForms",
+        "code.module.kind": "Module",
+        "code.file": "Modules/modDynamicForms.bas",
+        "code.source.file": "Modules/modDynamicForms.bas",
+        "code.source.module": "modDynamicForms",
+        "code.source.line": "1",
+        "code.metrics.lines": "2",
+        "code.metrics.sloc": "0",
+        "code.metrics.cyclomatic": "0"
+      }
+    },
+    {
+      "id": "modErrorHandler",
+      "label": "modErrorHandler",
+      "tier": "Modules",
+      "metadata": {
+        "code.module": "modErrorHandler",
+        "code.module.kind": "Module",
+        "code.file": "Modules/modErrorHandler.bas",
+        "code.source.file": "Modules/modErrorHandler.bas",
+        "code.source.module": "modErrorHandler",
+        "code.source.line": "1",
+        "code.metrics.lines": "73",
+        "code.metrics.sloc": "49",
+        "code.metrics.cyclomatic": "14"
+      }
+    },
+    {
+      "id": "modExportImportAll",
+      "label": "modExportImportAll",
+      "tier": "Modules",
+      "metadata": {
+        "code.module": "modExportImportAll",
+        "code.module.kind": "Module",
+        "code.file": "Modules/modExportImportAll.bas",
+        "code.source.file": "Modules/modExportImportAll.bas",
+        "code.source.module": "modExportImportAll",
+        "code.source.line": "1",
+        "code.metrics.lines": "474",
+        "code.metrics.sloc": "353",
+        "code.metrics.cyclomatic": "112"
+      }
+    },
+    {
+      "id": "modGlobals",
+      "label": "modGlobals",
+      "tier": "Modules",
+      "metadata": {
+        "code.module": "modGlobals",
+        "code.module.kind": "Module",
+        "code.file": "Modules/modGlobals.bas",
+        "code.source.file": "Modules/modGlobals.bas",
+        "code.source.module": "modGlobals",
+        "code.source.line": "1",
+        "code.metrics.lines": "100",
+        "code.metrics.sloc": "59",
+        "code.metrics.cyclomatic": "24"
+      }
+    },
+    {
+      "id": "modImportExportAll",
+      "label": "modImportExportAll",
+      "tier": "Modules",
+      "metadata": {
+        "code.module": "modImportExportAll",
+        "code.module.kind": "Module",
+        "code.file": "Modules/modImportExportAll.bas",
+        "code.source.file": "Modules/modImportExportAll.bas",
+        "code.source.module": "modImportExportAll",
+        "code.source.line": "1",
+        "code.metrics.lines": "475",
+        "code.metrics.sloc": "353",
+        "code.metrics.cyclomatic": "112"
+      }
+    },
+    {
+      "id": "modInvLogs",
+      "label": "modInvLogs",
+      "tier": "Modules",
+      "metadata": {
+        "code.module": "modInvLogs",
+        "code.module.kind": "Module",
+        "code.file": "Modules/modInvLogs.bas",
+        "code.source.file": "Modules/modInvLogs.bas",
+        "code.source.module": "modInvLogs",
+        "code.source.line": "1",
+        "code.metrics.lines": "89",
+        "code.metrics.sloc": "65",
+        "code.metrics.cyclomatic": "6"
+      }
+    },
+    {
+      "id": "modInvMan",
+      "label": "modInvMan",
+      "tier": "Modules",
+      "metadata": {
+        "code.module": "modInvMan",
+        "code.module.kind": "Module",
+        "code.file": "Modules/modInvMan.bas",
+        "code.source.file": "Modules/modInvMan.bas",
+        "code.source.module": "modInvMan",
+        "code.source.line": "1",
+        "code.metrics.lines": "371",
+        "code.metrics.sloc": "313",
+        "code.metrics.cyclomatic": "53"
+      }
+    },
+    {
+      "id": "modTestModule",
+      "label": "modTestModule",
+      "tier": "Modules",
+      "metadata": {
+        "code.module": "modTestModule",
+        "code.module.kind": "Module",
+        "code.file": "Modules/modTestModule.bas",
+        "code.source.file": "Modules/modTestModule.bas",
+        "code.source.module": "modTestModule",
+        "code.source.line": "1",
+        "code.metrics.lines": "110",
+        "code.metrics.sloc": "89",
+        "code.metrics.cyclomatic": "18"
+      }
+    },
+    {
+      "id": "modTS_Data",
+      "label": "modTS_Data",
+      "tier": "Modules",
+      "metadata": {
+        "code.module": "modTS_Data",
+        "code.module.kind": "Module",
+        "code.file": "Modules/modTS_Data.bas",
+        "code.source.file": "Modules/modTS_Data.bas",
+        "code.source.module": "modTS_Data",
+        "code.source.line": "1",
+        "code.metrics.lines": "215",
+        "code.metrics.sloc": "160",
+        "code.metrics.cyclomatic": "47"
+      }
+    },
+    {
+      "id": "modTS_Launchers",
+      "label": "modTS_Launchers",
+      "tier": "Modules",
+      "metadata": {
+        "code.module": "modTS_Launchers",
+        "code.module.kind": "Module",
+        "code.file": "Modules/modTS_Launchers.bas",
+        "code.source.file": "Modules/modTS_Launchers.bas",
+        "code.source.module": "modTS_Launchers",
+        "code.source.line": "1",
+        "code.metrics.lines": "19",
+        "code.metrics.sloc": "8",
+        "code.metrics.cyclomatic": "2"
+      }
+    },
+    {
+      "id": "modTS_Log",
+      "label": "modTS_Log",
+      "tier": "Modules",
+      "metadata": {
+        "code.module": "modTS_Log",
+        "code.module.kind": "Module",
+        "code.file": "Modules/modTS_Log.bas",
+        "code.source.file": "Modules/modTS_Log.bas",
+        "code.source.module": "modTS_Log",
+        "code.source.line": "1",
+        "code.metrics.lines": "77",
+        "code.metrics.sloc": "50",
+        "code.metrics.cyclomatic": "24"
+      }
+    },
+    {
+      "id": "modTS_Received",
+      "label": "modTS_Received",
+      "tier": "Modules",
+      "metadata": {
+        "code.module": "modTS_Received",
+        "code.module.kind": "Module",
+        "code.file": "Modules/modTS_Received.bas",
+        "code.source.file": "Modules/modTS_Received.bas",
+        "code.source.module": "modTS_Received",
+        "code.source.line": "1",
+        "code.metrics.lines": "307",
+        "code.metrics.sloc": "230",
+        "code.metrics.cyclomatic": "40"
+      }
+    },
+    {
+      "id": "modTS_SavedLists",
+      "label": "modTS_SavedLists",
+      "tier": "Modules",
+      "metadata": {
+        "code.module": "modTS_SavedLists",
+        "code.module.kind": "Module",
+        "code.file": "Modules/modTS_SavedLists.bas",
+        "code.source.file": "Modules/modTS_SavedLists.bas",
+        "code.source.module": "modTS_SavedLists",
+        "code.source.line": "1",
+        "code.metrics.lines": "2",
+        "code.metrics.sloc": "0",
+        "code.metrics.cyclomatic": "0"
+      }
+    },
+    {
+      "id": "modTS_Shipments",
+      "label": "modTS_Shipments",
+      "tier": "Modules",
+      "metadata": {
+        "code.module": "modTS_Shipments",
+        "code.module.kind": "Module",
+        "code.file": "Modules/modTS_Shipments.bas",
+        "code.source.file": "Modules/modTS_Shipments.bas",
+        "code.source.module": "modTS_Shipments",
+        "code.source.line": "1",
+        "code.metrics.lines": "243",
+        "code.metrics.sloc": "192",
+        "code.metrics.cyclomatic": "51"
+      }
+    },
+    {
+      "id": "modTS_Tally",
+      "label": "modTS_Tally",
+      "tier": "Modules",
+      "metadata": {
+        "code.module": "modTS_Tally",
+        "code.module.kind": "Module",
+        "code.file": "Modules/modTS_Tally.bas",
+        "code.source.file": "Modules/modTS_Tally.bas",
+        "code.source.module": "modTS_Tally",
+        "code.source.line": "1",
+        "code.metrics.lines": "131",
+        "code.metrics.sloc": "85",
+        "code.metrics.cyclomatic": "35"
+      }
+    },
+    {
+      "id": "modUR_ExcelIntegration",
+      "label": "modUR_ExcelIntegration",
+      "tier": "Modules",
+      "metadata": {
+        "code.module": "modUR_ExcelIntegration",
+        "code.module.kind": "Module",
+        "code.file": "Modules/modUR_ExcelIntegration.bas",
+        "code.source.file": "Modules/modUR_ExcelIntegration.bas",
+        "code.source.module": "modUR_ExcelIntegration",
+        "code.source.line": "1",
+        "code.metrics.lines": "33",
+        "code.metrics.sloc": "10",
+        "code.metrics.cyclomatic": "4"
+      }
+    },
+    {
+      "id": "modUR_Snapshot",
+      "label": "modUR_Snapshot",
+      "tier": "Modules",
+      "metadata": {
+        "code.module": "modUR_Snapshot",
+        "code.module.kind": "Module",
+        "code.file": "Modules/modUR_Snapshot.bas",
+        "code.source.file": "Modules/modUR_Snapshot.bas",
+        "code.source.module": "modUR_Snapshot",
+        "code.source.line": "1",
+        "code.metrics.lines": "122",
+        "code.metrics.sloc": "104",
+        "code.metrics.cyclomatic": "28"
+      }
+    },
+    {
+      "id": "modUR_Transaction",
+      "label": "modUR_Transaction",
+      "tier": "Modules",
+      "metadata": {
+        "code.module": "modUR_Transaction",
+        "code.module.kind": "Module",
+        "code.file": "Modules/modUR_Transaction.bas",
+        "code.source.file": "Modules/modUR_Transaction.bas",
+        "code.source.module": "modUR_Transaction",
+        "code.source.line": "1",
+        "code.metrics.lines": "94",
+        "code.metrics.sloc": "64",
+        "code.metrics.cyclomatic": "19"
+      }
+    },
+    {
+      "id": "modUR_UndoRedo",
+      "label": "modUR_UndoRedo",
+      "tier": "Modules",
+      "metadata": {
+        "code.module": "modUR_UndoRedo",
+        "code.module.kind": "Module",
+        "code.file": "Modules/modUR_UndoRedo.bas",
+        "code.source.file": "Modules/modUR_UndoRedo.bas",
+        "code.source.module": "modUR_UndoRedo",
+        "code.source.line": "1",
+        "code.metrics.lines": "83",
+        "code.metrics.sloc": "59",
+        "code.metrics.cyclomatic": "19"
+      }
+    },
+    {
+      "id": "modUtils",
+      "label": "modUtils",
+      "tier": "Modules",
+      "metadata": {
+        "code.module": "modUtils",
+        "code.module.kind": "Module",
+        "code.file": "Modules/modUtils.bas",
+        "code.source.file": "Modules/modUtils.bas",
+        "code.source.module": "modUtils",
+        "code.source.line": "1",
+        "code.metrics.lines": "21",
+        "code.metrics.sloc": "0",
+        "code.metrics.cyclomatic": "0"
+      }
+    },
+    {
+      "id": "MouseOverControl",
+      "label": "MouseOverControl",
+      "tier": "Classes",
+      "metadata": {
+        "code.module": "MouseOverControl",
+        "code.module.kind": "Class",
+        "code.file": "Class Modules/MouseOverControl.cls",
+        "code.source.file": "Class Modules/MouseOverControl.cls",
+        "code.source.module": "MouseOverControl",
+        "code.source.line": "1",
+        "code.metrics.lines": "216",
+        "code.metrics.sloc": "91",
+        "code.metrics.cyclomatic": "50"
+      }
+    },
+    {
+      "id": "MouseScroll",
+      "label": "MouseScroll",
+      "tier": "Modules",
+      "metadata": {
+        "code.module": "MouseScroll",
+        "code.module.kind": "Module",
+        "code.file": "Modules/MouseScroll.bas",
+        "code.source.file": "Modules/MouseScroll.bas",
+        "code.source.module": "MouseScroll",
+        "code.source.line": "1",
+        "code.metrics.lines": "1107",
+        "code.metrics.sloc": "704",
+        "code.metrics.cyclomatic": "234"
+      }
+    },
+    {
+      "id": "Notes",
+      "label": "Notes",
+      "tier": "Classes",
+      "metadata": {
+        "code.module": "Notes",
+        "code.module.kind": "Class",
+        "code.file": "Sheets/Notes.cls",
+        "code.source.file": "Sheets/Notes.cls",
+        "code.source.module": "Notes",
+        "code.source.line": "1",
+        "code.metrics.lines": "10",
+        "code.metrics.sloc": "0",
+        "code.metrics.cyclomatic": "0"
+      }
+    },
+    {
+      "id": "Prediction",
+      "label": "Prediction",
+      "tier": "Classes",
+      "metadata": {
+        "code.module": "Prediction",
+        "code.module.kind": "Class",
+        "code.file": "Sheets/Prediction.cls",
+        "code.source.file": "Sheets/Prediction.cls",
+        "code.source.module": "Prediction",
+        "code.source.line": "1",
+        "code.metrics.lines": "10",
+        "code.metrics.sloc": "0",
+        "code.metrics.cyclomatic": "0"
+      }
+    },
+    {
+      "id": "PredictionLog",
+      "label": "PredictionLog",
+      "tier": "Classes",
+      "metadata": {
+        "code.module": "PredictionLog",
+        "code.module.kind": "Class",
+        "code.file": "Sheets/PredictionLog.cls",
+        "code.source.file": "Sheets/PredictionLog.cls",
+        "code.source.module": "PredictionLog",
+        "code.source.line": "1",
+        "code.metrics.lines": "10",
+        "code.metrics.sloc": "0",
+        "code.metrics.cyclomatic": "0"
+      }
+    },
+    {
+      "id": "Production",
+      "label": "Production",
+      "tier": "Classes",
+      "metadata": {
+        "code.module": "Production",
+        "code.module.kind": "Class",
+        "code.file": "Sheets/Production.cls",
+        "code.source.file": "Sheets/Production.cls",
+        "code.source.module": "Production",
+        "code.source.line": "1",
+        "code.metrics.lines": "10",
+        "code.metrics.sloc": "0",
+        "code.metrics.cyclomatic": "0"
+      }
+    },
+    {
+      "id": "ProductionLog",
+      "label": "ProductionLog",
+      "tier": "Classes",
+      "metadata": {
+        "code.module": "ProductionLog",
+        "code.module.kind": "Class",
+        "code.file": "Sheets/ProductionLog.cls",
+        "code.source.file": "Sheets/ProductionLog.cls",
+        "code.source.module": "ProductionLog",
+        "code.source.line": "1",
+        "code.metrics.lines": "10",
+        "code.metrics.sloc": "0",
+        "code.metrics.cyclomatic": "0"
+      }
+    },
+    {
+      "id": "ReceivedLog",
+      "label": "ReceivedLog",
+      "tier": "Classes",
+      "metadata": {
+        "code.module": "ReceivedLog",
+        "code.module.kind": "Class",
+        "code.file": "Sheets/ReceivedLog.cls",
+        "code.source.file": "Sheets/ReceivedLog.cls",
+        "code.source.module": "ReceivedLog",
+        "code.source.line": "1",
+        "code.metrics.lines": "10",
+        "code.metrics.sloc": "0",
+        "code.metrics.cyclomatic": "0"
+      }
+    },
+    {
+      "id": "ReceivedTally",
+      "label": "ReceivedTally",
+      "tier": "Classes",
+      "metadata": {
+        "code.module": "ReceivedTally",
+        "code.module.kind": "Class",
+        "code.file": "Sheets/ReceivedTally.cls",
+        "code.source.file": "Sheets/ReceivedTally.cls",
+        "code.source.module": "ReceivedTally",
+        "code.source.line": "1",
+        "code.metrics.lines": "28",
+        "code.metrics.sloc": "8",
+        "code.metrics.cyclomatic": "6"
+      }
+    },
+    {
+      "id": "Recipes",
+      "label": "Recipes",
+      "tier": "Classes",
+      "metadata": {
+        "code.module": "Recipes",
+        "code.module.kind": "Class",
+        "code.file": "Sheets/Recipes.cls",
+        "code.source.file": "Sheets/Recipes.cls",
+        "code.source.module": "Recipes",
+        "code.source.line": "1",
+        "code.metrics.lines": "10",
+        "code.metrics.sloc": "0",
+        "code.metrics.cyclomatic": "0"
+      }
+    },
+    {
+      "id": "SavedLists",
+      "label": "SavedLists",
+      "tier": "Classes",
+      "metadata": {
+        "code.module": "SavedLists",
+        "code.module.kind": "Class",
+        "code.file": "Sheets/SavedLists.cls",
+        "code.source.file": "Sheets/SavedLists.cls",
+        "code.source.module": "SavedLists",
+        "code.source.line": "1",
+        "code.metrics.lines": "10",
+        "code.metrics.sloc": "0",
+        "code.metrics.cyclomatic": "0"
+      }
+    },
+    {
+      "id": "Sheet1",
+      "label": "Sheet1",
+      "tier": "Sheets",
+      "metadata": {
+        "code.module": "Sheet1",
+        "code.module.kind": "Class",
+        "code.file": "Sheets/Sheet1.cls",
+        "code.source.file": "Sheets/Sheet1.cls",
+        "code.source.module": "Sheet1",
+        "code.source.line": "1",
+        "code.metrics.lines": "9",
+        "code.metrics.sloc": "0",
+        "code.metrics.cyclomatic": "0"
+      }
+    },
+    {
+      "id": "ShipmentsLog",
+      "label": "ShipmentsLog",
+      "tier": "Classes",
+      "metadata": {
+        "code.module": "ShipmentsLog",
+        "code.module.kind": "Class",
+        "code.file": "Sheets/ShipmentsLog.cls",
+        "code.source.file": "Sheets/ShipmentsLog.cls",
+        "code.source.module": "ShipmentsLog",
+        "code.source.line": "1",
+        "code.metrics.lines": "10",
+        "code.metrics.sloc": "0",
+        "code.metrics.cyclomatic": "0"
+      }
+    },
+    {
+      "id": "ShipmentsTally",
+      "label": "ShipmentsTally",
+      "tier": "Classes",
+      "metadata": {
+        "code.module": "ShipmentsTally",
+        "code.module.kind": "Class",
+        "code.file": "Sheets/ShipmentsTally.cls",
+        "code.source.file": "Sheets/ShipmentsTally.cls",
+        "code.source.module": "ShipmentsTally",
+        "code.source.line": "1",
+        "code.metrics.lines": "29",
+        "code.metrics.sloc": "8",
+        "code.metrics.cyclomatic": "6"
+      }
+    },
+    {
+      "id": "Substitutions",
+      "label": "Substitutions",
+      "tier": "Classes",
+      "metadata": {
+        "code.module": "Substitutions",
+        "code.module.kind": "Class",
+        "code.file": "Sheets/Substitutions.cls",
+        "code.source.file": "Sheets/Substitutions.cls",
+        "code.source.module": "Substitutions",
+        "code.source.line": "1",
+        "code.metrics.lines": "10",
+        "code.metrics.sloc": "0",
+        "code.metrics.cyclomatic": "0"
+      }
+    },
+    {
+      "id": "TestSummary",
+      "label": "TestSummary",
+      "tier": "Classes",
+      "metadata": {
+        "code.module": "TestSummary",
+        "code.module.kind": "Class",
+        "code.file": "Sheets/TestSummary.cls",
+        "code.source.file": "Sheets/TestSummary.cls",
+        "code.source.module": "TestSummary",
+        "code.source.line": "1",
+        "code.metrics.lines": "13",
+        "code.metrics.sloc": "1",
+        "code.metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "ThisWorkbook",
+      "label": "ThisWorkbook",
+      "tier": "Sheets",
+      "metadata": {
+        "code.module": "ThisWorkbook",
+        "code.module.kind": "Class",
+        "code.file": "Sheets/ThisWorkbook.cls",
+        "code.source.file": "Sheets/ThisWorkbook.cls",
+        "code.source.module": "ThisWorkbook",
+        "code.source.line": "1",
+        "code.metrics.lines": "30",
+        "code.metrics.sloc": "11",
+        "code.metrics.cyclomatic": "4"
+      }
+    },
+    {
+      "id": "UserCredentials",
+      "label": "UserCredentials",
+      "tier": "Classes",
+      "metadata": {
+        "code.module": "UserCredentials",
+        "code.module.kind": "Class",
+        "code.file": "Sheets/UserCredentials.cls",
+        "code.source.file": "Sheets/UserCredentials.cls",
+        "code.source.module": "UserCredentials",
+        "code.source.line": "1",
+        "code.metrics.lines": "22",
+        "code.metrics.sloc": "0",
+        "code.metrics.cyclomatic": "0"
+      }
+    }
+  ]
+}

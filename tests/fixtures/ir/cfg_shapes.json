@@ -1,8 +1,8 @@
 {
-  "irSchemaVersion": "0.1",
+  "irSchemaVersion": "0.2",
   "generator": {
     "name": "vba2json",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "project": {
     "name": "cfg_shapes",
@@ -12,6 +12,16 @@
         "name": "ModuleCfg",
         "kind": "Module",
         "file": "ModuleCfg.bas",
+        "source": {
+          "file": "ModuleCfg.bas",
+          "module": "ModuleCfg",
+          "line": 1
+        },
+        "metrics": {
+          "cyclomatic": 7,
+          "lines": 24,
+          "sloc": 13
+        },
         "procedures": [
           {
             "id": "ModuleCfg.HelperA",
@@ -22,6 +32,16 @@
               "file": "ModuleCfg.bas",
               "startLine": 19,
               "endLine": 20
+            },
+            "source": {
+              "file": "ModuleCfg.bas",
+              "module": "ModuleCfg",
+              "line": 19
+            },
+            "metrics": {
+              "cyclomatic": 1,
+              "lines": 2,
+              "sloc": 1
             }
           },
           {
@@ -33,6 +53,16 @@
               "file": "ModuleCfg.bas",
               "startLine": 22,
               "endLine": 23
+            },
+            "source": {
+              "file": "ModuleCfg.bas",
+              "module": "ModuleCfg",
+              "line": 22
+            },
+            "metrics": {
+              "cyclomatic": 1,
+              "lines": 2,
+              "sloc": 1
             }
           },
           {
@@ -44,6 +74,11 @@
               "file": "ModuleCfg.bas",
               "startLine": 4,
               "endLine": 10
+            },
+            "source": {
+              "file": "ModuleCfg.bas",
+              "module": "ModuleCfg",
+              "line": 4
             },
             "calls": [
               {
@@ -67,6 +102,11 @@
                 "branch": "else"
               }
             ],
+            "metrics": {
+              "cyclomatic": 3,
+              "lines": 7,
+              "sloc": 6
+            },
             "tags": [
               "hasIf"
             ]
@@ -81,6 +121,11 @@
               "startLine": 12,
               "endLine": 17
             },
+            "source": {
+              "file": "ModuleCfg.bas",
+              "module": "ModuleCfg",
+              "line": 12
+            },
             "calls": [
               {
                 "target": "ModuleCfg.HelperB",
@@ -93,6 +138,11 @@
                 "branch": "loop"
               }
             ],
+            "metrics": {
+              "cyclomatic": 2,
+              "lines": 6,
+              "sloc": 5
+            },
             "tags": [
               "hasLoop"
             ]

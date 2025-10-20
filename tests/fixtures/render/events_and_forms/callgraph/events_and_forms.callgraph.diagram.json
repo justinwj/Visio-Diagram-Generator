@@ -33,7 +33,13 @@
         "code.access": "Private",
         "code.locs.file": "Form1.frm",
         "code.locs.startLine": "8",
-        "code.locs.endLine": "10"
+        "code.locs.endLine": "10",
+        "code.source.file": "Form1.frm",
+        "code.source.module": "Form1",
+        "code.source.line": "8",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
       }
     }
   ],
@@ -42,7 +48,18 @@
     {
       "id": "Form1",
       "label": "Form1",
-      "tier": "Forms"
+      "tier": "Forms",
+      "metadata": {
+        "code.module": "Form1",
+        "code.module.kind": "Form",
+        "code.file": "Form1.frm",
+        "code.source.file": "Form1.frm",
+        "code.source.module": "Form1",
+        "code.source.line": "1",
+        "code.metrics.lines": "11",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
     }
   ]
 }

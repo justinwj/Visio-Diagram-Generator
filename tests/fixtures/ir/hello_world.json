@@ -1,8 +1,8 @@
 {
-  "irSchemaVersion": "0.1",
+  "irSchemaVersion": "0.2",
   "generator": {
     "name": "vba2json",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "project": {
     "name": "hello_world",
@@ -12,6 +12,16 @@
         "name": "Module1",
         "kind": "Module",
         "file": "Module1.bas",
+        "source": {
+          "file": "Module1.bas",
+          "module": "Module1",
+          "line": 1
+        },
+        "metrics": {
+          "cyclomatic": 1,
+          "lines": 7,
+          "sloc": 2
+        },
         "procedures": [
           {
             "id": "Module1.Hello",
@@ -22,6 +32,16 @@
               "file": "Module1.bas",
               "startLine": 4,
               "endLine": 6
+            },
+            "source": {
+              "file": "Module1.bas",
+              "module": "Module1",
+              "line": 4
+            },
+            "metrics": {
+              "cyclomatic": 1,
+              "lines": 3,
+              "sloc": 2
             }
           }
         ]

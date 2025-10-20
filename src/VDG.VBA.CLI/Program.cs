@@ -91,23 +91,25 @@ internal static class Program
         Console.Error.WriteLine("VDG.VBA.CLI");
         Console.Error.WriteLine("Usage:");
         Console.Error.WriteLine("  vba2json --in <folder> [--glob <pattern> ...] [--out <ir.json>] [--project-name <name>] [--root <path>] [--infer-metrics]");
-        Console.Error.WriteLine("    Extracts VBA sources into IR JSON (schema v0.1).");
+        Console.Error.WriteLine("    Extracts VBA sources into IR JSON (schema v0.2).");
         Console.Error.WriteLine("    --glob <pattern>       Limit inputs using * / ? wildcards relative to --in (repeatable).");
         Console.Error.WriteLine("    --root <path>          Base path for emitted module file paths (defaults to --in).");
         Console.Error.WriteLine("    --infer-metrics        Include simple line-count metrics in the IR payload.");
         Console.Error.WriteLine("    Example: dotnet run --project src/VDG.VBA.CLI -- vba2json --in tests/fixtures/vba/cross_module_calls --out out/project.ir.json");
         Console.Error.WriteLine();
-        Console.Error.WriteLine("  ir2diagram --in <ir.json> [--out <diagram.json>] [--mode <callgraph|module-structure|module-callmap|event-wiring|proc-cfg>] [--include-unknown] [--timeout <ms>] [--strict-validate]");
+        Console.Error.WriteLine("  ir2diagram --in <ir.json> [--out <diagram.json>] [--mode <callgraph|module-structure|module-callmap|event-wiring|proc-cfg>] [--include-unknown] [--timeout <ms>] [--strict-validate] [--summary-log <csv>]");
         Console.Error.WriteLine("    Converts IR JSON into Diagram JSON (schema 1.2). Defaults to callgraph mode with tiered lanes.");
         Console.Error.WriteLine("    --include-unknown      Emit sentinel edges for '~unknown' dynamic calls.");
         Console.Error.WriteLine("    --timeout <ms>         Abort conversion if processing exceeds the provided timeout in milliseconds.");
         Console.Error.WriteLine("    --strict-validate      Enforce strict IR invariants before conversion (fails fast on issues).");
+        Console.Error.WriteLine("    --summary-log <csv>    Write hyperlink summary (Name/File/Module/Lines) to the specified CSV alongside console output.");
         Console.Error.WriteLine("    Example: dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in out/project.ir.json --out out/project.callgraph.json");
         Console.Error.WriteLine();
-        Console.Error.WriteLine("  render --in <folder> --out <diagram.vsdx> [--mode <callgraph|module-structure|module-callmap>] [--cli <VDG.CLI.exe>] [--diagram-json <path>] [--diag-json <path>]");
+        Console.Error.WriteLine("  render --in <folder> --out <diagram.vsdx> [--mode <callgraph|module-structure|module-callmap>] [--cli <VDG.CLI.exe>] [--diagram-json <path>] [--diag-json <path>] [--summary-log <csv>]");
         Console.Error.WriteLine("    Runs vba2json + ir2diagram and renders with VDG.CLI.");
         Console.Error.WriteLine("    --diagram-json         Keep the intermediate Diagram JSON instead of using a temp path.");
         Console.Error.WriteLine("    --diag-json            Emit diagnostics JSON from VDG.CLI to the provided path.");
+        Console.Error.WriteLine("    --summary-log <csv>    Mirror the hyperlink summary to a CSV when rendering end-to-end.");
         Console.Error.WriteLine("    --cli <VDG.CLI.exe>    Provide an explicit path to VDG.CLI (defaults to env or discovery).");
         Console.Error.WriteLine("    Example: dotnet run --project src/VDG.VBA.CLI -- render --in tests/fixtures/vba/cross_module_calls --out out/project.vsdx");
     }
@@ -241,16 +243,30 @@ internal static class Program
         {
             var relativePath = MakeRelative(rootDir, it.file);
             var procs = ParseProcedures(it.lines, it.name, relativePath, moduleSet, returnTypeMap, inferMetrics);
+            var orderedProcedures = procs.OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
+                                         .ThenBy(p => p.Id, StringComparer.Ordinal)
+                                         .ToList();
+            MetricsIr? moduleMetrics = null;
+            if (inferMetrics)
+            {
+                var slocSum = orderedProcedures.Sum(p => p.Metrics?.Sloc ?? 0);
+                var cyclomaticSum = orderedProcedures.Sum(p => p.Metrics?.Cyclomatic ?? 0);
+                moduleMetrics = new MetricsIr
+                {
+                    Lines = it.lines.Length,
+                    Sloc = slocSum,
+                    Cyclomatic = cyclomaticSum
+                };
+            }
             modules.Add(new ModuleIr
             {
                 Id = it.name,
                 Name = it.name,
                 Kind = it.kind,
                 File = relativePath,
-                Metrics = inferMetrics ? new MetricsIr { Lines = it.lines.Length } : null,
-                Procedures = procs.OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
-                                  .ThenBy(p => p.Id, StringComparer.Ordinal)
-                                  .ToList()
+                Source = new SourceIr { File = relativePath, Module = it.name, Line = 1 },
+                Metrics = moduleMetrics,
+                Procedures = orderedProcedures
             });
         }
 
@@ -261,8 +277,8 @@ internal static class Program
 
         var ir = new IrRoot
         {
-            IrSchemaVersion = "0.1",
-            Generator = new() { Name = "vba2json", Version = "0.1.0" },
+            IrSchemaVersion = "0.2",
+            Generator = new() { Name = "vba2json", Version = "0.2.0" },
             Project = new()
             {
                 Name = string.IsNullOrWhiteSpace(projectName) ? Path.GetFileName(inputFolder) : projectName!,
@@ -283,7 +299,7 @@ internal static class Program
 
     private static int RunIr2Diagram(string[] args)
     {
-        string? input = null; string? output = null; string mode = "callgraph"; bool includeUnknown = false; int? timeoutMs = null; bool strictValidate = false;
+        string? input = null; string? output = null; string mode = "callgraph"; bool includeUnknown = false; int? timeoutMs = null; bool strictValidate = false; string? summaryLogPath = null;
         for (int i = 0; i < args.Length; i++)
         {
             var a = args[i];
@@ -299,6 +315,8 @@ internal static class Program
             { if (i + 1 >= args.Length) throw new UsageException("--timeout requires milliseconds value."); if (!int.TryParse(args[++i], NumberStyles.Integer, CultureInfo.InvariantCulture, out var t)) throw new UsageException("--timeout must be an integer (milliseconds)."); timeoutMs = t; }
             else if (string.Equals(a, "--strict-validate", StringComparison.OrdinalIgnoreCase))
             { strictValidate = true; }
+            else if (string.Equals(a, "--summary-log", StringComparison.OrdinalIgnoreCase))
+            { if (i + 1 >= args.Length) throw new UsageException("--summary-log requires a file path."); summaryLogPath = args[++i]; }
             else throw new UsageException($"Unknown option '{a}' for ir2diagram.");
         }
         if (string.IsNullOrWhiteSpace(input)) throw new UsageException("ir2diagram requires --in <ir.json>.");
@@ -316,6 +334,55 @@ internal static class Program
         }
 
         var tiers = new[] { "Forms", "Sheets", "Classes", "Modules" };
+
+        Dictionary<string, string> BuildModuleMetadata(ModuleIr module)
+        {
+            var meta = new Dictionary<string, string>();
+            if (!string.IsNullOrWhiteSpace(module.Name)) meta["code.module"] = module.Name;
+            if (!string.IsNullOrWhiteSpace(module.Kind)) meta["code.module.kind"] = module.Kind!;
+            if (!string.IsNullOrWhiteSpace(module.File)) meta["code.file"] = module.File!;
+            if (module.Source is { } source)
+            {
+                if (!string.IsNullOrWhiteSpace(source.File)) meta["code.source.file"] = source.File;
+                if (!string.IsNullOrWhiteSpace(source.Module)) meta["code.source.module"] = source.Module!;
+                if (source.Line.HasValue && source.Line.Value > 0) meta["code.source.line"] = source.Line.Value.ToString(CultureInfo.InvariantCulture);
+            }
+            if (module.Metrics is { } metrics)
+            {
+                if (metrics.Lines.HasValue) meta["code.metrics.lines"] = metrics.Lines.Value.ToString(CultureInfo.InvariantCulture);
+                if (metrics.Sloc.HasValue) meta["code.metrics.sloc"] = metrics.Sloc.Value.ToString(CultureInfo.InvariantCulture);
+                if (metrics.Cyclomatic.HasValue) meta["code.metrics.cyclomatic"] = metrics.Cyclomatic.Value.ToString(CultureInfo.InvariantCulture);
+            }
+            return meta;
+        }
+
+        Dictionary<string, string> BuildProcedureMetadata(ModuleIr module, ProcedureIr procedure)
+        {
+            var meta = new Dictionary<string, string>();
+            if (!string.IsNullOrWhiteSpace(module.Name)) meta["code.module"] = module.Name;
+            if (!string.IsNullOrWhiteSpace(procedure.Name)) meta["code.proc"] = procedure.Name;
+            if (!string.IsNullOrWhiteSpace(procedure.Kind)) meta["code.kind"] = procedure.Kind!;
+            if (!string.IsNullOrWhiteSpace(procedure.Access)) meta["code.access"] = procedure.Access!;
+            if (procedure.Locs is { } locs)
+            {
+                if (!string.IsNullOrWhiteSpace(locs.File)) meta["code.locs.file"] = locs.File;
+                if (locs.StartLine > 0) meta["code.locs.startLine"] = locs.StartLine.ToString(CultureInfo.InvariantCulture);
+                if (locs.EndLine > 0) meta["code.locs.endLine"] = locs.EndLine.ToString(CultureInfo.InvariantCulture);
+            }
+            if (procedure.Source is { } source)
+            {
+                if (!string.IsNullOrWhiteSpace(source.File)) meta["code.source.file"] = source.File;
+                if (!string.IsNullOrWhiteSpace(source.Module)) meta["code.source.module"] = source.Module!;
+                if (source.Line.HasValue && source.Line.Value > 0) meta["code.source.line"] = source.Line.Value.ToString(CultureInfo.InvariantCulture);
+            }
+            if (procedure.Metrics is { } metrics)
+            {
+                if (metrics.Lines.HasValue) meta["code.metrics.lines"] = metrics.Lines.Value.ToString(CultureInfo.InvariantCulture);
+                if (metrics.Sloc.HasValue) meta["code.metrics.sloc"] = metrics.Sloc.Value.ToString(CultureInfo.InvariantCulture);
+                if (metrics.Cyclomatic.HasValue) meta["code.metrics.cyclomatic"] = metrics.Cyclomatic.Value.ToString(CultureInfo.InvariantCulture);
+            }
+            return meta;
+        }
         if (strictValidate)
         {
             string[] allowedKinds = new[] { "Module", "Class", "Form" };
@@ -459,7 +526,8 @@ internal static class Program
             CheckTimeout();
             var tier = TierFor(m);
             var moduleLabel = string.IsNullOrWhiteSpace(m.Name) ? m.Id : m.Name;
-            containers.Add(new { id = m.Id, label = moduleLabel, tier });
+            var moduleMetadata = BuildModuleMetadata(m);
+            containers.Add(new { id = m.Id, label = moduleLabel, tier, metadata = moduleMetadata });
             var orderedProcedures = (m.Procedures ?? new())
                 .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
                 .ThenBy(p => p.Id, StringComparer.Ordinal)
@@ -467,17 +535,7 @@ internal static class Program
             foreach (var p in orderedProcedures)
             {
                 CheckTimeout();
-                var nodeMeta = new Dictionary<string, string>();
-                if (!string.IsNullOrWhiteSpace(m.Name)) nodeMeta["code.module"] = m.Name;
-                if (!string.IsNullOrWhiteSpace(p.Name)) nodeMeta["code.proc"] = p.Name;
-                if (!string.IsNullOrWhiteSpace(p.Kind)) nodeMeta["code.kind"] = p.Kind!;
-                if (!string.IsNullOrWhiteSpace(p.Access)) nodeMeta["code.access"] = p.Access!;
-                if (p.Locs is { } locs)
-                {
-                    nodeMeta["code.locs.file"] = locs.File;
-                    nodeMeta["code.locs.startLine"] = locs.StartLine.ToString(CultureInfo.InvariantCulture);
-                    nodeMeta["code.locs.endLine"] = locs.EndLine.ToString(CultureInfo.InvariantCulture);
-                }
+                var nodeMeta = BuildProcedureMetadata(m, p);
                 var label = mode.Equals("module-structure", StringComparison.OrdinalIgnoreCase) ? (p.Name ?? p.Id) : p.Id;
                 nodes.Add(new { id = p.Id, label, tier, containerId = m.Id, metadata = nodeMeta });
                 var procedureCalls = p.Calls ?? new List<CallIr>();
@@ -565,7 +623,8 @@ internal static class Program
             foreach (var m in formModules)
             {
                 var tier = TierFor(m);
-                containers.Add(new { id = m.Id, label = m.Name, tier });
+                var moduleMeta = BuildModuleMetadata(m);
+                containers.Add(new { id = m.Id, label = m.Name, tier, metadata = moduleMeta });
                 var orderedProcedures = (m.Procedures ?? new())
                     .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
                     .ThenBy(p => p.Id, StringComparer.Ordinal)
@@ -576,13 +635,31 @@ internal static class Program
                     if (string.IsNullOrWhiteSpace(p.Name)) continue;
                     var mm = Regex.Match(p.Name, @"^(?<ctl>[A-Za-z_][A-Za-z0-9_]*)_(?<evt>[A-Za-z_][A-Za-z0-9_]*)$");
                     if (!mm.Success) continue;
+                    var moduleDisplay = string.IsNullOrWhiteSpace(m.Name) ? m.Id : m.Name;
                     var ctl = mm.Groups["ctl"].Value;
                     var srcId = m.Id + "." + ctl;
                     // Source (control) node
-                    nodes.Add(new { id = srcId, label = srcId, tier, containerId = m.Id });
+                    var controlMeta = new Dictionary<string, string>();
+                    controlMeta["code.module"] = moduleDisplay;
+                    controlMeta["code.control"] = ctl;
+                    if (m.Source is { } moduleSource && !string.IsNullOrWhiteSpace(moduleSource.File))
+                    {
+                        controlMeta["code.source.file"] = moduleSource.File;
+                        if (moduleSource.Line.HasValue && moduleSource.Line.Value > 0)
+                            controlMeta["code.source.line"] = moduleSource.Line.Value.ToString(CultureInfo.InvariantCulture);
+                    }
+                    nodes.Add(new { id = srcId, label = srcId, tier, containerId = m.Id, metadata = controlMeta });
                     // Handler node
-                    nodes.Add(new { id = p.Id, label = p.Id, tier, containerId = m.Id });
+                    var handlerMeta = BuildProcedureMetadata(m, p);
+                    nodes.Add(new { id = p.Id, label = p.Id, tier, containerId = m.Id, metadata = handlerMeta });
                     var meta = new Dictionary<string, string> { ["code.edge"] = "event" };
+                    meta["code.module"] = moduleDisplay;
+                    if (p.Source is { } handlerSource)
+                    {
+                        if (!string.IsNullOrWhiteSpace(handlerSource.File)) meta["code.target.file"] = handlerSource.File;
+                        if (handlerSource.Line.HasValue && handlerSource.Line.Value > 0)
+                            meta["code.target.line"] = handlerSource.Line.Value.ToString(CultureInfo.InvariantCulture);
+                    }
                     edges.Add(new { sourceId = srcId, targetId = p.Id, label = mm.Groups["evt"].Value, metadata = meta });
                 }
             }
@@ -604,10 +681,12 @@ internal static class Program
                 foreach (var p in orderedProcedures)
                 {
                     var contId = p.Id + "#proc";
-                    containers.Add(new { id = contId, label = p.Id, tier });
+                    var procMeta = BuildProcedureMetadata(m, p);
+                    containers.Add(new { id = contId, label = p.Id, tier, metadata = procMeta });
 
                     var startId = p.Id + "#start";
-                    nodes.Add(new { id = startId, label = "Start", tier, containerId = contId });
+                    var startMeta = new Dictionary<string, string>(procMeta) { ["code.flow.node"] = "start" };
+                    nodes.Add(new { id = startId, label = "Start", tier, containerId = contId, metadata = startMeta });
 
                     bool hasIf = (p.Tags?.Contains("hasIf") ?? false);
                     bool hasLoop = (p.Tags?.Contains("hasLoop") ?? false);
@@ -618,7 +697,18 @@ internal static class Program
                         foreach (var call in sequence)
                         {
                             var nodeId = $"{p.Id}#call:{call.Target}@{call.Site?.Line ?? 0}";
-                            nodes.Add(new { id = nodeId, label = call.Target, tier, containerId = contId });
+                            var callMeta = new Dictionary<string, string>(procMeta)
+                            {
+                                ["code.flow.node"] = "call",
+                                ["code.call.target"] = call.Target
+                            };
+                            if (call.Site is { } site)
+                            {
+                                if (!string.IsNullOrWhiteSpace(site.Module)) callMeta["code.site.module"] = site.Module;
+                                if (!string.IsNullOrWhiteSpace(site.File)) callMeta["code.site.file"] = site.File;
+                                if (site.Line > 0) callMeta["code.site.line"] = site.Line.ToString(CultureInfo.InvariantCulture);
+                            }
+                            nodes.Add(new { id = nodeId, label = call.Target, tier, containerId = contId, metadata = callMeta });
                             edges.Add(new { sourceId = fromId, targetId = nodeId, label = "seq", metadata = flowMeta });
                             fromId = nodeId;
                         }
@@ -650,7 +740,8 @@ internal static class Program
                     if (hasLoop)
                     {
                         var loopId = p.Id + "#loop";
-                        nodes.Add(new { id = loopId, label = "Loop", tier, containerId = contId });
+                        var loopMeta = new Dictionary<string, string>(procMeta) { ["code.flow.node"] = "loop" };
+                        nodes.Add(new { id = loopId, label = "Loop", tier, containerId = contId, metadata = loopMeta });
                         edges.Add(new { sourceId = cursor, targetId = loopId, label = "seq", metadata = flowMeta });
 
                         foreach (var call in loopCore) handled.Add(call);
@@ -662,11 +753,13 @@ internal static class Program
                         if (hasIf)
                         {
                             var decId = p.Id + "#dec";
-                            nodes.Add(new { id = decId, label = "Decision", tier, containerId = contId });
+                            var decMeta = new Dictionary<string, string>(procMeta) { ["code.flow.node"] = "decision" };
+                            nodes.Add(new { id = decId, label = "Decision", tier, containerId = contId, metadata = decMeta });
                             edges.Add(new { sourceId = loopCursor, targetId = decId, label = "iter", metadata = flowMeta });
 
                             var thenId = p.Id + "#then";
-                            nodes.Add(new { id = thenId, label = "Then", tier, containerId = contId });
+                            var thenMeta = new Dictionary<string, string>(procMeta) { ["code.flow.node"] = "then" };
+                            nodes.Add(new { id = thenId, label = "Then", tier, containerId = contId, metadata = thenMeta });
                             edges.Add(new { sourceId = decId, targetId = thenId, label = "True", metadata = flowMeta });
                             var thenExit = AppendSequence(loopThen, thenId);
                             edges.Add(new { sourceId = thenExit, targetId = loopId, label = "back", metadata = flowMeta });
@@ -674,7 +767,8 @@ internal static class Program
                             if (loopElse.Any())
                             {
                                 var elseId = p.Id + "#else";
-                                nodes.Add(new { id = elseId, label = "Else", tier, containerId = contId });
+                                var elseMeta = new Dictionary<string, string>(procMeta) { ["code.flow.node"] = "else" };
+                                nodes.Add(new { id = elseId, label = "Else", tier, containerId = contId, metadata = elseMeta });
                                 edges.Add(new { sourceId = decId, targetId = elseId, label = "False", metadata = flowMeta });
                                 var elseExit = AppendSequence(loopElse, elseId);
                                 edges.Add(new { sourceId = elseExit, targetId = loopId, label = "back", metadata = flowMeta });
@@ -690,7 +784,8 @@ internal static class Program
                         }
 
                         var endId = p.Id + "#end";
-                        nodes.Add(new { id = endId, label = "End", tier, containerId = contId });
+                        var endMeta = new Dictionary<string, string>(procMeta) { ["code.flow.node"] = "end" };
+                        nodes.Add(new { id = endId, label = "End", tier, containerId = contId, metadata = endMeta });
                         edges.Add(new { sourceId = loopId, targetId = endId, label = "exit", metadata = flowMeta });
                         cursor = endId;
                         endAdded = true;
@@ -698,25 +793,29 @@ internal static class Program
                     else if (hasIf)
                     {
                         var decId = p.Id + "#dec";
-                        nodes.Add(new { id = decId, label = "Decision", tier, containerId = contId });
+                        var decMeta = new Dictionary<string, string>(procMeta) { ["code.flow.node"] = "decision" };
+                        nodes.Add(new { id = decId, label = "Decision", tier, containerId = contId, metadata = decMeta });
                         edges.Add(new { sourceId = cursor, targetId = decId, label = "seq", metadata = flowMeta });
 
                         foreach (var call in topThen) handled.Add(call);
                         foreach (var call in topElse) handled.Add(call);
 
                         var thenId = p.Id + "#then";
-                        nodes.Add(new { id = thenId, label = "Then", tier, containerId = contId });
+                        var thenMeta = new Dictionary<string, string>(procMeta) { ["code.flow.node"] = "then" };
+                        nodes.Add(new { id = thenId, label = "Then", tier, containerId = contId, metadata = thenMeta });
                         edges.Add(new { sourceId = decId, targetId = thenId, label = "True", metadata = flowMeta });
                         var thenExit = AppendSequence(topThen, thenId);
 
                         var endId = p.Id + "#end";
-                        nodes.Add(new { id = endId, label = "End", tier, containerId = contId });
+                        var endMeta = new Dictionary<string, string>(procMeta) { ["code.flow.node"] = "end" };
+                        nodes.Add(new { id = endId, label = "End", tier, containerId = contId, metadata = endMeta });
                         edges.Add(new { sourceId = thenExit, targetId = endId, label = "seq", metadata = flowMeta });
 
                         if (topElse.Any())
                         {
                             var elseId = p.Id + "#else";
-                            nodes.Add(new { id = elseId, label = "Else", tier, containerId = contId });
+                            var elseMeta = new Dictionary<string, string>(procMeta) { ["code.flow.node"] = "else" };
+                            nodes.Add(new { id = elseId, label = "Else", tier, containerId = contId, metadata = elseMeta });
                             edges.Add(new { sourceId = decId, targetId = elseId, label = "False", metadata = flowMeta });
                             var elseExit = AppendSequence(topElse, elseId);
                             edges.Add(new { sourceId = elseExit, targetId = endId, label = "seq", metadata = flowMeta });
@@ -735,7 +834,8 @@ internal static class Program
                         var remaining = calls.Where(c => !handled.Contains(c)).ToList();
                         cursor = AppendSequence(remaining, cursor);
                         var endId = p.Id + "#end";
-                        nodes.Add(new { id = endId, label = "End", tier, containerId = contId });
+                        var endMeta = new Dictionary<string, string>(procMeta) { ["code.flow.node"] = "end" };
+                        nodes.Add(new { id = endId, label = "End", tier, containerId = contId, metadata = endMeta });
                         edges.Add(new { sourceId = cursor, targetId = endId, label = "seq", metadata = flowMeta });
                     }
                 }
@@ -797,6 +897,12 @@ internal static class Program
         {
             Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(output!)) ?? ".");
             File.WriteAllText(output!, json);
+        }
+
+        EmitHyperlinkSummary(orderedModules, mode, summaryLogPath);
+
+        if (!string.IsNullOrWhiteSpace(output))
+        {
             var progressLastMs = progressEmits > 0
                 ? (int)Math.Round(lastProgressElapsed.TotalMilliseconds)
                 : (int)Math.Round(progressStopwatch.Elapsed.TotalMilliseconds);
@@ -804,6 +910,93 @@ internal static class Program
         }
         return ExitCodes.Ok;
     }
+
+    private static void EmitHyperlinkSummary(IReadOnlyList<ModuleIr> modules, string mode, string? summaryLogPath)
+    {
+        var entries = CollectLinkSummaryEntries(modules);
+        if (entries.Count == 0)
+        {
+            if (!string.IsNullOrWhiteSpace(summaryLogPath))
+            {
+                var fullPath = Path.GetFullPath(summaryLogPath!);
+                var dir = Path.GetDirectoryName(fullPath);
+                if (!string.IsNullOrWhiteSpace(dir)) Directory.CreateDirectory(dir);
+                File.WriteAllText(fullPath, "Name,File,Module,StartLine,EndLine,Hyperlink" + Environment.NewLine);
+                Console.WriteLine($"Hyperlink summary written to {fullPath}");
+            }
+            return;
+        }
+
+        Console.WriteLine();
+        Console.WriteLine($"Hyperlink Summary ({mode}):");
+        Console.WriteLine("Procedure/Control | File Path | Module | Start Line | End Line | Hyperlink");
+        foreach (var entry in entries)
+        {
+            Console.WriteLine($"{entry.Name} | {entry.File} | {entry.Module} | {entry.StartLine} | {entry.EndLine} | {entry.Hyperlink}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(summaryLogPath))
+        {
+            var fullPath = Path.GetFullPath(summaryLogPath!);
+            var dir = Path.GetDirectoryName(fullPath);
+            if (!string.IsNullOrWhiteSpace(dir)) Directory.CreateDirectory(dir);
+            var sb = new StringBuilder();
+            sb.AppendLine("Name,File,Module,StartLine,EndLine,Hyperlink");
+            string CsvEscape(string value) => value.Contains('"', StringComparison.Ordinal) || value.Contains(',', StringComparison.Ordinal)
+                ? $"\"{value.Replace("\"", "\"\"", StringComparison.Ordinal)}\""
+                : value;
+            foreach (var entry in entries)
+            {
+                sb.AppendLine(string.Join(",", new[]
+                {
+                    CsvEscape(entry.Name),
+                    CsvEscape(entry.File),
+                    CsvEscape(entry.Module),
+                    CsvEscape(entry.StartLine.ToString(CultureInfo.InvariantCulture)),
+                    CsvEscape(entry.EndLine.ToString(CultureInfo.InvariantCulture)),
+                    CsvEscape(entry.Hyperlink)
+                }));
+            }
+            File.WriteAllText(fullPath, sb.ToString());
+            Console.WriteLine($"Hyperlink summary written to {fullPath}");
+        }
+    }
+
+    private static List<LinkSummaryEntry> CollectLinkSummaryEntries(IEnumerable<ModuleIr> modules)
+    {
+        var entries = new List<LinkSummaryEntry>();
+        if (modules is null) return entries;
+
+        foreach (var module in modules)
+        {
+            if (module is null) continue;
+            var moduleName = !string.IsNullOrWhiteSpace(module.Name) ? module.Name! : module.Id ?? string.Empty;
+            var procedures = module.Procedures ?? new List<ProcedureIr>();
+            foreach (var procedure in procedures)
+            {
+                if (procedure is null) continue;
+                var displayName = !string.IsNullOrWhiteSpace(procedure.Name) ? procedure.Name! : procedure.Id ?? string.Empty;
+                if (string.IsNullOrWhiteSpace(displayName)) continue;
+                var file = procedure.Source?.File
+                           ?? procedure.Locs?.File
+                           ?? module.Source?.File
+                           ?? module.File
+                           ?? string.Empty;
+                if (string.IsNullOrWhiteSpace(file)) continue;
+                var start = procedure.Locs?.StartLine ?? procedure.Source?.Line ?? 0;
+                var end = procedure.Locs?.EndLine ?? start;
+                var hyperlink = start > 0 ? $"{file}#L{start}" : file;
+                entries.Add(new LinkSummaryEntry(displayName, file, moduleName, start, end, hyperlink));
+            }
+        }
+
+        return entries
+            .OrderBy(e => e.Module, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(e => e.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private sealed record LinkSummaryEntry(string Name, string File, string Module, int StartLine, int EndLine, string Hyperlink);
 
     private static string KindFromExt(string? ext) => (ext ?? string.Empty).ToLowerInvariant() switch
     {
@@ -962,6 +1155,8 @@ internal static class Program
             var branchStack = new Stack<string>();
             bool hasIf = false, hasLoop = false;
             int loopDepth = 0;
+            int sloc = 0;
+            int branchKeywords = 0;
             for (int k = i; k < Math.Min(lines.Length, end - 1); k++)
             {
                 var originalLine = lines[k];
@@ -991,6 +1186,20 @@ internal static class Program
                 }
 
                 var trimmed = line.Trim();
+                var trimmedOriginal = originalLine.Trim();
+                if (!string.IsNullOrWhiteSpace(trimmedOriginal) && !trimmedOriginal.StartsWith("'", StringComparison.Ordinal))
+                {
+                    sloc++;
+                    var upper = trimmedOriginal.ToUpperInvariant();
+                    if (Regex.IsMatch(upper, @"(^|[^A-Z])IF\b")) branchKeywords++;
+                    if (Regex.IsMatch(upper, @"\bELSEIF\b")) branchKeywords++;
+                    if (Regex.IsMatch(upper, @"\bSELECT\s+CASE\b")) branchKeywords++;
+                    if (Regex.IsMatch(upper, @"\bCASE\b") && !Regex.IsMatch(upper, @"\bSELECT\s+CASE\b")) branchKeywords++;
+                    if (Regex.IsMatch(upper, @"\bFOR\b")) branchKeywords++;
+                    if (Regex.IsMatch(upper, @"\bDO\b")) branchKeywords++;
+                    if (Regex.IsMatch(upper, @"\bWHILE\b")) branchKeywords++;
+                    if (Regex.IsMatch(upper, @"\bUNTIL\b")) branchKeywords++;
+                }
                 if (!hasIf && Regex.IsMatch(trimmed, @"^\s*If\b", RegexOptions.IgnoreCase)) hasIf = true;
                 if (!hasLoop && Regex.IsMatch(trimmed, @"^\s*(For\b|Do\b|While\b)", RegexOptions.IgnoreCase)) hasLoop = true;
 
@@ -1131,7 +1340,14 @@ internal static class Program
             if (hasIf) tags.Add("hasIf");
             if (hasLoop) tags.Add("hasLoop");
 
-            var metrics = includeMetrics ? new MetricsIr { Lines = end - start + 1 } : null;
+            var metrics = includeMetrics
+                ? new MetricsIr
+                {
+                    Lines = end - start + 1,
+                    Sloc = sloc,
+                    Cyclomatic = Math.Max(1, 1 + branchKeywords)
+                }
+                : null;
 
             result.Add(new ProcedureIr
             {
@@ -1143,6 +1359,7 @@ internal static class Program
                 Params = @params.Count > 0 ? @params : null,
                 Returns = returns,
                 Locs = new LocsIr { File = filePath, StartLine = start, EndLine = end },
+                Source = new SourceIr { File = filePath, Module = moduleName, Line = start },
                 Calls = calls.Count > 0 ? calls : null,
                 Metrics = metrics,
                 Tags = tags.Count > 0 ? tags : null
@@ -1209,7 +1426,7 @@ internal static class Program
 
     private static int RunRender(string[] args)
     {
-        string? inputFolder = null; string? outVsdx = null; string mode = "callgraph"; string? cliPath = null; string? diagramJson = null; string? diagnosticsJson = null;
+        string? inputFolder = null; string? outVsdx = null; string mode = "callgraph"; string? cliPath = null; string? diagramJson = null; string? diagnosticsJson = null; string? summaryLogPath = null;
         for (int i = 0; i < args.Length; i++)
         {
             var a = args[i];
@@ -1219,13 +1436,20 @@ internal static class Program
             else if (string.Equals(a, "--cli", StringComparison.OrdinalIgnoreCase)) { if (i + 1 >= args.Length) throw new UsageException("--cli requires path to VDG.CLI.exe"); cliPath = args[++i]; }
             else if (string.Equals(a, "--diagram-json", StringComparison.OrdinalIgnoreCase)) { if (i + 1 >= args.Length) throw new UsageException("--diagram-json requires path"); diagramJson = args[++i]; }
             else if (string.Equals(a, "--diag-json", StringComparison.OrdinalIgnoreCase)) { if (i + 1 >= args.Length) throw new UsageException("--diag-json requires path"); diagnosticsJson = args[++i]; }
+            else if (string.Equals(a, "--summary-log", StringComparison.OrdinalIgnoreCase)) { if (i + 1 >= args.Length) throw new UsageException("--summary-log requires path"); summaryLogPath = args[++i]; }
             else throw new UsageException($"Unknown option '{a}' for render.");
         }
         if (string.IsNullOrWhiteSpace(inputFolder) || string.IsNullOrWhiteSpace(outVsdx)) throw new UsageException("render requires --in <folder> and --out <diagram.vsdx>");
         var irPath = Path.Combine(Path.GetTempPath(), $"vdg_ir_{Guid.NewGuid():N}.json");
         var diagPath = diagramJson ?? Path.Combine(Path.GetTempPath(), $"vdg_diag_{Guid.NewGuid():N}.json");
         RunVba2Json(new[] { "--in", inputFolder!, "--out", irPath });
-        RunIr2Diagram(new[] { "--in", irPath, "--out", diagPath, "--mode", mode });
+        var irArgs = new List<string> { "--in", irPath, "--out", diagPath, "--mode", mode };
+        if (!string.IsNullOrWhiteSpace(summaryLogPath))
+        {
+            irArgs.Add("--summary-log");
+            irArgs.Add(summaryLogPath!);
+        }
+        RunIr2Diagram(irArgs.ToArray());
 
         var cli = FindCli(cliPath);
         if (string.IsNullOrWhiteSpace(cli)) throw new UsageException("VDG.CLI.exe not found. Provide --cli <path> or set VDG_CLI env.");
@@ -1287,13 +1511,13 @@ internal static class Program
 // IR types
 internal sealed class IrRoot
 {
-    [JsonPropertyName("irSchemaVersion")] public string IrSchemaVersion { get; set; } = "0.1";
+    [JsonPropertyName("irSchemaVersion")] public string IrSchemaVersion { get; set; } = "0.2";
     [JsonPropertyName("generator")] public GeneratorIr Generator { get; set; } = new();
     [JsonPropertyName("project")] public ProjectIr Project { get; set; } = new();
 }
 internal sealed class GeneratorIr { public string? Name { get; set; } public string? Version { get; set; } }
 internal sealed class ProjectIr { public string Name { get; set; } = ""; public List<ModuleIr> Modules { get; set; } = new(); }
-internal sealed class ModuleIr { public string Id { get; set; } = ""; public string Name { get; set; } = ""; public string? Kind { get; set; } public string? File { get; set; } public MetricsIr? Metrics { get; set; } public List<ProcedureIr> Procedures { get; set; } = new(); }
+internal sealed class ModuleIr { public string Id { get; set; } = ""; public string Name { get; set; } = ""; public string? Kind { get; set; } public string? File { get; set; } public SourceIr? Source { get; set; } public MetricsIr? Metrics { get; set; } public List<ProcedureIr> Procedures { get; set; } = new(); }
 internal sealed class ProcedureIr
 {
     public string Id { get; set; } = "";
@@ -1304,6 +1528,7 @@ internal sealed class ProcedureIr
     public List<ParamIr>? Params { get; set; }
     public string? Returns { get; set; }
     public LocsIr Locs { get; set; } = new();
+    public SourceIr? Source { get; set; }
     public List<CallIr>? Calls { get; set; }
     public MetricsIr? Metrics { get; set; }
     public List<string>? Tags { get; set; }
@@ -1312,4 +1537,5 @@ internal sealed class ParamIr { public string Name { get; set; } = ""; public st
 internal sealed class LocsIr { public string File { get; set; } = ""; public int StartLine { get; set; } public int EndLine { get; set; } }
 internal sealed class CallIr { public string Target { get; set; } = ""; public bool IsDynamic { get; set; } public SiteIr Site { get; set; } = new(); public string? Branch { get; set; } }
 internal sealed class SiteIr { public string Module { get; set; } = ""; public string File { get; set; } = ""; public int Line { get; set; } }
-internal sealed class MetricsIr { public int? Cyclomatic { get; set; } public int? Lines { get; set; } }
+internal sealed class SourceIr { public string File { get; set; } = ""; public string? Module { get; set; } public int? Line { get; set; } }
+internal sealed class MetricsIr { public int? Cyclomatic { get; set; } public int? Lines { get; set; } public int? Sloc { get; set; } }

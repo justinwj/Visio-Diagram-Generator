@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://visio-diagram-generator/schema/vbaIr.schema.json",
-  "title": "VDG VBA Intermediate Representation (IR) v0.1",
+  "title": "VDG VBA Intermediate Representation (IR) v0.2",
   "type": "object",
   "additionalProperties": true,
   "required": ["irSchemaVersion", "project"],
   "properties": {
-    "irSchemaVersion": { "type": "string", "const": "0.1" },
+    "irSchemaVersion": { "type": "string", "const": "0.2" },
     "generator": {
       "type": "object",
       "additionalProperties": true,
@@ -39,6 +39,7 @@
         "name": { "type": "string", "minLength": 1 },
         "kind": { "type": "string", "enum": ["Module", "Class", "Form"] },
         "file": { "type": "string" },
+        "source": { "$ref": "#/$defs/sourceAnchor" },
         "attributes": {
           "type": "array",
           "items": { "type": "string" },
@@ -69,6 +70,7 @@
         },
         "returns": { "type": ["string", "null"] },
         "locs": { "$ref": "#/$defs/locs" },
+        "source": { "$ref": "#/$defs/sourceAnchor" },
         "calls": {
           "type": "array",
           "items": { "$ref": "#/$defs/call" },
@@ -126,7 +128,18 @@
       "additionalProperties": true,
       "properties": {
         "cyclomatic": { "type": "integer", "minimum": 0 },
-        "lines": { "type": "integer", "minimum": 0 }
+        "lines": { "type": "integer", "minimum": 0 },
+        "sloc": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "sourceAnchor": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["file"],
+      "properties": {
+        "file": { "type": "string", "minLength": 1 },
+        "module": { "type": "string" },
+        "line": { "type": "integer", "minimum": 1 }
       }
     }
   }

@@ -1,0 +1,27 @@
+{
+  "Version": "1.0",
+  "Metrics": {
+    "ConnectorCount": 29,
+    "StraightLineCrossings": 0,
+    "PageHeight": 8.5,
+    "UsableHeight": 7.5,
+    "LanePages": [],
+    "Containers": []
+  },
+  "Issues": [
+    {
+      "Code": "LayoutHeightThreshold",
+      "Level": "warning",
+      "Message": "layout height 94.2in exceeds threshold 11.0in; consider pagination, reducing spacing, or vertical orientation.",
+      "Lane": null,
+      "Page": null
+    },
+    {
+      "Code": "LaneNodeMax",
+      "Level": "warning",
+      "Message": "lane \u0027Forms\u0027 contains 58 nodes (max 12); consider splitting the lane or paginating.",
+      "Lane": "Forms",
+      "Page": null
+    }
+  ]
+}

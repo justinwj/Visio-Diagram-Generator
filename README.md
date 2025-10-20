@@ -144,33 +144,6 @@ A minimal 1.2 envelope with lanes looks like this:
 - Additional document metadata and `diagramType` field.
 - Backward compatible with 1.0/1.1 inputs.
 
-Milestone 3 routing (alpha)
-- `layout.routing` (mode, bundling, channels, routeAroundContainers) and `node.ports` (inSide/outSide) are now parsed by the CLI.
-- Default routing mode is `orthogonal` using Visio Dynamic Connectors; set `--route-mode straight` to revert to straight lines.
-- Additional flags: `--bundle-by`, `--bundle-sep`, `--channel-gap`, `--route-around` are accepted and stored for future bundling/channel algorithms.
-- `edge.waypoints` and `edge.priority` are parsed and stored for future use.
-- Testing note: set `VDG_SKIP_RUNNER=1` to skip the Visio automation in `VDG.CLI` during tests/CI. The CLI will still parse input, emit diagnostics, and create a stub output file.
- - Labels: polylines (corridors/waypoints) use detached label boxes placed near the longest segment. Tune with `edge.metadata["edge.label.offsetIn"]` (inches).
- - Diagnostics: now include baseline crossings, planned route crossings, average path length, channel utilization, edges-with-waypoints count, and a bundle-separation effectiveness warning for tiny shapes.
-
-Milestone 4 containers (alpha)
-- `layout.containers` adds container rendering options: `paddingIn` (inches), `cornerIn` (inches), and optional `style` (fill/stroke/linePattern).
-- Optional top-level `containers[]` allows defining explicit sub-containers per tier. Nodes can opt-in via `containerId`.
-- CLI flags: `--container-padding <in>` and `--container-corner <in>` override JSON; `--route-around <true|false>` prefers paths that skirt container edges.
-- When `routeAroundContainers=true`, the CLI draws H–V–H polylines that hug lane container edges using roughly half the container padding, reducing overlap through container interiors.
-- Diagnostics: logs container count, padding/corner values, and warns if nodes reference unknown container IDs.
-- Sample: `samples/m4_containers_sample.json` (works with both Debug/Release builds).
-
-Exported properties (Visio DocumentSheet)
-- The CLI writes container metadata to the document’s ShapeSheet for downstream automation:
-  - `User.ContainerCount` (numeric)
-  - `User.ContainerIds` (CSV string)
-  - `User.ContainerLabels` (CSV string)
-  - `User.ContainerTiers` (CSV string)
-
-Notes and Future Integration
-- The layout model (nodes/edges + layout hints) is renderer-agnostic. While M1–M2 target Visio via COM, the same model can be exported to other formats (e.g., SVG, PPTX, PDF) in future milestones.
-
 ## Testing and Validation
 - Run unit tests: `dotnet test --configuration Release`
 - Rebuild after edits: `dotnet build -c Release`
@@ -227,17 +200,26 @@ Notes and Future Integration
 ## Repository Layout
 ```
 src/
-  VDG.CLI/                     // Windows CLI runner (Visio automation)
-  VisioDiagramGenerator.CliFs/ // F# CLI wrapper
-  VDG.Core*/                   // Core contracts and implementations
-samples/                       // Ready-to-run diagram JSON
-shared/Config/                 // JSON schema and configuration samples
-out/                           // Build + generated diagrams
+  DebugHarness/                      // Scratch runner for local experimentation
+  VDG.CLI/                           // Windows CLI that drives Visio via COM
+  VDG.VBA.CLI/                       // VBA export pipeline (vba2json / ir2diagram / render)
+  VDG.Core/                          // Core implementation shared across runners
+  VDG.Core.Contracts/                // Shared contracts/DTOs consumed by clients
+  VDG.VisioRuntime/                  // Visio automation helpers (shapes, masters, etc.)
+  VisioDiagramGenerator.Algorithms/  // Layout algorithms and routing helpers
+  VisioDiagramGenerator.CliFs/       // F# command-line wrapper
+docs/                                // Specs, governance, design notes
+samples/                             // Ready-to-run diagram JSON and VBA exports
+shared/Config/                       // JSON schema and default configuration snippets
+tests/                               // Unit, integration, and CLI smoke tests
+tools/                               // PowerShell helpers (fixtures, validation, perf smoke)
+out/                                 // Build + generated artifacts (gitignored)
 ```
 
-## Roadmap
-- Milestone 2 (current): tiered layout, spacing, pagination/banding, title banner, diagnostics. See `plan docs/VDG_MILESTONE_TWO.md`.
-- Milestone 3 (next): improved connector routing (orthogonal), bundling, and reserved channels to reduce overlap. Plan in `plan docs/VDG_MILESTONE_THREE.md`.
+## Upcoming Work
+- Continue refining routing and bundling behaviour (channels, reserved corridors, waypoint handling).
+- Expand reusable CLI tooling and summaries so downstream automation can validate hyperlinks and metrics without Visio.
+- Explore additional runners that do not require COM automation to broaden platform support.
 
 ## Contributing
 Issues and pull requests are welcome. Please run `dotnet test` before submitting and include reproduction steps for Visio automation issues. The automation layer is sensitive to environment differences, so details about Visio version and Windows build help significantly.

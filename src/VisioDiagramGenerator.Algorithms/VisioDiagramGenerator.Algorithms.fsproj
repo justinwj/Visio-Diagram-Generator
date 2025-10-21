@@ -12,6 +12,7 @@
   
   <ItemGroup>
     <Compile Include="Types.fs" />
+    <Compile Include="PagingPlanner.fs" />
     <Compile Include="LayoutEngine.fs" />
   </ItemGroup>
 </Project>

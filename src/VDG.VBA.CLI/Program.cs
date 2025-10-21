@@ -619,6 +619,7 @@ internal static class Program
         if (mode.Equals("event-wiring", StringComparison.OrdinalIgnoreCase))
         {
             nodes.Clear(); edges.Clear(); containers.Clear();
+            var seenControls = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var formModules = orderedModules.Where(m => string.Equals(m.Kind, "Form", StringComparison.OrdinalIgnoreCase)).ToList();
             foreach (var m in formModules)
             {
@@ -638,17 +639,19 @@ internal static class Program
                     var moduleDisplay = string.IsNullOrWhiteSpace(m.Name) ? m.Id : m.Name;
                     var ctl = mm.Groups["ctl"].Value;
                     var srcId = m.Id + "." + ctl;
-                    // Source (control) node
-                    var controlMeta = new Dictionary<string, string>();
-                    controlMeta["code.module"] = moduleDisplay;
-                    controlMeta["code.control"] = ctl;
-                    if (m.Source is { } moduleSource && !string.IsNullOrWhiteSpace(moduleSource.File))
+                    if (seenControls.Add(srcId))
                     {
-                        controlMeta["code.source.file"] = moduleSource.File;
-                        if (moduleSource.Line.HasValue && moduleSource.Line.Value > 0)
-                            controlMeta["code.source.line"] = moduleSource.Line.Value.ToString(CultureInfo.InvariantCulture);
+                        var controlMeta = new Dictionary<string, string>();
+                        controlMeta["code.module"] = moduleDisplay;
+                        controlMeta["code.control"] = ctl;
+                        if (m.Source is { } moduleSource && !string.IsNullOrWhiteSpace(moduleSource.File))
+                        {
+                            controlMeta["code.source.file"] = moduleSource.File;
+                            if (moduleSource.Line.HasValue && moduleSource.Line.Value > 0)
+                                controlMeta["code.source.line"] = moduleSource.Line.Value.ToString(CultureInfo.InvariantCulture);
+                        }
+                        nodes.Add(new { id = srcId, label = srcId, tier, containerId = m.Id, metadata = controlMeta });
                     }
-                    nodes.Add(new { id = srcId, label = srcId, tier, containerId = m.Id, metadata = controlMeta });
                     // Handler node
                     var handlerMeta = BuildProcedureMetadata(m, p);
                     nodes.Add(new { id = p.Id, label = p.Id, tier, containerId = m.Id, metadata = handlerMeta });
@@ -876,6 +879,16 @@ internal static class Program
             }
         }
 
+        object pageConfig = mode.Equals("event-wiring", StringComparison.OrdinalIgnoreCase)
+            ? new
+            {
+                heightIn = 8.5,
+                marginIn = 0.5,
+                paginate = true,
+                plan = new { laneSplitAllowed = true }
+            }
+            : new { heightIn = 8.5, marginIn = 0.5 };
+
         var diagram = new
         {
             schemaVersion = "1.2",
@@ -883,7 +896,7 @@ internal static class Program
             {
                 tiers,
                 spacing = new { horizontal = 1.2, vertical = 0.6 },
-                page = new { heightIn = 8.5, marginIn = 0.5 },
+                page = pageConfig,
                 containers = new { paddingIn = 0.0, cornerIn = 0.12 }
             },
             nodes,

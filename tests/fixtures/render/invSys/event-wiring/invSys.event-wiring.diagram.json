@@ -13,7 +13,11 @@
     },
     "page": {
       "heightIn": 8.5,
-      "marginIn": 0.5
+      "marginIn": 0.5,
+      "paginate": true,
+      "plan": {
+        "laneSplitAllowed": true
+      }
     },
     "containers": {
       "paddingIn": 0,
@@ -352,18 +356,6 @@
       }
     },
     {
-      "id": "frmItemSearch.lstBox",
-      "label": "frmItemSearch.lstBox",
-      "tier": "Forms",
-      "containerId": "frmItemSearch",
-      "metadata": {
-        "code.module": "frmItemSearch",
-        "code.control": "lstBox",
-        "code.source.file": "Forms/frmItemSearch.frm",
-        "code.source.line": "1"
-      }
-    },
-    {
       "id": "frmItemSearch.lstBox_Click",
       "label": "frmItemSearch.lstBox_Click",
       "tier": "Forms",
@@ -382,18 +374,6 @@
         "code.metrics.lines": "4",
         "code.metrics.sloc": "2",
         "code.metrics.cyclomatic": "1"
-      }
-    },
-    {
-      "id": "frmItemSearch.lstBox",
-      "label": "frmItemSearch.lstBox",
-      "tier": "Forms",
-      "containerId": "frmItemSearch",
-      "metadata": {
-        "code.module": "frmItemSearch",
-        "code.control": "lstBox",
-        "code.source.file": "Forms/frmItemSearch.frm",
-        "code.source.line": "1"
       }
     },
     {
@@ -418,18 +398,6 @@
       }
     },
     {
-      "id": "frmItemSearch.lstBox",
-      "label": "frmItemSearch.lstBox",
-      "tier": "Forms",
-      "containerId": "frmItemSearch",
-      "metadata": {
-        "code.module": "frmItemSearch",
-        "code.control": "lstBox",
-        "code.source.file": "Forms/frmItemSearch.frm",
-        "code.source.line": "1"
-      }
-    },
-    {
       "id": "frmItemSearch.lstBox_KeyDown",
       "label": "frmItemSearch.lstBox_KeyDown",
       "tier": "Forms",
@@ -448,18 +416,6 @@
         "code.metrics.lines": "6",
         "code.metrics.sloc": "5",
         "code.metrics.cyclomatic": "3"
-      }
-    },
-    {
-      "id": "frmItemSearch.lstBox",
-      "label": "frmItemSearch.lstBox",
-      "tier": "Forms",
-      "containerId": "frmItemSearch",
-      "metadata": {
-        "code.module": "frmItemSearch",
-        "code.control": "lstBox",
-        "code.source.file": "Forms/frmItemSearch.frm",
-        "code.source.line": "1"
       }
     },
     {
@@ -517,18 +473,6 @@
       }
     },
     {
-      "id": "frmItemSearch.txtBox",
-      "label": "frmItemSearch.txtBox",
-      "tier": "Forms",
-      "containerId": "frmItemSearch",
-      "metadata": {
-        "code.module": "frmItemSearch",
-        "code.control": "txtBox",
-        "code.source.file": "Forms/frmItemSearch.frm",
-        "code.source.line": "1"
-      }
-    },
-    {
       "id": "frmItemSearch.txtBox_KeyDown",
       "label": "frmItemSearch.txtBox_KeyDown",
       "tier": "Forms",
@@ -583,18 +527,6 @@
       }
     },
     {
-      "id": "frmItemSearch.UserForm",
-      "label": "frmItemSearch.UserForm",
-      "tier": "Forms",
-      "containerId": "frmItemSearch",
-      "metadata": {
-        "code.module": "frmItemSearch",
-        "code.control": "UserForm",
-        "code.source.file": "Forms/frmItemSearch.frm",
-        "code.source.line": "1"
-      }
-    },
-    {
       "id": "frmItemSearch.UserForm_Initialize",
       "label": "frmItemSearch.UserForm_Initialize",
       "tier": "Forms",
@@ -616,18 +548,6 @@
       }
     },
     {
-      "id": "frmItemSearch.UserForm",
-      "label": "frmItemSearch.UserForm",
-      "tier": "Forms",
-      "containerId": "frmItemSearch",
-      "metadata": {
-        "code.module": "frmItemSearch",
-        "code.control": "UserForm",
-        "code.source.file": "Forms/frmItemSearch.frm",
-        "code.source.line": "1"
-      }
-    },
-    {
       "id": "frmItemSearch.UserForm_KeyDown",
       "label": "frmItemSearch.UserForm_KeyDown",
       "tier": "Forms",
@@ -646,18 +566,6 @@
         "code.metrics.lines": "13",
         "code.metrics.sloc": "9",
         "code.metrics.cyclomatic": "5"
-      }
-    },
-    {
-      "id": "frmItemSearch.UserForm",
-      "label": "frmItemSearch.UserForm",
-      "tier": "Forms",
-      "containerId": "frmItemSearch",
-      "metadata": {
-        "code.module": "frmItemSearch",
-        "code.control": "UserForm",
-        "code.source.file": "Forms/frmItemSearch.frm",
-        "code.source.line": "1"
       }
     },
     {
@@ -811,18 +719,6 @@
         "code.metrics.lines": "4",
         "code.metrics.sloc": "2",
         "code.metrics.cyclomatic": "1"
-      }
-    },
-    {
-      "id": "frmLogin.UserForm",
-      "label": "frmLogin.UserForm",
-      "tier": "Forms",
-      "containerId": "frmLogin",
-      "metadata": {
-        "code.module": "frmLogin",
-        "code.control": "UserForm",
-        "code.source.file": "Forms/frmLogin.frm",
-        "code.source.line": "1"
       }
     },
     {

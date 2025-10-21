@@ -16,5 +16,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="LayoutEngineTests.fs" />
+    <Compile Include="PagingPlannerTests.fs" />
   </ItemGroup>
 </Project>

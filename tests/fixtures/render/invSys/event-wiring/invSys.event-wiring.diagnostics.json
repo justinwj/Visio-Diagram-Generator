@@ -5,23 +5,398 @@
     "StraightLineCrossings": 0,
     "PageHeight": 8.5,
     "UsableHeight": 7.5,
-    "LanePages": [],
-    "Containers": []
+    "Pages": [
+      {
+        "Index": 1,
+        "Name": "frmAdminControls, frmCreateDeleteUser",
+        "Nodes": 5,
+        "Connectors": 3,
+        "SkippedConnectors": 0,
+        "Overflow": false
+      },
+      {
+        "Index": 2,
+        "Name": "frmCreateDeleteUser",
+        "Nodes": 5,
+        "Connectors": 2,
+        "SkippedConnectors": 0,
+        "Overflow": false
+      },
+      {
+        "Index": 3,
+        "Name": "frmCreateDeleteUser, frmEditUser",
+        "Nodes": 5,
+        "Connectors": 3,
+        "SkippedConnectors": 0,
+        "Overflow": false
+      },
+      {
+        "Index": 4,
+        "Name": "frmEditUser, frmItemSearch",
+        "Nodes": 4,
+        "Connectors": 5,
+        "SkippedConnectors": 0,
+        "Overflow": false
+      },
+      {
+        "Index": 5,
+        "Name": "frmItemSearch",
+        "Nodes": 5,
+        "Connectors": 5,
+        "SkippedConnectors": 0,
+        "Overflow": false
+      },
+      {
+        "Index": 6,
+        "Name": "frmItemSearch",
+        "Nodes": 5,
+        "Connectors": 0,
+        "SkippedConnectors": 0,
+        "Overflow": false
+      },
+      {
+        "Index": 7,
+        "Name": "frmItemSearch, frmLogin",
+        "Nodes": 4,
+        "Connectors": 4,
+        "SkippedConnectors": 0,
+        "Overflow": false
+      },
+      {
+        "Index": 8,
+        "Name": "frmLogin",
+        "Nodes": 5,
+        "Connectors": 2,
+        "SkippedConnectors": 0,
+        "Overflow": false
+      },
+      {
+        "Index": 9,
+        "Name": "frmLogin, frmReceivedTally",
+        "Nodes": 5,
+        "Connectors": 2,
+        "SkippedConnectors": 0,
+        "Overflow": false
+      },
+      {
+        "Index": 10,
+        "Name": "frmReceivedTally, frmShipmentsTally",
+        "Nodes": 4,
+        "Connectors": 2,
+        "SkippedConnectors": 0,
+        "Overflow": false
+      },
+      {
+        "Index": 11,
+        "Name": "frmShipmentsTally",
+        "Nodes": 2,
+        "Connectors": 1,
+        "SkippedConnectors": 0,
+        "Overflow": false
+      }
+    ],
+    "LanePages": [
+      {
+        "Tier": "Forms",
+        "Page": 1,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Forms",
+        "Page": 2,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Forms",
+        "Page": 3,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Forms",
+        "Page": 4,
+        "OccupancyRatio": 0.77333333333333332,
+        "Nodes": 4
+      },
+      {
+        "Tier": "Forms",
+        "Page": 5,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Forms",
+        "Page": 6,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Forms",
+        "Page": 7,
+        "OccupancyRatio": 0.77333333333333332,
+        "Nodes": 4
+      },
+      {
+        "Tier": "Forms",
+        "Page": 8,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Forms",
+        "Page": 9,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Forms",
+        "Page": 10,
+        "OccupancyRatio": 0.77333333333333332,
+        "Nodes": 4
+      },
+      {
+        "Tier": "Forms",
+        "Page": 11,
+        "OccupancyRatio": 0.34666666666666668,
+        "Nodes": 2
+      }
+    ],
+    "Containers": [
+      {
+        "Id": "frmAdminControls",
+        "Tier": "Forms",
+        "Page": 1,
+        "OccupancyRatio": 0.77333333333333332,
+        "Nodes": 4
+      },
+      {
+        "Id": "frmCreateDeleteUser",
+        "Tier": "Forms",
+        "Page": 1,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "frmCreateDeleteUser",
+        "Tier": "Forms",
+        "Page": 2,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Id": "frmCreateDeleteUser",
+        "Tier": "Forms",
+        "Page": 3,
+        "OccupancyRatio": 0.34666666666666668,
+        "Nodes": 2
+      },
+      {
+        "Id": "frmEditUser",
+        "Tier": "Forms",
+        "Page": 3,
+        "OccupancyRatio": 0.56000000000000005,
+        "Nodes": 3
+      },
+      {
+        "Id": "frmEditUser",
+        "Tier": "Forms",
+        "Page": 4,
+        "OccupancyRatio": 0.56000000000000005,
+        "Nodes": 3
+      },
+      {
+        "Id": "frmItemSearch",
+        "Tier": "Forms",
+        "Page": 4,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "frmItemSearch",
+        "Tier": "Forms",
+        "Page": 5,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Id": "frmItemSearch",
+        "Tier": "Forms",
+        "Page": 6,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Id": "frmItemSearch",
+        "Tier": "Forms",
+        "Page": 7,
+        "OccupancyRatio": 0.56000000000000005,
+        "Nodes": 3
+      },
+      {
+        "Id": "frmLogin",
+        "Tier": "Forms",
+        "Page": 7,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "frmLogin",
+        "Tier": "Forms",
+        "Page": 8,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Id": "frmLogin",
+        "Tier": "Forms",
+        "Page": 9,
+        "OccupancyRatio": 0.56000000000000005,
+        "Nodes": 3
+      },
+      {
+        "Id": "frmReceivedTally",
+        "Tier": "Forms",
+        "Page": 9,
+        "OccupancyRatio": 0.34666666666666668,
+        "Nodes": 2
+      },
+      {
+        "Id": "frmReceivedTally",
+        "Tier": "Forms",
+        "Page": 10,
+        "OccupancyRatio": 0.34666666666666668,
+        "Nodes": 2
+      },
+      {
+        "Id": "frmShipmentsTally",
+        "Tier": "Forms",
+        "Page": 10,
+        "OccupancyRatio": 0.34666666666666668,
+        "Nodes": 2
+      },
+      {
+        "Id": "frmShipmentsTally",
+        "Tier": "Forms",
+        "Page": 11,
+        "OccupancyRatio": 0.34666666666666668,
+        "Nodes": 2
+      }
+    ]
   },
   "Issues": [
     {
       "Code": "LayoutHeightThreshold",
       "Level": "warning",
-      "Message": "layout height 94.2in exceeds threshold 11.0in; consider pagination, reducing spacing, or vertical orientation.",
+      "Message": "layout height 79.8in exceeds threshold 11.0in; consider pagination, reducing spacing, or vertical orientation.",
       "Lane": null,
       "Page": null
     },
     {
       "Code": "LaneNodeMax",
       "Level": "warning",
-      "Message": "lane \u0027Forms\u0027 contains 58 nodes (max 12); consider splitting the lane or paginating.",
+      "Message": "lane \u0027Forms\u0027 contains 49 nodes (max 12); consider splitting the lane or paginating.",
       "Lane": "Forms",
       "Page": null
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "warning",
+      "Message": "lane overcrowded: lane=\u0027Forms\u0027 page=1 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Forms",
+      "Page": 1
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "warning",
+      "Message": "lane overcrowded: lane=\u0027Forms\u0027 page=2 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Forms",
+      "Page": 2
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "warning",
+      "Message": "lane overcrowded: lane=\u0027Forms\u0027 page=3 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Forms",
+      "Page": 3
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "warning",
+      "Message": "lane overcrowded: lane=\u0027Forms\u0027 page=5 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Forms",
+      "Page": 5
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "warning",
+      "Message": "lane overcrowded: lane=\u0027Forms\u0027 page=6 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Forms",
+      "Page": 6
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "warning",
+      "Message": "lane overcrowded: lane=\u0027Forms\u0027 page=8 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Forms",
+      "Page": 8
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "warning",
+      "Message": "lane overcrowded: lane=\u0027Forms\u0027 page=9 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Forms",
+      "Page": 9
+    },
+    {
+      "Code": "PageCrowding",
+      "Level": "warning",
+      "Message": "page crowded: page=1 occupancy=99% (usable 7.50in); top: [frmAdminControls.btnCreateDeleteUser(1.00in), frmAdminControls.btnCreateDeleteUser_Click(1.00in), frmAdminControls.btnEditUser(1.00in)]",
+      "Lane": null,
+      "Page": 1
+    },
+    {
+      "Code": "PageCrowding",
+      "Level": "warning",
+      "Message": "page crowded: page=2 occupancy=99% (usable 7.50in); top: [frmCreateDeleteUser.UserForm_Initialize(1.00in), frmCreateDeleteUser.btnCreateUser(1.00in), frmCreateDeleteUser.btnCreateUser_Click(1.00in)]",
+      "Lane": null,
+      "Page": 2
+    },
+    {
+      "Code": "PageCrowding",
+      "Level": "warning",
+      "Message": "page crowded: page=3 occupancy=99% (usable 7.50in); top: [frmCreateDeleteUser.btnRandomPIN(1.00in), frmCreateDeleteUser.btnRandomPIN_Click(1.00in), frmEditUser.UserForm(1.00in)]",
+      "Lane": null,
+      "Page": 3
+    },
+    {
+      "Code": "PageCrowding",
+      "Level": "warning",
+      "Message": "page crowded: page=5 occupancy=99% (usable 7.50in); top: [frmItemSearch.UserForm_Activate(1.00in), frmItemSearch.UserForm_Initialize(1.00in), frmItemSearch.UserForm_KeyDown(1.00in)]",
+      "Lane": null,
+      "Page": 5
+    },
+    {
+      "Code": "PageCrowding",
+      "Level": "warning",
+      "Message": "page crowded: page=6 occupancy=99% (usable 7.50in); top: [frmItemSearch.lstBox_Change(1.00in), frmItemSearch.lstBox_Click(1.00in), frmItemSearch.lstBox_DblClick(1.00in)]",
+      "Lane": null,
+      "Page": 6
+    },
+    {
+      "Code": "PageCrowding",
+      "Level": "warning",
+      "Message": "page crowded: page=8 occupancy=99% (usable 7.50in); top: [frmLogin.UserForm_Activate(1.00in), frmLogin.UserForm_Initialize(1.00in), frmLogin.btnCloseWorkbook(1.00in)]",
+      "Lane": null,
+      "Page": 8
+    },
+    {
+      "Code": "PageCrowding",
+      "Level": "warning",
+      "Message": "page crowded: page=9 occupancy=99% (usable 7.50in); top: [frmLogin.btnLogin_Click(1.00in), frmLogin.btnResetPIN(1.00in), frmLogin.btnResetPIN_Click(1.00in)]",
+      "Lane": null,
+      "Page": 9
     }
   ]
 }

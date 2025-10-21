@@ -27,6 +27,18 @@ pwsh ./tools/render-fixture.ps1 -Update -Note "reason for refresh"
 - Use descriptive notes (`palette tweak`, `callgraph edge ordering fix`, etc.).
 - Commit updated fixtures + ledger entry in the same change.
 
+## Planner Summary & Segmentation Metrics
+Every CLI render now prints a planner summary line similar to:
+```
+info: planner summary modules=210 segments=248 delta=+38 splitModules=37 avgSegments/module=1.18 pages=238 avgModules/page=1.0 avgConnectors/page=9.2 maxOccupancy=250.0% maxConnectors=48
+```
+- `modules` → original module count from the dataset.
+- `segments`/`delta`/`splitModules` → height-based segmentation statistics (how many modules were split and by how much).
+- `avgSegments/module` → useful for spotting mega-modules still spanning multiple pages.
+- `pages`/`avgModules/page`/`avgConnectors/page`/`maxOccupancy`/`maxConnectors` → quick pagination health indicators.
+
+When `--diag-json` is enabled the same metrics are persisted to `metrics.*` (`moduleCount`, `segmentCount`, `segmentDelta`, `splitModuleCount`, `averageSegmentsPerModule`, `plannerPageCount`, `plannerAverageModulesPerPage`, `plannerAverageConnectorsPerPage`, `plannerMaxOccupancyPercent`, `plannerMaxConnectorsPerPage`). Capture these values in baseline notes when they change so downstream regression jobs can reason about pagination shifts.
+
 ## Troubleshooting
 - **Missing golden file**: run with `-Update` to seed the baseline.
 - **Hash mismatch**: inspect the diff hint, verify the change is expected, then update the baseline.

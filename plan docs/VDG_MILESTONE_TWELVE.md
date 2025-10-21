@@ -5,7 +5,7 @@ Goal
 
 Scope
 - [x] Harden multi-page layout so Visio pages are created and tracked before any shape/connector placement.
-- [ ] Introduce smarter pagination and lane/module partitioning when occupancy or connector counts exceed thresholds.
+- [x] Introduce smarter pagination and lane/module partitioning when occupancy or connector counts exceed thresholds.
 - [ ] Extend diagnostics to gracefully report overflow/partial outputs instead of throwing exceptions.
 - [ ] Add CLI filtering options so users can render subsets or “page through” very large exports.
 - [ ] Validate outputs by rendering `samples/invSys` end-to-end and capturing success in CI artifacts.
@@ -17,13 +17,13 @@ Milestone Breakdown
   - [x] Create/track Visio page objects ahead of placement; update `DrawConnectorsPaged` & `DrawMultiPage`.
   - [ ] Add unit/CLI tests covering multi-page traversal.
 - **Milestone B – Crowding Mitigation & Paging Strategy**
-  - [ ] Implement automatic lane/module splitting when occupancy exceeds limits.
+  - [x] Implement automatic lane/module splitting when occupancy exceeds limits.
   - [x] Refine paging planner heuristics (height-aware grouping, connector caps, slack) and add algorithm tests.
   - [ ] Chunk densely connected modules across additional pages based on connector counts.
-  - [ ] Surface layout decisions in diagnostics metadata.
+  - [x] Surface layout decisions in diagnostics metadata.
 - **Milestone C – Diagnostics & Graceful Degradation**
   - [ ] Extend diagnostics to flag overflowed modules/pages, log partial outputs, and avoid exceptions.
-  - [ ] Emit summary annotations (overflow module list, skipped connectors) in CLI output.
+  - [x] Emit summary annotations (overflow module list, skipped connectors) in CLI output.
 - [ ] Establish an error-handling policy (partial diagrams allowed, skipped connectors logged, documented fallback heuristics).
 - **Milestone D – User-Facing Filtering**
   - [ ] Add CLI parameters for module/page subsets (e.g., `--modules`, `--max-pages`).

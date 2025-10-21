@@ -69,15 +69,23 @@ CI Notes
      - `--diag-page-warn <0..1>` page/band occupancy warn ratio (default 0.90)
      - `--diag-cross-warn <n>` planned crossings warn threshold (default 200)
      - `--diag-cross-err <n>` planned crossings error threshold (default 400)
-     - `--diag-util-warn <0..100>` corridor utilization warn minimum percent (default 40)
-     - `--diag-json [path]` write structured diagnostics JSON (default `<output>.diagnostics.json`)
-   - `--spacing-h <inches>` horizontal spacing between columns
-   - `--spacing-v <inches>` vertical spacing between nodes
-   - `--page-width <inches>` / `--page-height <inches>` / `--page-margin <inches>`
-   - `--paginate <bool>` (reserved for future pagination)
+   - `--diag-util-warn <0..100>` corridor utilization warn minimum percent (default 40)
+   - `--diag-json [path]` write structured diagnostics JSON (default `<output>.diagnostics.json`)
+  - `--spacing-h <inches>` horizontal spacing between columns
+  - `--spacing-v <inches>` vertical spacing between nodes
+  - `--page-width <inches>` / `--page-height <inches>` / `--page-margin <inches>`
+  - `--paginate <bool>` (reserved for future pagination)
+
+   After layout, the CLI prints a planner summary that surfaces pagination health at a glance. Example:
+   ```
+   info: planner summary modules=210 segments=248 delta=+38 splitModules=37 avgSegments/module=1.18 pages=238 avgModules/page=1.0 avgConnectors/page=9.2 maxOccupancy=250.0% maxConnectors=48
+   ```
+   The summary shows how many original modules were split into height-bounded segments, the resulting page count, and the peak occupancy/connectors per page so you can spot overflow hot spots without opening diagnostics JSON.
 
    Diagnostics JSON contents (when enabled):
    - `metrics.connectorCount`, `metrics.straightLineCrossings`, `metrics.pageHeight`, `metrics.usableHeight`
+   - `metrics.moduleCount`, `metrics.segmentCount`, `metrics.segmentDelta`, `metrics.splitModuleCount`, `metrics.averageSegmentsPerModule`
+   - `metrics.plannerPageCount`, `metrics.plannerAverageModulesPerPage`, `metrics.plannerAverageConnectorsPerPage`, `metrics.plannerMaxOccupancyPercent`, `metrics.plannerMaxConnectorsPerPage`
    - `metrics.lanePages[] { tier, page, occupancyRatio, nodes }`
    - `metrics.containers[] { id, tier, page, occupancyRatio, nodes }` (when containers present and page height configured)
    - `issues[] { code, level, message, lane?, page? }` (respects `--diag-level`; includes `LaneCrowding`, `PageCrowding`, `PageOverflow`, `ContainerOverflow`, `ContainerCrowding`)
@@ -149,6 +157,9 @@ A minimal 1.2 envelope with lanes looks like this:
 - Rebuild after edits: `dotnet build -c Release`
 - To test the CLI without Visio COM automation, set `VDG_SKIP_RUNNER=1`.
 - For CLI smoke tests, re-run the command in the quick start section using your scenario-specific JSON.
+
+## Paging Planner Reference
+The pagination summary printed by the CLI and the associated diagnostics metrics are documented in `docs/PagingPlanner.md`. Review that guide when tuning thresholds, interpreting fixture output (`render-fixture.ps1`), or onboarding new team members to the segmentation heuristics.
 
 ## Samples
 - Corridor-aware routing sample: `samples/m3_dense_sample.json`

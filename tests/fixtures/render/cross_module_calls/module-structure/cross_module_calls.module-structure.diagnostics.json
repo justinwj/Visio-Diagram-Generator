@@ -5,6 +5,16 @@
     "StraightLineCrossings": 0,
     "PageHeight": 8.5,
     "UsableHeight": 7.5,
+    "Pages": [
+      {
+        "Index": 1,
+        "Name": "Modules",
+        "Nodes": 2,
+        "Connectors": 0,
+        "SkippedConnectors": 0,
+        "Overflow": true
+      }
+    ],
     "LanePages": [
       {
         "Tier": "Modules",
@@ -30,5 +40,13 @@
       }
     ]
   },
-  "Issues": []
+  "Issues": [
+    {
+      "Code": "PagePlanOccupancy",
+      "Level": "info",
+      "Message": "paging planner occupancy exceeds limit on page 1: occupancy=100.0% limit=95.0%",
+      "Lane": null,
+      "Page": 1
+    }
+  ]
 }

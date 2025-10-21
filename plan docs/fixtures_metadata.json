@@ -1,6 +1,6 @@
 {
-  "generatedAtUtc": "2025-10-21T23:35:49.7181919Z",
-  "commit": "6373e6e051d73d07e7fb0a3260cd29c67f50f112",
+  "generatedAtUtc": "2025-10-21T23:52:06.3637950Z",
+  "commit": "5da3afb6a5410468751ef9982d77f2db9c44c8f6",
   "note": "Planner 250% clamp baselines",
   "fixtures": [
     {

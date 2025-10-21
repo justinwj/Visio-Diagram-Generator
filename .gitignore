@@ -30,6 +30,7 @@ coverage/
 .coverage
 *.coverage
 *.coveragexml
+diag_cli*.txt
 
 # Local config
 *.env

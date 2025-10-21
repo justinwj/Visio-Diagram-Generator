@@ -88,6 +88,16 @@ namespace VDG.CLI
             public int StraightLineCrossings { get; set; }
             public double? PageHeight { get; set; }
             public double? UsableHeight { get; set; }
+            public int ModuleCount { get; set; }
+            public int SegmentCount { get; set; }
+            public int SegmentDelta { get; set; }
+            public int SplitModuleCount { get; set; }
+            public double AverageSegmentsPerModule { get; set; }
+            public int PlannerPageCount { get; set; }
+            public double PlannerAverageModulesPerPage { get; set; }
+            public double PlannerAverageConnectorsPerPage { get; set; }
+            public double PlannerMaxOccupancyPercent { get; set; }
+            public int PlannerMaxConnectorsPerPage { get; set; }
             public List<PageMetric> Pages { get; set; } = new List<PageMetric>();
             public List<LanePageMetric> LanePages { get; set; } = new List<LanePageMetric>();
             public List<ContainerPageMetric> Containers { get; set; } = new List<ContainerPageMetric>();
@@ -395,8 +405,8 @@ namespace VDG.CLI
                 }
                 var layout = LayoutEngine.compute(model);
                 var pagingOptions = BuildPageSplitOptions(model);
-                var pagingDataset = BuildPagingDataset(model, layout, out var nodeSegmentOverrides);
-                var pagePlans = PagingPlanner.computePages(pagingOptions, pagingDataset) ?? Array.Empty<PagePlan>();
+                var plannerBuild = BuildPagingDataset(model, layout);
+                var pagePlans = PagingPlanner.computePages(pagingOptions, plannerBuild.Dataset) ?? Array.Empty<PagePlan>();
                 if (pagePlans.Length <= 1)
                 {
                     var fallbackPlans = BuildLayoutPagePlans(model, layout, pagingOptions);
@@ -405,9 +415,9 @@ namespace VDG.CLI
                         pagePlans = fallbackPlans;
                     }
                 }
-                var nodePageAssignments = BuildNodePageAssignments(model, pagePlans, nodeSegmentOverrides);
-                EmitPlannerSummary(pagePlans);
-                var diagnosticsRank = EmitDiagnostics(model, layout, diagHeightOverride, diagLaneMaxOverride, pagePlans, pagingOptions);
+                var nodePageAssignments = BuildNodePageAssignments(model, pagePlans, plannerBuild.NodeSegmentOverrides);
+                var plannerSummary = EmitPlannerSummary(pagePlans, plannerBuild.Metrics);
+                var diagnosticsRank = EmitDiagnostics(model, layout, diagHeightOverride, diagLaneMaxOverride, pagePlans, pagingOptions, plannerBuild.Metrics, plannerSummary);
 
                 var failLevelEnv = Environment.GetEnvironmentVariable("VDG_DIAG_FAIL_LEVEL");
                 if (string.IsNullOrWhiteSpace(failLevelEnv))
@@ -898,7 +908,15 @@ namespace VDG.CLI
             return DiagRank(level) >= DiagRank(min);
         }
 
-        private static int EmitDiagnostics(DiagramModel model, LayoutResult layout, double? pageHeightOverride = null, int? laneMaxOverride = null, PagePlan[]? pagePlans = null, PageSplitOptions? pageOptions = null)
+        private static int EmitDiagnostics(
+            DiagramModel model,
+            LayoutResult layout,
+            double? pageHeightOverride = null,
+            int? laneMaxOverride = null,
+            PagePlan[]? pagePlans = null,
+            PageSplitOptions? pageOptions = null,
+            PlannerMetrics? plannerMetrics = null,
+            PlannerSummaryStats? plannerSummary = null)
         {
             int highestRank = 0;
 
@@ -1705,6 +1723,22 @@ namespace VDG.CLI
                 {
                     var payload = new DiagnosticsJson();
                     payload.Metrics.ConnectorCount = model.Edges.Count;
+                    if (plannerMetrics != null)
+                    {
+                        payload.Metrics.ModuleCount = plannerMetrics.OriginalModuleCount;
+                        payload.Metrics.SegmentCount = plannerMetrics.SegmentCount;
+                        payload.Metrics.SegmentDelta = plannerMetrics.SegmentDelta;
+                        payload.Metrics.SplitModuleCount = plannerMetrics.SplitModuleCount;
+                        payload.Metrics.AverageSegmentsPerModule = plannerMetrics.AverageSegmentsPerModule;
+                    }
+                    if (plannerSummary != null)
+                    {
+                        payload.Metrics.PlannerPageCount = plannerSummary.PageCount;
+                        payload.Metrics.PlannerAverageModulesPerPage = plannerSummary.AverageModulesPerPage;
+                        payload.Metrics.PlannerAverageConnectorsPerPage = plannerSummary.AverageConnectorsPerPage;
+                        payload.Metrics.PlannerMaxOccupancyPercent = plannerSummary.MaxOccupancy;
+                        payload.Metrics.PlannerMaxConnectorsPerPage = plannerSummary.MaxConnectors;
+                    }
 
                     // Straight-line crossings
                     try
@@ -2058,6 +2092,38 @@ namespace VDG.CLI
             public string ModuleId { get; set; } = string.Empty;
         }
 
+        internal sealed class PlannerMetrics
+        {
+            public int OriginalModuleCount { get; set; }
+            public int SegmentCount { get; set; }
+            public int SplitModuleCount { get; set; }
+            public double AverageSegmentsPerModule { get; set; }
+            public int SegmentDelta => SegmentCount - OriginalModuleCount;
+        }
+
+        internal sealed class PlannerSummaryStats
+        {
+            public int PageCount { get; set; }
+            public double AverageModulesPerPage { get; set; }
+            public double AverageConnectorsPerPage { get; set; }
+            public double MaxOccupancy { get; set; }
+            public int MaxConnectors { get; set; }
+        }
+
+        private sealed class PlannerBuildResult
+        {
+            public PlannerBuildResult(DiagramDataset dataset, Dictionary<string, string> nodeOverrides, PlannerMetrics metrics)
+            {
+                Dataset = dataset;
+                NodeSegmentOverrides = nodeOverrides;
+                Metrics = metrics;
+            }
+
+            public DiagramDataset Dataset { get; }
+            public Dictionary<string, string> NodeSegmentOverrides { get; }
+            public PlannerMetrics Metrics { get; }
+        }
+
         private static string ResolveModuleIdForNode(VDG.Core.Models.Node node, string[] tiers, HashSet<string> tiersSet)
         {
             if (!string.IsNullOrWhiteSpace(node.GroupId)) return node.GroupId!.Trim();
@@ -2086,10 +2152,10 @@ namespace VDG.CLI
             return tiers.Length > 0 ? tiers[0] : "Default";
         }
 
-        private static DiagramDataset BuildPagingDataset(DiagramModel model, LayoutResult layout, out Dictionary<string, string> nodeSegmentOverrides)
+        private static PlannerBuildResult BuildPagingDataset(DiagramModel model, LayoutResult layout)
         {
             _ = layout; // layout reserved for future heuristics (crowding metrics, etc.)
-            nodeSegmentOverrides = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var nodeSegmentOverrides = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
             var tiers = GetOrderedTiers(model);
             var tiersSet = new HashSet<string>(tiers, StringComparer.OrdinalIgnoreCase);
@@ -2219,11 +2285,11 @@ namespace VDG.CLI
             }
 
             var projections = new List<ModuleProjection>();
+            int splitModuleCount = 0;
             foreach (var moduleId in moduleOrder)
             {
                 var acc = moduleAccumulators[moduleId];
-                projections.AddRange(
-                    ExpandModuleStatistics(
+                var moduleSegments = ExpandModuleStatistics(
                         moduleId,
                         acc,
                         usableHeight,
@@ -2232,8 +2298,19 @@ namespace VDG.CLI
                         placementMap,
                         nodeMap,
                         edgeLookup,
-                        nodeSegmentOverrides));
+                        nodeSegmentOverrides)
+                    .ToList();
+                if (moduleSegments.Count > 1) splitModuleCount++;
+                projections.AddRange(moduleSegments);
             }
+
+            var metrics = new PlannerMetrics
+            {
+                OriginalModuleCount = moduleOrder.Count,
+                SegmentCount = projections.Count,
+                SplitModuleCount = splitModuleCount,
+                AverageSegmentsPerModule = moduleOrder.Count > 0 ? projections.Count / (double)moduleOrder.Count : 0.0
+            };
 
             var modules = projections
                 .OrderBy(m => m.HasPlacement ? m.MinY : double.PositiveInfinity)
@@ -2252,7 +2329,8 @@ namespace VDG.CLI
                 }
             }
 
-            return new DiagramDataset { Modules = modules };
+            var dataset = new DiagramDataset { Modules = modules };
+            return new PlannerBuildResult(dataset, nodeSegmentOverrides, metrics);
         }
 
         private static IEnumerable<ModuleProjection> ExpandModuleStatistics(
@@ -4843,35 +4921,66 @@ namespace VDG.CLI
             }
         }
 
-        private static void EmitPlannerSummary(PagePlan[]? pagePlans)
+        private static PlannerSummaryStats EmitPlannerSummary(PagePlan[]? pagePlans, PlannerMetrics? segmentationMetrics)
         {
-            if (pagePlans == null || pagePlans.Length == 0)
-            {
-                return;
-            }
-
-            int pageCount = pagePlans.Length;
+            int pageCount = 0;
             int totalModules = 0;
             int totalConnectors = 0;
             double maxOccupancy = 0.0;
             int maxConnectors = 0;
 
-            foreach (var plan in pagePlans)
+            if (pagePlans != null)
             {
-                if (plan == null) continue;
-                var modules = plan.Modules?.Length ?? 0;
-                totalModules += modules;
-                totalConnectors += plan.Connectors;
-                if (plan.Occupancy > maxOccupancy) maxOccupancy = plan.Occupancy;
-                if (plan.Connectors > maxConnectors) maxConnectors = plan.Connectors;
+                pageCount = pagePlans.Length;
+                foreach (var plan in pagePlans)
+                {
+                    if (plan == null) continue;
+                    var modules = plan.Modules?.Length ?? 0;
+                    totalModules += modules;
+                    totalConnectors += plan.Connectors;
+                    if (plan.Occupancy > maxOccupancy) maxOccupancy = plan.Occupancy;
+                    if (plan.Connectors > maxConnectors) maxConnectors = plan.Connectors;
+                }
             }
 
             double avgModules = pageCount > 0 ? totalModules / (double)pageCount : 0.0;
             double avgConnectors = pageCount > 0 ? totalConnectors / (double)pageCount : 0.0;
 
-            Console.WriteLine(
-                $"info: planner summary pages={pageCount} avgModules/page={avgModules:F1} avgConnectors/page={avgConnectors:F1} maxOccupancy={maxOccupancy:F1}% maxConnectors={maxConnectors}");
+            var modulesValue = segmentationMetrics?.OriginalModuleCount ?? 0;
+            var segmentsValue = segmentationMetrics?.SegmentCount ?? 0;
+            var splitModulesValue = segmentationMetrics?.SplitModuleCount ?? 0;
+            var avgSegmentsPerModule = segmentationMetrics?.AverageSegmentsPerModule ?? 0.0;
+            var deltaText = FormatDelta(segmentsValue - modulesValue);
+
+            var summaryLine = string.Format(
+                CultureInfo.InvariantCulture,
+                "info: planner summary modules={0} segments={1} delta={2} splitModules={3} avgSegments/module={4:F2} pages={5} avgModules/page={6:F1} avgConnectors/page={7:F1} maxOccupancy={8:F1}% maxConnectors={9}",
+                modulesValue,
+                segmentsValue,
+                deltaText,
+                splitModulesValue,
+                avgSegmentsPerModule,
+                pageCount,
+                avgModules,
+                avgConnectors,
+                maxOccupancy,
+                maxConnectors);
+
+            Console.WriteLine(summaryLine);
+
+            return new PlannerSummaryStats
+            {
+                PageCount = pageCount,
+                AverageModulesPerPage = avgModules,
+                AverageConnectorsPerPage = avgConnectors,
+                MaxOccupancy = maxOccupancy,
+                MaxConnectors = maxConnectors
+            };
         }
+
+        private static string FormatDelta(int delta) => delta >= 0
+            ? string.Format(CultureInfo.InvariantCulture, "+{0}", delta)
+            : delta.ToString(CultureInfo.InvariantCulture);
 
     }
 }

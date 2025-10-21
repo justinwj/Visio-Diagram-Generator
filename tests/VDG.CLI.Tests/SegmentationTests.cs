@@ -13,7 +13,7 @@ namespace VDG.CLI.Tests
         [Fact]
         public void Oversized_module_is_split_into_sequential_parts()
         {
-            var (dataset, overrides, totalConnectors, totalNodes) = BuildMegaModuleDataset(nodeCount: 60, connectorFanOut: true);
+            var (dataset, overrides, metrics, totalConnectors, totalNodes) = BuildMegaModuleDataset(nodeCount: 60, connectorFanOut: true);
 
             var parts = dataset.Modules
                 .Where(m => m.ModuleId.StartsWith("MegaProc#part", StringComparison.Ordinal))
@@ -36,12 +36,16 @@ namespace VDG.CLI.Tests
             {
                 Assert.StartsWith("MegaProc#part", kvp.Value, StringComparison.Ordinal);
             }
+
+            Assert.Equal("MegaProc", dataset.Modules.First(m => m.ModuleId.StartsWith("MegaProc#part", StringComparison.Ordinal)).ModuleId.Split('#')[0]);
+            Assert.Equal(1, metrics.SplitModuleCount);
+            Assert.True(metrics.SegmentCount > metrics.OriginalModuleCount);
         }
 
         [Fact]
         public void Planner_distributes_module_parts_across_pages()
         {
-            var (dataset, _, _, _) = BuildMegaModuleDataset(nodeCount: 75, connectorFanOut: false);
+            var (dataset, _, _, totalConnectors, totalNodes) = BuildMegaModuleDataset(nodeCount: 75, connectorFanOut: false);
 
             var options = new PageSplitOptions
             {
@@ -61,9 +65,33 @@ namespace VDG.CLI.Tests
             Assert.Equal(dataset.Modules.Length, flattenedModules.Length);
             Assert.Equal(dataset.Modules.Select(m => m.ModuleId).OrderBy(id => id, StringComparer.Ordinal),
                          flattenedModules.OrderBy(id => id, StringComparer.Ordinal));
+            Assert.Equal(totalConnectors, plans.Sum(p => p.Connectors));
         }
 
-        private static (DiagramDataset Dataset, Dictionary<string, string> Overrides, int TotalConnectors, int TotalNodes) BuildMegaModuleDataset(int nodeCount, bool connectorFanOut)
+        [Fact]
+        public void Planner_summary_reports_segmentation_and_pages()
+        {
+            var plans = new[]
+            {
+                new PagePlan(0, new[] { "MegaProc#part1", "Other" }, 10, 12, 180.0),
+                new PagePlan(1, new[] { "MegaProc#part2" }, 5, 6, 250.0)
+            };
+
+            var summary = Program.InvokePlannerSummaryForTests(plans, originalModules: 2, segmentCount: 3, splitModuleCount: 1);
+
+            Assert.Contains("modules=2", summary);
+            Assert.Contains("segments=3", summary);
+            Assert.Contains("delta=+1", summary);
+            Assert.Contains("splitModules=1", summary);
+            Assert.Contains("avgSegments/module=1.50", summary);
+            Assert.Contains("pages=2", summary);
+            Assert.Contains("avgModules/page=1.5", summary);
+            Assert.Contains("avgConnectors/page=7.5", summary);
+            Assert.Contains("maxOccupancy=250.0%", summary);
+            Assert.Contains("maxConnectors=10", summary);
+        }
+
+        private static (DiagramDataset Dataset, Dictionary<string, string> Overrides, Program.PlannerMetrics Metrics, int TotalConnectors, int TotalNodes) BuildMegaModuleDataset(int nodeCount, bool connectorFanOut)
         {
             var nodes = new List<Node>(capacity: nodeCount);
             var layouts = new List<NodeLayout>(capacity: nodeCount);
@@ -101,9 +129,9 @@ namespace VDG.CLI.Tests
                 Edges = Array.Empty<EdgeRoute>()
             };
 
-            var (dataset, overrides) = Program.BuildPagingDatasetForTests(model, layout);
+            var (dataset, overrides, metrics) = Program.BuildPagingDatasetForTests(model, layout);
 
-            return (dataset, overrides, edges.Count, nodeCount);
+            return (dataset, overrides, metrics, edges.Count, nodeCount);
         }
     }
 }

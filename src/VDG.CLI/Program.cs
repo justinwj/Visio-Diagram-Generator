@@ -8,7 +8,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Globalization;
 using Microsoft.CSharp.RuntimeBinder;
-using VDG.CLI.Interop;
 using VDG.Core.Models;
 using VDG.Core.Safety;
 using VisioDiagramGenerator.Algorithms;
@@ -2004,10 +2003,12 @@ namespace VDG.CLI
             {
                 Nodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 Edges = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                CrossEdges = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             }
 
             public HashSet<string> Nodes { get; }
             public HashSet<string> Edges { get; }
+            public HashSet<string> CrossEdges { get; }
             public int FirstIndex { get; set; }
             public bool HasPlacement { get; set; }
             public double MinY { get; set; } = double.PositiveInfinity;
@@ -2051,6 +2052,7 @@ namespace VDG.CLI
 
             var moduleOrder = new List<string>();
             var moduleAccumulators = new Dictionary<string, ModuleAccumulator>(StringComparer.OrdinalIgnoreCase);
+            var nodeToModule = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
             ModuleAccumulator GetOrCreate(string moduleId)
             {
@@ -2068,21 +2070,44 @@ namespace VDG.CLI
                 var moduleId = ResolveModuleIdForNode(node, tiers, tiersSet);
                 var acc = GetOrCreate(moduleId);
                 acc.Nodes.Add(node.Id);
+                nodeToModule[node.Id] = moduleId;
             }
 
             var nodeMap = BuildNodeMap(model);
+
+            string? GetModuleIdForNode(string? nodeId)
+            {
+                if (string.IsNullOrWhiteSpace(nodeId)) return null;
+                if (nodeToModule.TryGetValue(nodeId!, out var cached)) return cached;
+                if (nodeMap.TryGetValue(nodeId!, out var node))
+                {
+                    var moduleId = ResolveModuleIdForNode(node, tiers, tiersSet);
+                    nodeToModule[node.Id] = moduleId;
+                    return moduleId;
+                }
+                return null;
+            }
+
             foreach (var edge in model.Edges)
             {
-                if (nodeMap.TryGetValue(edge.SourceId, out var srcNode))
+                var srcModule = GetModuleIdForNode(edge.SourceId);
+                if (!string.IsNullOrWhiteSpace(srcModule))
                 {
-                    var moduleId = ResolveModuleIdForNode(srcNode, tiers, tiersSet);
-                    GetOrCreate(moduleId).Edges.Add(edge.Id);
+                    GetOrCreate(srcModule!).Edges.Add(edge.Id);
                 }
 
-                if (nodeMap.TryGetValue(edge.TargetId, out var dstNode))
+                var dstModule = GetModuleIdForNode(edge.TargetId);
+                if (!string.IsNullOrWhiteSpace(dstModule))
                 {
-                    var moduleId = ResolveModuleIdForNode(dstNode, tiers, tiersSet);
-                    GetOrCreate(moduleId).Edges.Add(edge.Id);
+                    GetOrCreate(dstModule!).Edges.Add(edge.Id);
+                }
+
+                if (!string.IsNullOrWhiteSpace(srcModule) &&
+                    !string.IsNullOrWhiteSpace(dstModule) &&
+                    !string.Equals(srcModule, dstModule, StringComparison.OrdinalIgnoreCase))
+                {
+                    GetOrCreate(srcModule!).CrossEdges.Add(edge.Id);
+                    GetOrCreate(dstModule!).CrossEdges.Add(edge.Id);
                 }
             }
 
@@ -2145,17 +2170,32 @@ namespace VDG.CLI
                 {
                     var acc = moduleAccumulators[moduleId];
                     double occupancy;
-                    if (usableHeight.HasValue && acc.HasPlacement)
+                    var hasSpan = acc.HasPlacement && !double.IsInfinity(acc.MinY) && !double.IsInfinity(acc.MaxY);
+                    double spanMin = hasSpan ? acc.MinY : 0.0;
+                    double spanMax = hasSpan ? acc.MaxY : 0.0;
+                    double estimatedHeight;
+                    if (hasSpan)
                     {
                         var span = acc.MaxY - acc.MinY;
-                        if (span <= 0) span = DefaultNodeHeight;
-                        var heightWithPadding = span + verticalSpacing;
-                        occupancy = Math.Min(100.0, Math.Max(0.0, (heightWithPadding / usableHeight.Value) * 100.0));
+                        if (span <= 0.0) span = DefaultNodeHeight;
+                        estimatedHeight = Math.Max(DefaultNodeHeight, span + verticalSpacing);
+                    }
+                    else
+                    {
+                        var perNode = DefaultNodeHeight + Math.Max(0.0, verticalSpacing);
+                        estimatedHeight = Math.Max(DefaultNodeHeight, acc.Nodes.Count * perNode);
+                    }
+
+                    if (usableHeight.HasValue && usableHeight.Value > 0.01)
+                    {
+                        occupancy = Math.Min(100.0, Math.Max(0.0, (estimatedHeight / usableHeight.Value) * 100.0));
                     }
                     else
                     {
                         occupancy = totalNodes > 0 ? Math.Min(100.0, (acc.Nodes.Count * 100.0) / totalNodes) : 0.0;
                     }
+
+                    var crossEdges = acc.CrossEdges.Count;
                     return new
                     {
                         ModuleId = moduleId,
@@ -2167,7 +2207,12 @@ namespace VDG.CLI
                             ModuleId = moduleId,
                             ConnectorCount = acc.Edges.Count,
                             NodeCount = acc.Nodes.Count,
-                            OccupancyPercent = occupancy
+                            OccupancyPercent = occupancy,
+                            HeightEstimate = (float)estimatedHeight,
+                            SpanMin = (float)spanMin,
+                            SpanMax = (float)spanMax,
+                            HasSpan = hasSpan,
+                            CrossModuleConnectors = crossEdges
                         }
                     };
                 })
@@ -2337,8 +2382,11 @@ namespace VDG.CLI
             var options = new PageSplitOptions
             {
                 MaxConnectors = 400,
-                MaxOccupancyPercent = 95.0,
-                LaneSplitAllowed = false
+                MaxOccupancyPercent = 110.0,
+                LaneSplitAllowed = false,
+                MaxPageHeightIn = 0.0,
+                MaxModulesPerPage = 10,
+                HeightSlackPercent = 25.0
             };
 
             if (model.Metadata.TryGetValue("layout.page.plan.maxConnectors", out var connectorsRaw) &&
@@ -2359,6 +2407,36 @@ namespace VDG.CLI
                 bool.TryParse(laneRaw, out var laneSplit))
             {
                 options.LaneSplitAllowed = laneSplit;
+            }
+
+            var pageHeight = GetPageHeight(model);
+            if (pageHeight.HasValue)
+            {
+                var margin = GetPageMargin(model) ?? Margin;
+                var title = GetTitleHeight(model);
+                var usable = pageHeight.Value - (2 * margin) - title;
+                if (usable > 0.01) options.MaxPageHeightIn = usable;
+            }
+
+            if (model.Metadata.TryGetValue("layout.page.plan.maxHeightIn", out var heightRaw) &&
+                double.TryParse(heightRaw, NumberStyles.Float, CultureInfo.InvariantCulture, out var maxHeight) &&
+                maxHeight > 0.0)
+            {
+                options.MaxPageHeightIn = maxHeight;
+            }
+
+            if (model.Metadata.TryGetValue("layout.page.plan.maxModulesPerPage", out var modulesRaw) &&
+                int.TryParse(modulesRaw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var maxModules) &&
+                maxModules > 0)
+            {
+                options.MaxModulesPerPage = maxModules;
+            }
+
+            if (model.Metadata.TryGetValue("layout.page.plan.heightSlackPercent", out var slackRaw) &&
+                double.TryParse(slackRaw, NumberStyles.Float, CultureInfo.InvariantCulture, out var slack) &&
+                slack >= 0.0)
+            {
+                options.HeightSlackPercent = slack;
             }
 
             return options;

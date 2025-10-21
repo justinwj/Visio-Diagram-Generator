@@ -15,4 +15,11 @@
     <Compile Include="PagingPlanner.fs" />
     <Compile Include="LayoutEngine.fs" />
   </ItemGroup>
+  
+  <ItemGroup>
+    <Content Include="..\..\data\stencils\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>data\stencils\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Content>
+  </ItemGroup>
 </Project>

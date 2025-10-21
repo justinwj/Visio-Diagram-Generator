@@ -4,7 +4,7 @@ Goal
 - [ ] Achieve reliable end-to-end `.vsdx` rendering for large VBA datasets (e.g., full `samples/invSys`) without crashes or unusable 99% occupancy layouts.
 
 Scope
-- [ ] Harden multi-page layout so Visio pages are created and tracked before any shape/connector placement.
+- [x] Harden multi-page layout so Visio pages are created and tracked before any shape/connector placement.
 - [ ] Introduce smarter pagination and lane/module partitioning when occupancy or connector counts exceed thresholds.
 - [ ] Extend diagnostics to gracefully report overflow/partial outputs instead of throwing exceptions.
 - [ ] Add CLI filtering options so users can render subsets or “page through” very large exports.
@@ -13,11 +13,12 @@ Scope
 
 Milestone Breakdown
 - **Milestone A – Reliable Multi-Page Layout**
-  - [ ] Audit `VDG.CLI` paging branch; ensure connectors never target null pages.
-  - [ ] Create/track Visio page objects ahead of placement; update `DrawConnectorsPaged` & `DrawMultiPage`.
+  - [x] Audit `VDG.CLI` paging branch; ensure connectors never target null pages.
+  - [x] Create/track Visio page objects ahead of placement; update `DrawConnectorsPaged` & `DrawMultiPage`.
   - [ ] Add unit/CLI tests covering multi-page traversal.
 - **Milestone B – Crowding Mitigation & Paging Strategy**
   - [ ] Implement automatic lane/module splitting when occupancy exceeds limits.
+  - [x] Refine paging planner heuristics (height-aware grouping, connector caps, slack) and add algorithm tests.
   - [ ] Chunk densely connected modules across additional pages based on connector counts.
   - [ ] Surface layout decisions in diagnostics metadata.
 - **Milestone C – Diagnostics & Graceful Degradation**

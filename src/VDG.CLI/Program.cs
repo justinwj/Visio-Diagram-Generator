@@ -28,13 +28,15 @@ namespace VDG.CLI
         public UsageException(string message) : base(message) { }
     }
 
-    internal static class Program
+    internal static partial class Program
     {
         private const string CurrentSchemaVersion = "1.2";
         private static readonly string[] SupportedSchemaVersions = { "1.0", "1.1", CurrentSchemaVersion };
         private const double DefaultNodeWidth = 1.8;
         private const double DefaultNodeHeight = 1.0;
         private const double Margin = 1.0;
+        private const double ModuleSplitThresholdMultiplier = 2.5;
+        private const int ModuleSplitMaxSegments = 24;
 
         private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions
         {
@@ -393,7 +395,7 @@ namespace VDG.CLI
                 }
                 var layout = LayoutEngine.compute(model);
                 var pagingOptions = BuildPageSplitOptions(model);
-                var pagingDataset = BuildPagingDataset(model, layout);
+                var pagingDataset = BuildPagingDataset(model, layout, out var nodeSegmentOverrides);
                 var pagePlans = PagingPlanner.computePages(pagingOptions, pagingDataset) ?? Array.Empty<PagePlan>();
                 if (pagePlans.Length <= 1)
                 {
@@ -403,7 +405,8 @@ namespace VDG.CLI
                         pagePlans = fallbackPlans;
                     }
                 }
-                var nodePageAssignments = BuildNodePageAssignments(model, pagePlans);
+                var nodePageAssignments = BuildNodePageAssignments(model, pagePlans, nodeSegmentOverrides);
+                EmitPlannerSummary(pagePlans);
                 var diagnosticsRank = EmitDiagnostics(model, layout, diagHeightOverride, diagLaneMaxOverride, pagePlans, pagingOptions);
 
                 var failLevelEnv = Environment.GetEnvironmentVariable("VDG_DIAG_FAIL_LEVEL");
@@ -2015,6 +2018,46 @@ namespace VDG.CLI
             public double MaxY { get; set; } = double.NegativeInfinity;
         }
 
+        private sealed class ModuleProjection
+        {
+            public ModuleStats Stats { get; set; } = null!;
+            public int FirstIndex { get; set; }
+            public bool HasPlacement { get; set; }
+            public double MinY { get; set; }
+        }
+
+        private sealed class NodePlacementInfo
+        {
+            public NodePlacementInfo(string id, double bottom, double top, double height)
+            {
+                Id = id;
+                Bottom = bottom;
+                Top = top;
+                Height = height;
+                Center = bottom + (height / 2.0);
+            }
+
+            public string Id { get; }
+            public double Bottom { get; }
+            public double Top { get; }
+            public double Height { get; }
+            public double Center { get; }
+        }
+
+        private sealed class SegmentInfo
+        {
+            public SegmentInfo(int index)
+            {
+                Index = index;
+            }
+
+            public int Index { get; }
+            public List<string> Nodes { get; } = new List<string>();
+            public double MinY { get; set; } = double.PositiveInfinity;
+            public double MaxY { get; set; } = double.NegativeInfinity;
+            public string ModuleId { get; set; } = string.Empty;
+        }
+
         private static string ResolveModuleIdForNode(VDG.Core.Models.Node node, string[] tiers, HashSet<string> tiersSet)
         {
             if (!string.IsNullOrWhiteSpace(node.GroupId)) return node.GroupId!.Trim();
@@ -2043,9 +2086,10 @@ namespace VDG.CLI
             return tiers.Length > 0 ? tiers[0] : "Default";
         }
 
-        private static DiagramDataset BuildPagingDataset(DiagramModel model, LayoutResult layout)
+        private static DiagramDataset BuildPagingDataset(DiagramModel model, LayoutResult layout, out Dictionary<string, string> nodeSegmentOverrides)
         {
             _ = layout; // layout reserved for future heuristics (crowding metrics, etc.)
+            nodeSegmentOverrides = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
             var tiers = GetOrderedTiers(model);
             var tiersSet = new HashSet<string>(tiers, StringComparer.OrdinalIgnoreCase);
@@ -2074,6 +2118,15 @@ namespace VDG.CLI
             }
 
             var nodeMap = BuildNodeMap(model);
+            var edgeLookup = new Dictionary<string, Edge>(StringComparer.OrdinalIgnoreCase);
+            foreach (var edge in model.Edges)
+            {
+                if (edge == null || string.IsNullOrWhiteSpace(edge.Id)) continue;
+                if (!edgeLookup.ContainsKey(edge.Id))
+                {
+                    edgeLookup[edge.Id] = edge;
+                }
+            }
 
             string? GetModuleIdForNode(string? nodeId)
             {
@@ -2165,57 +2218,24 @@ namespace VDG.CLI
                 }
             }
 
-            var modules = moduleOrder
-                .Select(moduleId =>
-                {
-                    var acc = moduleAccumulators[moduleId];
-                    double occupancy;
-                    var hasSpan = acc.HasPlacement && !double.IsInfinity(acc.MinY) && !double.IsInfinity(acc.MaxY);
-                    double spanMin = hasSpan ? acc.MinY : 0.0;
-                    double spanMax = hasSpan ? acc.MaxY : 0.0;
-                    double estimatedHeight;
-                    if (hasSpan)
-                    {
-                        var span = acc.MaxY - acc.MinY;
-                        if (span <= 0.0) span = DefaultNodeHeight;
-                        estimatedHeight = Math.Max(DefaultNodeHeight, span + verticalSpacing);
-                    }
-                    else
-                    {
-                        var perNode = DefaultNodeHeight + Math.Max(0.0, verticalSpacing);
-                        estimatedHeight = Math.Max(DefaultNodeHeight, acc.Nodes.Count * perNode);
-                    }
+            var projections = new List<ModuleProjection>();
+            foreach (var moduleId in moduleOrder)
+            {
+                var acc = moduleAccumulators[moduleId];
+                projections.AddRange(
+                    ExpandModuleStatistics(
+                        moduleId,
+                        acc,
+                        usableHeight,
+                        verticalSpacing,
+                        totalNodes,
+                        placementMap,
+                        nodeMap,
+                        edgeLookup,
+                        nodeSegmentOverrides));
+            }
 
-                    if (usableHeight.HasValue && usableHeight.Value > 0.01)
-                    {
-                        occupancy = Math.Min(100.0, Math.Max(0.0, (estimatedHeight / usableHeight.Value) * 100.0));
-                    }
-                    else
-                    {
-                        occupancy = totalNodes > 0 ? Math.Min(100.0, (acc.Nodes.Count * 100.0) / totalNodes) : 0.0;
-                    }
-
-                    var crossEdges = acc.CrossEdges.Count;
-                    return new
-                    {
-                        ModuleId = moduleId,
-                        acc.FirstIndex,
-                        acc.HasPlacement,
-                        acc.MinY,
-                        Stats = new ModuleStats
-                        {
-                            ModuleId = moduleId,
-                            ConnectorCount = acc.Edges.Count,
-                            NodeCount = acc.Nodes.Count,
-                            OccupancyPercent = occupancy,
-                            HeightEstimate = (float)estimatedHeight,
-                            SpanMin = (float)spanMin,
-                            SpanMax = (float)spanMax,
-                            HasSpan = hasSpan,
-                            CrossModuleConnectors = crossEdges
-                        }
-                    };
-                })
+            var modules = projections
                 .OrderBy(m => m.HasPlacement ? m.MinY : double.PositiveInfinity)
                 .ThenBy(m => m.FirstIndex)
                 .Select(m => m.Stats)
@@ -2235,7 +2255,319 @@ namespace VDG.CLI
             return new DiagramDataset { Modules = modules };
         }
 
-        private static IReadOnlyDictionary<string, int> BuildNodePageAssignments(DiagramModel model, PagePlan[] pagePlans)
+        private static IEnumerable<ModuleProjection> ExpandModuleStatistics(
+            string moduleId,
+            ModuleAccumulator accumulator,
+            double? usableHeight,
+            double verticalSpacing,
+            int totalNodes,
+            IDictionary<string, NodeLayout> placementMap,
+            IDictionary<string, VDG.Core.Models.Node> nodeMap,
+            IDictionary<string, Edge> edgeLookup,
+            IDictionary<string, string> nodeSegmentOverrides)
+        {
+            double ComputeEstimatedHeight(int nodeCount, double span)
+            {
+                if (span > 0.0)
+                {
+                    return Math.Max(DefaultNodeHeight, span + verticalSpacing);
+                }
+
+                var perNode = DefaultNodeHeight + Math.Max(0.0, verticalSpacing);
+                return Math.Max(DefaultNodeHeight, nodeCount * perNode);
+            }
+
+            double ComputeOccupancy(double estimatedHeight, int nodeCount)
+            {
+                if (usableHeight.HasValue && usableHeight.Value > 0.01)
+                {
+                    return Math.Min(100.0, Math.Max(0.0, (estimatedHeight / usableHeight.Value) * 100.0));
+                }
+
+                return totalNodes > 0 ? Math.Min(100.0, (nodeCount * 100.0) / totalNodes) : 0.0;
+            }
+
+            var projections = new List<ModuleProjection>();
+            var hasSpan = accumulator.HasPlacement && !double.IsInfinity(accumulator.MinY) && !double.IsInfinity(accumulator.MaxY);
+            var span = hasSpan ? accumulator.MaxY - accumulator.MinY : 0.0;
+
+            var placementInfos = new List<NodePlacementInfo>();
+            foreach (var nodeId in accumulator.Nodes)
+            {
+                if (placementMap.TryGetValue(nodeId, out var placement))
+                {
+                    var height = placement.Size.HasValue && placement.Size.Value.Height > 0
+                        ? placement.Size.Value.Height
+                        : (float)DefaultNodeHeight;
+                    var bottom = placement.Position.Y;
+                    var top = bottom + height;
+                    placementInfos.Add(new NodePlacementInfo(nodeId, bottom, top, height));
+                }
+            }
+
+            bool ShouldSplit()
+            {
+                if (accumulator.Nodes.Count <= 6) return false;
+
+                if (!usableHeight.HasValue || usableHeight.Value <= 0.01)
+                {
+                    return accumulator.Nodes.Count > 100;
+                }
+
+                if (placementInfos.Count == 0)
+                {
+                    return accumulator.Nodes.Count > 50;
+                }
+
+                if (!hasSpan) return false;
+                if (span <= usableHeight.Value * ModuleSplitThresholdMultiplier) return false;
+                return true;
+            }
+
+            double ClampSpan(double rawSpan)
+            {
+                if (!usableHeight.HasValue || usableHeight.Value <= 0.01) return rawSpan;
+                var threshold = usableHeight.Value * ModuleSplitThresholdMultiplier;
+                return Math.Min(rawSpan, threshold);
+            }
+
+            if (!ShouldSplit())
+            {
+                var clampedSpan = ClampSpan(span);
+                var estimatedHeight = ComputeEstimatedHeight(accumulator.Nodes.Count, clampedSpan);
+                var occupancy = ComputeOccupancy(estimatedHeight, accumulator.Nodes.Count);
+                var normalizedSpan = Math.Max(DefaultNodeHeight, clampedSpan);
+                projections.Add(new ModuleProjection
+                {
+                    Stats = new ModuleStats
+                    {
+                        ModuleId = moduleId,
+                        ConnectorCount = accumulator.Edges.Count,
+                        NodeCount = accumulator.Nodes.Count,
+                        OccupancyPercent = occupancy,
+                        HeightEstimate = (float)estimatedHeight,
+                        SpanMin = 0f,
+                        SpanMax = (float)normalizedSpan,
+                        HasSpan = hasSpan && normalizedSpan > 0.0,
+                        CrossModuleConnectors = accumulator.CrossEdges.Count
+                    },
+                    FirstIndex = accumulator.FirstIndex,
+                    HasPlacement = hasSpan,
+                    MinY = hasSpan ? accumulator.MinY : double.PositiveInfinity
+                });
+
+                return projections;
+            }
+
+            var targetHeight = usableHeight!.Value;
+            var effectiveSpan = span > 0.0 ? span : accumulator.Nodes.Count * (DefaultNodeHeight + verticalSpacing);
+            var segmentCount = Math.Min(ModuleSplitMaxSegments, Math.Max(1, (int)Math.Ceiling(effectiveSpan / targetHeight)));
+            segmentCount = Math.Min(segmentCount, Math.Max(1, placementInfos.Count));
+            var nodeBasedLimit = Math.Max(1, (int)Math.Ceiling(accumulator.Nodes.Count / 20.0));
+            segmentCount = Math.Min(segmentCount, nodeBasedLimit);
+            if (segmentCount <= 1)
+            {
+                var clampedSpan = ClampSpan(span);
+                var estimatedHeight = ComputeEstimatedHeight(accumulator.Nodes.Count, clampedSpan);
+                var occupancy = ComputeOccupancy(estimatedHeight, accumulator.Nodes.Count);
+                var normalizedSpan = Math.Max(DefaultNodeHeight, clampedSpan);
+                projections.Add(new ModuleProjection
+                {
+                    Stats = new ModuleStats
+                    {
+                        ModuleId = moduleId,
+                        ConnectorCount = accumulator.Edges.Count,
+                        NodeCount = accumulator.Nodes.Count,
+                        OccupancyPercent = occupancy,
+                        HeightEstimate = (float)estimatedHeight,
+                        SpanMin = 0f,
+                        SpanMax = (float)normalizedSpan,
+                        HasSpan = hasSpan && normalizedSpan > 0.0,
+                        CrossModuleConnectors = accumulator.CrossEdges.Count
+                    },
+                    FirstIndex = accumulator.FirstIndex,
+                    HasPlacement = hasSpan,
+                    MinY = hasSpan ? accumulator.MinY : double.PositiveInfinity
+                });
+
+                return projections;
+            }
+
+            var rawSegments = new SegmentInfo[segmentCount];
+            for (int i = 0; i < segmentCount; i++)
+            {
+                rawSegments[i] = new SegmentInfo(i);
+            }
+
+            if (placementInfos.Count > 0)
+            {
+                foreach (var info in placementInfos.OrderBy(p => p.Center))
+                {
+                    var relative = info.Center - accumulator.MinY;
+                    var idx = (int)Math.Floor(relative / targetHeight);
+                    if (idx < 0) idx = 0;
+                    if (idx >= segmentCount) idx = segmentCount - 1;
+                    var seg = rawSegments[idx];
+                    seg.Nodes.Add(info.Id);
+                    if (info.Bottom < seg.MinY) seg.MinY = info.Bottom;
+                    if (info.Top > seg.MaxY) seg.MaxY = info.Top;
+                }
+            }
+            else
+            {
+                var orderedNodes = accumulator.Nodes
+                    .OrderBy(id => id, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                var perSegment = Math.Max(1, (int)Math.Ceiling(orderedNodes.Count / (double)segmentCount));
+                for (int i = 0; i < orderedNodes.Count; i++)
+                {
+                    var idx = i / perSegment;
+                    if (idx >= segmentCount) idx = segmentCount - 1;
+                    var seg = rawSegments[idx];
+                    seg.Nodes.Add(orderedNodes[i]);
+                    if (double.IsPositiveInfinity(seg.MinY)) seg.MinY = accumulator.MinY;
+                    if (double.IsNegativeInfinity(seg.MaxY)) seg.MaxY = accumulator.MaxY;
+                }
+            }
+
+            var nodesWithoutPlacement = accumulator.Nodes
+                .Where(id => !placementMap.ContainsKey(id))
+                .ToList();
+
+            var nonEmptySegments = rawSegments.Where(s => s.Nodes.Count > 0).ToList();
+            if (nonEmptySegments.Count == 0)
+            {
+                var estimatedHeight = ComputeEstimatedHeight(accumulator.Nodes.Count, span);
+                var occupancy = ComputeOccupancy(estimatedHeight, accumulator.Nodes.Count);
+                projections.Add(new ModuleProjection
+                {
+                    Stats = new ModuleStats
+                    {
+                        ModuleId = moduleId,
+                        ConnectorCount = accumulator.Edges.Count,
+                        NodeCount = accumulator.Nodes.Count,
+                        OccupancyPercent = occupancy,
+                        HeightEstimate = (float)estimatedHeight,
+                        SpanMin = hasSpan ? (float)accumulator.MinY : 0f,
+                        SpanMax = hasSpan ? (float)accumulator.MaxY : 0f,
+                        HasSpan = hasSpan,
+                        CrossModuleConnectors = accumulator.CrossEdges.Count
+                    },
+                    FirstIndex = accumulator.FirstIndex,
+                    HasPlacement = hasSpan,
+                    MinY = hasSpan ? accumulator.MinY : double.PositiveInfinity
+                });
+
+                return projections;
+            }
+
+            if (nodesWithoutPlacement.Count > 0)
+            {
+                foreach (var nodeId in nodesWithoutPlacement)
+                {
+                    var targetSegment = nonEmptySegments.OrderBy(s => s.Nodes.Count).First();
+                    targetSegment.Nodes.Add(nodeId);
+                }
+            }
+
+            var fallbackMin = double.IsPositiveInfinity(accumulator.MinY) ? 0.0 : accumulator.MinY;
+            var fallbackMax = double.IsNegativeInfinity(accumulator.MaxY) ? fallbackMin : accumulator.MaxY;
+
+            foreach (var seg in nonEmptySegments)
+            {
+                if (double.IsPositiveInfinity(seg.MinY)) seg.MinY = fallbackMin;
+                if (double.IsNegativeInfinity(seg.MaxY)) seg.MaxY = fallbackMax;
+            }
+
+            var nodeToSegment = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            for (int i = 0; i < nonEmptySegments.Count; i++)
+            {
+                var seg = nonEmptySegments[i];
+                seg.ModuleId = $"{moduleId}#part{i + 1}";
+                foreach (var nodeId in seg.Nodes)
+                {
+                    nodeToSegment[nodeId] = seg.ModuleId;
+                    nodeSegmentOverrides[nodeId] = seg.ModuleId;
+                }
+            }
+
+            var connectorCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            var crossCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            foreach (var seg in nonEmptySegments)
+            {
+                connectorCounts[seg.ModuleId] = 0;
+                crossCounts[seg.ModuleId] = 0;
+            }
+
+            foreach (var edgeId in accumulator.Edges)
+            {
+                if (string.IsNullOrWhiteSpace(edgeId)) continue;
+                if (!edgeLookup.TryGetValue(edgeId, out var edge)) continue;
+
+                string? segId = null;
+                if (!string.IsNullOrWhiteSpace(edge.SourceId) && nodeToSegment.TryGetValue(edge.SourceId, out var sourceSeg))
+                {
+                    segId = sourceSeg;
+                }
+                else if (!string.IsNullOrWhiteSpace(edge.TargetId) && nodeToSegment.TryGetValue(edge.TargetId, out var targetSegFallback))
+                {
+                    segId = targetSegFallback;
+                }
+
+                if (segId == null) continue;
+                connectorCounts[segId] += 1;
+
+                if (!string.IsNullOrWhiteSpace(edge.TargetId) &&
+                    nodeToSegment.TryGetValue(edge.TargetId, out var targetSeg) &&
+                    !string.Equals(targetSeg, segId, StringComparison.OrdinalIgnoreCase))
+                {
+                    crossCounts[segId] += 1;
+                }
+            }
+
+            double runningOffset = 0.0;
+            foreach (var seg in nonEmptySegments)
+            {
+                var nodeCount = seg.Nodes.Count;
+                var spanAbsMin = double.IsPositiveInfinity(seg.MinY) ? accumulator.MinY : seg.MinY;
+                var spanAbsMax = double.IsNegativeInfinity(seg.MaxY) ? accumulator.MaxY : seg.MaxY;
+                if (spanAbsMax < spanAbsMin) spanAbsMax = spanAbsMin;
+                var segSpan = spanAbsMax - spanAbsMin;
+                var clampedSpan = ClampSpan(segSpan);
+                var normalizedSpan = Math.Max(DefaultNodeHeight, clampedSpan);
+
+                var spanMin = runningOffset;
+                var spanMax = spanMin + normalizedSpan;
+                runningOffset = spanMax + verticalSpacing;
+
+                var estimatedHeight = ComputeEstimatedHeight(nodeCount, clampedSpan);
+                var occupancy = ComputeOccupancy(estimatedHeight, nodeCount);
+
+                projections.Add(new ModuleProjection
+                {
+                    Stats = new ModuleStats
+                    {
+                        ModuleId = seg.ModuleId,
+                        ConnectorCount = connectorCounts.TryGetValue(seg.ModuleId, out var c) ? c : 0,
+                        NodeCount = nodeCount,
+                        OccupancyPercent = occupancy,
+                        HeightEstimate = (float)estimatedHeight,
+                        SpanMin = (float)spanMin,
+                        SpanMax = (float)spanMax,
+                        HasSpan = true,
+                        CrossModuleConnectors = crossCounts.TryGetValue(seg.ModuleId, out var cross) ? cross : 0
+                    },
+                    FirstIndex = accumulator.FirstIndex,
+                    HasPlacement = true,
+                    MinY = spanAbsMin
+                });
+            }
+
+            return projections;
+        }
+
+        private static IReadOnlyDictionary<string, int> BuildNodePageAssignments(DiagramModel model, PagePlan[] pagePlans, IDictionary<string, string>? nodeModuleOverrides)
         {
             var assignments = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             if (pagePlans == null || pagePlans.Length == 0) return assignments;
@@ -2263,7 +2595,16 @@ namespace VDG.CLI
             var tiersSet = new HashSet<string>(tiers, StringComparer.OrdinalIgnoreCase);
             foreach (var node in model.Nodes)
             {
-                var moduleId = ResolveModuleIdForNode(node, tiers, tiersSet);
+                string moduleId;
+                if (nodeModuleOverrides != null && nodeModuleOverrides.TryGetValue(node.Id, out var overrideModule) && !string.IsNullOrWhiteSpace(overrideModule))
+                {
+                    moduleId = overrideModule;
+                }
+                else
+                {
+                    moduleId = ResolveModuleIdForNode(node, tiers, tiersSet);
+                }
+
                 if (moduleToPage.TryGetValue(moduleId, out var pageIndex))
                 {
                     if (pageIndex < 0) pageIndex = 0;
@@ -4500,6 +4841,36 @@ namespace VDG.CLI
             {
                 Console.WriteLine($"info: rendered page {pageInfo.Index + 1}: nodes={pageInfo.NodeCount}, connectors={pageInfo.ConnectorCount}, skippedConnectors={pageInfo.SkippedConnectorCount}");
             }
+        }
+
+        private static void EmitPlannerSummary(PagePlan[]? pagePlans)
+        {
+            if (pagePlans == null || pagePlans.Length == 0)
+            {
+                return;
+            }
+
+            int pageCount = pagePlans.Length;
+            int totalModules = 0;
+            int totalConnectors = 0;
+            double maxOccupancy = 0.0;
+            int maxConnectors = 0;
+
+            foreach (var plan in pagePlans)
+            {
+                if (plan == null) continue;
+                var modules = plan.Modules?.Length ?? 0;
+                totalModules += modules;
+                totalConnectors += plan.Connectors;
+                if (plan.Occupancy > maxOccupancy) maxOccupancy = plan.Occupancy;
+                if (plan.Connectors > maxConnectors) maxConnectors = plan.Connectors;
+            }
+
+            double avgModules = pageCount > 0 ? totalModules / (double)pageCount : 0.0;
+            double avgConnectors = pageCount > 0 ? totalConnectors / (double)pageCount : 0.0;
+
+            Console.WriteLine(
+                $"info: planner summary pages={pageCount} avgModules/page={avgModules:F1} avgConnectors/page={avgConnectors:F1} maxOccupancy={maxOccupancy:F1}% maxConnectors={maxConnectors}");
         }
 
     }

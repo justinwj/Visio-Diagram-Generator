@@ -110,7 +110,7 @@ namespace VDG.CLI.Tests
             var pagePlans = PagingPlanner.computePages(options, dataset);
             Assert.NotNull(pagePlans);
 
-            var (stats, diagnostics) = Program.RunDiagnosticsForTests(model, layout, pagePlans, options, metrics);
+            var (stats, diagnostics) = Program.RunDiagnosticsForTests(model, layout, pagePlans, options, metrics, dataset);
             Assert.True(diagnostics.PageOverflowCount > 0, "Expected at least one page overflow to be flagged.");
             Assert.True(diagnostics.PartialRender, "Overflow diagnostics should mark partial render.");
 

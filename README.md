@@ -75,12 +75,17 @@ CI Notes
   - `--spacing-v <inches>` vertical spacing between nodes
   - `--page-width <inches>` / `--page-height <inches>` / `--page-margin <inches>`
   - `--paginate <bool>` (reserved for future pagination)
+  - Filtering helpers for large renders:
+    - `--modules <id id ...>` include only the provided module identifiers (space or comma separated). Handy for debugging sub-systems without touching the source JSON. Prefix with `include` or `exclude` to be explicit (e.g. `--modules include Alpha Beta`, `--modules exclude LegacyModule`). Repeat the flag to mix include and exclude semantics.
+    - `--max-pages <n>` keep only the first `n` planned pages. The CLI trims segments beyond the limit, marks deferred modules in diagnostics, and re-runs pagination on the filtered dataset.
 
-   After layout, the CLI prints a planner summary that surfaces pagination health at a glance. Example:
+   After layout, the CLI prints a planner summary that surfaces pagination health at a glance, followed by page-level annotations when degradation occurs. Example:
    ```
-   info: planner summary modules=210 segments=248 delta=+38 splitModules=37 avgSegments/module=1.18 pages=238 avgModules/page=1.0 avgConnectors/page=9.2 maxOccupancy=250.0% maxConnectors=48
+   info: planner summary modules=210 segments=248 delta=+38 splitModules=37 avgSegments/module=1.18 pages=238 avgModules/page=1.0 avgConnectors/page=9.2 maxOccupancy=250.0% maxConnectors=48 connectorOverLimitPages=2 truncatedNodes=3 skippedModules=1 partialRender=yes
+   warning: page 12 connectors=520 limit=500 over=+20 modules=7 laneWarnings=2 partial=yes
+   warning: skipped modules ModMega, ModLegacy (+3 more)
    ```
-   The summary shows how many original modules were split into height-bounded segments, the resulting page count, and the peak occupancy/connectors per page so you can spot overflow hot spots without opening diagnostics JSON.
+   The summary shows how many original modules were split into height-bounded segments, the resulting page count, the peak occupancy/connectors per page, and aggregate degradation (`connectorOverLimitPages`, `truncatedNodes`, `skippedModules`, `partialRender`). Page annotations drill into limit breaches so you can triage hotspot pages without opening diagnostics JSON.
 
    Diagnostics JSON contents (when enabled):
    - `metrics.connectorCount`, `metrics.straightLineCrossings`, `metrics.pageHeight`, `metrics.usableHeight`
@@ -157,6 +162,7 @@ A minimal 1.2 envelope with lanes looks like this:
 - Rebuild after edits: `dotnet build -c Release`
 - To test the CLI without Visio COM automation, set `VDG_SKIP_RUNNER=1`.
 - For CLI smoke tests, re-run the command in the quick start section using your scenario-specific JSON.
+- End-to-end fixture validation (including `samples/invSys`): `pwsh ./tools/render-fixture.ps1 -FixtureName invSys -Update -Note "reason"` regenerates IR, Diagram JSON, diagnostics, and hashes, updates `plan docs/fixtures_log.md`, and rewrites `plan docs/fixtures_metadata.json`. Omit `-Update` for a read-only drift check.
 
 ## Paging Planner Reference
 The pagination summary printed by the CLI and the associated diagnostics metrics are documented in `docs/PagingPlanner.md`. Review that guide when tuning thresholds, interpreting fixture output (`render-fixture.ps1`), or onboarding new team members to the segmentation heuristics.

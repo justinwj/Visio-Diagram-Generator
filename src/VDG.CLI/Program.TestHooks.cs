@@ -53,10 +53,12 @@ namespace VDG.CLI
             LayoutResult layout,
             PagePlan[]? pagePlans,
             PageSplitOptions? options,
-            PlannerMetrics metrics)
+            PlannerMetrics metrics,
+            DiagramDataset? dataset = null,
+            IEnumerable<string>? filteredModules = null)
         {
             var stats = BuildPlannerSummaryStats(pagePlans);
-            var diagnostics = EmitDiagnostics(model, layout, null, null, pagePlans, options, metrics, stats);
+            var diagnostics = EmitDiagnostics(model, layout, null, null, pagePlans, options, metrics, stats, dataset, filteredModules);
             return (stats, diagnostics);
         }
     }

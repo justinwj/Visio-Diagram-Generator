@@ -75,6 +75,32 @@ namespace VDG.CLI
             public int Nodes { get; set; }
         }
 
+        internal sealed class LaneAlert
+        {
+            public string Tier { get; set; } = string.Empty;
+            public double OccupancyRatio { get; set; }
+            public int Nodes { get; set; }
+            public string Severity { get; set; } = "warning";
+        }
+
+        internal sealed class PageDiagnosticsDetail
+        {
+            public int PageNumber { get; set; }
+            public int? ConnectorLimit { get; set; }
+            public int ConnectorOverLimit { get; set; }
+            public int? PlannedConnectors { get; set; }
+            public int? PlannedNodes { get; set; }
+            public int? ModuleCount { get; set; }
+            public int LaneCrowdingWarnings { get; set; }
+            public int LaneCrowdingErrors { get; set; }
+            public bool HasPageOverflow { get; set; }
+            public bool HasPageCrowding { get; set; }
+            public bool HasPartialRender { get; set; }
+            public int TruncatedNodeCount { get; set; }
+            public List<string> TruncatedNodes { get; } = new List<string>();
+            public List<LaneAlert> LaneAlerts { get; } = new List<LaneAlert>();
+        }
+
         private sealed class DiagnosticsJson
         {
             public string Version { get; set; } = "1.0";
@@ -104,6 +130,10 @@ namespace VDG.CLI
             public int LaneCrowdingCount { get; set; }
             public int ContainerOverflowCount { get; set; }
             public bool PartialRender { get; set; }
+            public int ConnectorOverLimitPageCount { get; set; }
+            public int PagesWithPartialRender { get; set; }
+            public int TruncatedNodeCount { get; set; }
+            public List<string> SkippedModules { get; set; } = new List<string>();
             public List<PageMetric> Pages { get; set; } = new List<PageMetric>();
             public List<LanePageMetric> LanePages { get; set; } = new List<LanePageMetric>();
             public List<ContainerPageMetric> Containers { get; set; } = new List<ContainerPageMetric>();
@@ -117,6 +147,15 @@ namespace VDG.CLI
             public int Connectors { get; set; }
             public int SkippedConnectors { get; set; }
             public bool Overflow { get; set; }
+            public int? ConnectorLimit { get; set; }
+            public int ConnectorOverLimit { get; set; }
+            public int ModuleCount { get; set; }
+            public bool Partial { get; set; }
+            public int LaneCrowdingWarnings { get; set; }
+            public int LaneCrowdingErrors { get; set; }
+            public bool PageCrowding { get; set; }
+            public bool PageOverflow { get; set; }
+            public int TruncatedNodes { get; set; }
         }
 
         private sealed class ContainerPageMetric
@@ -160,6 +199,11 @@ namespace VDG.CLI
                 int? diagCrossWarnOverride = null;            // integer
                 int? diagCrossErrorOverride = null;           // integer
                 double? diagUtilWarnMinOverride = null;       // percent 0..100
+
+                var moduleIncludeFilters = new List<string>();
+                var moduleExcludeFilters = new List<string>();
+                var modulesFilteredOut = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                int? maxPagesFilter = null;
 
                 int index = 0;
                 bool diagJsonEnable = false; string? diagJsonPath = null; string? diagLevelOverride = null;
@@ -212,6 +256,70 @@ namespace VDG.CLI
                         if (!double.TryParse(args[index + 1], NumberStyles.Float, CultureInfo.InvariantCulture, out var v))
                         { throw new UsageException("--spacing-v must be a number (inches)."); }
                         spacingVOverride = v; index += 2; continue;
+                    }
+                    else if (string.Equals(flag, "--modules", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (index + 1 >= args.Length) { throw new UsageException("--modules requires at least one module id."); }
+                        var collected = new List<string>();
+                        var cursor = index + 1;
+                        while (cursor < args.Length && !args[cursor].StartsWith("-", StringComparison.Ordinal))
+                        {
+                            var token = args[cursor];
+                            if (!string.IsNullOrWhiteSpace(token))
+                            {
+                                var parts = token.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                                foreach (var part in parts)
+                                {
+                                    var trimmed = part.Trim();
+                                    if (!string.IsNullOrWhiteSpace(trimmed))
+                                    {
+                                        collected.Add(trimmed);
+                                    }
+                                }
+                            }
+                            cursor++;
+                        }
+                        if (collected.Count == 0)
+                        {
+                            throw new UsageException("--modules requires at least one module id.");
+                        }
+                        var mode = "include";
+                        if (collected.Count > 0)
+                        {
+                            var first = collected[0];
+                            if (string.Equals(first, "include", StringComparison.OrdinalIgnoreCase) ||
+                                string.Equals(first, "exclude", StringComparison.OrdinalIgnoreCase))
+                            {
+                                mode = first.ToLowerInvariant();
+                                collected.RemoveAt(0);
+                                if (collected.Count == 0)
+                                {
+                                    throw new UsageException($"--modules {mode} requires at least one module id.");
+                                }
+                            }
+                        }
+
+                        if (string.Equals(mode, "exclude", StringComparison.OrdinalIgnoreCase))
+                        {
+                            moduleExcludeFilters.AddRange(collected);
+                        }
+                        else
+                        {
+                            moduleIncludeFilters.AddRange(collected);
+                        }
+                        index = cursor;
+                        continue;
+                    }
+                    else if (string.Equals(flag, "--max-pages", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (index + 1 >= args.Length) { throw new UsageException("--max-pages requires integer value."); }
+                        if (!int.TryParse(args[index + 1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedPages) || parsedPages <= 0)
+                        {
+                            throw new UsageException("--max-pages must be a positive integer.");
+                        }
+                        maxPagesFilter = parsedPages;
+                        index += 2;
+                        continue;
                     }
                     else if (string.Equals(flag, "--page-width", StringComparison.OrdinalIgnoreCase))
                     {
@@ -409,6 +517,42 @@ namespace VDG.CLI
                         : Path.Combine("out", "diagnostics.json");
                     model.Metadata["layout.diagnostics.jsonPath"] = defaultJson;
                 }
+                if (moduleIncludeFilters.Count > 0)
+                {
+                    var beforeModules = CollectModuleIds(model);
+                    model = FilterModelByModules(model, moduleIncludeFilters);
+                    var afterModules = CollectModuleIds(model);
+                    beforeModules.ExceptWith(afterModules);
+                    foreach (var dropped in beforeModules)
+                    {
+                        modulesFilteredOut.Add(dropped);
+                    }
+                    if (model.Nodes.Count == 0)
+                    {
+                        Console.Error.WriteLine("warning: no modules matched --modules filter.");
+                        return ExitCodes.InvalidInput;
+                    }
+                }
+
+                if (moduleExcludeFilters.Count > 0)
+                {
+                    var allModules = CollectModuleIds(model);
+                    var excludeSet = new HashSet<string>(moduleExcludeFilters, StringComparer.OrdinalIgnoreCase);
+                    var keepSet = allModules.Where(m => !excludeSet.Contains(m)).ToList();
+                    if (keepSet.Count == 0)
+                    {
+                        Console.Error.WriteLine("warning: --modules exclude removed all modules.");
+                        return ExitCodes.InvalidInput;
+                    }
+
+                    foreach (var excluded in allModules.Where(m => excludeSet.Contains(m)))
+                    {
+                        modulesFilteredOut.Add(excluded);
+                    }
+
+                    model = FilterModelByModules(model, keepSet);
+                }
+
                 var layout = LayoutEngine.compute(model);
                 var pagingOptions = BuildPageSplitOptions(model);
                 var plannerBuild = BuildPagingDataset(model, layout);
@@ -421,9 +565,60 @@ namespace VDG.CLI
                         pagePlans = fallbackPlans;
                     }
                 }
+
+                if (maxPagesFilter.HasValue && maxPagesFilter.Value > 0 && pagePlans.Length > maxPagesFilter.Value)
+                {
+                    var pageLimit = maxPagesFilter.Value;
+                    var modulesToKeep = new HashSet<string>(
+                        pagePlans
+                            .OrderBy(p => p.PageIndex)
+                            .Take(pageLimit)
+                            .SelectMany(p => p.Modules ?? Array.Empty<string>())
+                            .Where(m => !string.IsNullOrWhiteSpace(m))
+                            .Select(m => m.Trim()),
+                        StringComparer.OrdinalIgnoreCase);
+
+                    if (modulesToKeep.Count > 0)
+                    {
+                        var allModules = CollectModuleIds(model);
+                        foreach (var removed in allModules.Where(m => !modulesToKeep.Contains(m)))
+                        {
+                            modulesFilteredOut.Add(removed);
+                        }
+
+                        model = FilterModelByModules(model, modulesToKeep);
+                        if (model.Nodes.Count == 0)
+                        {
+                            Console.Error.WriteLine($"warning: --max-pages {pageLimit} removed all modules.");
+                            return ExitCodes.InvalidInput;
+                        }
+
+                        layout = LayoutEngine.compute(model);
+                        pagingOptions = BuildPageSplitOptions(model);
+                        plannerBuild = BuildPagingDataset(model, layout);
+                        pagePlans = PagingPlanner.computePages(pagingOptions, plannerBuild.Dataset) ?? Array.Empty<PagePlan>();
+                        if (pagePlans.Length <= 1)
+                        {
+                            var limitedFallback = BuildLayoutPagePlans(model, layout, pagingOptions);
+                            if (limitedFallback.Length > pagePlans.Length)
+                            {
+                                pagePlans = limitedFallback;
+                            }
+                        }
+                        if (pagePlans.Length > pageLimit)
+                        {
+                            pagePlans = pagePlans.OrderBy(p => p.PageIndex).Take(pageLimit).ToArray();
+                        }
+                    }
+                    else
+                    {
+                        pagePlans = pagePlans.OrderBy(p => p.PageIndex).Take(pageLimit).ToArray();
+                    }
+                }
+
                 var nodePageAssignments = BuildNodePageAssignments(model, pagePlans, plannerBuild.NodeSegmentOverrides);
                 var plannerStats = BuildPlannerSummaryStats(pagePlans);
-                var diagnosticsSummary = EmitDiagnostics(model, layout, diagHeightOverride, diagLaneMaxOverride, pagePlans, pagingOptions, plannerBuild.Metrics, plannerStats);
+                var diagnosticsSummary = EmitDiagnostics(model, layout, diagHeightOverride, diagLaneMaxOverride, pagePlans, pagingOptions, plannerBuild.Metrics, plannerStats, plannerBuild.Dataset);
                 PrintPlannerSummary(plannerStats, plannerBuild.Metrics, diagnosticsSummary);
                 var diagnosticsRank = diagnosticsSummary.Rank;
 
@@ -512,6 +707,8 @@ namespace VDG.CLI
             Console.Error.WriteLine("  --diag-lane-max <n>     Max nodes per lane before crowding hint. Default 12");
             Console.Error.WriteLine("  --spacing-h <in>        Horizontal spacing (inches) override");
             Console.Error.WriteLine("  --spacing-v <in>        Vertical spacing (inches) override");
+            Console.Error.WriteLine("  --modules <ids...>      Include only specified module ids (space or comma separated)");
+            Console.Error.WriteLine("  --max-pages <n>         Limit render to the first N planned pages");
             Console.Error.WriteLine("  --page-width <in>       Page width (inches)");
             Console.Error.WriteLine("  --page-height <in>      Page height (inches)");
             Console.Error.WriteLine("  --page-margin <in>      Page margin (inches)");
@@ -924,10 +1121,29 @@ namespace VDG.CLI
             PagePlan[]? pagePlans = null,
             PageSplitOptions? pageOptions = null,
             PlannerMetrics? plannerMetrics = null,
-            PlannerSummaryStats? plannerSummary = null)
+            PlannerSummaryStats? plannerSummary = null,
+            DiagramDataset? plannerDataset = null,
+            IEnumerable<string>? filteredModules = null)
         {
             var summary = new DiagnosticsSummary();
             int highestRank = 0;
+            var pageDetails = new Dictionary<int, PageDiagnosticsDetail>();
+
+            PageDiagnosticsDetail GetPageDetail(int pageIndex)
+            {
+                if (pageIndex < 0)
+                {
+                    pageIndex = 0;
+                }
+
+                if (!pageDetails.TryGetValue(pageIndex, out var detail))
+                {
+                    detail = new PageDiagnosticsDetail { PageNumber = pageIndex + 1 };
+                    pageDetails[pageIndex] = detail;
+                }
+
+                return detail;
+            }
 
             // Diagnostics level gating (info|warning|error); default info
             string minLevel = "info";
@@ -967,8 +1183,11 @@ namespace VDG.CLI
 
             if (pagePlans != null && pagePlans.Length > 0)
             {
-                var connectorsLimit = (pageOptions != null && pageOptions.MaxConnectors > 0)
-                    ? pageOptions.MaxConnectors.ToString(CultureInfo.InvariantCulture)
+                var connectorLimitValue = (pageOptions != null && pageOptions.MaxConnectors > 0)
+                    ? pageOptions.MaxConnectors
+                    : int.MaxValue;
+                var connectorsLimit = connectorLimitValue < int.MaxValue
+                    ? connectorLimitValue.ToString(CultureInfo.InvariantCulture)
                     : "unbounded";
                 Emit("info", $"paging planner planned {pagePlans.Length} page(s) (connector limit {connectorsLimit})");
 
@@ -981,15 +1200,26 @@ namespace VDG.CLI
                     foreach (var plan in pagePlans)
                     {
                         var pageNumber = plan.PageIndex + 1;
-                        if (pageOptions.MaxConnectors > 0 && plan.Connectors > pageOptions.MaxConnectors)
+                        var pageDetail = GetPageDetail(plan.PageIndex);
+                        pageDetail.PlannedConnectors = plan.Connectors;
+                        pageDetail.PlannedNodes = plan.Nodes;
+                        pageDetail.ModuleCount = plan.Modules?.Length ?? 0;
+                        if (connectorLimitValue < int.MaxValue)
                         {
-                            var msg = $"paging planner connectors exceed limit on page {pageNumber}: connectors={plan.Connectors} limit={pageOptions.MaxConnectors}";
-                            Emit("info", msg);
-                            AddIssue("PagePlanConnectors", "info", msg, page: pageNumber);
+                            pageDetail.ConnectorLimit = connectorLimitValue;
+                            if (plan.Connectors > connectorLimitValue)
+                            {
+                                pageDetail.ConnectorOverLimit = plan.Connectors - connectorLimitValue;
+                                var msg = $"paging planner connectors exceed limit on page {pageNumber}: connectors={plan.Connectors} limit={connectorLimitValue}";
+                                Emit("info", msg);
+                                AddIssue("PagePlanConnectors", "info", msg, page: pageNumber);
+                                summary.ConnectorOverLimitPageCount++;
+                            }
                         }
 
                         if (!double.IsInfinity(occupancyLimit) && plan.Occupancy > occupancyLimit)
                         {
+                            pageDetail.HasPageCrowding = true;
                             var msg = $"paging planner occupancy exceeds limit on page {pageNumber}: occupancy={plan.Occupancy:F1}% limit={occupancyLimit:F1}%";
                             Emit("info", msg);
                             AddIssue("PagePlanOccupancy", "info", msg, page: pageNumber);
@@ -1165,6 +1395,16 @@ namespace VDG.CLI
                             var msg = $"node '{nl.Id}' height {hNode:F2}in exceeds usable page height {usable:F2}in. Increase page height/margin or resize node.";
                             Emit("warning", msg);
                             AddIssue("NodeTooTall", "warning", msg);
+                            var pageIndex = nodePage.TryGetValue(nl.Id, out var mapped) ? mapped : 0;
+                            var pageDetail = GetPageDetail(pageIndex);
+                            if (!pageDetail.TruncatedNodes.Any(id => string.Equals(id, nl.Id, StringComparison.OrdinalIgnoreCase)))
+                            {
+                                pageDetail.TruncatedNodes.Add(nl.Id);
+                                pageDetail.TruncatedNodeCount++;
+                            }
+                            pageDetail.HasPartialRender = true;
+                            summary.TruncatedNodeCount++;
+                            summary.PartialRender = true;
                         }
                     }
                 }
@@ -1228,9 +1468,12 @@ namespace VDG.CLI
 
                         foreach (var kv in perPageTier)
                         {
-                            var page = kv.Key.page; var tierName = kv.Key.tier; var (sumH, count) = kv.Value;
+                            var page = kv.Key.page;
+                            var tierName = kv.Key.tier;
+                            var (sumH, count) = kv.Value;
                             var occupied = sumH + (count > 0 ? (count - 1) * vs : 0);
                             var ratio = occupied / usable;
+                            var pageDetail = GetPageDetail(page);
                             if (ratio >= laneErr)
                             {
                                 var msg = $"lane overcrowded: lane='{tierName}' page={page + 1} occupancy={(ratio * 100):F0}% nodes={count} usable={usable:F2}in";
@@ -1240,14 +1483,25 @@ namespace VDG.CLI
                                 var severity = degradeToWarning ? "warning" : "error";
                                 Emit(severity, msg);
                                 AddIssue("LaneCrowding", severity, msg, lane: tierName, page: page + 1);
+                                pageDetail.LaneAlerts.Add(new LaneAlert
+                                {
+                                    Tier = tierName,
+                                    OccupancyRatio = ratio,
+                                    Nodes = count,
+                                    Severity = severity
+                                });
                                 if (degradeToWarning)
                                 {
                                     summary.LaneCrowdingCount++;
                                     summary.PartialRender = true;
+                                    pageDetail.HasPartialRender = true;
+                                    pageDetail.LaneCrowdingWarnings++;
                                 }
                                 else
                                 {
                                     summary.LaneOverflowCount++;
+                                    pageDetail.HasPartialRender = true;
+                                    pageDetail.LaneCrowdingErrors++;
                                 }
                             }
                             else if (ratio >= laneWarn)
@@ -1256,6 +1510,14 @@ namespace VDG.CLI
                                 Emit("warning", msg);
                                 AddIssue("LaneCrowding", "warning", msg, lane: tierName, page: page + 1);
                                 summary.LaneCrowdingCount++;
+                                pageDetail.LaneCrowdingWarnings++;
+                                pageDetail.LaneAlerts.Add(new LaneAlert
+                                {
+                                    Tier = tierName,
+                                    OccupancyRatio = ratio,
+                                    Nodes = count,
+                                    Severity = "warning"
+                                });
                             }
 
                             // update per-page maximum occupancy ratio across lanes
@@ -1279,6 +1541,7 @@ namespace VDG.CLI
                         {
                             var page = kvp.Key; var r = kvp.Value; var pct = r * 100.0;
                             var tops = perPageTopHeights.TryGetValue(page, out var list) ? string.Join(", ", list.Take(3).Select(x => $"{x.id}({x.h:F2}in)")) : string.Empty;
+                            var detail = GetPageDetail(page);
                             if (r > 1.0)
                             {
                                 var msg = $"page overflow: page={page + 1} occupancy={pct:F0}% (usable {usable:F2}in); top: [{tops}]";
@@ -1286,6 +1549,8 @@ namespace VDG.CLI
                                 AddIssue("PageOverflow", "error", msg, page: page + 1);
                                 summary.PageOverflowCount++;
                                 summary.PartialRender = true;
+                                detail.HasPageOverflow = true;
+                                detail.HasPartialRender = true;
                             }
                             else if (r >= pageWarn)
                             {
@@ -1293,6 +1558,7 @@ namespace VDG.CLI
                                 Emit("warning", msg);
                                 AddIssue("PageCrowding", "warning", msg, page: page + 1);
                                 summary.PageCrowdingCount++;
+                                detail.HasPageCrowding = true;
                             }
                         }
                     }
@@ -1740,6 +2006,102 @@ namespace VDG.CLI
             }
             catch { }
 
+            if (plannerDataset != null && plannerDataset.Modules != null && plannerDataset.Modules.Length > 0 && pagePlans != null)
+            {
+                var datasetModules = new HashSet<string>(
+                    plannerDataset.Modules
+                        .Where(m => m != null && !string.IsNullOrWhiteSpace(m.ModuleId))
+                        .Select(m => m.ModuleId.Trim()),
+                    StringComparer.OrdinalIgnoreCase);
+                var plannedModules = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                foreach (var plan in pagePlans)
+                {
+                    if (plan?.Modules == null) continue;
+                    foreach (var module in plan.Modules)
+                    {
+                        if (string.IsNullOrWhiteSpace(module)) continue;
+                        plannedModules.Add(module.Trim());
+                    }
+                }
+
+                datasetModules.ExceptWith(plannedModules);
+                if (datasetModules.Count > 0)
+                {
+                    foreach (var module in datasetModules)
+                    {
+                        if (string.IsNullOrWhiteSpace(module)) continue;
+                        if (!summary.SkippedModules.Any(m => string.Equals(m, module, StringComparison.OrdinalIgnoreCase)))
+                        {
+                            summary.SkippedModules.Add(module);
+                        }
+                    }
+                    if (summary.SkippedModules.Count > 0)
+                    {
+                        summary.PartialRender = true;
+                    }
+                }
+            }
+
+            if (pageDetails.Count > 0)
+            {
+                summary.Pages.AddRange(pageDetails.Values.OrderBy(p => p.PageNumber));
+                summary.ConnectorOverLimitPageCount = summary.Pages.Count(p => p.ConnectorOverLimit > 0);
+                summary.PagesWithPartialRender = summary.Pages.Count(p => p.HasPartialRender);
+                summary.TruncatedNodeCount = summary.Pages.Sum(p => p.TruncatedNodeCount);
+                foreach (var page in summary.Pages)
+                {
+                    if (page.TruncatedNodes.Count > 1)
+                    {
+                        page.TruncatedNodes.Sort(StringComparer.OrdinalIgnoreCase);
+                    }
+
+                    if (page.LaneAlerts.Count > 1)
+                    {
+                        static int SeverityRank(string? severity)
+                        {
+                            if (string.Equals(severity, "error", StringComparison.OrdinalIgnoreCase)) return 0;
+                            if (string.Equals(severity, "warning", StringComparison.OrdinalIgnoreCase)) return 1;
+                            return 2;
+                        }
+
+                        page.LaneAlerts.Sort((a, b) =>
+                        {
+                            var rank = SeverityRank(a.Severity).CompareTo(SeverityRank(b.Severity));
+                            if (rank != 0) return rank;
+                            var ratioCompare = b.OccupancyRatio.CompareTo(a.OccupancyRatio);
+                            if (ratioCompare != 0) return ratioCompare;
+                            var nodeCompare = b.Nodes.CompareTo(a.Nodes);
+                            if (nodeCompare != 0) return nodeCompare;
+                            return StringComparer.OrdinalIgnoreCase.Compare(a.Tier, b.Tier);
+                        });
+                    }
+                }
+                if (summary.PagesWithPartialRender > 0)
+                {
+                    summary.PartialRender = true;
+                }
+            }
+
+            if (filteredModules != null)
+            {
+                foreach (var module in filteredModules)
+                {
+                    if (string.IsNullOrWhiteSpace(module)) continue;
+                    if (!summary.SkippedModules.Any(m => string.Equals(m, module, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        summary.SkippedModules.Add(module);
+                    }
+                }
+                if (summary.SkippedModules.Count > 0)
+                {
+                    summary.PartialRender = true;
+                }
+            }
+            if (summary.SkippedModules.Count > 1)
+            {
+                summary.SkippedModules.Sort(StringComparer.OrdinalIgnoreCase);
+            }
+
             // M5: Emit structured diagnostics JSON (best-effort)
             try
             {
@@ -1772,6 +2134,13 @@ namespace VDG.CLI
                     payload.Metrics.LaneCrowdingCount = summary.LaneCrowdingCount;
                     payload.Metrics.ContainerOverflowCount = summary.ContainerOverflowCount;
                     payload.Metrics.PartialRender = summary.PartialRender;
+                    payload.Metrics.ConnectorOverLimitPageCount = summary.ConnectorOverLimitPageCount;
+                    payload.Metrics.PagesWithPartialRender = summary.PagesWithPartialRender;
+                    payload.Metrics.TruncatedNodeCount = summary.TruncatedNodeCount;
+                    if (summary.SkippedModules.Count > 0)
+                    {
+                        payload.Metrics.SkippedModules.AddRange(summary.SkippedModules);
+                    }
 
                     // Straight-line crossings
                     try
@@ -1903,6 +2272,30 @@ namespace VDG.CLI
                                 Overflow = (plan.Connectors > connectorLimit && connectorLimit < int.MaxValue) ||
                                            (!double.IsInfinity(occupancyLimit) && plan.Occupancy > occupancyLimit)
                             };
+                            if (pageDetails.TryGetValue(plan.PageIndex, out var detail))
+                            {
+                                metric.ConnectorLimit = detail.ConnectorLimit;
+                                metric.ConnectorOverLimit = detail.ConnectorOverLimit;
+                                metric.ModuleCount = detail.ModuleCount ?? (plan.Modules?.Length ?? 0);
+                                metric.Partial = detail.HasPartialRender;
+                                metric.LaneCrowdingWarnings = detail.LaneCrowdingWarnings;
+                                metric.LaneCrowdingErrors = detail.LaneCrowdingErrors;
+                                metric.PageCrowding = detail.HasPageCrowding;
+                                metric.PageOverflow = detail.HasPageOverflow;
+                                metric.TruncatedNodes = detail.TruncatedNodeCount;
+                            }
+                            else
+                            {
+                                metric.ConnectorLimit = connectorLimit < int.MaxValue ? (int?)connectorLimit : null;
+                                metric.ConnectorOverLimit = 0;
+                                metric.ModuleCount = plan.Modules?.Length ?? 0;
+                                metric.Partial = false;
+                                metric.LaneCrowdingWarnings = 0;
+                                metric.LaneCrowdingErrors = 0;
+                                metric.PageCrowding = false;
+                                metric.PageOverflow = false;
+                                metric.TruncatedNodes = 0;
+                            }
                             payload.Metrics.Pages.Add(metric);
                         }
                     }
@@ -2153,10 +2546,16 @@ namespace VDG.CLI
             public int LaneCrowdingCount { get; set; }
             public int ContainerOverflowCount { get; set; }
             public bool PartialRender { get; set; }
+            public int ConnectorOverLimitPageCount { get; set; }
+            public int PagesWithPartialRender { get; set; }
+            public int TruncatedNodeCount { get; set; }
+            public List<PageDiagnosticsDetail> Pages { get; } = new List<PageDiagnosticsDetail>();
+            public List<string> SkippedModules { get; } = new List<string>();
             public bool HasOverflow =>
                 PageOverflowCount > 0 ||
                 LaneOverflowCount > 0 ||
-                ContainerOverflowCount > 0;
+                ContainerOverflowCount > 0 ||
+                ConnectorOverLimitPageCount > 0;
         }
 
         private sealed class PlannerBuildResult
@@ -2199,6 +2598,74 @@ namespace VDG.CLI
             }
 
             return tiers.Length > 0 ? tiers[0] : "Default";
+        }
+
+        internal static HashSet<string> CollectModuleIds(DiagramModel model)
+        {
+            var modules = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var tiers = GetOrderedTiers(model);
+            var tiersSet = new HashSet<string>(tiers, StringComparer.OrdinalIgnoreCase);
+            foreach (var node in model.Nodes)
+            {
+                if (node == null) continue;
+                var moduleId = ResolveModuleIdForNode(node, tiers, tiersSet);
+                if (!string.IsNullOrWhiteSpace(moduleId))
+                {
+                    modules.Add(moduleId);
+                }
+            }
+            return modules;
+        }
+
+        internal static DiagramModel FilterModelByModules(DiagramModel model, IEnumerable<string> includeModules)
+        {
+            var includeSet = new HashSet<string>(
+                includeModules
+                    .Where(m => !string.IsNullOrWhiteSpace(m))
+                    .Select(m => m.Trim()),
+                StringComparer.OrdinalIgnoreCase);
+
+            if (includeSet.Count == 0)
+            {
+                var empty = new DiagramModel();
+                foreach (var kvp in model.Metadata)
+                {
+                    empty.Metadata[kvp.Key] = kvp.Value;
+                }
+                return empty;
+            }
+
+            var tiers = GetOrderedTiers(model);
+            var tiersSet = new HashSet<string>(tiers, StringComparer.OrdinalIgnoreCase);
+
+            var keptNodes = new List<Node>();
+            foreach (var node in model.Nodes)
+            {
+                if (node == null) continue;
+                var moduleId = ResolveModuleIdForNode(node, tiers, tiersSet);
+                if (includeSet.Contains(moduleId))
+                {
+                    keptNodes.Add(node);
+                }
+            }
+
+            var keepNodeIds = new HashSet<string>(keptNodes.Select(n => n.Id), StringComparer.OrdinalIgnoreCase);
+            var keptEdges = model.Edges
+                .Where(e =>
+                    e != null &&
+                    !string.IsNullOrWhiteSpace(e.SourceId) &&
+                    !string.IsNullOrWhiteSpace(e.TargetId) &&
+                    keepNodeIds.Contains(e.SourceId!) &&
+                    keepNodeIds.Contains(e.TargetId!))
+                .ToList();
+
+            var filtered = new DiagramModel(keptNodes, keptEdges);
+            foreach (var kvp in model.Metadata)
+            {
+                filtered.Metadata[kvp.Key] = kvp.Value;
+            }
+
+            return filtered;
         }
 
         private static PlannerBuildResult BuildPagingDataset(DiagramModel model, LayoutResult layout)
@@ -5054,6 +5521,18 @@ namespace VDG.CLI
                 {
                     annotations.Add($"crowdedLanes={diagnosticsSummary.LaneCrowdingCount}");
                 }
+                if (diagnosticsSummary.ConnectorOverLimitPageCount > 0)
+                {
+                    annotations.Add($"connectorOverLimitPages={diagnosticsSummary.ConnectorOverLimitPageCount}");
+                }
+                if (diagnosticsSummary.TruncatedNodeCount > 0)
+                {
+                    annotations.Add($"truncatedNodes={diagnosticsSummary.TruncatedNodeCount}");
+                }
+                if (diagnosticsSummary.SkippedModules.Count > 0)
+                {
+                    annotations.Add($"skippedModules={diagnosticsSummary.SkippedModules.Count}");
+                }
                 if (diagnosticsSummary.PartialRender)
                 {
                     annotations.Add("partialRender=yes");
@@ -5066,6 +5545,82 @@ namespace VDG.CLI
             }
 
             Console.WriteLine(summaryLine);
+
+            if (diagnosticsSummary != null)
+            {
+                foreach (var page in diagnosticsSummary.Pages.OrderBy(p => p.PageNumber))
+                {
+                    var parts = new List<string>();
+                    if (page.PlannedConnectors.HasValue)
+                    {
+                        parts.Add($"connectors={page.PlannedConnectors.Value}");
+                    }
+                    if (page.ConnectorLimit.HasValue && page.ConnectorLimit.Value > 0)
+                    {
+                        parts.Add($"limit={page.ConnectorLimit.Value}");
+                        if (page.ConnectorOverLimit > 0)
+                        {
+                            parts.Add($"over=+{page.ConnectorOverLimit}");
+                        }
+                    }
+                    if (page.ModuleCount.HasValue)
+                    {
+                        parts.Add($"modules={page.ModuleCount.Value}");
+                    }
+                    if (page.TruncatedNodeCount > 0)
+                    {
+                        parts.Add($"truncated={page.TruncatedNodeCount}");
+                    }
+                    if (page.LaneCrowdingErrors > 0)
+                    {
+                        parts.Add($"laneErrors={page.LaneCrowdingErrors}");
+                    }
+                    else if (page.LaneCrowdingWarnings > 0)
+                    {
+                        parts.Add($"laneWarnings={page.LaneCrowdingWarnings}");
+                    }
+                    if (page.HasPageOverflow)
+                    {
+                        parts.Add("pageOverflow=yes");
+                    }
+                    else if (page.HasPageCrowding)
+                    {
+                        parts.Add("pageCrowding=yes");
+                    }
+                    if (page.HasPartialRender)
+                    {
+                        parts.Add("partial=yes");
+                    }
+
+                    if (parts.Count == 0)
+                    {
+                        continue;
+                    }
+
+                    var severity = "info";
+                    if (page.HasPageOverflow || page.LaneCrowdingErrors > 0)
+                    {
+                        severity = "error";
+                    }
+                    else if (page.ConnectorOverLimit > 0 || page.LaneCrowdingWarnings > 0 || page.HasPageCrowding || page.TruncatedNodeCount > 0 || page.HasPartialRender)
+                    {
+                        severity = "warning";
+                    }
+
+                    Console.WriteLine($"{severity}: page {page.PageNumber} {string.Join(" ", parts)}");
+                }
+
+                if (diagnosticsSummary.SkippedModules.Count > 0)
+                {
+                    var ordered = diagnosticsSummary.SkippedModules
+                        .OrderBy(m => m, StringComparer.OrdinalIgnoreCase)
+                        .ToList();
+                    var preview = string.Join(", ", ordered.Take(5));
+                    var remainder = ordered.Count - 5;
+                    var suffix = remainder > 0 ? $" (+{remainder} more)" : string.Empty;
+                    Console.WriteLine($"warning: skipped modules {preview}{suffix}");
+                }
+            }
         }
 
     }

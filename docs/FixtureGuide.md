@@ -6,6 +6,7 @@ This guide explains how to maintain the rendered VBA fixtures, keep their hashes
 - `hello_world` (callgraph)
 - `cross_module_calls` (callgraph + module-structure)
 - `events_and_forms` (callgraph)
+- `invSys` (callgraph + module-structure + event-wiring + proc-cfg)
 
 ## Normal Check Workflow
 ```powershell
@@ -26,6 +27,7 @@ pwsh ./tools/render-fixture.ps1 -Update -Note "reason for refresh"
 - Appends SHA256 hashes to `plan docs/fixtures_log.md` for traceability.
 - Use descriptive notes (`palette tweak`, `callgraph edge ordering fix`, etc.).
 - Commit updated fixtures + ledger entry in the same change.
+- Limit the run to heavy fixtures (e.g., the full `samples/invSys` export) via `pwsh ./tools/render-fixture.ps1 -FixtureName invSys -Update -Note "pagination tuning"` to shorten local iterations.
 
 ## Planner Summary & Segmentation Metrics
 Every CLI render now prints a planner summary line similar to:
@@ -56,6 +58,7 @@ When `--diag-json` is enabled the same metrics are persisted to `metrics.*` (`mo
 - Golden outputs root: `tests/fixtures/render/`.
 - Temp run outputs: `out/fixtures/` (safe to delete).
 - Metadata snapshot: `plan docs/fixtures_metadata.json` (commit hash + commands).
+- Targeted regeneration: `pwsh ./tools/render-fixture.ps1 -FixtureName <name> [-Update] [-Note "..."]`.
 
 Keep this guide updated as the fixture matrix or regeneration process evolves.
 

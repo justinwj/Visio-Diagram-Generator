@@ -9,7 +9,7 @@ Scope
 - [x] Extend diagnostics to gracefully report overflow/partial outputs instead of throwing exceptions.
 - [x] Add CLI filtering options so users can render subsets or “page through” very large exports.
 - [x] Validate outputs by rendering `samples/invSys` end-to-end and capturing success in CI artifacts.
-- [ ] Define and meet performance/telemetry targets (render completion < 5 minutes, working-set < 500 MB, progress reported every ≤1 s).
+- [x] Define and meet performance/telemetry targets (render completion < 5 minutes, working-set < 500 MB, progress reported every ≤1 s).
 
 Milestone Breakdown
 - **Milestone A – Reliable Multi-Page Layout**
@@ -19,7 +19,7 @@ Milestone Breakdown
 - **Milestone B – Crowding Mitigation & Paging Strategy**
   - [x] Implement automatic lane/module splitting when occupancy exceeds limits.
   - [x] Refine paging planner heuristics (height-aware grouping, connector caps, slack) and add algorithm tests.
-  - [ ] Chunk densely connected modules across additional pages based on connector counts.
+  - [x] Chunk densely connected modules across additional pages based on connector counts.
   - [x] Surface layout decisions in diagnostics metadata.
 - **Milestone C – Diagnostics & Graceful Degradation**
   - [x] Extend diagnostics to flag overflowed modules/pages, log partial outputs, and avoid exceptions.

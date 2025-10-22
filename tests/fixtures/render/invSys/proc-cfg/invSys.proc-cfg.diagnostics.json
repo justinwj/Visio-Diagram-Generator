@@ -1,0 +1,89 @@
+{
+  "Version": "1.0",
+  "Metrics": {
+    "ConnectorCount": 2182,
+    "StraightLineCrossings": 686499,
+    "PageHeight": 0,
+    "UsableHeight": null,
+    "Pages": [
+      {
+        "Index": 1,
+        "Name": "Classes",
+        "Nodes": 136,
+        "Connectors": 114,
+        "SkippedConnectors": 0,
+        "Overflow": false
+      },
+      {
+        "Index": 2,
+        "Name": "Forms",
+        "Nodes": 400,
+        "Connectors": 390,
+        "SkippedConnectors": 0,
+        "Overflow": false
+      },
+      {
+        "Index": 3,
+        "Name": "Modules",
+        "Nodes": 1657,
+        "Connectors": 1665,
+        "SkippedConnectors": 0,
+        "Overflow": true
+      },
+      {
+        "Index": 4,
+        "Name": "Sheets",
+        "Nodes": 15,
+        "Connectors": 13,
+        "SkippedConnectors": 0,
+        "Overflow": false
+      }
+    ],
+    "LanePages": [],
+    "Containers": []
+  },
+  "Issues": [
+    {
+      "Code": "PagePlanConnectors",
+      "Level": "info",
+      "Message": "paging planner connectors exceed limit on page 3: connectors=1665 limit=400",
+      "Lane": null,
+      "Page": 3
+    },
+    {
+      "Code": "LayoutHeightThreshold",
+      "Level": "warning",
+      "Message": "layout height 2652.6in exceeds threshold 11.0in; consider pagination, reducing spacing, or vertical orientation.",
+      "Lane": null,
+      "Page": null
+    },
+    {
+      "Code": "LaneNodeMax",
+      "Level": "warning",
+      "Message": "lane \u0027Forms\u0027 contains 400 nodes (max 12); consider splitting the lane or paginating.",
+      "Lane": "Forms",
+      "Page": null
+    },
+    {
+      "Code": "LaneNodeMax",
+      "Level": "warning",
+      "Message": "lane \u0027Sheets\u0027 contains 15 nodes (max 12); consider splitting the lane or paginating.",
+      "Lane": "Sheets",
+      "Page": null
+    },
+    {
+      "Code": "LaneNodeMax",
+      "Level": "warning",
+      "Message": "lane \u0027Classes\u0027 contains 136 nodes (max 12); consider splitting the lane or paginating.",
+      "Lane": "Classes",
+      "Page": null
+    },
+    {
+      "Code": "LaneNodeMax",
+      "Level": "warning",
+      "Message": "lane \u0027Modules\u0027 contains 1657 nodes (max 12); consider splitting the lane or paginating.",
+      "Lane": "Modules",
+      "Page": null
+    }
+  ]
+}

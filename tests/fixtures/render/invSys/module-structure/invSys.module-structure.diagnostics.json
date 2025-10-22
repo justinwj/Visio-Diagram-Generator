@@ -1,0 +1,51 @@
+{
+  "Version": "1.0",
+  "Metrics": {
+    "ConnectorCount": 0,
+    "StraightLineCrossings": 0,
+    "PageHeight": 0,
+    "UsableHeight": null,
+    "Pages": [
+      {
+        "Index": 1,
+        "Name": "Classes, Forms, Modules, Sheets",
+        "Nodes": 210,
+        "Connectors": 0,
+        "SkippedConnectors": 0,
+        "Overflow": false
+      }
+    ],
+    "LanePages": [],
+    "Containers": []
+  },
+  "Issues": [
+    {
+      "Code": "LayoutHeightThreshold",
+      "Level": "warning",
+      "Message": "layout height 211.0in exceeds threshold 11.0in; consider pagination, reducing spacing, or vertical orientation.",
+      "Lane": null,
+      "Page": null
+    },
+    {
+      "Code": "LaneNodeMax",
+      "Level": "warning",
+      "Message": "lane \u0027Forms\u0027 contains 45 nodes (max 12); consider splitting the lane or paginating.",
+      "Lane": "Forms",
+      "Page": null
+    },
+    {
+      "Code": "LaneNodeMax",
+      "Level": "warning",
+      "Message": "lane \u0027Classes\u0027 contains 31 nodes (max 12); consider splitting the lane or paginating.",
+      "Lane": "Classes",
+      "Page": null
+    },
+    {
+      "Code": "LaneNodeMax",
+      "Level": "warning",
+      "Message": "lane \u0027Modules\u0027 contains 131 nodes (max 12); consider splitting the lane or paginating.",
+      "Lane": "Modules",
+      "Page": null
+    }
+  ]
+}

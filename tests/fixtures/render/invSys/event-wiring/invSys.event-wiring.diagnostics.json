@@ -1,0 +1,44 @@
+{
+  "Version": "1.0",
+  "Metrics": {
+    "ConnectorCount": 29,
+    "StraightLineCrossings": 0,
+    "PageHeight": 0,
+    "UsableHeight": null,
+    "Pages": [
+      {
+        "Index": 1,
+        "Name": "Forms",
+        "Nodes": 49,
+        "Connectors": 29,
+        "SkippedConnectors": 0,
+        "Overflow": true
+      }
+    ],
+    "LanePages": [],
+    "Containers": []
+  },
+  "Issues": [
+    {
+      "Code": "PagePlanOccupancy",
+      "Level": "info",
+      "Message": "paging planner occupancy exceeds limit on page 1: occupancy=100.0% limit=95.0%",
+      "Lane": null,
+      "Page": 1
+    },
+    {
+      "Code": "LayoutHeightThreshold",
+      "Level": "warning",
+      "Message": "layout height 79.8in exceeds threshold 11.0in; consider pagination, reducing spacing, or vertical orientation.",
+      "Lane": null,
+      "Page": null
+    },
+    {
+      "Code": "LaneNodeMax",
+      "Level": "warning",
+      "Message": "lane \u0027Forms\u0027 contains 49 nodes (max 12); consider splitting the lane or paginating.",
+      "Lane": "Forms",
+      "Page": null
+    }
+  ]
+}

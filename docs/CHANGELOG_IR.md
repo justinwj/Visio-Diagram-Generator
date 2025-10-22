@@ -2,6 +2,15 @@
 
 All notable changes to the VBA IR (Intermediate Representation) will be documented in this file.
 
+## Unreleased
+- _No changes yet._
+
+## 0.2 — Hyperlink anchors & enriched metrics
+- Bumped `irSchemaVersion` to `0.2`.
+- Added `source { file, module?, line? }` anchors on modules and procedures to drive hyperlink targets.
+- Expanded `metrics` to include `sloc` alongside existing `lines`/`cyclomatic`, and capture module-level aggregates when available.
+- Clarified schema appendix to reflect the new anchor/metric fields.
+
 ## 0.1 — Initial draft
 - Top-level envelope with `irSchemaVersion` and optional `generator` metadata.
 - Project surface: `project { name, modules[] }`.

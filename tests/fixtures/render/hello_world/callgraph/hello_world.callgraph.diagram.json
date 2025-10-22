@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "1.2",
+  "layout": {
+    "outputMode": "view",
+    "tiers": [
+      "Forms",
+      "Sheets",
+      "Classes",
+      "Modules"
+    ],
+    "spacing": {
+      "horizontal": 1.2,
+      "vertical": 0.6
+    },
+    "page": {
+      "marginIn": 0.5
+    },
+    "containers": {
+      "paddingIn": 0,
+      "cornerIn": 0.12
+    }
+  },
+  "nodes": [
+    {
+      "id": "Module1.Hello",
+      "label": "Module1.Hello",
+      "tier": "Modules",
+      "containerId": "Module1",
+      "metadata": {
+        "code.module": "Module1",
+        "code.proc": "Hello",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Module1.bas",
+        "code.locs.startLine": "4",
+        "code.locs.endLine": "6",
+        "code.source.file": "Module1.bas",
+        "code.source.module": "Module1",
+        "code.source.line": "4",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    }
+  ],
+  "edges": [],
+  "containers": [
+    {
+      "id": "Module1",
+      "label": "Module1",
+      "tier": "Modules",
+      "metadata": {
+        "code.module": "Module1",
+        "code.module.kind": "Module",
+        "code.file": "Module1.bas",
+        "code.source.file": "Module1.bas",
+        "code.source.module": "Module1",
+        "code.source.line": "1",
+        "code.metrics.lines": "7",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1"
+      }
+    }
+  ]
+}

@@ -13,10 +13,11 @@ Commands
 
 - ir2diagram: Convert IR JSON into diagram JSON (Project Call Graph)
   - Usage:
-    - `dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in <ir.json> [--out <diagram.json>]`
+    - `dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in <ir.json> [--out <diagram.json>] [--output-mode <view|print>]`
   - Inputs: IR JSON conforming to `shared/Config/vbaIr.schema.json`
   - Outputs: Diagram JSON to stdout if `--out` omitted; writes to file when provided
   - Exit codes: 0 success; 65 invalid input; 70 internal error
+  - `--output-mode view` (default) captures full procedure-level content for on-screen exploration. `--output-mode print` retains the previous page-oriented behaviour (fixed page height + pagination metadata).
 
 - render: Pipeline helper that runs `vba2json`, `ir2diagram`, and `VDG.CLI`
   - Usage:
@@ -36,6 +37,7 @@ Flags & Behavior
 - `--root <path>` controls how module files are relativised inside the IR; defaults to the `--in` directory.
 - `--infer-metrics` toggles lightweight `metrics.lines` output on modules and procedures. Metrics are omitted by default to keep payloads lean.
 - The vba2json parser is a pragmatic skeleton: it recognizes procedure signatures and simple `Module.Proc` call patterns, and tags dynamic calls (CallByName/Application.Run).
+- `ir2diagram` emits `layout.outputMode` metadata (`view` by default). `VDG.CLI` uses this to differentiate dense on-screen diagrams from print-oriented pagination.
 
 Examples
 ```powershell

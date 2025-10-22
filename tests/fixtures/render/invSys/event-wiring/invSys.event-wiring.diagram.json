@@ -1,6 +1,7 @@
 {
   "schemaVersion": "1.2",
   "layout": {
+    "outputMode": "view",
     "tiers": [
       "Forms",
       "Sheets",
@@ -12,12 +13,7 @@
       "vertical": 0.6
     },
     "page": {
-      "heightIn": 8.5,
-      "marginIn": 0.5,
-      "paginate": true,
-      "plan": {
-        "laneSplitAllowed": true
-      }
+      "marginIn": 0.5
     },
     "containers": {
       "paddingIn": 0,

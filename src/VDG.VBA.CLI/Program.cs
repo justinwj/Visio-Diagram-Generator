@@ -97,9 +97,10 @@ internal static class Program
         Console.Error.WriteLine("    --infer-metrics        Include simple line-count metrics in the IR payload.");
         Console.Error.WriteLine("    Example: dotnet run --project src/VDG.VBA.CLI -- vba2json --in tests/fixtures/vba/cross_module_calls --out out/project.ir.json");
         Console.Error.WriteLine();
-        Console.Error.WriteLine("  ir2diagram --in <ir.json> [--out <diagram.json>] [--mode <callgraph|module-structure|module-callmap|event-wiring|proc-cfg>] [--include-unknown] [--timeout <ms>] [--strict-validate] [--summary-log <csv>]");
+        Console.Error.WriteLine("  ir2diagram --in <ir.json> [--out <diagram.json>] [--mode <callgraph|module-structure|module-callmap|event-wiring|proc-cfg>] [--output-mode <view|print>] [--include-unknown] [--timeout <ms>] [--strict-validate] [--summary-log <csv>]");
         Console.Error.WriteLine("    Converts IR JSON into Diagram JSON (schema 1.2). Defaults to callgraph mode with tiered lanes.");
         Console.Error.WriteLine("    --include-unknown      Emit sentinel edges for '~unknown' dynamic calls.");
+        Console.Error.WriteLine("    --output-mode <view|print>  Emit layout.outputMode metadata (default view).");
         Console.Error.WriteLine("    --timeout <ms>         Abort conversion if processing exceeds the provided timeout in milliseconds.");
         Console.Error.WriteLine("    --strict-validate      Enforce strict IR invariants before conversion (fails fast on issues).");
         Console.Error.WriteLine("    --summary-log <csv>    Write hyperlink summary (Name/File/Module/Lines) to the specified CSV alongside console output.");
@@ -299,7 +300,7 @@ internal static class Program
 
     private static int RunIr2Diagram(string[] args)
     {
-        string? input = null; string? output = null; string mode = "callgraph"; bool includeUnknown = false; int? timeoutMs = null; bool strictValidate = false; string? summaryLogPath = null;
+        string? input = null; string? output = null; string mode = "callgraph"; bool includeUnknown = false; int? timeoutMs = null; bool strictValidate = false; string? summaryLogPath = null; string outputMode = "view";
         for (int i = 0; i < args.Length; i++)
         {
             var a = args[i];
@@ -317,10 +318,20 @@ internal static class Program
             { strictValidate = true; }
             else if (string.Equals(a, "--summary-log", StringComparison.OrdinalIgnoreCase))
             { if (i + 1 >= args.Length) throw new UsageException("--summary-log requires a file path."); summaryLogPath = args[++i]; }
+            else if (string.Equals(a, "--output-mode", StringComparison.OrdinalIgnoreCase))
+            { if (i + 1 >= args.Length) throw new UsageException("--output-mode requires view|print."); outputMode = args[++i]; }
             else throw new UsageException($"Unknown option '{a}' for ir2diagram.");
         }
         if (string.IsNullOrWhiteSpace(input)) throw new UsageException("ir2diagram requires --in <ir.json>.");
         if (!File.Exists(input!)) throw new UsageException($"IR file not found: {input}");
+
+        outputMode = string.IsNullOrWhiteSpace(outputMode) ? "view" : outputMode.Trim();
+        if (!outputMode.Equals("view", StringComparison.OrdinalIgnoreCase) &&
+            !outputMode.Equals("print", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new UsageException("--output-mode must be 'view' or 'print'.");
+        }
+        var normalizedOutputMode = outputMode.Equals("print", StringComparison.OrdinalIgnoreCase) ? "print" : "view";
 
         IrRoot root;
         try
@@ -879,21 +890,31 @@ internal static class Program
             }
         }
 
-        object pageConfig = mode.Equals("event-wiring", StringComparison.OrdinalIgnoreCase)
-            ? new
-            {
-                heightIn = 8.5,
-                marginIn = 0.5,
-                paginate = true,
-                plan = new { laneSplitAllowed = true }
-            }
-            : new { heightIn = 8.5, marginIn = 0.5 };
+        bool isPrintMode = normalizedOutputMode.Equals("print", StringComparison.OrdinalIgnoreCase);
+        object pageConfig;
+        if (isPrintMode)
+        {
+            pageConfig = mode.Equals("event-wiring", StringComparison.OrdinalIgnoreCase)
+                ? new
+                {
+                    heightIn = 8.5,
+                    marginIn = 0.5,
+                    paginate = true,
+                    plan = new { laneSplitAllowed = true }
+                }
+                : new { heightIn = 8.5, marginIn = 0.5 };
+        }
+        else
+        {
+            pageConfig = new { marginIn = 0.5 };
+        }
 
         var diagram = new
         {
             schemaVersion = "1.2",
             layout = new
             {
+                outputMode = normalizedOutputMode,
                 tiers,
                 spacing = new { horizontal = 1.2, vertical = 0.6 },
                 page = pageConfig,

@@ -61,5 +61,9 @@ namespace VDG.CLI
             var diagnostics = EmitDiagnostics(model, layout, null, null, pagePlans, options, metrics, stats, dataset, filteredModules);
             return (stats, diagnostics);
         }
+
+        internal static bool ShouldPaginateForTests(DiagramModel model, LayoutResult layout) => ShouldPaginate(model, layout);
+
+        internal static DiagramModel LoadDiagramModelForTests(string inputPath) => LoadDiagramModel(inputPath);
     }
 }

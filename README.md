@@ -76,6 +76,8 @@ CI Notes
   - `--spacing-v <inches>` vertical spacing between nodes
   - `--page-width <inches>` / `--page-height <inches>` / `--page-margin <inches>`
   - `--paginate <bool>` (reserved for future pagination)
+  - Output mode:
+    - `--output-mode <view|print>` (default `view`) – dense view-mode auto-sizes the canvas and keeps every procedure visible; print mode retains fixed page heights and pagination heuristics for paper output.
   - Filtering helpers for large renders:
     - `--modules <id id ...>` include only the provided module identifiers (space or comma separated). Handy for debugging sub-systems without touching the source JSON. Prefix with `include` or `exclude` to be explicit (e.g. `--modules include Alpha Beta`, `--modules exclude LegacyModule`). Repeat the flag to mix include and exclude semantics.
     - `--max-pages <n>` keep only the first `n` planned pages. The CLI trims segments beyond the limit, marks deferred modules in diagnostics, and re-runs pagination on the filtered dataset.
@@ -211,6 +213,8 @@ The pagination summary printed by the CLI and the associated diagnostics metrics
    - `--mode module-structure`: procedures grouped in module containers; no edges
    - `--mode module-callmap`: module-level call aggregation edges (N call(s))
    - `--mode event-wiring`: control events → handler procedures for Form modules
+ - Output options:
+   - `--output-mode <view|print>` (default `view`) – view mode captures full procedure-level detail for on-screen exploration; print mode keeps the legacy fixed-height pagination.
  - One-shot render convenience:
    - `dotnet run --project src/VDG.VBA.CLI -- render --in <folder> --out out/diagram.vsdx --mode callgraph`
    - The `render` command auto-discovers `VDG.CLI.exe` (or use `--cli` or `VDG_CLI` env).

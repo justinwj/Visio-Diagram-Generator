@@ -3,8 +3,8 @@
   "Metrics": {
     "ConnectorCount": 1,
     "StraightLineCrossings": 0,
-    "PageHeight": 8.5,
-    "UsableHeight": 7.5,
+    "PageHeight": 0,
+    "UsableHeight": null,
     "Pages": [
       {
         "Index": 1,
@@ -15,30 +15,8 @@
         "Overflow": true
       }
     ],
-    "LanePages": [
-      {
-        "Tier": "Modules",
-        "Page": 1,
-        "OccupancyRatio": 0.34666666666666668,
-        "Nodes": 2
-      }
-    ],
-    "Containers": [
-      {
-        "Id": "Module1",
-        "Tier": "Modules",
-        "Page": 1,
-        "OccupancyRatio": 0.13333333333333333,
-        "Nodes": 1
-      },
-      {
-        "Id": "Module2",
-        "Tier": "Modules",
-        "Page": 1,
-        "OccupancyRatio": 0.13333333333333333,
-        "Nodes": 1
-      }
-    ]
+    "LanePages": [],
+    "Containers": []
   },
   "Issues": [
     {

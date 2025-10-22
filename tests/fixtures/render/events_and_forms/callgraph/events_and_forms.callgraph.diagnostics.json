@@ -3,8 +3,8 @@
   "Metrics": {
     "ConnectorCount": 0,
     "StraightLineCrossings": 0,
-    "PageHeight": 8.5,
-    "UsableHeight": 7.5,
+    "PageHeight": 0,
+    "UsableHeight": null,
     "Pages": [
       {
         "Index": 1,
@@ -15,23 +15,8 @@
         "Overflow": true
       }
     ],
-    "LanePages": [
-      {
-        "Tier": "Forms",
-        "Page": 1,
-        "OccupancyRatio": 0.13333333333333333,
-        "Nodes": 1
-      }
-    ],
-    "Containers": [
-      {
-        "Id": "Form1",
-        "Tier": "Forms",
-        "Page": 1,
-        "OccupancyRatio": 0.13333333333333333,
-        "Nodes": 1
-      }
-    ]
+    "LanePages": [],
+    "Containers": []
   },
   "Issues": [
     {

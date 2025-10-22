@@ -929,6 +929,11 @@ namespace VDG.CLI
 
             if (dto.Layout != null)
             {
+                if (!string.IsNullOrWhiteSpace(dto.Layout.OutputMode))
+                {
+                    model.Metadata["layout.outputMode"] = dto.Layout.OutputMode!.Trim();
+                }
+
                 if (!string.IsNullOrWhiteSpace(dto.Layout.Orientation))
                 {
                     model.Metadata["layout.orientation"] = dto.Layout.Orientation!.Trim();
@@ -2372,6 +2377,8 @@ namespace VDG.CLI
             var tiers = GetOrderedTiers(model);
             var tiersSet = new HashSet<string>(tiers, StringComparer.OrdinalIgnoreCase);
             var nodeMap = BuildNodeMap(model);
+            var outputMode = GetOutputMode(model);
+            var isViewMode = string.Equals(outputMode, "view", StringComparison.OrdinalIgnoreCase);
 
             string GetTier(VDG.Core.Models.Node n)
             {
@@ -3795,6 +3802,8 @@ namespace VDG.CLI
             if (pageInfo == null) throw new COMException("Visio page metadata was not initialised.");
             dynamic visioPage = pageInfo.Page ?? throw new COMException("Visio page was not created.");
             var nodeMap = BuildNodeMap(model);
+            var outputMode = GetOutputMode(model);
+            var isViewMode = string.Equals(outputMode, "view", StringComparison.OrdinalIgnoreCase);
 
             var (minLeft, minBottom, maxRight, maxTop) = ComputeLayoutBounds(layout);
             var margin = GetPageMargin(model) ?? Margin;
@@ -3804,8 +3813,8 @@ namespace VDG.CLI
             var pageWidth = Math.Max(1.0, (maxRight - minLeft) + (margin * 2));
             var pageHeight = Math.Max(1.0, (maxTop - minBottom) + (margin * 2) + titleHeight);
 
-            var pageWidthOverride = GetPageWidth(model);
-            var pageHeightOverride = GetPageHeight(model);
+            var pageWidthOverride = isViewMode ? (double?)null : GetPageWidth(model);
+            var pageHeightOverride = isViewMode ? (double?)null : GetPageHeight(model);
             if (pageWidthOverride.HasValue) pageWidth = pageWidthOverride.Value;
             if (pageHeightOverride.HasValue) pageHeight = pageHeightOverride.Value;
 
@@ -4336,6 +4345,17 @@ namespace VDG.CLI
             return null;
         }
 
+        private static string GetOutputMode(DiagramModel model)
+        {
+            if (model.Metadata.TryGetValue("layout.outputMode", out var mode) && !string.IsNullOrWhiteSpace(mode))
+            {
+                var normalized = mode.Trim();
+                if (string.Equals(normalized, "view", StringComparison.OrdinalIgnoreCase)) return "view";
+                if (string.Equals(normalized, "print", StringComparison.OrdinalIgnoreCase)) return "print";
+            }
+            return "print";
+        }
+
         private static double? GetPageHeight(DiagramModel model)
         {
             if (model.Metadata.TryGetValue("layout.page.heightIn", out var h) &&
@@ -4492,6 +4512,9 @@ namespace VDG.CLI
 
         private sealed class LayoutDto
         {
+            [JsonPropertyName("outputMode")]
+            public string? OutputMode { get; set; }
+
             [JsonPropertyName("orientation")]
             public string? Orientation { get; set; }
 
@@ -4879,6 +4902,11 @@ namespace VDG.CLI
 
         private static bool ShouldPaginate(DiagramModel model, LayoutResult layout)
         {
+            if (string.Equals(GetOutputMode(model), "view", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
             // default true if height exceeds usable height when page size provided; otherwise false
             var height = (ComputeLayoutBounds(layout).maxTop - ComputeLayoutBounds(layout).minBottom);
             var margin = GetPageMargin(model) ?? Margin;

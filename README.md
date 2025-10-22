@@ -241,3 +241,4 @@ Issues and pull requests are welcome. Please run `dotnet test` before submitting
 3. Review the terminology in `docs/Glossary.md` so you recognise project-specific acronyms during reviews.
 
 > Automated guardrails: the **PR Checklist Enforcement** workflow blocks merges unless all IR Impact items are checked or a justified exception rationale is provided.
+

@@ -15,7 +15,7 @@ Milestone Breakdown
 - **Milestone A – Reliable Multi-Page Layout**
   - [x] Audit `VDG.CLI` paging branch; ensure connectors never target null pages.
   - [x] Create/track Visio page objects ahead of placement; update `DrawConnectorsPaged` & `DrawMultiPage`.
-  - [ ] Add unit/CLI tests covering multi-page traversal.
+  - [x] Add unit/CLI tests covering multi-page traversal.
 - **Milestone B – Crowding Mitigation & Paging Strategy**
   - [x] Implement automatic lane/module splitting when occupancy exceeds limits.
   - [x] Refine paging planner heuristics (height-aware grouping, connector caps, slack) and add algorithm tests.

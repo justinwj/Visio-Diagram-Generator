@@ -23,6 +23,9 @@ Field meanings:
 | `pages` | Page plans emitted by the paging algorithm. |
 | `avgModules/page`, `avgConnectors/page` | Useful density metrics. |
 | `maxOccupancy`, `maxConnectors` | Peak page utilisation and connectors per page. |
+| `overflowPages`, `overflowLanes`, `overflowContainers` | Added when diagnostics detect overflow situations. |
+| `crowdedPages`, `crowdedLanes` | Added when pages/lanes breach the warning threshold. |
+| `partialRender` | Indicates the run completed with mitigated overflow (render succeeded but exceeded hard thresholds). |
 
 ## JSON Diagnostics
 
@@ -64,3 +67,4 @@ Adjusting the thresholds:
 
 Tune these constants cautiously and always re-run `./tools/render-fixture.ps1` to
 refresh baselines after intentional planner changes.
+

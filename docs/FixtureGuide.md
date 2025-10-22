@@ -60,3 +60,4 @@ When `--diag-json` is enabled the same metrics are persisted to `metrics.*` (`mo
 Keep this guide updated as the fixture matrix or regeneration process evolves.
 
 Baseline golden fixture updates are self-reviewed and logged by the project maintainer. Any changes must be intentional and annotated with a sanitized note via the update script.
+

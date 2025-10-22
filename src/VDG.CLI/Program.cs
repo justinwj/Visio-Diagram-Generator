@@ -98,6 +98,12 @@ namespace VDG.CLI
             public double PlannerAverageConnectorsPerPage { get; set; }
             public double PlannerMaxOccupancyPercent { get; set; }
             public int PlannerMaxConnectorsPerPage { get; set; }
+            public int PageOverflowCount { get; set; }
+            public int PageCrowdingCount { get; set; }
+            public int LaneOverflowCount { get; set; }
+            public int LaneCrowdingCount { get; set; }
+            public int ContainerOverflowCount { get; set; }
+            public bool PartialRender { get; set; }
             public List<PageMetric> Pages { get; set; } = new List<PageMetric>();
             public List<LanePageMetric> LanePages { get; set; } = new List<LanePageMetric>();
             public List<ContainerPageMetric> Containers { get; set; } = new List<ContainerPageMetric>();
@@ -416,8 +422,10 @@ namespace VDG.CLI
                     }
                 }
                 var nodePageAssignments = BuildNodePageAssignments(model, pagePlans, plannerBuild.NodeSegmentOverrides);
-                var plannerSummary = EmitPlannerSummary(pagePlans, plannerBuild.Metrics);
-                var diagnosticsRank = EmitDiagnostics(model, layout, diagHeightOverride, diagLaneMaxOverride, pagePlans, pagingOptions, plannerBuild.Metrics, plannerSummary);
+                var plannerStats = BuildPlannerSummaryStats(pagePlans);
+                var diagnosticsSummary = EmitDiagnostics(model, layout, diagHeightOverride, diagLaneMaxOverride, pagePlans, pagingOptions, plannerBuild.Metrics, plannerStats);
+                PrintPlannerSummary(plannerStats, plannerBuild.Metrics, diagnosticsSummary);
+                var diagnosticsRank = diagnosticsSummary.Rank;
 
                 var failLevelEnv = Environment.GetEnvironmentVariable("VDG_DIAG_FAIL_LEVEL");
                 if (string.IsNullOrWhiteSpace(failLevelEnv))
@@ -908,7 +916,7 @@ namespace VDG.CLI
             return DiagRank(level) >= DiagRank(min);
         }
 
-        private static int EmitDiagnostics(
+        private static DiagnosticsSummary EmitDiagnostics(
             DiagramModel model,
             LayoutResult layout,
             double? pageHeightOverride = null,
@@ -918,6 +926,7 @@ namespace VDG.CLI
             PlannerMetrics? plannerMetrics = null,
             PlannerSummaryStats? plannerSummary = null)
         {
+            var summary = new DiagnosticsSummary();
             int highestRank = 0;
 
             // Diagnostics level gating (info|warning|error); default info
@@ -1041,7 +1050,11 @@ namespace VDG.CLI
             {
                 if (bool.TryParse(enabledRaw, out var b)) enabled = b;
             }
-            if (!enabled) return highestRank;
+            if (!enabled)
+            {
+                summary.Rank = highestRank;
+                return summary;
+            }
 
             // M3: minimal routing diagnostics
             var routeMode = (model.Metadata.TryGetValue("layout.routing.mode", out var rm) && !string.IsNullOrWhiteSpace(rm)) ? rm.Trim() : "orthogonal";
@@ -1227,12 +1240,22 @@ namespace VDG.CLI
                                 var severity = degradeToWarning ? "warning" : "error";
                                 Emit(severity, msg);
                                 AddIssue("LaneCrowding", severity, msg, lane: tierName, page: page + 1);
+                                if (degradeToWarning)
+                                {
+                                    summary.LaneCrowdingCount++;
+                                    summary.PartialRender = true;
+                                }
+                                else
+                                {
+                                    summary.LaneOverflowCount++;
+                                }
                             }
                             else if (ratio >= laneWarn)
                             {
                                 var msg = $"lane crowded: lane='{tierName}' page={page + 1} occupancy={(ratio * 100):F0}% nodes={count} usable={usable:F2}in";
                                 Emit("warning", msg);
                                 AddIssue("LaneCrowding", "warning", msg, lane: tierName, page: page + 1);
+                                summary.LaneCrowdingCount++;
                             }
 
                             // update per-page maximum occupancy ratio across lanes
@@ -1261,12 +1284,15 @@ namespace VDG.CLI
                                 var msg = $"page overflow: page={page + 1} occupancy={pct:F0}% (usable {usable:F2}in); top: [{tops}]";
                                 Emit("error", msg);
                                 AddIssue("PageOverflow", "error", msg, page: page + 1);
+                                summary.PageOverflowCount++;
+                                summary.PartialRender = true;
                             }
                             else if (r >= pageWarn)
                             {
                                 var msg = $"page crowded: page={page + 1} occupancy={pct:F0}% (usable {usable:F2}in); top: [{tops}]";
                                 Emit("warning", msg);
                                 AddIssue("PageCrowding", "warning", msg, page: page + 1);
+                                summary.PageCrowdingCount++;
                             }
                         }
                     }
@@ -1639,6 +1665,7 @@ namespace VDG.CLI
                                 var msg = $"sub-container '{c.Id}' overflows lane '{ctier}'.";
                                 Emit("warning", msg);
                                 AddIssue("ContainerOverflow", "warning", msg, lane: ctier, page: 1);
+                                summary.ContainerOverflowCount++;
                             }
 
                             // Container occupancy ratio vs usable page height (crowding)
@@ -1739,6 +1766,12 @@ namespace VDG.CLI
                         payload.Metrics.PlannerMaxOccupancyPercent = plannerSummary.MaxOccupancy;
                         payload.Metrics.PlannerMaxConnectorsPerPage = plannerSummary.MaxConnectors;
                     }
+                    payload.Metrics.PageOverflowCount = summary.PageOverflowCount;
+                    payload.Metrics.PageCrowdingCount = summary.PageCrowdingCount;
+                    payload.Metrics.LaneOverflowCount = summary.LaneOverflowCount;
+                    payload.Metrics.LaneCrowdingCount = summary.LaneCrowdingCount;
+                    payload.Metrics.ContainerOverflowCount = summary.ContainerOverflowCount;
+                    payload.Metrics.PartialRender = summary.PartialRender;
 
                     // Straight-line crossings
                     try
@@ -1875,22 +1908,23 @@ namespace VDG.CLI
                     }
 
                     // Attach gated issues collected during diagnostics
-                      if (gatedIssues.Count > 0)
-                      {
-                          payload.Issues.AddRange(gatedIssues);
-                      }
+                    if (gatedIssues.Count > 0)
+                    {
+                        payload.Issues.AddRange(gatedIssues);
+                    }
 
-                      var json = System.Text.Json.JsonSerializer.Serialize(payload, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
-                      var target = string.IsNullOrWhiteSpace(outPath) ? Path.Combine("out", "diagnostics.json") : Path.GetFullPath(outPath!);
-                      var dir = Path.GetDirectoryName(target);
-                      if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-                      File.WriteAllText(target, json);
-                      Emit("info", $"diagnostics JSON written: {target}");
+                    var json = System.Text.Json.JsonSerializer.Serialize(payload, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+                    var target = string.IsNullOrWhiteSpace(outPath) ? Path.Combine("out", "diagnostics.json") : Path.GetFullPath(outPath!);
+                    var dir = Path.GetDirectoryName(target);
+                    if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+                    File.WriteAllText(target, json);
+                    Emit("info", $"diagnostics JSON written: {target}");
                   }
               }
               catch { }
 
-              return highestRank;
+            summary.Rank = highestRank;
+            return summary;
         }
 
         private static double Orientation(double ax, double ay, double bx, double by, double cx, double cy)
@@ -2108,6 +2142,21 @@ namespace VDG.CLI
             public double AverageConnectorsPerPage { get; set; }
             public double MaxOccupancy { get; set; }
             public int MaxConnectors { get; set; }
+        }
+
+        internal sealed class DiagnosticsSummary
+        {
+            public int Rank { get; set; }
+            public int PageOverflowCount { get; set; }
+            public int PageCrowdingCount { get; set; }
+            public int LaneOverflowCount { get; set; }
+            public int LaneCrowdingCount { get; set; }
+            public int ContainerOverflowCount { get; set; }
+            public bool PartialRender { get; set; }
+            public bool HasOverflow =>
+                PageOverflowCount > 0 ||
+                LaneOverflowCount > 0 ||
+                ContainerOverflowCount > 0;
         }
 
         private sealed class PlannerBuildResult
@@ -4921,7 +4970,7 @@ namespace VDG.CLI
             }
         }
 
-        private static PlannerSummaryStats EmitPlannerSummary(PagePlan[]? pagePlans, PlannerMetrics? segmentationMetrics)
+        private static PlannerSummaryStats BuildPlannerSummaryStats(PagePlan[]? pagePlans)
         {
             int pageCount = 0;
             int totalModules = 0;
@@ -4946,28 +4995,6 @@ namespace VDG.CLI
             double avgModules = pageCount > 0 ? totalModules / (double)pageCount : 0.0;
             double avgConnectors = pageCount > 0 ? totalConnectors / (double)pageCount : 0.0;
 
-            var modulesValue = segmentationMetrics?.OriginalModuleCount ?? 0;
-            var segmentsValue = segmentationMetrics?.SegmentCount ?? 0;
-            var splitModulesValue = segmentationMetrics?.SplitModuleCount ?? 0;
-            var avgSegmentsPerModule = segmentationMetrics?.AverageSegmentsPerModule ?? 0.0;
-            var deltaText = FormatDelta(segmentsValue - modulesValue);
-
-            var summaryLine = string.Format(
-                CultureInfo.InvariantCulture,
-                "info: planner summary modules={0} segments={1} delta={2} splitModules={3} avgSegments/module={4:F2} pages={5} avgModules/page={6:F1} avgConnectors/page={7:F1} maxOccupancy={8:F1}% maxConnectors={9}",
-                modulesValue,
-                segmentsValue,
-                deltaText,
-                splitModulesValue,
-                avgSegmentsPerModule,
-                pageCount,
-                avgModules,
-                avgConnectors,
-                maxOccupancy,
-                maxConnectors);
-
-            Console.WriteLine(summaryLine);
-
             return new PlannerSummaryStats
             {
                 PageCount = pageCount,
@@ -4982,7 +5009,72 @@ namespace VDG.CLI
             ? string.Format(CultureInfo.InvariantCulture, "+{0}", delta)
             : delta.ToString(CultureInfo.InvariantCulture);
 
+        private static void PrintPlannerSummary(PlannerSummaryStats stats, PlannerMetrics? segmentationMetrics, DiagnosticsSummary? diagnosticsSummary)
+        {
+            var modulesValue = segmentationMetrics?.OriginalModuleCount ?? 0;
+            var segmentsValue = segmentationMetrics?.SegmentCount ?? modulesValue;
+            var splitModulesValue = segmentationMetrics?.SplitModuleCount ?? 0;
+            var avgSegmentsPerModule = segmentationMetrics?.AverageSegmentsPerModule ?? (modulesValue > 0 ? segmentsValue / (double)modulesValue : 0.0);
+            var deltaText = FormatDelta(segmentsValue - modulesValue);
+
+            var summaryLine = string.Format(
+                CultureInfo.InvariantCulture,
+                "info: planner summary modules={0} segments={1} delta={2} splitModules={3} avgSegments/module={4:F2} pages={5} avgModules/page={6:F1} avgConnectors/page={7:F1} maxOccupancy={8:F1}% maxConnectors={9}",
+                modulesValue,
+                segmentsValue,
+                deltaText,
+                splitModulesValue,
+                avgSegmentsPerModule,
+                stats.PageCount,
+                stats.AverageModulesPerPage,
+                stats.AverageConnectorsPerPage,
+                stats.MaxOccupancy,
+                stats.MaxConnectors);
+
+            if (diagnosticsSummary != null)
+            {
+                var annotations = new List<string>();
+                if (diagnosticsSummary.PageOverflowCount > 0)
+                {
+                    annotations.Add($"overflowPages={diagnosticsSummary.PageOverflowCount}");
+                }
+                if (diagnosticsSummary.LaneOverflowCount > 0)
+                {
+                    annotations.Add($"overflowLanes={diagnosticsSummary.LaneOverflowCount}");
+                }
+                if (diagnosticsSummary.ContainerOverflowCount > 0)
+                {
+                    annotations.Add($"overflowContainers={diagnosticsSummary.ContainerOverflowCount}");
+                }
+                if (diagnosticsSummary.PageCrowdingCount > 0)
+                {
+                    annotations.Add($"crowdedPages={diagnosticsSummary.PageCrowdingCount}");
+                }
+                if (diagnosticsSummary.LaneCrowdingCount > 0)
+                {
+                    annotations.Add($"crowdedLanes={diagnosticsSummary.LaneCrowdingCount}");
+                }
+                if (diagnosticsSummary.PartialRender)
+                {
+                    annotations.Add("partialRender=yes");
+                }
+
+                if (annotations.Count > 0)
+                {
+                    summaryLine = $"{summaryLine} {string.Join(" ", annotations)}";
+                }
+            }
+
+            Console.WriteLine(summaryLine);
+        }
+
     }
 }
+
+
+
+
+
+
 
 

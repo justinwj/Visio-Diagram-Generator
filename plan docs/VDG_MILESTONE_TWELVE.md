@@ -1,7 +1,7 @@
 **VDG MILESTONE TWELVE - Scalable Multi-Page Visio Export & Diagnostics**
 
 Goal
-- [x] Achieve reliable end-to-end `.vsdx` rendering for large VBA datasets (e.g., full `samples/invSys`) without crashes or unusable 99% occupancy layouts.
+- [ ] Achieve reliable end-to-end `.vsdx` rendering for large VBA datasets (e.g., full `samples/invSys`) without crashes or unusable 99% occupancy layouts.
 
 Scope
 - [x] Harden multi-page layout so Visio pages are created and tracked before any shape/connector placement.

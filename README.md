@@ -8,7 +8,8 @@ CI Notes
 - The main workflow runs unit tests across projects and validates Diagram JSON against schema 1.2.
 - A validation matrix job runs `ir2diagram` in both default and `--strict-validate` modes to prevent regressions.
 - A perf-smoke job emits timing and counts for IR→Diagram conversions and uploads metrics (`out/perf/perf.json`).
- - The perf-smoke job writes a Job Summary with key metrics (vba2json/ir2diagram ms, nodes, edges, dynamicSkipped/dynamicIncluded). Open any workflow run and click the “perf-smoke” job to view the summary and download artifacts.
+  - The perf-smoke job writes a Job Summary with key metrics (vba2json/ir2diagram ms, nodes, edges, dynamicSkipped/dynamicIncluded). Open any workflow run and click the “perf-smoke” job to view the summary and download artifacts.
+- Dedicated `render-fixtures` and `invsys-fixture` jobs run `tools/render-fixture.ps1` (full matrix and `-FixtureName invSys`, respectively) to guarantee fixture/diagnostics drift is caught before merge.
 
 ## What You Get
 - `VDG.CLI` – Windows CLI (`net48`) that opens Visio via COM and renders diagrams described in JSON.

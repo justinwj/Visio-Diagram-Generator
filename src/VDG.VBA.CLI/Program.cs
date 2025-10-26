@@ -906,7 +906,20 @@ internal static class Program
         }
         else
         {
-            pageConfig = new { marginIn = 0.5 };
+            pageConfig = new
+            {
+                widthIn = 13.0,
+                heightIn = 8.5,
+                marginIn = 0.5,
+                paginate = true,
+                plan = new
+                {
+                    laneSplitAllowed = true,
+                    maxConnectors = 350,
+                    maxModulesPerPage = 10,
+                    heightSlackPercent = 0.2
+                }
+            };
         }
 
         var diagram = new

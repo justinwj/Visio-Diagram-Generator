@@ -35,6 +35,7 @@ Here’s a clear recap of the F# / C# split—the architectural guardrail design
 - **Pure Data Hand-off:**
   - C# CLI sends IR and options (input), F# returns a typed `LayoutPlan`/`PagePlan` (output).
   - Layout plan is the authoritative source—C# never re-computes layout or paging, only renders in the right order.
+  - Paging diagnostics, per-page metadata, and overflow stats originate exclusively from the F# `LayoutPlan.Pages` payload, keeping analysis logic on the algorithms side.
 
 ***
 

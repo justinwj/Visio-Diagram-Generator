@@ -42,6 +42,7 @@ Primary Work Streams
 - [ ] Provide troubleshooting notes for missing connectors/nodes (e.g., diagnostics warnings, metadata overrides).
 - [ ] Capture the F#/C# responsibility split from `plan docs/high_level_plan.md` inside this milestone’s README/brief so future contributors route all layout math through the algorithms layer.
 - [ ] Produce a “connector debugging” section that explains how to trace a routed edge from diagnostics → layout JSON → Visio polyline.
+- [x] Document that paging diagnostics and CLI page summaries now derive exclusively from the F# `LayoutPlan.PagePlan`, ensuring C# acts purely as a consumer.
 
 Acceptance Criteria
 - Running the CLI with `layout.outputMode=view` produces diagrams where all modules, forms, and procedures (including `frmItemSearch`) are visible with connectors intact.

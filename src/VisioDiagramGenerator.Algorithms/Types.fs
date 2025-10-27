@@ -21,6 +21,61 @@ type EdgeRoute =
     { Id: string
       Points: PointF array }
 
+/// Axis-aligned rectangle helper used for container bounds.
+[<CLIMutable>]
+type RectangleF =
+    { Left: float32
+      Bottom: float32
+      Width: float32
+      Height: float32 }
+
+/// Captures visible container geometry emitted by the layout planner.
+[<CLIMutable>]
+type ContainerLayout =
+    { Id: string
+      Label: string
+      Tier: string
+      Bounds: RectangleF
+      VisibleNodes: int
+      OverflowCount: int }
+
+/// Aggregated overflow metadata for nodes trimmed from a container/module.
+[<CLIMutable>]
+type LayoutOverflow =
+    { ContainerId: string
+      HiddenNodeCount: int }
+
+/// Aggregated statistics for a computed layout.
+[<CLIMutable>]
+type LayoutStats =
+    { NodeCount: int
+      ConnectorCount: int
+      ModuleCount: int
+      ContainerCount: int
+      ModuleIds: string array
+      Overflows: LayoutOverflow array }
+
+/// Planner output describing how modules map to a physical page.
+[<CLIMutable>]
+type PagePlan =
+    { PageIndex: int
+      Modules: string array
+      Connectors: int
+      Nodes: int
+      Occupancy: float }
+
+/// High-level layout plan returned by the algorithms layer.
+[<CLIMutable>]
+type LayoutPlan =
+    { OutputMode: string
+      CanvasWidth: float32
+      CanvasHeight: float32
+      Nodes: NodeLayout array
+      Containers: ContainerLayout array
+      Edges: EdgeRoute array
+      Pages: PagePlan array
+      Stats: LayoutStats }
+
 /// The result of a layout operation, containing layouts for nodes and edges.
 [<CLIMutable>]
 type LayoutResult =

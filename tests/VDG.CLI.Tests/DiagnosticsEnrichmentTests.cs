@@ -16,6 +16,7 @@ namespace VDG.CLI.Tests
         public void Diagnostics_report_connector_overlimit_and_truncations()
         {
             var model = new DiagramModel();
+            model.Metadata["layout.outputMode"] = "view";
             model.Metadata["layout.page.heightIn"] = "5.0";
             model.Metadata["layout.page.marginIn"] = "0.5";
             model.Metadata["layout.page.paginate"] = "true";
@@ -47,6 +48,26 @@ namespace VDG.CLI.Tests
                 Edges = Array.Empty<EdgeRoute>()
             };
 
+            var plan = new LayoutPlan
+            {
+                OutputMode = "view",
+                CanvasWidth = 6f,
+                CanvasHeight = 4f,
+                Nodes = layout.Nodes,
+                Edges = layout.Edges,
+                Containers = Array.Empty<ContainerLayout>(),
+                Pages = Array.Empty<PagePlan>(),
+                Stats = new LayoutStats
+                {
+                    NodeCount = layout.Nodes.Length,
+                    ConnectorCount = model.Edges.Count,
+                    ModuleCount = 1,
+                    ContainerCount = 0,
+                    ModuleIds = new[] { "ModuleA" },
+                    Overflows = Array.Empty<LayoutOverflow>()
+                }
+            };
+
             var (dataset, _, metrics) = Program.BuildPagingDatasetForTests(model, layout);
             var primaryModule = Assert.Single(dataset.Modules);
 
@@ -73,7 +94,7 @@ namespace VDG.CLI.Tests
                 HeightSlackPercent = 0.0
             };
 
-            var (_, diagnostics) = Program.RunDiagnosticsForTests(model, layout, pagePlans, options, metrics, dataset);
+            var (_, diagnostics) = Program.RunDiagnosticsForTests(model, layout, pagePlans, options, metrics, dataset, layoutPlan: plan);
 
             Assert.Equal(1, diagnostics.ConnectorOverLimitPageCount);
             Assert.True(diagnostics.PartialRender);
@@ -99,6 +120,12 @@ namespace VDG.CLI.Tests
             Assert.Contains("connectorOverLimitPages=1", summaryText);
             Assert.Contains("page 1", summaryText);
             Assert.Contains("truncated=", summaryText);
+            Assert.Contains("outputMode=view", summaryText);
+            Assert.Equal((float?)plan.CanvasWidth, diagnostics.LayoutCanvasWidth);
+            Assert.Equal((float?)plan.CanvasHeight, diagnostics.LayoutCanvasHeight);
+            Assert.Equal(plan.Stats.NodeCount, diagnostics.LayoutNodeCount);
+            Assert.Equal(plan.Stats.ModuleCount, diagnostics.LayoutModuleCount);
+            Assert.Equal(plan.Stats.ContainerCount, diagnostics.LayoutContainerCount);
 
             var tempJson = Path.Combine(Path.GetTempPath(), $"vdg_diag_{Guid.NewGuid():N}.json");
             model.Metadata["layout.diagnostics.emitJson"] = "true";
@@ -106,11 +133,17 @@ namespace VDG.CLI.Tests
 
             try
             {
-                Program.RunDiagnosticsForTests(model, layout, pagePlans, options, metrics, dataset);
+                Program.RunDiagnosticsForTests(model, layout, pagePlans, options, metrics, dataset, layoutPlan: plan);
                 Assert.True(File.Exists(tempJson), "Diagnostics JSON should be emitted when requested.");
 
                 using var json = JsonDocument.Parse(File.ReadAllText(tempJson));
                 var metricsElement = json.RootElement.GetProperty("Metrics");
+                Assert.Equal("view", metricsElement.GetProperty("LayoutOutputMode").GetString());
+                Assert.Equal((double)plan.CanvasWidth, metricsElement.GetProperty("LayoutCanvasWidth").GetDouble(), 3);
+                Assert.Equal((double)plan.CanvasHeight, metricsElement.GetProperty("LayoutCanvasHeight").GetDouble(), 3);
+                Assert.Equal(plan.Stats.NodeCount, metricsElement.GetProperty("LayoutNodeCount").GetInt32());
+                Assert.Equal(plan.Stats.ModuleCount, metricsElement.GetProperty("LayoutModuleCount").GetInt32());
+                Assert.Equal(plan.Stats.ContainerCount, metricsElement.GetProperty("LayoutContainerCount").GetInt32());
                 Assert.Equal(1, metricsElement.GetProperty("ConnectorOverLimitPageCount").GetInt32());
                 Assert.True(metricsElement.GetProperty("TruncatedNodeCount").GetInt32() > 0);
 

@@ -190,5 +190,41 @@ namespace VDG.CLI.Tests
             var route = layout.Edges.Single(e => e.Id == "edgeAB");
             Assert.True(route.Points.Length >= 4);
         }
+
+        [Fact]
+        public void View_mode_plan_creates_multiple_pages_when_module_limit_reached()
+        {
+            var model = new DiagramModel();
+            model.Metadata["layout.outputMode"] = "view";
+            model.Metadata["layout.tiers"] = "Modules";
+            model.Metadata["layout.page.heightIn"] = "5.0";
+            model.Metadata["layout.page.marginIn"] = "0.2";
+            model.Metadata["layout.page.plan.maxModulesPerPage"] = "1";
+
+            void AddModule(string moduleId)
+            {
+                var node = new Node($"{moduleId}.entry", $"{moduleId} Entry")
+                {
+                    Tier = "Modules"
+                };
+                node.Metadata["moduleId"] = moduleId;
+                model.Nodes.Add(node);
+            }
+
+            AddModule("ModuleA");
+            AddModule("ModuleB");
+            AddModule("ModuleC");
+
+            var plan = ViewModePlanner.ComputeViewLayout(model);
+            Assert.Equal(3, plan.Pages.Length);
+            Assert.All(plan.Pages, page =>
+            {
+                Assert.Single(page.Modules);
+                Assert.Equal(1, page.Nodes);
+            });
+            Assert.Equal(
+                new[] { "ModuleA", "ModuleB", "ModuleC" },
+                plan.Pages.OrderBy(p => p.PageIndex).SelectMany(p => p.Modules));
+        }
     }
 }

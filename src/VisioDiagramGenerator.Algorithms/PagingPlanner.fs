@@ -28,14 +28,6 @@ type PageSplitOptions =
       MaxModulesPerPage: int
       HeightSlackPercent: float }
 
-[<CLIMutable>]
-type PagePlan =
-    { PageIndex: int
-      Modules: string array
-      Connectors: int
-      Nodes: int
-      Occupancy: float }
-
 module PagingPlanner =
 
     let private sanitizeModuleId (moduleId: string) =

@@ -58,7 +58,8 @@ namespace VDG.CLI
             PageSplitOptions? options,
             PlannerMetrics metrics,
             DiagramDataset? dataset = null,
-            IEnumerable<string>? filteredModules = null)
+            IEnumerable<string>? filteredModules = null,
+            LayoutPlan? layoutPlan = null)
         {
             var stats = BuildPlannerSummaryStats(pagePlans);
             DiagnosticsSummary diagnostics;
@@ -72,7 +73,7 @@ namespace VDG.CLI
                 Console.SetError(suppressedErr);
                 try
                 {
-                    diagnostics = EmitDiagnostics(model, layout, null, null, pagePlans, options, metrics, stats, dataset, filteredModules);
+                    diagnostics = EmitDiagnostics(model, layout, null, null, pagePlans, options, metrics, stats, dataset, filteredModules, layoutPlan);
                 }
                 finally
                 {
@@ -89,6 +90,6 @@ namespace VDG.CLI
 
         internal static ViewModeValidationResult AnalyzeViewModeContentForTests(DiagramModel model) => AnalyzeViewModeContent(model);
 
-        internal static LayoutResult ComputeViewModeLayoutForTests(DiagramModel model) => ComputeViewModeLayout(model);
+        internal static LayoutResult ComputeViewModeLayoutForTests(DiagramModel model) => ComputeViewModeLayout(model).Layout;
     }
 }

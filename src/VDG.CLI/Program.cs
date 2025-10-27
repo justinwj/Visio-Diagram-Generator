@@ -111,6 +111,12 @@ namespace VDG.CLI
 
         private sealed class Metrics
         {
+            public string? LayoutOutputMode { get; set; }
+            public float? LayoutCanvasWidth { get; set; }
+            public float? LayoutCanvasHeight { get; set; }
+            public int LayoutNodeCount { get; set; }
+            public int LayoutModuleCount { get; set; }
+            public int LayoutContainerCount { get; set; }
             public int ConnectorCount { get; set; }
             public int StraightLineCrossings { get; set; }
             public double? PageHeight { get; set; }
@@ -554,17 +560,19 @@ namespace VDG.CLI
                     model = FilterModelByModules(model, keepSet);
                 }
 
-                var layout = ComputeLayout(model);
+                var layoutComputation = ComputeLayout(model);
+                var layout = layoutComputation.Layout;
+                var layoutPlan = layoutComputation.Plan;
                 var pagingOptions = BuildPageSplitOptions(model);
-                var plannerBuild = BuildPagingDataset(model, layout);
-                var pagePlans = PagingPlanner.computePages(pagingOptions, plannerBuild.Dataset) ?? Array.Empty<PagePlan>();
-                if (pagePlans.Length <= 1)
+
+                PagePlan[] pagePlans;
+                if (layoutPlan?.Pages != null && layoutPlan.Pages.Length > 0)
                 {
-                    var fallbackPlans = BuildLayoutPagePlans(model, layout, pagingOptions);
-                    if (fallbackPlans.Length > pagePlans.Length)
-                    {
-                        pagePlans = fallbackPlans;
-                    }
+                    pagePlans = layoutPlan.Pages;
+                }
+                else
+                {
+                    pagePlans = Array.Empty<PagePlan>();
                 }
 
                 if (maxPagesFilter.HasValue && maxPagesFilter.Value > 0 && pagePlans.Length > maxPagesFilter.Value)
@@ -594,18 +602,11 @@ namespace VDG.CLI
                             return ExitCodes.InvalidInput;
                         }
 
-                        layout = ComputeLayout(model);
+                        layoutComputation = ComputeLayout(model);
+                        layout = layoutComputation.Layout;
+                        layoutPlan = layoutComputation.Plan;
                         pagingOptions = BuildPageSplitOptions(model);
-                        plannerBuild = BuildPagingDataset(model, layout);
-                        pagePlans = PagingPlanner.computePages(pagingOptions, plannerBuild.Dataset) ?? Array.Empty<PagePlan>();
-                        if (pagePlans.Length <= 1)
-                        {
-                            var limitedFallback = BuildLayoutPagePlans(model, layout, pagingOptions);
-                            if (limitedFallback.Length > pagePlans.Length)
-                            {
-                                pagePlans = limitedFallback;
-                            }
-                        }
+                        pagePlans = layoutPlan?.Pages ?? Array.Empty<PagePlan>();
                         if (pagePlans.Length > pageLimit)
                         {
                             pagePlans = pagePlans.OrderBy(p => p.PageIndex).Take(pageLimit).ToArray();
@@ -619,12 +620,12 @@ namespace VDG.CLI
 
             ValidateViewModeContent(model);
 
-            var nodePageAssignments = BuildNodePageAssignments(model, pagePlans, plannerBuild.NodeSegmentOverrides);
+            var nodePageAssignments = BuildNodePageAssignments(model, pagePlans, null);
             var plannerStats = BuildPlannerSummaryStats(pagePlans);
-                var diagnosticsSummary = EmitDiagnostics(model, layout, diagHeightOverride, diagLaneMaxOverride, pagePlans, pagingOptions, plannerBuild.Metrics, plannerStats, plannerBuild.Dataset);
+                var diagnosticsSummary = EmitDiagnostics(model, layout, diagHeightOverride, diagLaneMaxOverride, pagePlans, pagingOptions, null, plannerStats, null, modulesFilteredOut, layoutPlan);
                 try
                 {
-                    PrintPlannerSummary(plannerStats, plannerBuild.Metrics, diagnosticsSummary);
+                    PrintPlannerSummary(plannerStats, null, diagnosticsSummary);
                 }
                 catch (ObjectDisposedException)
                 {
@@ -1144,11 +1145,26 @@ namespace VDG.CLI
             PlannerMetrics? plannerMetrics = null,
             PlannerSummaryStats? plannerSummary = null,
             DiagramDataset? plannerDataset = null,
-            IEnumerable<string>? filteredModules = null)
+            IEnumerable<string>? filteredModules = null,
+            LayoutPlan? layoutPlan = null)
         {
             var summary = new DiagnosticsSummary();
             int highestRank = 0;
             var pageDetails = new Dictionary<int, PageDiagnosticsDetail>();
+            var outputMode = GetOutputMode(model);
+            summary.OutputMode = outputMode;
+
+            if (layoutPlan != null)
+            {
+                summary.LayoutCanvasWidth = layoutPlan.CanvasWidth;
+                summary.LayoutCanvasHeight = layoutPlan.CanvasHeight;
+                if (layoutPlan.Stats != null)
+                {
+                    summary.LayoutNodeCount = layoutPlan.Stats.NodeCount;
+                    summary.LayoutModuleCount = layoutPlan.Stats.ModuleCount;
+                    summary.LayoutContainerCount = layoutPlan.Stats.ContainerCount;
+                }
+            }
 
             PageDiagnosticsDetail GetPageDetail(int pageIndex)
             {
@@ -2034,7 +2050,44 @@ namespace VDG.CLI
             }
             catch { }
 
-            if (plannerDataset != null && plannerDataset.Modules != null && plannerDataset.Modules.Length > 0 && pagePlans != null)
+            var layoutPlanModules = layoutPlan?.Stats?.ModuleIds;
+            if (layoutPlanModules != null && layoutPlanModules.Length > 0 && pagePlans != null)
+            {
+                var datasetModules = new HashSet<string>(
+                    layoutPlanModules
+                        .Where(m => !string.IsNullOrWhiteSpace(m))
+                        .Select(m => m.Trim()),
+                    StringComparer.OrdinalIgnoreCase);
+
+                var plannedModules = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                foreach (var plan in pagePlans)
+                {
+                    if (plan?.Modules == null) continue;
+                    foreach (var module in plan.Modules)
+                    {
+                        if (string.IsNullOrWhiteSpace(module)) continue;
+                        plannedModules.Add(module.Trim());
+                    }
+                }
+
+                datasetModules.ExceptWith(plannedModules);
+                if (datasetModules.Count > 0)
+                {
+                    foreach (var module in datasetModules)
+                    {
+                        if (string.IsNullOrWhiteSpace(module)) continue;
+                        if (!summary.SkippedModules.Any(m => string.Equals(m, module, StringComparison.OrdinalIgnoreCase)))
+                        {
+                            summary.SkippedModules.Add(module);
+                        }
+                    }
+                    if (summary.SkippedModules.Count > 0)
+                    {
+                        summary.PartialRender = true;
+                    }
+                }
+            }
+            else if (plannerDataset != null && plannerDataset.Modules != null && plannerDataset.Modules.Length > 0 && pagePlans != null)
             {
                 var datasetModules = new HashSet<string>(
                     plannerDataset.Modules
@@ -2139,6 +2192,18 @@ namespace VDG.CLI
                 if (emitJson)
                 {
                     var payload = new DiagnosticsJson();
+                    payload.Metrics.LayoutOutputMode = summary.OutputMode;
+                    if (layoutPlan != null)
+                    {
+                        payload.Metrics.LayoutCanvasWidth = layoutPlan.CanvasWidth;
+                        payload.Metrics.LayoutCanvasHeight = layoutPlan.CanvasHeight;
+                        if (layoutPlan.Stats != null)
+                        {
+                            payload.Metrics.LayoutNodeCount = layoutPlan.Stats.NodeCount;
+                            payload.Metrics.LayoutModuleCount = layoutPlan.Stats.ModuleCount;
+                            payload.Metrics.LayoutContainerCount = layoutPlan.Stats.ContainerCount;
+                        }
+                    }
                     payload.Metrics.ConnectorCount = model.Edges.Count;
                     if (plannerMetrics != null)
                     {
@@ -2569,6 +2634,7 @@ namespace VDG.CLI
 
         internal sealed class DiagnosticsSummary
         {
+            public string OutputMode { get; set; } = "print";
             public int Rank { get; set; }
             public int PageOverflowCount { get; set; }
             public int PageCrowdingCount { get; set; }
@@ -2579,6 +2645,11 @@ namespace VDG.CLI
             public int ConnectorOverLimitPageCount { get; set; }
             public int PagesWithPartialRender { get; set; }
             public int TruncatedNodeCount { get; set; }
+            public float? LayoutCanvasWidth { get; set; }
+            public float? LayoutCanvasHeight { get; set; }
+            public int? LayoutNodeCount { get; set; }
+            public int? LayoutModuleCount { get; set; }
+            public int? LayoutContainerCount { get; set; }
             public List<PageDiagnosticsDetail> Pages { get; } = new List<PageDiagnosticsDetail>();
             public List<string> SkippedModules { get; } = new List<string>();
             public bool HasOverflow =>
@@ -2615,25 +2686,16 @@ namespace VDG.CLI
             public Dictionary<string, int> TruncatedModules { get; } = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         }
 
-        private sealed class ViewModeModule
+        private sealed class LayoutComputation
         {
-            public string Id { get; }
-            public string Tier { get; }
-            public List<VDG.Core.Models.Node> Nodes { get; } = new List<VDG.Core.Models.Node>();
-
-            public ViewModeModule(string id, string tier)
+            public LayoutComputation(LayoutResult layout, LayoutPlan? plan = null)
             {
-                Id = id;
-                Tier = tier;
+                Layout = layout ?? throw new ArgumentNullException(nameof(layout));
+                Plan = plan;
             }
-        }
 
-        private sealed class ViewModeRow
-        {
-            public float Bottom { get; set; }
-            public float CurrentX { get; set; }
-            public float Height { get; set; }
-            public bool HasContent { get; set; }
+            public LayoutResult Layout { get; }
+            public LayoutPlan? Plan { get; }
         }
 
         private static string ResolveModuleIdForNode(VDG.Core.Models.Node node, string[] tiers, HashSet<string> tiersSet)
@@ -2664,14 +2726,15 @@ namespace VDG.CLI
             return tiers.Length > 0 ? tiers[0] : "Default";
         }
 
-        private static LayoutResult ComputeLayout(DiagramModel model)
+        private static LayoutComputation ComputeLayout(DiagramModel model)
         {
             if (string.Equals(GetOutputMode(model), "view", StringComparison.OrdinalIgnoreCase))
             {
                 return ComputeViewModeLayout(model);
             }
 
-            return LayoutEngine.compute(model);
+            var layout = LayoutEngine.compute(model);
+            return new LayoutComputation(layout);
         }
 
         private static string ResolveTierForNode(VDG.Core.Models.Node node, string[] tiers, HashSet<string> tiersSet)
@@ -2685,250 +2748,64 @@ namespace VDG.CLI
             return tiers.Length > 0 ? tiers[0] : "Modules";
         }
 
-        private static LayoutResult ComputeViewModeLayout(DiagramModel model)
+        private static LayoutComputation ComputeViewModeLayout(DiagramModel model)
         {
-            const int SlotsPerTier = 6;
-            const int SlotsPerRow = 3;
-            const float TierSpacing = 1.4f;
-            const float RowSpacing = 0.85f;
-            const float CardSpacingX = 0.75f;
-            const float CardSpacingY = 0.8f;
-            const float CardPadding = 0.3f;
-            const float NodeWidth = 1.35f;
-            const float NodeHeight = 0.34f;
-            const float ColumnGap = 0.18f;
-            const float RowGap = 0.08f;
-            const float HeaderHeight = 0.55f;
-            const int MaxRowsPerColumn = 6;
-            const int MaxColumns = 2;
-
-            var tiers = GetOrderedTiers(model);
-            if (tiers.Length == 0) tiers = new[] { "Modules" };
-            var tiersSet = new HashSet<string>(tiers, StringComparer.OrdinalIgnoreCase);
-
-            var containerTierMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            if (TryGetExplicitContainers(model, out var existingContainers) && existingContainers.Count > 0)
+            var plan = ViewModePlanner.ComputeViewLayout(model);
+            if (plan == null || plan.Nodes == null || plan.Nodes.Length == 0)
             {
-                foreach (var container in existingContainers)
+                model.Metadata.Remove("layout.containers.json");
+                model.Metadata.Remove("layout.containers.count");
+                model.Metadata.Remove("layout.view.truncatedModules");
+                var fallback = LayoutEngine.compute(model);
+                return new LayoutComputation(fallback);
+            }
+
+            ApplyViewModeMetadata(model, plan);
+
+            var result = new LayoutResult
+            {
+                Nodes = plan.Nodes,
+                Edges = plan.Edges
+            };
+
+            return new LayoutComputation(result, plan);
+        }
+
+        private static void ApplyViewModeMetadata(DiagramModel model, LayoutPlan plan)
+        {
+            if (plan?.Containers != null && plan.Containers.Length > 0)
+            {
+                var containers = new List<ContainerDto>(plan.Containers.Length);
+                foreach (var container in plan.Containers)
                 {
                     if (container == null || string.IsNullOrWhiteSpace(container.Id)) continue;
-                    var containerId = container.Id!.Trim();
-                    if (containerId.Length == 0) continue;
-                    var tier = !string.IsNullOrWhiteSpace(container.Tier) ? container.Tier!.Trim() : tiers.First();
-                    containerTierMap[containerId] = tiersSet.Contains(tier) ? tier : tiers.First();
-                }
-            }
-
-            var modules = new Dictionary<string, ViewModeModule>(StringComparer.OrdinalIgnoreCase);
-            foreach (var node in model.Nodes ?? Array.Empty<VDG.Core.Models.Node>())
-            {
-                if (node == null) continue;
-                var moduleId = ResolveModuleIdForNode(node, tiers, tiersSet);
-                if (string.IsNullOrWhiteSpace(moduleId)) moduleId = "~";
-                if (!modules.TryGetValue(moduleId, out var module))
-                {
-                    var tier = containerTierMap.TryGetValue(moduleId, out var mappedTier)
-                        ? mappedTier
-                        : ResolveTierForNode(node, tiers, tiersSet);
-                    module = new ViewModeModule(moduleId, tier);
-                    modules[moduleId] = module;
-                }
-                module.Nodes.Add(node);
-            }
-
-            if (modules.Count == 0)
-            {
-                return LayoutEngine.compute(model);
-            }
-
-            var nodeMap = BuildNodeMap(model);
-            var tierBuckets = new Dictionary<string, List<ViewModeModule>>(StringComparer.OrdinalIgnoreCase);
-            foreach (var module in modules.Values)
-            {
-                if (!tierBuckets.TryGetValue(module.Tier, out var list))
-                {
-                    list = new List<ViewModeModule>();
-                    tierBuckets[module.Tier] = list;
-                }
-                list.Add(module);
-            }
-
-            var nodeLayouts = new List<NodeLayout>();
-            var placementMap = new Dictionary<string, (float centerX, float centerY)>(StringComparer.OrdinalIgnoreCase);
-            var containerSpecs = new List<ContainerDto>();
-            var truncatedModules = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-
-            float cursorY = 0f;
-            foreach (var tier in tiers)
-            {
-                if (!tierBuckets.TryGetValue(tier, out var tierModules) || tierModules.Count == 0)
-                {
-                    cursorY -= TierSpacing;
-                    continue;
-                }
-
-                tierModules.Sort((a, b) => string.Compare(a.Id, b.Id, StringComparison.OrdinalIgnoreCase));
-
-                int slotIndex = 0;
-                foreach (var module in tierModules)
-                {
-                    var orderedNodes = module.Nodes
-                        .Where(n => n != null)
-                        .OrderBy(n => n.Label, StringComparer.OrdinalIgnoreCase)
-                        .ThenBy(n => n.Id, StringComparer.OrdinalIgnoreCase)
-                        .ToList();
-
-                    if (orderedNodes.Count == 0)
+                    containers.Add(new ContainerDto
                     {
-                        slotIndex++;
-                        continue;
-                    }
-
-                    var totalNodes = orderedNodes.Count;
-                    var maxVisible = MaxRowsPerColumn * MaxColumns;
-                    var visibleCount = Math.Min(totalNodes, maxVisible);
-                    var requiredColumns = (int)Math.Ceiling(visibleCount / (double)MaxRowsPerColumn);
-                    var columns = Math.Min(MaxColumns, Math.Max(1, requiredColumns));
-                    var rows = (int)Math.Ceiling(visibleCount / (double)columns);
-                    rows = Math.Max(1, Math.Min(MaxRowsPerColumn, rows));
-
-                    var cardWidth = CardPadding * 2 + (columns * NodeWidth) + Math.Max(0, columns - 1) * ColumnGap;
-                    var listHeight = rows * NodeHeight + Math.Max(0, rows - 1) * RowGap;
-                    var cardHeight = CardPadding + HeaderHeight + RowGap + listHeight + CardPadding;
-
-                    const float MaxCardHeight = 4.0f;
-                    var overflow = totalNodes - visibleCount;
-                    if (cardHeight > MaxCardHeight)
-                    {
-                        var usable = MaxCardHeight - (CardPadding + HeaderHeight + RowGap + CardPadding);
-                        var rowsThatFit = Math.Max(1, (int)Math.Floor((usable + RowGap) / (NodeHeight + RowGap)));
-                        visibleCount = Math.Min(totalNodes, rowsThatFit * columns);
-                        overflow = totalNodes - visibleCount;
-                        cardHeight = MaxCardHeight;
-                    }
-
-                    var slotRow = slotIndex / SlotsPerRow;
-                    var slotCol = slotIndex % SlotsPerRow;
-                    var left = slotCol * (cardWidth + CardSpacingX);
-                    var bottom = cursorY - slotRow * (cardHeight + CardSpacingY);
-                    var bodyTop = bottom + cardHeight - HeaderHeight - RowGap;
-
-                    for (int index = 0; index < visibleCount; index++)
-                    {
-                        var node = orderedNodes[index];
-                        var col = index % columns;
-                        var rowIndex = index / columns;
-
-                        var nodeLeft = left + CardPadding + col * (NodeWidth + ColumnGap);
-                        var nodeTop = bodyTop - rowIndex * (NodeHeight + RowGap);
-                        var nodeBottom = nodeTop - NodeHeight;
-
-                        var layout = new NodeLayout
-                        {
-                            Id = node.Id,
-                            Position = new PointF { X = nodeLeft, Y = nodeBottom },
-                            Size = new Nullable<Size>(new Size(NodeWidth, NodeHeight))
-                        };
-                        nodeLayouts.Add(layout);
-                        placementMap[node.Id] = (nodeLeft + (NodeWidth / 2f), nodeBottom + (NodeHeight / 2f));
-                    }
-
-                    if (overflow > 0)
-                    {
-                        truncatedModules[module.Id] = overflow;
-                        var badgeText = $"+{overflow}…";
-                        var badgeWidth = Math.Max(0.9f, badgeText.Length * 0.1f);
-                        var badgeLeft = left + cardWidth - CardPadding - badgeWidth;
-                        var badgeBottom = bottom + CardPadding * 0.5f;
-                        var badgeLayout = new NodeLayout
-                        {
-                            Id = $"{module.Id}#overflow",
-                            Position = new PointF { X = badgeLeft, Y = badgeBottom },
-                            Size = new Nullable<Size>(new Size(badgeWidth, 0.3f))
-                        };
-                        nodeLayouts.Add(badgeLayout);
-                    }
-
-                    var labelText = overflow > 0
-                        ? $"{module.Id} (+{overflow})"
-                        : module.Id;
-
-                    containerSpecs.Add(new ContainerDto
-                    {
-                        Id = module.Id,
-                        Label = labelText,
-                        Tier = module.Tier,
+                        Id = container.Id,
+                        Label = container.Label,
+                        Tier = container.Tier,
                         Bounds = new BoundsDto
                         {
-                            X = left,
-                            Y = bottom,
-                            Width = cardWidth,
-                            Height = cardHeight
+                            X = container.Bounds.Left,
+                            Y = container.Bounds.Bottom,
+                            Width = container.Bounds.Width,
+                            Height = container.Bounds.Height
                         }
                     });
-
-                    slotIndex++;
-                    if (slotIndex >= SlotsPerTier)
-                    {
-                        cursorY = bottom - cardHeight - TierSpacing;
-                        slotIndex = 0;
-                    }
                 }
 
-                if (slotIndex > 0)
+                if (containers.Count > 0)
                 {
-                    var usedRows = (int)Math.Ceiling(slotIndex / (double)SlotsPerRow);
-                    cursorY -= usedRows * (HeaderHeight + CardPadding + RowSpacing);
-                }
-
-                cursorY -= TierSpacing;
-            }
-
-            var moduleBounds = containerSpecs
-                .Where(c => !string.IsNullOrWhiteSpace(c.Id) && c.Bounds != null)
-                .ToDictionary(c => c.Id!, c => c.Bounds!, StringComparer.OrdinalIgnoreCase);
-
-            double BoundsLeft(BoundsDto bounds) => bounds.X ?? 0.0;
-            double BoundsBottom(BoundsDto bounds) => bounds.Y ?? 0.0;
-            double BoundsWidth(BoundsDto bounds) => bounds.Width ?? 0.0;
-            double BoundsHeight(BoundsDto bounds) => bounds.Height ?? 0.0;
-            PointF ToPoint(double x, double y) => new PointF { X = (float)x, Y = (float)y };
-            PointF MidPoint(PointF a, PointF b) => new PointF { X = (a.X + b.X) / 2f, Y = (a.Y + b.Y) / 2f };
-            PointF ComputeAnchor(BoundsDto from, BoundsDto to)
-            {
-                var fromLeft = BoundsLeft(from);
-                var fromBottom = BoundsBottom(from);
-                var fromWidth = BoundsWidth(from);
-                var fromHeight = BoundsHeight(from);
-                var toLeft = BoundsLeft(to);
-                var toBottom = BoundsBottom(to);
-                var toWidth = BoundsWidth(to);
-                var toHeight = BoundsHeight(to);
-
-                var fromCenterX = fromLeft + (fromWidth / 2.0);
-                var fromCenterY = fromBottom + (fromHeight / 2.0);
-                var toCenterX = toLeft + (toWidth / 2.0);
-                var toCenterY = toBottom + (toHeight / 2.0);
-                var dx = toCenterX - fromCenterX;
-                var dy = toCenterY - fromCenterY;
-                if (Math.Abs(dx) >= Math.Abs(dy))
-                {
-                    var x = dx >= 0 ? fromLeft + fromWidth : fromLeft;
-                    return ToPoint(x, fromCenterY);
+                    model.Metadata["layout.containers.json"] = JsonSerializer.Serialize(containers, JsonOptions);
+                    model.Metadata["layout.containers.count"] = containers.Count.ToString(CultureInfo.InvariantCulture);
+                    model.Metadata["layout.containers.paddingIn"] = "0.2";
+                    model.Metadata["layout.containers.cornerIn"] = "0.12";
                 }
                 else
                 {
-                    var y = dy >= 0 ? fromBottom + fromHeight : fromBottom;
-                    return ToPoint(fromCenterX, y);
+                    model.Metadata.Remove("layout.containers.json");
+                    model.Metadata.Remove("layout.containers.count");
                 }
-            }
-
-            if (containerSpecs.Count > 0)
-            {
-                model.Metadata["layout.containers.json"] = JsonSerializer.Serialize(containerSpecs, JsonOptions);
-                model.Metadata["layout.containers.count"] = containerSpecs.Count.ToString(CultureInfo.InvariantCulture);
-                model.Metadata["layout.containers.paddingIn"] = "0.2";
-                model.Metadata["layout.containers.cornerIn"] = "0.12";
             }
             else
             {
@@ -2936,72 +2813,29 @@ namespace VDG.CLI
                 model.Metadata.Remove("layout.containers.count");
             }
 
-            if (truncatedModules.Count > 0)
+            if (plan?.Stats?.Overflows != null && plan.Stats.Overflows.Length > 0)
             {
-                model.Metadata["layout.view.truncatedModules"] = JsonSerializer.Serialize(truncatedModules, JsonOptions);
+                var truncated = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+                foreach (var overflow in plan.Stats.Overflows)
+                {
+                    if (overflow == null || string.IsNullOrWhiteSpace(overflow.ContainerId)) continue;
+                    if (overflow.HiddenNodeCount <= 0) continue;
+                    truncated[overflow.ContainerId] = overflow.HiddenNodeCount;
+                }
+
+                if (truncated.Count > 0)
+                {
+                    model.Metadata["layout.view.truncatedModules"] = JsonSerializer.Serialize(truncated, JsonOptions);
+                }
+                else
+                {
+                    model.Metadata.Remove("layout.view.truncatedModules");
+                }
             }
             else
             {
                 model.Metadata.Remove("layout.view.truncatedModules");
             }
-
-            if (nodeLayouts.Count == 0)
-            {
-                return LayoutEngine.compute(model);
-            }
-
-            var edgeRoutes = new List<EdgeRoute>();
-            foreach (var edge in model.Edges ?? Array.Empty<Edge>())
-            {
-                if (edge == null) continue;
-                var sourceId = edge.SourceId;
-                var targetId = edge.TargetId;
-                if (string.IsNullOrWhiteSpace(sourceId) || string.IsNullOrWhiteSpace(targetId)) continue;
-                if (!placementMap.TryGetValue(sourceId, out var srcPlacement) ||
-                    !placementMap.TryGetValue(targetId, out var dstPlacement))
-                {
-                    continue;
-                }
-                if (!nodeMap.TryGetValue(sourceId, out var srcNode) ||
-                    !nodeMap.TryGetValue(targetId, out var dstNode))
-                {
-                    continue;
-                }
-
-                var srcModule = ResolveModuleIdForNode(srcNode, tiers, tiersSet);
-                var dstModule = ResolveModuleIdForNode(dstNode, tiers, tiersSet);
-
-                var srcCenter = new PointF { X = srcPlacement.centerX, Y = srcPlacement.centerY };
-                var dstCenter = new PointF { X = dstPlacement.centerX, Y = dstPlacement.centerY };
-
-                PointF[] points;
-                if (string.Equals(srcModule, dstModule, StringComparison.OrdinalIgnoreCase) ||
-                    !moduleBounds.TryGetValue(srcModule, out var srcBounds) ||
-                    !moduleBounds.TryGetValue(dstModule, out var dstBounds))
-                {
-                    points = new[] { srcCenter, dstCenter };
-                }
-                else
-                {
-                    var exit = ComputeAnchor(srcBounds, dstBounds);
-                    var entry = ComputeAnchor(dstBounds, srcBounds);
-                    var mid = MidPoint(exit, entry);
-                    points = new[] { srcCenter, exit, mid, entry, dstCenter };
-                }
-
-                var route = new EdgeRoute
-                {
-                    Id = !string.IsNullOrWhiteSpace(edge.Id) ? edge.Id! : $"{sourceId}->{targetId}",
-                    Points = points
-                };
-                edgeRoutes.Add(route);
-            }
-
-            return new LayoutResult
-            {
-                Nodes = nodeLayouts.ToArray(),
-                Edges = edgeRoutes.ToArray()
-            };
         }
 
         private static ViewModeValidationResult AnalyzeViewModeContent(DiagramModel model)
@@ -6114,6 +5948,24 @@ namespace VDG.CLI
             var splitModulesValue = segmentationMetrics?.SplitModuleCount ?? 0;
             var avgSegmentsPerModule = segmentationMetrics?.AverageSegmentsPerModule ?? (modulesValue > 0 ? segmentsValue / (double)modulesValue : 0.0);
             var deltaText = FormatDelta(segmentsValue - modulesValue);
+
+            var layoutMode = diagnosticsSummary?.OutputMode;
+            if (!string.IsNullOrWhiteSpace(layoutMode))
+            {
+                Console.WriteLine($"info: layout outputMode={layoutMode}");
+                if (diagnosticsSummary?.LayoutCanvasWidth is float canvasWidth &&
+                    diagnosticsSummary.LayoutCanvasHeight is float canvasHeight &&
+                    canvasWidth > 0f && canvasHeight > 0f)
+                {
+                    Console.WriteLine($"info: layout canvas {canvasWidth:F2}in x {canvasHeight:F2}in");
+                }
+                if (diagnosticsSummary?.LayoutNodeCount is int layoutNodes && layoutNodes > 0)
+                {
+                    var moduleCount = diagnosticsSummary.LayoutModuleCount ?? 0;
+                    var containerCount = diagnosticsSummary.LayoutContainerCount ?? 0;
+                    Console.WriteLine($"info: layout nodes={layoutNodes} modules={moduleCount} containers={containerCount}");
+                }
+            }
 
             var summaryLine = string.Format(
                 CultureInfo.InvariantCulture,

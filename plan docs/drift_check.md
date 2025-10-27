@@ -1,0 +1,2 @@
+Fixture Drift Guardrail
+Whenever you touch rendering logic, run pwsh ./tools/render-fixture.ps1 -FixtureName invSys (without -Update) before committing. If you see diffs, apply/refresh the matching tests/fixtures/config/<fixture>/<mode>.diagram.override.json first, then rerun with -Update -Note "<reason>". The override + ledger workflow keeps multi-page view-mode coverage stable so CI never surprises you.

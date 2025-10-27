@@ -29,6 +29,22 @@ pwsh ./tools/render-fixture.ps1 -Update -Note "reason for refresh"
 - Commit updated fixtures + ledger entry in the same change.
 - Limit the run to heavy fixtures (e.g., the full `samples/invSys` export) via `pwsh ./tools/render-fixture.ps1 -FixtureName invSys -Update -Note "pagination tuning"` to shorten local iterations.
 
+### Per-fixture Diagram Overrides
+Some fixtures need custom layout metadata (e.g., forcing multi-page behaviour). You can patch the generated diagram JSON automatically by dropping overrides under `tests/fixtures/config/<fixture>/<mode>.diagram.override.json`.  
+Example forcing the `invSys` callgraph to paginate one module per page:
+```json
+{
+  "layout": {
+    "page": {
+      "plan": {
+        "maxModulesPerPage": 1
+      }
+    }
+  }
+}
+```
+When present, the override is merged into the freshly generated diagram before hashes are computed. Check the file into source control so CI/other contributors get the same behaviour.
+
 ## Planner Summary & Segmentation Metrics
 Every CLI render now prints a planner summary line similar to:
 ```

@@ -13,7 +13,16 @@
       "vertical": 0.6
     },
     "page": {
-      "marginIn": 0.5
+      "widthIn": 13,
+      "heightIn": 8.5,
+      "marginIn": 0.5,
+      "paginate": true,
+      "plan": {
+        "laneSplitAllowed": true,
+        "maxConnectors": 350,
+        "maxModulesPerPage": 10,
+        "heightSlackPercent": 0.2
+      }
     },
     "containers": {
       "paddingIn": 0,

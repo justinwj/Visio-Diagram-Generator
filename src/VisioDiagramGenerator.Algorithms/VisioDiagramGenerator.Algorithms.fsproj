@@ -18,6 +18,7 @@
     <Compile Include="Types.fs" />
     <Compile Include="PagingPlanner.fs" />
     <Compile Include="LayoutEngine.fs" />
+    <Compile Include="PrintPlanner.fs" />
     <Compile Include="ViewModePlanner.fs" />
   </ItemGroup>
   

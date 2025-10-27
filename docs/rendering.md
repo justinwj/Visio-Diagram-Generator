@@ -43,6 +43,7 @@ pwsh ./tools/render-fixture.ps1 -Update -Note "reason for refresh"
 ```
 
 The script writes regenerated artifacts to `out/fixtures/`, compares SHA256 hashes, and appends ledger entries to `plan docs/fixtures_log.md` when `-Update` is used. See `docs/FixtureGuide.md` for the full regeneration and troubleshooting workflow.
+Some fixtures rely on small JSON overrides (e.g., forcing pagination). Drop them under `tests/fixtures/config/<fixture>/<mode>.diagram.override.json` so the render script merges them automatically—details and examples live in `docs/FixtureGuide.md`.
 
 ## Diagnostics Policy Snapshot
 

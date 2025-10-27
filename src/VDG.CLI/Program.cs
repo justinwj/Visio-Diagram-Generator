@@ -2734,7 +2734,8 @@ namespace VDG.CLI
             }
 
             var layout = LayoutEngine.compute(model);
-            return new LayoutComputation(layout);
+            var plan = PrintPlanner.ComputeLayoutPlan(model, layout);
+            return new LayoutComputation(layout, plan);
         }
 
         private static string ResolveTierForNode(VDG.Core.Models.Node node, string[] tiers, HashSet<string> tiersSet)

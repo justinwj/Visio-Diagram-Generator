@@ -166,6 +166,7 @@ A minimal 1.2 envelope with lanes looks like this:
 - To test the CLI without Visio COM automation, set `VDG_SKIP_RUNNER=1`.
 - For CLI smoke tests, re-run the command in the quick start section using your scenario-specific JSON.
 - End-to-end fixture validation (including `samples/invSys`): `pwsh ./tools/render-fixture.ps1 -FixtureName invSys -Update -Note "reason"` regenerates IR, Diagram JSON, diagnostics, and hashes, updates `plan docs/fixtures_log.md`, and rewrites `plan docs/fixtures_metadata.json`. Omit `-Update` for a read-only drift check.
+- Fixture-specific overrides: drop JSON patches under `tests/fixtures/config/<fixture>/<mode>.diagram.override.json` (e.g., to force `layout.page.plan.maxModulesPerPage=1` for `invSys/callgraph`). The render script merges these files automatically so view-mode and print-mode pagination scenarios stay reproducible in CI. See `docs/FixtureGuide.md` for examples.
 
 ## Paging Planner Reference
 The pagination summary printed by the CLI and the associated diagnostics metrics are documented in `docs/PagingPlanner.md`. Review that guide when tuning thresholds, interpreting fixture output (`render-fixture.ps1`), or onboarding new team members to the segmentation heuristics.

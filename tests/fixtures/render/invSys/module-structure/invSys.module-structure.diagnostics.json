@@ -3,20 +3,1322 @@
   "Metrics": {
     "ConnectorCount": 0,
     "StraightLineCrossings": 0,
-    "PageHeight": 0,
-    "UsableHeight": null,
-    "Pages": [
+    "PageHeight": 8.5,
+    "UsableHeight": 7.5,
+    "LanePages": [
       {
-        "Index": 1,
-        "Name": "Classes, Forms, Modules, Sheets",
-        "Nodes": 210,
-        "Connectors": 0,
-        "SkippedConnectors": 0,
-        "Overflow": false
+        "Tier": "Forms",
+        "Page": 10,
+        "OccupancyRatio": 0.77333333333333332,
+        "Nodes": 4
+      },
+      {
+        "Tier": "Forms",
+        "Page": 11,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Forms",
+        "Page": 12,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Forms",
+        "Page": 13,
+        "OccupancyRatio": 0.77333333333333332,
+        "Nodes": 4
+      },
+      {
+        "Tier": "Forms",
+        "Page": 14,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Forms",
+        "Page": 15,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Forms",
+        "Page": 16,
+        "OccupancyRatio": 0.77333333333333332,
+        "Nodes": 4
+      },
+      {
+        "Tier": "Forms",
+        "Page": 17,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Forms",
+        "Page": 18,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Forms",
+        "Page": 19,
+        "OccupancyRatio": 0.56000000000000005,
+        "Nodes": 3
+      },
+      {
+        "Tier": "Sheets",
+        "Page": 14,
+        "OccupancyRatio": 0.34666666666666668,
+        "Nodes": 2
+      },
+      {
+        "Tier": "Sheets",
+        "Page": 15,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Tier": "Classes",
+        "Page": 11,
+        "OccupancyRatio": 0.34666666666666668,
+        "Nodes": 2
+      },
+      {
+        "Tier": "Classes",
+        "Page": 12,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Classes",
+        "Page": 13,
+        "OccupancyRatio": 0.77333333333333332,
+        "Nodes": 4
+      },
+      {
+        "Tier": "Classes",
+        "Page": 14,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Classes",
+        "Page": 15,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Classes",
+        "Page": 16,
+        "OccupancyRatio": 0.77333333333333332,
+        "Nodes": 4
+      },
+      {
+        "Tier": "Classes",
+        "Page": 17,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Classes",
+        "Page": 18,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Tier": "Modules",
+        "Page": 1,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Modules",
+        "Page": 2,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Modules",
+        "Page": 3,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Modules",
+        "Page": 4,
+        "OccupancyRatio": 0.77333333333333332,
+        "Nodes": 4
+      },
+      {
+        "Tier": "Modules",
+        "Page": 5,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Modules",
+        "Page": 6,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Modules",
+        "Page": 7,
+        "OccupancyRatio": 0.77333333333333332,
+        "Nodes": 4
+      },
+      {
+        "Tier": "Modules",
+        "Page": 8,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Modules",
+        "Page": 9,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Modules",
+        "Page": 10,
+        "OccupancyRatio": 0.77333333333333332,
+        "Nodes": 4
+      },
+      {
+        "Tier": "Modules",
+        "Page": 11,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Modules",
+        "Page": 12,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Modules",
+        "Page": 13,
+        "OccupancyRatio": 0.77333333333333332,
+        "Nodes": 4
+      },
+      {
+        "Tier": "Modules",
+        "Page": 14,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Modules",
+        "Page": 15,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Modules",
+        "Page": 16,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Modules",
+        "Page": 17,
+        "OccupancyRatio": 0.77333333333333332,
+        "Nodes": 4
+      },
+      {
+        "Tier": "Modules",
+        "Page": 18,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Modules",
+        "Page": 19,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Modules",
+        "Page": 20,
+        "OccupancyRatio": 0.77333333333333332,
+        "Nodes": 4
+      },
+      {
+        "Tier": "Modules",
+        "Page": 21,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Modules",
+        "Page": 22,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Modules",
+        "Page": 23,
+        "OccupancyRatio": 0.77333333333333332,
+        "Nodes": 4
+      },
+      {
+        "Tier": "Modules",
+        "Page": 24,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Modules",
+        "Page": 25,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Modules",
+        "Page": 26,
+        "OccupancyRatio": 0.77333333333333332,
+        "Nodes": 4
+      },
+      {
+        "Tier": "Modules",
+        "Page": 27,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Tier": "Modules",
+        "Page": 28,
+        "OccupancyRatio": 0.77333333333333332,
+        "Nodes": 4
       }
     ],
-    "LanePages": [],
-    "Containers": []
+    "Containers": [
+      {
+        "Id": "frmItemSearch",
+        "Tier": "Forms",
+        "Page": 10,
+        "OccupancyRatio": 0.77333333333333332,
+        "Nodes": 4
+      },
+      {
+        "Id": "frmItemSearch",
+        "Tier": "Forms",
+        "Page": 11,
+        "OccupancyRatio": 0.56000000000000005,
+        "Nodes": 3
+      },
+      {
+        "Id": "frmReceivedTally",
+        "Tier": "Forms",
+        "Page": 11,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "frmShipmentsTally",
+        "Tier": "Forms",
+        "Page": 11,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "frmShipmentsTally",
+        "Tier": "Forms",
+        "Page": 12,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "frmReceivedTally",
+        "Tier": "Forms",
+        "Page": 12,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "frmItemSearch",
+        "Tier": "Forms",
+        "Page": 12,
+        "OccupancyRatio": 0.56000000000000005,
+        "Nodes": 3
+      },
+      {
+        "Id": "frmReceivedTally",
+        "Tier": "Forms",
+        "Page": 13,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "frmShipmentsTally",
+        "Tier": "Forms",
+        "Page": 13,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "frmLogin",
+        "Tier": "Forms",
+        "Page": 13,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "frmItemSearch",
+        "Tier": "Forms",
+        "Page": 13,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "frmCreateDeleteUser",
+        "Tier": "Forms",
+        "Page": 14,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "frmShipmentsTally",
+        "Tier": "Forms",
+        "Page": 14,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "frmReceivedTally",
+        "Tier": "Forms",
+        "Page": 14,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "frmItemSearch",
+        "Tier": "Forms",
+        "Page": 14,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "frmEditUser",
+        "Tier": "Forms",
+        "Page": 14,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "frmLogin",
+        "Tier": "Forms",
+        "Page": 15,
+        "OccupancyRatio": 0.34666666666666668,
+        "Nodes": 2
+      },
+      {
+        "Id": "frmItemSearch",
+        "Tier": "Forms",
+        "Page": 15,
+        "OccupancyRatio": 0.34666666666666668,
+        "Nodes": 2
+      },
+      {
+        "Id": "frmAdminControls",
+        "Tier": "Forms",
+        "Page": 15,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "frmCreateDeleteUser",
+        "Tier": "Forms",
+        "Page": 16,
+        "OccupancyRatio": 0.34666666666666668,
+        "Nodes": 2
+      },
+      {
+        "Id": "frmAdminControls",
+        "Tier": "Forms",
+        "Page": 16,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "frmLogin",
+        "Tier": "Forms",
+        "Page": 16,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "frmEditUser",
+        "Tier": "Forms",
+        "Page": 17,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "frmCreateDeleteUser",
+        "Tier": "Forms",
+        "Page": 17,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "frmLogin",
+        "Tier": "Forms",
+        "Page": 17,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "frmShipmentsTally",
+        "Tier": "Forms",
+        "Page": 17,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "frmReceivedTally",
+        "Tier": "Forms",
+        "Page": 17,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "frmEditUser",
+        "Tier": "Forms",
+        "Page": 18,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "frmItemSearch",
+        "Tier": "Forms",
+        "Page": 18,
+        "OccupancyRatio": 0.77333333333333332,
+        "Nodes": 4
+      },
+      {
+        "Id": "frmItemSearch",
+        "Tier": "Forms",
+        "Page": 19,
+        "OccupancyRatio": 0.56000000000000005,
+        "Nodes": 3
+      },
+      {
+        "Id": "ThisWorkbook",
+        "Tier": "Sheets",
+        "Page": 14,
+        "OccupancyRatio": 0.34666666666666668,
+        "Nodes": 2
+      },
+      {
+        "Id": "ThisWorkbook",
+        "Tier": "Sheets",
+        "Page": 15,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "MouseOverControl",
+        "Tier": "Classes",
+        "Page": 11,
+        "OccupancyRatio": 0.34666666666666668,
+        "Nodes": 2
+      },
+      {
+        "Id": "MouseOverControl",
+        "Tier": "Classes",
+        "Page": 12,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Id": "MouseOverControl",
+        "Tier": "Classes",
+        "Page": 13,
+        "OccupancyRatio": 0.34666666666666668,
+        "Nodes": 2
+      },
+      {
+        "Id": "TestSummary",
+        "Tier": "Classes",
+        "Page": 13,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "InventoryManagement",
+        "Tier": "Classes",
+        "Page": 13,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "ShipmentsTally",
+        "Tier": "Classes",
+        "Page": 14,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "ReceivedTally",
+        "Tier": "Classes",
+        "Page": 14,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "InventoryManagement",
+        "Tier": "Classes",
+        "Page": 14,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "clsBulkSnapshot",
+        "Tier": "Classes",
+        "Page": 14,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "MouseOverControl",
+        "Tier": "Classes",
+        "Page": 14,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "MouseOverControl",
+        "Tier": "Classes",
+        "Page": 15,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Id": "MouseOverControl",
+        "Tier": "Classes",
+        "Page": 16,
+        "OccupancyRatio": 0.77333333333333332,
+        "Nodes": 4
+      },
+      {
+        "Id": "MouseOverControl",
+        "Tier": "Classes",
+        "Page": 17,
+        "OccupancyRatio": 0.98666666666666669,
+        "Nodes": 5
+      },
+      {
+        "Id": "MouseOverControl",
+        "Tier": "Classes",
+        "Page": 18,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modTS_Data",
+        "Tier": "Modules",
+        "Page": 1,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "MouseScroll",
+        "Tier": "Modules",
+        "Page": 1,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modInvMan",
+        "Tier": "Modules",
+        "Page": 1,
+        "OccupancyRatio": 0.34666666666666668,
+        "Nodes": 2
+      },
+      {
+        "Id": "modUR_UndoRedo",
+        "Tier": "Modules",
+        "Page": 1,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modInvMan",
+        "Tier": "Modules",
+        "Page": 2,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modAdmin",
+        "Tier": "Modules",
+        "Page": 2,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modTS_Received",
+        "Tier": "Modules",
+        "Page": 2,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modUR_Transaction",
+        "Tier": "Modules",
+        "Page": 2,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modUR_Snapshot",
+        "Tier": "Modules",
+        "Page": 2,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modUR_UndoRedo",
+        "Tier": "Modules",
+        "Page": 3,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modTS_Data",
+        "Tier": "Modules",
+        "Page": 3,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "MouseScroll",
+        "Tier": "Modules",
+        "Page": 3,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modTS_Tally",
+        "Tier": "Modules",
+        "Page": 3,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modGlobals",
+        "Tier": "Modules",
+        "Page": 3,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modUR_Transaction",
+        "Tier": "Modules",
+        "Page": 4,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modInvMan",
+        "Tier": "Modules",
+        "Page": 4,
+        "OccupancyRatio": 0.34666666666666668,
+        "Nodes": 2
+      },
+      {
+        "Id": "modUR_ExcelIntegration",
+        "Tier": "Modules",
+        "Page": 4,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "MouseScroll",
+        "Tier": "Modules",
+        "Page": 5,
+        "OccupancyRatio": 0.34666666666666668,
+        "Nodes": 2
+      },
+      {
+        "Id": "modInvMan",
+        "Tier": "Modules",
+        "Page": 5,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modUR_ExcelIntegration",
+        "Tier": "Modules",
+        "Page": 5,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modImportExportAll",
+        "Tier": "Modules",
+        "Page": 5,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modExportImportAll",
+        "Tier": "Modules",
+        "Page": 6,
+        "OccupancyRatio": 0.56000000000000005,
+        "Nodes": 3
+      },
+      {
+        "Id": "modImportExportAll",
+        "Tier": "Modules",
+        "Page": 6,
+        "OccupancyRatio": 0.34666666666666668,
+        "Nodes": 2
+      },
+      {
+        "Id": "modImportExportAll",
+        "Tier": "Modules",
+        "Page": 7,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modExportImportAll",
+        "Tier": "Modules",
+        "Page": 7,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modTS_Tally",
+        "Tier": "Modules",
+        "Page": 7,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modUR_Snapshot",
+        "Tier": "Modules",
+        "Page": 7,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modTS_Data",
+        "Tier": "Modules",
+        "Page": 8,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "MouseScroll",
+        "Tier": "Modules",
+        "Page": 8,
+        "OccupancyRatio": 0.56000000000000005,
+        "Nodes": 3
+      },
+      {
+        "Id": "modUR_Transaction",
+        "Tier": "Modules",
+        "Page": 8,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modTS_Tally",
+        "Tier": "Modules",
+        "Page": 9,
+        "OccupancyRatio": 0.34666666666666668,
+        "Nodes": 2
+      },
+      {
+        "Id": "modUR_Snapshot",
+        "Tier": "Modules",
+        "Page": 9,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modGlobals",
+        "Tier": "Modules",
+        "Page": 9,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "MouseScroll",
+        "Tier": "Modules",
+        "Page": 9,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modTS_Received",
+        "Tier": "Modules",
+        "Page": 10,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modUR_Snapshot",
+        "Tier": "Modules",
+        "Page": 10,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "MouseScroll",
+        "Tier": "Modules",
+        "Page": 10,
+        "OccupancyRatio": 0.34666666666666668,
+        "Nodes": 2
+      },
+      {
+        "Id": "modTS_Shipments",
+        "Tier": "Modules",
+        "Page": 11,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modTS_Received",
+        "Tier": "Modules",
+        "Page": 11,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modTS_Tally",
+        "Tier": "Modules",
+        "Page": 11,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modUR_UndoRedo",
+        "Tier": "Modules",
+        "Page": 11,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "MouseScroll",
+        "Tier": "Modules",
+        "Page": 11,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "MouseScroll",
+        "Tier": "Modules",
+        "Page": 12,
+        "OccupancyRatio": 0.56000000000000005,
+        "Nodes": 3
+      },
+      {
+        "Id": "modErrorHandler",
+        "Tier": "Modules",
+        "Page": 12,
+        "OccupancyRatio": 0.34666666666666668,
+        "Nodes": 2
+      },
+      {
+        "Id": "MouseScroll",
+        "Tier": "Modules",
+        "Page": 13,
+        "OccupancyRatio": 0.34666666666666668,
+        "Nodes": 2
+      },
+      {
+        "Id": "modGlobals",
+        "Tier": "Modules",
+        "Page": 13,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modUR_Snapshot",
+        "Tier": "Modules",
+        "Page": 13,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "MouseScroll",
+        "Tier": "Modules",
+        "Page": 14,
+        "OccupancyRatio": 0.34666666666666668,
+        "Nodes": 2
+      },
+      {
+        "Id": "modGlobals",
+        "Tier": "Modules",
+        "Page": 14,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modTS_Data",
+        "Tier": "Modules",
+        "Page": 14,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modUR_Transaction",
+        "Tier": "Modules",
+        "Page": 14,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modTS_Launchers",
+        "Tier": "Modules",
+        "Page": 15,
+        "OccupancyRatio": 0.34666666666666668,
+        "Nodes": 2
+      },
+      {
+        "Id": "MouseScroll",
+        "Tier": "Modules",
+        "Page": 15,
+        "OccupancyRatio": 0.34666666666666668,
+        "Nodes": 2
+      },
+      {
+        "Id": "modImportExportAll",
+        "Tier": "Modules",
+        "Page": 15,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modExportImportAll",
+        "Tier": "Modules",
+        "Page": 16,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modTS_Data",
+        "Tier": "Modules",
+        "Page": 16,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modErrorHandler",
+        "Tier": "Modules",
+        "Page": 16,
+        "OccupancyRatio": 0.34666666666666668,
+        "Nodes": 2
+      },
+      {
+        "Id": "modInvLogs",
+        "Tier": "Modules",
+        "Page": 16,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modTS_Log",
+        "Tier": "Modules",
+        "Page": 17,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "MouseScroll",
+        "Tier": "Modules",
+        "Page": 17,
+        "OccupancyRatio": 0.34666666666666668,
+        "Nodes": 2
+      },
+      {
+        "Id": "modTS_Tally",
+        "Tier": "Modules",
+        "Page": 17,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modGlobals",
+        "Tier": "Modules",
+        "Page": 18,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modAdmin",
+        "Tier": "Modules",
+        "Page": 18,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modTS_Received",
+        "Tier": "Modules",
+        "Page": 18,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modTS_Shipments",
+        "Tier": "Modules",
+        "Page": 18,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "MouseScroll",
+        "Tier": "Modules",
+        "Page": 18,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modTS_Received",
+        "Tier": "Modules",
+        "Page": 19,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modTS_Shipments",
+        "Tier": "Modules",
+        "Page": 19,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modUR_UndoRedo",
+        "Tier": "Modules",
+        "Page": 19,
+        "OccupancyRatio": 0.34666666666666668,
+        "Nodes": 2
+      },
+      {
+        "Id": "modInvLogs",
+        "Tier": "Modules",
+        "Page": 19,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "MouseScroll",
+        "Tier": "Modules",
+        "Page": 20,
+        "OccupancyRatio": 0.56000000000000005,
+        "Nodes": 3
+      },
+      {
+        "Id": "modInvLogs",
+        "Tier": "Modules",
+        "Page": 20,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modExportImportAll",
+        "Tier": "Modules",
+        "Page": 21,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modImportExportAll",
+        "Tier": "Modules",
+        "Page": 21,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "MouseScroll",
+        "Tier": "Modules",
+        "Page": 21,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modUR_Snapshot",
+        "Tier": "Modules",
+        "Page": 21,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modUR_Transaction",
+        "Tier": "Modules",
+        "Page": 21,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modErrorHandler",
+        "Tier": "Modules",
+        "Page": 22,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "MouseScroll",
+        "Tier": "Modules",
+        "Page": 22,
+        "OccupancyRatio": 0.56000000000000005,
+        "Nodes": 3
+      },
+      {
+        "Id": "modUR_Transaction",
+        "Tier": "Modules",
+        "Page": 22,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modTS_Data",
+        "Tier": "Modules",
+        "Page": 23,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modExportImportAll",
+        "Tier": "Modules",
+        "Page": 23,
+        "OccupancyRatio": 0.34666666666666668,
+        "Nodes": 2
+      },
+      {
+        "Id": "modImportExportAll",
+        "Tier": "Modules",
+        "Page": 23,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modImportExportAll",
+        "Tier": "Modules",
+        "Page": 24,
+        "OccupancyRatio": 0.56000000000000005,
+        "Nodes": 3
+      },
+      {
+        "Id": "modExportImportAll",
+        "Tier": "Modules",
+        "Page": 24,
+        "OccupancyRatio": 0.34666666666666668,
+        "Nodes": 2
+      },
+      {
+        "Id": "modExportImportAll",
+        "Tier": "Modules",
+        "Page": 25,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modImportExportAll",
+        "Tier": "Modules",
+        "Page": 25,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "MouseScroll",
+        "Tier": "Modules",
+        "Page": 25,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modTS_Received",
+        "Tier": "Modules",
+        "Page": 25,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modTS_Shipments",
+        "Tier": "Modules",
+        "Page": 25,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modTestModule",
+        "Tier": "Modules",
+        "Page": 26,
+        "OccupancyRatio": 0.34666666666666668,
+        "Nodes": 2
+      },
+      {
+        "Id": "modUR_UndoRedo",
+        "Tier": "Modules",
+        "Page": 26,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modUR_Transaction",
+        "Tier": "Modules",
+        "Page": 26,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "MouseScroll",
+        "Tier": "Modules",
+        "Page": 27,
+        "OccupancyRatio": 0.34666666666666668,
+        "Nodes": 2
+      },
+      {
+        "Id": "modUR_UndoRedo",
+        "Tier": "Modules",
+        "Page": 27,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modErrorHandler",
+        "Tier": "Modules",
+        "Page": 27,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modUR_ExcelIntegration",
+        "Tier": "Modules",
+        "Page": 27,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modUR_ExcelIntegration",
+        "Tier": "Modules",
+        "Page": 28,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "MouseScroll",
+        "Tier": "Modules",
+        "Page": 28,
+        "OccupancyRatio": 0.13333333333333333,
+        "Nodes": 1
+      },
+      {
+        "Id": "modTS_Tally",
+        "Tier": "Modules",
+        "Page": 28,
+        "OccupancyRatio": 0.34666666666666668,
+        "Nodes": 2
+      }
+    ]
   },
   "Issues": [
     {
@@ -46,6 +1348,349 @@
       "Message": "lane \u0027Modules\u0027 contains 131 nodes (max 12); consider splitting the lane or paginating.",
       "Lane": "Modules",
       "Page": null
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "error",
+      "Message": "lane overcrowded: lane=\u0027Forms\u0027 page=11 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Forms",
+      "Page": 11
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "error",
+      "Message": "lane overcrowded: lane=\u0027Forms\u0027 page=12 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Forms",
+      "Page": 12
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "error",
+      "Message": "lane overcrowded: lane=\u0027Forms\u0027 page=14 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Forms",
+      "Page": 14
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "error",
+      "Message": "lane overcrowded: lane=\u0027Forms\u0027 page=15 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Forms",
+      "Page": 15
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "error",
+      "Message": "lane overcrowded: lane=\u0027Forms\u0027 page=17 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Forms",
+      "Page": 17
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "error",
+      "Message": "lane overcrowded: lane=\u0027Forms\u0027 page=18 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Forms",
+      "Page": 18
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "error",
+      "Message": "lane overcrowded: lane=\u0027Classes\u0027 page=12 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Classes",
+      "Page": 12
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "error",
+      "Message": "lane overcrowded: lane=\u0027Classes\u0027 page=14 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Classes",
+      "Page": 14
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "error",
+      "Message": "lane overcrowded: lane=\u0027Classes\u0027 page=15 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Classes",
+      "Page": 15
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "error",
+      "Message": "lane overcrowded: lane=\u0027Classes\u0027 page=17 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Classes",
+      "Page": 17
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "error",
+      "Message": "lane overcrowded: lane=\u0027Modules\u0027 page=1 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Modules",
+      "Page": 1
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "error",
+      "Message": "lane overcrowded: lane=\u0027Modules\u0027 page=2 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Modules",
+      "Page": 2
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "error",
+      "Message": "lane overcrowded: lane=\u0027Modules\u0027 page=3 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Modules",
+      "Page": 3
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "error",
+      "Message": "lane overcrowded: lane=\u0027Modules\u0027 page=5 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Modules",
+      "Page": 5
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "error",
+      "Message": "lane overcrowded: lane=\u0027Modules\u0027 page=6 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Modules",
+      "Page": 6
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "error",
+      "Message": "lane overcrowded: lane=\u0027Modules\u0027 page=8 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Modules",
+      "Page": 8
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "error",
+      "Message": "lane overcrowded: lane=\u0027Modules\u0027 page=9 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Modules",
+      "Page": 9
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "error",
+      "Message": "lane overcrowded: lane=\u0027Modules\u0027 page=11 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Modules",
+      "Page": 11
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "error",
+      "Message": "lane overcrowded: lane=\u0027Modules\u0027 page=12 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Modules",
+      "Page": 12
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "error",
+      "Message": "lane overcrowded: lane=\u0027Modules\u0027 page=14 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Modules",
+      "Page": 14
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "error",
+      "Message": "lane overcrowded: lane=\u0027Modules\u0027 page=15 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Modules",
+      "Page": 15
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "error",
+      "Message": "lane overcrowded: lane=\u0027Modules\u0027 page=16 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Modules",
+      "Page": 16
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "error",
+      "Message": "lane overcrowded: lane=\u0027Modules\u0027 page=18 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Modules",
+      "Page": 18
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "error",
+      "Message": "lane overcrowded: lane=\u0027Modules\u0027 page=19 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Modules",
+      "Page": 19
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "error",
+      "Message": "lane overcrowded: lane=\u0027Modules\u0027 page=21 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Modules",
+      "Page": 21
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "error",
+      "Message": "lane overcrowded: lane=\u0027Modules\u0027 page=22 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Modules",
+      "Page": 22
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "error",
+      "Message": "lane overcrowded: lane=\u0027Modules\u0027 page=24 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Modules",
+      "Page": 24
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "error",
+      "Message": "lane overcrowded: lane=\u0027Modules\u0027 page=25 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Modules",
+      "Page": 25
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "error",
+      "Message": "lane overcrowded: lane=\u0027Modules\u0027 page=27 occupancy=99% nodes=5 usable=7.50in",
+      "Lane": "Modules",
+      "Page": 27
+    },
+    {
+      "Code": "PageCrowding",
+      "Level": "warning",
+      "Message": "page crowded: page=11 occupancy=99% (usable 7.50in); top: [frmItemSearch.FindRowByValue(1.00in), frmItemSearch.GetLocationByItem(1.00in), frmReceivedTally.GetUOMFromDataTable(1.00in)]",
+      "Lane": null,
+      "Page": 11
+    },
+    {
+      "Code": "PageCrowding",
+      "Level": "warning",
+      "Message": "page crowded: page=12 occupancy=99% (usable 7.50in); top: [frmShipmentsTally.LogInventoryChange(1.00in), frmReceivedTally.LogInventoryChange(1.00in), frmItemSearch.PopulateListBox(1.00in)]",
+      "Lane": null,
+      "Page": 12
+    },
+    {
+      "Code": "PageCrowding",
+      "Level": "warning",
+      "Message": "page crowded: page=14 occupancy=99% (usable 7.50in); top: [frmCreateDeleteUser.UserForm_Initialize(1.00in), modTS_Data.IsInItemsColumn(1.00in), modGlobals.IsFormLoaded(1.00in)]",
+      "Lane": null,
+      "Page": 14
+    },
+    {
+      "Code": "PageCrowding",
+      "Level": "warning",
+      "Message": "page crowded: page=15 occupancy=99% (usable 7.50in); top: [frmLogin.UserForm_Initialize(1.00in), frmItemSearch.UserForm_KeyDown(1.00in), frmItemSearch.UserForm_MouseScroll(1.00in)]",
+      "Lane": null,
+      "Page": 15
+    },
+    {
+      "Code": "PageCrowding",
+      "Level": "warning",
+      "Message": "page crowded: page=16 occupancy=99% (usable 7.50in); top: [frmCreateDeleteUser.btnCreateUser_Click(1.00in), frmCreateDeleteUser.btnDeleteUser_Click(1.00in), frmAdminControls.btnEditUser_Click(1.00in)]",
+      "Lane": null,
+      "Page": 16
+    },
+    {
+      "Code": "PageCrowding",
+      "Level": "warning",
+      "Message": "page crowded: page=17 occupancy=99% (usable 7.50in); top: [frmEditUser.btnNewPIN_Click(1.00in), frmCreateDeleteUser.btnRandomPIN_Click(1.00in), frmLogin.btnResetPIN_Click(1.00in)]",
+      "Lane": null,
+      "Page": 17
+    },
+    {
+      "Code": "PageCrowding",
+      "Level": "warning",
+      "Message": "page crowded: page=18 occupancy=99% (usable 7.50in); top: [frmEditUser.btnUpdateUser_Click(1.00in), frmItemSearch.lstBox_Change(1.00in), frmItemSearch.lstBox_Click(1.00in)]",
+      "Lane": null,
+      "Page": 18
+    },
+    {
+      "Code": "PageCrowding",
+      "Level": "warning",
+      "Message": "page crowded: page=19 occupancy=99% (usable 7.50in); top: [frmItemSearch.lstBox_KeyPress(1.00in), frmItemSearch.txtBox_Change(1.00in), frmItemSearch.txtBox_KeyDown(1.00in)]",
+      "Lane": null,
+      "Page": 19
+    },
+    {
+      "Code": "PageCrowding",
+      "Level": "warning",
+      "Message": "page crowded: page=1 occupancy=99% (usable 7.50in); top: [modTS_Data.AddBigSearchButton(1.00in), MouseScroll.AddForm(1.00in), modInvMan.AddGoodsReceived_Click(1.00in)]",
+      "Lane": null,
+      "Page": 1
+    },
+    {
+      "Code": "PageCrowding",
+      "Level": "warning",
+      "Message": "page crowded: page=2 occupancy=99% (usable 7.50in); top: [modInvMan.Adjustments_Click(1.00in), modAdmin.Admin_Click(1.00in), modTS_Received.AppendReceivedLogRecord(1.00in)]",
+      "Lane": null,
+      "Page": 2
+    },
+    {
+      "Code": "PageCrowding",
+      "Level": "warning",
+      "Message": "page crowded: page=3 occupancy=99% (usable 7.50in); top: [modUR_UndoRedo.ClearRedoStack(1.00in), modTS_Data.ClearTableFilters(1.00in), MouseScroll.CollectionHasKey(1.00in)]",
+      "Lane": null,
+      "Page": 3
+    },
+    {
+      "Code": "PageCrowding",
+      "Level": "warning",
+      "Message": "page crowded: page=5 occupancy=99% (usable 7.50in); top: [MouseScroll.DisableMouseScroll(1.00in), modInvMan.DisplayMessage(1.00in), modUR_ExcelIntegration.EnableEvents(1.00in)]",
+      "Lane": null,
+      "Page": 5
+    },
+    {
+      "Code": "PageCrowding",
+      "Level": "warning",
+      "Message": "page crowded: page=6 occupancy=99% (usable 7.50in); top: [modExportImportAll.ExportAllCodeToSingleFiles(1.00in), modImportExportAll.ExportAllModules(1.00in), modExportImportAll.ExportAllModules(1.00in)]",
+      "Lane": null,
+      "Page": 6
+    },
+    {
+      "Code": "PageCrowding",
+      "Level": "warning",
+      "Message": "page crowded: page=8 occupancy=99% (usable 7.50in); top: [modTS_Data.GenerateRowNumbers(1.00in), MouseScroll.GetCallbackPtr(1.00in), MouseScroll.GetControlType(1.00in)]",
+      "Lane": null,
+      "Page": 8
+    },
+    {
+      "Code": "PageCrowding",
+      "Level": "warning",
+      "Message": "page crowded: page=9 occupancy=99% (usable 7.50in); top: [modTS_Tally.GetInvSysValue(1.00in), modUR_Snapshot.GetInventoryTable(1.00in), modGlobals.GetItemUOMByRowNum(1.00in)]",
+      "Lane": null,
+      "Page": 9
+    },
+    {
+      "Code": "PageCrowding",
+      "Level": "warning",
+      "Message": "page crowded: page=21 occupancy=99% (usable 7.50in); top: [modExportImportAll.ReplaceAllCodeFromFiles(1.00in), modImportExportAll.ReplaceAllCodeFromFiles(1.00in), MouseScroll.ResetLast(1.00in)]",
+      "Lane": null,
+      "Page": 21
+    },
+    {
+      "Code": "PageCrowding",
+      "Level": "warning",
+      "Message": "page crowded: page=22 occupancy=99% (usable 7.50in); top: [modErrorHandler.SafeExecute(1.00in), MouseScroll.ScrollX(1.00in), MouseScroll.ScrollY(1.00in)]",
+      "Lane": null,
+      "Page": 22
+    },
+    {
+      "Code": "PageCrowding",
+      "Level": "warning",
+      "Message": "page crowded: page=24 occupancy=99% (usable 7.50in); top: [modImportExportAll.SyncFormsCodeBehind(1.00in), modExportImportAll.SyncSheetsCodeBehind(1.00in), modImportExportAll.SyncSheetsCodeBehind(1.00in)]",
+      "Lane": null,
+      "Page": 24
+    },
+    {
+      "Code": "PageCrowding",
+      "Level": "warning",
+      "Message": "page crowded: page=25 occupancy=99% (usable 7.50in); top: [modExportImportAll.SyncStandardModules(1.00in), modImportExportAll.SyncStandardModules(1.00in), MouseScroll.TBoxScrollY(1.00in)]",
+      "Lane": null,
+      "Page": 25
+    },
+    {
+      "Code": "PageCrowding",
+      "Level": "warning",
+      "Message": "page crowded: page=27 occupancy=99% (usable 7.50in); top: [MouseScroll.UnHookMouse(1.00in), modUR_UndoRedo.UndoLastAction(1.00in), MouseScroll.UpdateLastCombo(1.00in)]",
+      "Lane": null,
+      "Page": 27
     }
   ]
 }

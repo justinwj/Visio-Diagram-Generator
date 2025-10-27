@@ -85,6 +85,36 @@ function Resolve-CliPath {
   throw "Unable to locate VDG.CLI.exe. Build the project or pass -Cli <path>."
 }
 
+function Merge-JsonObject {
+  param(
+    [psobject]$Target,
+    [psobject]$Overrides
+  )
+  foreach ($prop in $Overrides.PSObject.Properties) {
+    $name = $prop.Name
+    $overrideValue = $prop.Value
+    $targetProp = $Target.PSObject.Properties[$name]
+
+    $isOverrideObject = $overrideValue -is [System.Management.Automation.PSObject] -and `
+      $overrideValue.PSObject.TypeNames -contains 'System.Management.Automation.PSCustomObject'
+    $isTargetObject = $targetProp -and `
+      $targetProp.Value -is [System.Management.Automation.PSObject] -and `
+      $targetProp.Value.PSObject.TypeNames -contains 'System.Management.Automation.PSCustomObject'
+
+    if ($isOverrideObject -and $isTargetObject) {
+      Merge-JsonObject -Target $targetProp.Value -Overrides $overrideValue
+      continue
+    }
+
+    if ($null -eq $targetProp) {
+      $Target | Add-Member -NotePropertyName $name -NotePropertyValue $overrideValue
+    }
+    else {
+      $targetProp.Value = $overrideValue
+    }
+  }
+}
+
 function Ensure-Directory {
   param([string]$Path)
   if (-not (Test-Path $Path)) {
@@ -252,6 +282,14 @@ foreach ($fixtureEntry in $fixtureMatrix) {
 
     Invoke-Dotnet -Arguments @('run', '--project', 'src/VDG.VBA.CLI', '--', 'vba2json', '--in', $sourcePath, '--out', $irPath, '--infer-metrics')
     Invoke-Dotnet -Arguments @('run', '--project', 'src/VDG.VBA.CLI', '--', 'ir2diagram', '--in', $irPath, '--out', $diagramPath, '--mode', $mode)
+    $overridePath = Join-Path $repoRoot "tests/fixtures/config/$($fixtureEntry.Name)/$mode.diagram.override.json"
+    if (Test-Path $overridePath) {
+      Write-Host "Applying diagram override: $overridePath"
+      $diagramJson = Get-Content $diagramPath -Raw | ConvertFrom-Json -Depth 100
+      $overrideJson = Get-Content $overridePath -Raw | ConvertFrom-Json -Depth 100
+      Merge-JsonObject -Target $diagramJson -Overrides $overrideJson
+      $diagramJson | ConvertTo-Json -Depth 100 | Out-File $diagramPath -Encoding utf8
+    }
 
     $previousSkip = [System.Environment]::GetEnvironmentVariable('VDG_SKIP_RUNNER', [System.EnvironmentVariableTarget]::Process)
     try {

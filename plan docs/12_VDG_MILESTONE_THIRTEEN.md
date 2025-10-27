@@ -28,7 +28,7 @@ Primary Work Streams
 - [ ] Log per-page connector counts, routed polyline lengths, and skipped-edge reasons to make layout/Visio discrepancies obvious.
 - [ ] Surface a “no empty forms/modules” assertion in diagnostics; fail fast if any tier card has zero visible children in view mode.
 
-### 3. Testing & Fixtures
+-### 3. Testing & Fixtures
 - [ ] Update CLI/unit tests to assert node/edge counts and connector presence for representative samples (`frmItemSearch`, `MouseScroll`, cross-module calls).
 - [ ] Add regression tests that toggle `layout.outputMode` and validate both view and print planners behave as expected.
 - [ ] Refresh fixture baselines (including `invSys`) with new view-mode outputs; update ledger/metadata.

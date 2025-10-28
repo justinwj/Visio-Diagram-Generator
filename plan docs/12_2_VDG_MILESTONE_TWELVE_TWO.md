@@ -6,8 +6,13 @@ Handle large datasets without Visio performance collapse by capping each layer a
 Recommended Order of Operations
 
 1. **Baseline & Design**
-   - [ ] Inventory current shape/connector counts per page/layer (invSys baseline).  
-   - [ ] Define layer budget rules (shape + connector caps) and a bridging schema (`BridgeId`, source layer, target layer, connector metadata).
+   - [x] Inventory current shape/connector counts per page/layer (invSys baseline).  
+     - Current callgraph (view mode) renders 210 nodes, 33 containers, 1 684 connectors; planner splits into 7 pages with 34–40 nodes and up to 54 connectors per page, all on the default layer.
+   - [x] Define layer budget rules (shape + connector caps) and a bridging schema (`BridgeId`, source layer, target layer, connector metadata).  
+     - Layer budgets: soft target 900 shapes & 900 connectors per layer; hard cap 1 000 shapes/connectors triggers forced split and emits `LayerOverflow` diagnostics.  
+     - Planner must preserve logical groups; when a single module exceeds the cap it is isolated on its own layer and flagged.  
+     - Bridge schema: `BridgeId`, `sourceLayer`, `sourceNodeId`, `targetLayer`, `targetNodeId`, `connectorId`, `metadata` (preserve original edge metadata).  
+     - Each bridge also records `entryAnchor`/`exitAnchor` (diagram coordinates) so renderer can place stub shapes and diagnostics can list cross-layer endpoints.
 
 2. **Planner Enhancements (F#)**
    - [ ] Extend view-mode/paging planners to track cumulative shapes/connectors and enforce layer budgets.  

@@ -116,6 +116,26 @@ namespace VDG.CLI
             public List<string> OverflowModules { get; } = new List<string>();
         }
 
+        private sealed class LayerRenderContext
+        {
+            private LayerRenderContext(bool enabled, Dictionary<string, int> moduleToLayer, Dictionary<int, string> layerNames)
+            {
+                Enabled = enabled;
+                ModuleToLayer = moduleToLayer;
+                LayerNames = layerNames;
+            }
+
+            public bool Enabled { get; }
+            public Dictionary<string, int> ModuleToLayer { get; }
+            public Dictionary<int, string> LayerNames { get; }
+
+            public static LayerRenderContext Disabled { get; } =
+                new LayerRenderContext(false, new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase), new Dictionary<int, string>());
+
+            public static LayerRenderContext Create(Dictionary<string, int> moduleToLayer, Dictionary<int, string> layerNames) =>
+                new LayerRenderContext(true, moduleToLayer, layerNames);
+        }
+
         internal sealed class PageDiagnosticsDetail
         {
             public int PageNumber { get; set; }
@@ -701,7 +721,7 @@ namespace VDG.CLI
                 else
                 {
                     EnsureDirectory(outputPath);
-                    RunVisio(model, layout, outputPath, pagePlans, nodePageAssignments);
+                    RunVisio(model, layout, layoutPlan, outputPath, pagePlans, nodePageAssignments);
                     DeleteErrorLog(outputPath);
 
                     Console.WriteLine($"Saved diagram: {outputPath}");
@@ -1330,9 +1350,11 @@ namespace VDG.CLI
                 {
                     foreach (var module in plannerDataset.Modules)
                     {
-                        if (!string.IsNullOrWhiteSpace(module?.ModuleId))
+                        if (module == null) continue;
+                        var moduleId = module.ModuleId;
+                        if (!string.IsNullOrWhiteSpace(moduleId))
                         {
-                            moduleLookup[module.ModuleId] = module;
+                            moduleLookup[moduleId!] = module;
                         }
                     }
                 }
@@ -4159,7 +4181,62 @@ namespace VDG.CLI
             return (minLeft, minBottom, maxRight, maxTop);
         }
 
-        private static void RunVisio(DiagramModel model, LayoutResult layout, string outputPath, PagePlan[] pagePlans, IReadOnlyDictionary<string, int> nodePageAssignments)
+        private static LayerRenderContext BuildLayerRenderContext(DiagramModel model, LayoutPlan? layoutPlan)
+        {
+            if (layoutPlan?.Layers == null || layoutPlan.Layers.Length == 0)
+            {
+                return LayerRenderContext.Disabled;
+            }
+
+            var moduleToLayer = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            var layerNames = new Dictionary<int, string>();
+
+            string[]? parsedNames = null;
+            if (model.Metadata != null &&
+                model.Metadata.TryGetValue("layout.layers.names", out var namesRaw) &&
+                !string.IsNullOrWhiteSpace(namesRaw))
+            {
+                parsedNames = namesRaw
+                    .Split(new[] { ',', '|', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(n => n.Trim())
+                    .Where(n => n.Length > 0)
+                    .ToArray();
+            }
+
+            foreach (var plan in layoutPlan.Layers)
+            {
+                if (plan == null) continue;
+                var layerIndex = plan.LayerIndex;
+                if (!layerNames.ContainsKey(layerIndex))
+                {
+                    string defaultName = $"Layer {layerIndex + 1}";
+                    if (parsedNames != null && layerIndex >= 0 && layerIndex < parsedNames.Length)
+                    {
+                        layerNames[layerIndex] = parsedNames[layerIndex];
+                    }
+                    else
+                    {
+                        layerNames[layerIndex] = defaultName;
+                    }
+                }
+
+                if (plan.Modules == null) continue;
+                foreach (var moduleId in plan.Modules)
+                {
+                    if (string.IsNullOrWhiteSpace(moduleId)) continue;
+                    moduleToLayer[moduleId.Trim()] = layerIndex;
+                }
+            }
+
+            if (moduleToLayer.Count == 0)
+            {
+                return LayerRenderContext.Disabled;
+            }
+
+            return LayerRenderContext.Create(moduleToLayer, layerNames);
+        }
+
+        private static void RunVisio(DiagramModel model, LayoutResult layout, LayoutPlan? layoutPlan, string outputPath, PagePlan[] pagePlans, IReadOnlyDictionary<string, int> nodePageAssignments)
         {
             dynamic? app = null;
             dynamic? documents = null;
@@ -4193,15 +4270,17 @@ namespace VDG.CLI
                     throw new InvalidDataException("Layout produced zero nodes.");
                 }
 
+                var layerContext = BuildLayerRenderContext(model, layoutPlan);
+
                 if (ShouldPaginate(model, layout))
                 {
-                    DrawMultiPage(model, layout, pageManager, nodePageAssignments);
+                    DrawMultiPage(model, layout, layoutPlan, pageManager, nodePageAssignments, layerContext);
                 }
                 else
                 {
-                    ComputePlacements(model, layout, placements, firstPageInfo);
+                    ComputePlacements(model, layout, placements, firstPageInfo, layerContext);
                     DrawLaneContainers(model, layout, firstPageInfo.Page);
-            DrawConnectors(model, placements, firstPageInfo, pageManager, layout);
+                    DrawConnectors(model, placements, firstPageInfo, pageManager, layout, layerContext);
                 }
 
                 EmitPageSummary(pageManager);
@@ -4271,6 +4350,201 @@ namespace VDG.CLI
             ApplyLinePattern(shape, node.Style.LinePattern);
         }
 
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+        private static dynamic? EnsureVisioLayer(VisioPageManager.PageInfo pageInfo, LayerRenderContext context, int layerIndex)
+        {
+            if (!context.Enabled || layerIndex < 0)
+            {
+                return null;
+            }
+
+            if (pageInfo.LayerObjects.TryGetValue(layerIndex, out var cachedLayer) && cachedLayer != null)
+            {
+                return cachedLayer;
+            }
+
+            var layerName = context.LayerNames.TryGetValue(layerIndex, out var name)
+                ? name
+                : $"Layer {layerIndex + 1}";
+
+            dynamic? page = pageInfo.Page ?? throw new COMException("Visio page was not created.");
+            dynamic? layers = null;
+            try { layers = page.Layers; }
+            catch { layers = null; }
+            if (layers == null) return null;
+
+            dynamic? layer = TryGetLayerByName(layers, layerName);
+            if (layer == null)
+            {
+                layer = CreateLayer(layers, layerName);
+            }
+
+            if (layer != null)
+            {
+                pageInfo.LayerObjects[layerIndex] = layer;
+            }
+
+            return layer;
+        }
+
+        private static dynamic? TryGetLayerByName(dynamic layers, string layerName)
+        {
+            if (layers == null || string.IsNullOrWhiteSpace(layerName))
+            {
+                return null;
+            }
+
+            try { return layers.ItemU[layerName]; }
+            catch { }
+            try { return layers.Item[layerName]; }
+            catch { }
+            try { return layers[layerName]; }
+            catch { }
+
+            int count = 0;
+            try { count = Convert.ToInt32(layers.Count); }
+            catch { count = 0; }
+
+            for (int index = 1; index <= count; index++)
+            {
+                dynamic? candidate = null;
+                try { candidate = layers.Item(index); }
+                catch
+                {
+                    try { candidate = layers[index]; }
+                    catch
+                    {
+                        try { candidate = layers.get_Item(index); }
+                        catch { candidate = null; }
+                    }
+                }
+
+                if (candidate == null) continue;
+
+                string? candidateName = null;
+                try { candidateName = candidate.NameU; }
+                catch { candidateName = null; }
+                if (string.IsNullOrWhiteSpace(candidateName))
+                {
+                    try { candidateName = candidate.Name; }
+                    catch { candidateName = null; }
+                }
+
+                if (!string.IsNullOrWhiteSpace(candidateName) &&
+                    string.Equals(candidateName, layerName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return candidate;
+                }
+            }
+
+            return null;
+        }
+
+        private static dynamic? CreateLayer(dynamic layers, string layerName)
+        {
+            if (layers == null) return null;
+
+            dynamic? layer = null;
+            try
+            {
+                layer = layers.Add(layerName);
+            }
+            catch
+            {
+                try
+                {
+                    layer = layers.Add();
+                    if (layer != null)
+                    {
+                        try { layer.NameU = layerName; } catch { }
+                        try { layer.Name = layerName; } catch { }
+                    }
+                }
+                catch
+                {
+                    layer = null;
+                }
+            }
+
+            if (layer != null)
+            {
+                try { layer.NameU = layerName; } catch { }
+                try { layer.Name = layerName; } catch { }
+            }
+
+            return layer;
+        }
+
+        private static void AssignShapeToLayer(LayerRenderContext context, VisioPageManager.PageInfo pageInfo, dynamic shape, int layerIndex)
+        {
+            if (!context.Enabled || shape == null || layerIndex < 0)
+            {
+                return;
+            }
+
+            var layer = EnsureVisioLayer(pageInfo, context, layerIndex);
+            if (layer == null) return;
+            AddShapeToLayer(layer, shape);
+        }
+
+        private static void AssignConnectorToLayers(LayerRenderContext context, VisioPageManager.PageInfo pageInfo, dynamic connector, NodePlacement? sourcePlacement, NodePlacement? targetPlacement)
+        {
+            if (!context.Enabled || connector == null)
+            {
+                return;
+            }
+
+            var layerIndices = new HashSet<int>();
+            if (sourcePlacement?.LayerIndex is int src && src >= 0) layerIndices.Add(src);
+            if (targetPlacement?.LayerIndex is int dst && dst >= 0) layerIndices.Add(dst);
+
+            foreach (var layerIndex in layerIndices)
+            {
+                var layer = EnsureVisioLayer(pageInfo, context, layerIndex);
+                if (layer != null)
+                {
+                    AddShapeToLayer(layer, connector);
+                }
+            }
+        }
+
+        private static void AddShapeToLayer(dynamic layer, dynamic shape)
+        {
+            if (layer == null || shape == null)
+            {
+                return;
+            }
+
+            try
+            {
+                layer.Add(shape, (short)0);
+                return;
+            }
+            catch { }
+
+            try
+            {
+                layer.Add(shape, 0);
+                return;
+            }
+            catch { }
+
+            try
+            {
+                shape.AddToLayer(layer);
+                return;
+            }
+            catch { }
+
+            try
+            {
+                var membership = shape.CellsU["LayerMembership"];
+                membership.Add(layer, (short)0);
+            }
+            catch { }
+        }
+
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
         private static void ApplyEdgeStyle(Edge edge, dynamic line)
         {
             if (edge.Style == null || edge.Style.IsDefault())
@@ -4357,13 +4631,15 @@ namespace VDG.CLI
             return instance;
         }
 
-        private static void ComputePlacements(DiagramModel model, LayoutResult layout, IDictionary<string, NodePlacement> placements, VisioPageManager.PageInfo pageInfo)
+        private static void ComputePlacements(DiagramModel model, LayoutResult layout, IDictionary<string, NodePlacement> placements, VisioPageManager.PageInfo pageInfo, LayerRenderContext layerContext)
         {
             if (pageInfo == null) throw new COMException("Visio page metadata was not initialised.");
             dynamic visioPage = pageInfo.Page ?? throw new COMException("Visio page was not created.");
             var nodeMap = BuildNodeMap(model);
             var outputMode = GetOutputMode(model);
             var isViewMode = string.Equals(outputMode, "view", StringComparison.OrdinalIgnoreCase);
+            var tiers = GetOrderedTiers(model);
+            var tiersSet = new HashSet<string>(tiers, StringComparer.OrdinalIgnoreCase);
 
             var (minLeft, minBottom, maxRight, maxTop) = ComputeLayoutBounds(layout);
             var margin = GetPageMargin(model) ?? Margin;
@@ -4407,7 +4683,18 @@ namespace VDG.CLI
                 shape.Text = node.Label;
                 ApplyNodeStyle(node, shape);
 
-                placements[nodeLayout.Id] = new NodePlacement(shape, left, bottom, width, height);
+                int layerIndex = -1;
+                if (layerContext.Enabled)
+                {
+                    var moduleId = ResolveModuleIdForNode(node, tiers, tiersSet);
+                    if (!string.IsNullOrWhiteSpace(moduleId) && layerContext.ModuleToLayer.TryGetValue(moduleId, out var assignedLayer))
+                    {
+                        layerIndex = assignedLayer;
+                        AssignShapeToLayer(layerContext, pageInfo, shape, layerIndex);
+                    }
+                }
+
+                placements[nodeLayout.Id] = new NodePlacement(shape, left, bottom, width, height, layerIndex >= 0 ? layerIndex : (int?)null);
                 pageInfo.IncrementNodeCount();
             }
         }
@@ -4481,7 +4768,7 @@ namespace VDG.CLI
             DrawExplicitContainers(model, layout, visioPage, minLeft, minBottom, double.PositiveInfinity, margin, titleHeight, 0);
         }
 
-        private static void DrawConnectors(DiagramModel model, IDictionary<string, NodePlacement> placements, VisioPageManager.PageInfo pageInfo, VisioPageManager? pageManager, LayoutResult? layout = null)
+        private static void DrawConnectors(DiagramModel model, IDictionary<string, NodePlacement> placements, VisioPageManager.PageInfo pageInfo, VisioPageManager? pageManager, LayoutResult? layout = null, LayerRenderContext? layerContext = null)
         {
             if (pageInfo == null) throw new COMException("Visio page metadata was not initialised.");
             dynamic visioPage = pageInfo.Page ?? throw new COMException("Visio page was not created.");
@@ -4491,6 +4778,7 @@ namespace VDG.CLI
             var tiers = GetOrderedTiers(model);
             var tiersSet = new HashSet<string>(tiers, StringComparer.OrdinalIgnoreCase);
             var nodeMap = BuildNodeMap(model);
+            layerContext ??= LayerRenderContext.Disabled;
             var bundleByRaw = model.Metadata.TryGetValue("layout.routing.bundleBy", out var bb) ? (bb ?? "none").Trim() : "none";
             double bundleSepIn = 0.12;
             if (model.Metadata.TryGetValue("layout.routing.bundleSeparationIn", out var bsep) && double.TryParse(bsep, NumberStyles.Float, CultureInfo.InvariantCulture, out var bsv) && bsv >= 0) bundleSepIn = bsv;
@@ -4550,6 +4838,7 @@ namespace VDG.CLI
                         dynamic line = visioPage.DrawPolyline(pts.ToArray(), 0);
                         if (!string.IsNullOrWhiteSpace(edge.Label)) line.Text = edge.Label;
                         if (edge.Directed) TrySetFormula(line, "EndArrow", "5"); else TrySetFormula(line, "EndArrow", "0");
+                        AssignConnectorToLayers(layerContext, pageInfo, line, sourcePlacement, targetPlacement);
                         ApplyEdgeStyle(edge, line); try { line.SendToBack(); } catch { }
                         ReleaseCom(line);
                         connectorDrawn = true;
@@ -4624,6 +4913,7 @@ namespace VDG.CLI
                                     DrawLabelBox(visioPage, edge.Label!, mx, my, 0.0, off);
                                 }
                                 if (edge.Directed) TrySetFormula(pl, "EndArrow", "5"); else TrySetFormula(pl, "EndArrow", "0");
+                                AssignConnectorToLayers(layerContext, pageInfo, pl, sourcePlacement, targetPlacement);
                                 ApplyEdgeStyle(edge, pl);
                                 try { pl.SendToBack(); } catch { }
                                 ReleaseCom(pl);
@@ -4747,6 +5037,7 @@ namespace VDG.CLI
                             }
 
                             if (edge.Directed) TrySetFormula(connector, "EndArrow", "5"); else TrySetFormula(connector, "EndArrow", "0");
+                            AssignConnectorToLayers(layerContext, pageInfo, connector, sourcePlacement, targetPlacement);
                             // Prefer right-angle routing
                             TrySetFormula(connector, "Routestyle", "16");
                             try { TrySetFormula(connector, "LineRouteExt", "2"); } catch { }
@@ -4765,6 +5056,7 @@ namespace VDG.CLI
                     dynamic line = visioPage.DrawLine(sourcePlacement.CenterX, sourcePlacement.CenterY, targetPlacement.CenterX, targetPlacement.CenterY);
                     if (!string.IsNullOrWhiteSpace(edge.Label)) line.Text = edge.Label;
                     if (edge.Directed) TrySetFormula(line, "EndArrow", "5"); else TrySetFormula(line, "EndArrow", "0");
+                    AssignConnectorToLayers(layerContext, pageInfo, line, sourcePlacement, targetPlacement);
                     ApplyEdgeStyle(edge, line);
                     ReleaseCom(line);
                     connectorDrawn = true;
@@ -4864,13 +5156,14 @@ namespace VDG.CLI
 
         private sealed class NodePlacement
         {
-            public NodePlacement(object shape, double left, double bottom, double width, double height)
+            public NodePlacement(object shape, double left, double bottom, double width, double height, int? layerIndex = null)
             {
                 Shape = shape;
                 Left = left;
                 Bottom = bottom;
                 Width = width;
                 Height = height;
+                LayerIndex = layerIndex;
             }
 
             public object Shape { get; }
@@ -4878,6 +5171,7 @@ namespace VDG.CLI
             public double Bottom { get; }
             public double Width { get; }
             public double Height { get; }
+            public int? LayerIndex { get; }
             public double CenterX => Left + (Width / 2.0);
             public double CenterY => Bottom + (Height / 2.0);
         }
@@ -5523,8 +5817,9 @@ namespace VDG.CLI
             return paginate && usable > 0 && height > (float)usable;
         }
 
-        private static void DrawMultiPage(DiagramModel model, LayoutResult layout, VisioPageManager pageManager, IReadOnlyDictionary<string, int> plannedPages)
+        private static void DrawMultiPage(DiagramModel model, LayoutResult layout, LayoutPlan? layoutPlan, VisioPageManager pageManager, IReadOnlyDictionary<string, int> plannedPages, LayerRenderContext layerContext)
         {
+            _ = layoutPlan;
             var pageWidth = GetPageWidth(model) ?? 11.0;
             var pageHeight = GetPageHeight(model) ?? 8.5;
             var margin = GetPageMargin(model) ?? Margin;
@@ -5575,19 +5870,21 @@ namespace VDG.CLI
                 TrySetResult(page.PageSheet.CellsU["PageHeight"], pageHeight);
 
                 var placements = new Dictionary<string, NodePlacement>(StringComparer.OrdinalIgnoreCase);
-                ComputePlacementsForPage(model, layout, placements, pageInfo, pi, minLeft, minBottom, usable, margin, title, nodePage);
+                ComputePlacementsForPage(model, layout, placements, pageInfo, pi, minLeft, minBottom, usable, margin, title, nodePage, layerContext);
                 DrawLaneContainersForPage(model, layout, page, pi, pageCount, minLeft, minBottom, usable, margin, title, nodePage);
                 placementsPerPage[pi] = placements;
             }
 
-            DrawConnectorsPaged(model, layout, placementsPerPage, pageManager, nodePage);
+            DrawConnectorsPaged(model, layout, placementsPerPage, pageManager, nodePage, layerContext);
         }
 
-        private static void ComputePlacementsForPage(DiagramModel model, LayoutResult layout, IDictionary<string, NodePlacement> placements, VisioPageManager.PageInfo pageInfo, int pageIndex, double minLeft, double minBottom, double usableHeight, double margin, double title, IReadOnlyDictionary<string, int> nodePageAssignments)
+        private static void ComputePlacementsForPage(DiagramModel model, LayoutResult layout, IDictionary<string, NodePlacement> placements, VisioPageManager.PageInfo pageInfo, int pageIndex, double minLeft, double minBottom, double usableHeight, double margin, double title, IReadOnlyDictionary<string, int> nodePageAssignments, LayerRenderContext layerContext)
         {
             if (pageInfo == null) throw new COMException("Visio page metadata was not initialised.");
             dynamic visioPage = pageInfo.Page ?? throw new COMException("Visio page was not created.");
             var nodeMap = BuildNodeMap(model);
+            var tiers = GetOrderedTiers(model);
+            var tiersSet = new HashSet<string>(tiers, StringComparer.OrdinalIgnoreCase);
 
             foreach (var nl in layout.Nodes)
             {
@@ -5612,7 +5909,19 @@ namespace VDG.CLI
                 dynamic shape = visioPage.DrawRectangle(left, bottom, right, top);
                 shape.Text = node.Label;
                 ApplyNodeStyle(node, shape);
-                placements[nl.Id] = new NodePlacement(shape, left, bottom, width, height);
+
+                int layerIndex = -1;
+                if (layerContext.Enabled)
+                {
+                    var moduleId = ResolveModuleIdForNode(node, tiers, tiersSet);
+                    if (!string.IsNullOrWhiteSpace(moduleId) && layerContext.ModuleToLayer.TryGetValue(moduleId, out var assignedLayer))
+                    {
+                        layerIndex = assignedLayer;
+                        AssignShapeToLayer(layerContext, pageInfo, shape, layerIndex);
+                    }
+                }
+
+                placements[nl.Id] = new NodePlacement(shape, left, bottom, width, height, layerIndex >= 0 ? layerIndex : (int?)null);
                 pageInfo.IncrementNodeCount();
             }
         }
@@ -5698,7 +6007,7 @@ namespace VDG.CLI
             DrawExplicitContainers(model, layout, visioPage, minLeft, minBottom, usableHeight, margin, title, pageIndex);
         }
 
-        private static void DrawConnectorsPaged(DiagramModel model, LayoutResult layout, Dictionary<int, Dictionary<string, NodePlacement>> perPage, VisioPageManager pageManager, IReadOnlyDictionary<string, int> nodePageAssignments)
+        private static void DrawConnectorsPaged(DiagramModel model, LayoutResult layout, Dictionary<int, Dictionary<string, NodePlacement>> perPage, VisioPageManager pageManager, IReadOnlyDictionary<string, int> nodePageAssignments, LayerRenderContext layerContext)
         {
             var pageCount = perPage.Keys.Count == 0 ? 1 : perPage.Keys.Max() + 1;
             var (minLeft, minBottom, maxRight, maxTop) = ComputeLayoutBounds(layout);

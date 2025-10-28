@@ -19,7 +19,7 @@ Recommended Order of Operations
    - [x] Emit cross-layer bridge records while keeping layout deterministic.
 
 3. **Renderer & CLI Work (C#)**
-   - [ ] Teach `VDG.CLI` to create Visio layers dynamically and assign shapes/connectors to the correct layer.  
+   - [x] Teach `VDG.CLI` to create Visio layers dynamically and assign shapes/connectors to the correct layer.  
    - [ ] Render bridge anchors or stubs for cross-layer connectors; add CLI switches to render specific layers.  
    - [x] Update diagnostics output with `layerCount`, per-layer shape/connector totals, and bridge summaries.
 

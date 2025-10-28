@@ -270,6 +270,8 @@ namespace VDG.CLI
 
             public bool HasOverflow { get; private set; }
 
+            internal Dictionary<int, dynamic> LayerObjects { get; } = new Dictionary<int, dynamic>();
+
             public void IncrementNodeCount() => NodeCount++;
 
             public void IncrementConnectorCount() => ConnectorCount++;

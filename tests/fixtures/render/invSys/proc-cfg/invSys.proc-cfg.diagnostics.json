@@ -5,6 +5,40 @@
     "StraightLineCrossings": 686499,
     "PageHeight": 8.5,
     "UsableHeight": 7.5,
+    "Pages": [
+      {
+        "Index": 1,
+        "Name": "Classes",
+        "Nodes": 136,
+        "Connectors": 114,
+        "SkippedConnectors": 0,
+        "Overflow": false
+      },
+      {
+        "Index": 2,
+        "Name": "Forms",
+        "Nodes": 400,
+        "Connectors": 390,
+        "SkippedConnectors": 0,
+        "Overflow": false
+      },
+      {
+        "Index": 3,
+        "Name": "Modules",
+        "Nodes": 1657,
+        "Connectors": 1665,
+        "SkippedConnectors": 0,
+        "Overflow": true
+      },
+      {
+        "Index": 4,
+        "Name": "Sheets",
+        "Nodes": 15,
+        "Connectors": 13,
+        "SkippedConnectors": 0,
+        "Overflow": false
+      }
+    ],
     "LanePages": [
       {
         "Tier": "Forms",
@@ -15112,6 +15146,13 @@
     ]
   },
   "Issues": [
+    {
+      "Code": "PagePlanConnectors",
+      "Level": "info",
+      "Message": "paging planner connectors exceed limit on page 3: connectors=1665 limit=400",
+      "Lane": null,
+      "Page": 3
+    },
     {
       "Code": "LayoutHeightThreshold",
       "Level": "warning",

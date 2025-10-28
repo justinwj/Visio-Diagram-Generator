@@ -5,6 +5,16 @@
     "StraightLineCrossings": 0,
     "PageHeight": 8.5,
     "UsableHeight": 7.5,
+    "Pages": [
+      {
+        "Index": 1,
+        "Name": "Forms",
+        "Nodes": 49,
+        "Connectors": 29,
+        "SkippedConnectors": 0,
+        "Overflow": true
+      }
+    ],
     "LanePages": [
       {
         "Tier": "Forms",
@@ -196,6 +206,13 @@
     ]
   },
   "Issues": [
+    {
+      "Code": "PagePlanOccupancy",
+      "Level": "info",
+      "Message": "paging planner occupancy exceeds limit on page 1: occupancy=100.0% limit=95.0%",
+      "Lane": null,
+      "Page": 1
+    },
     {
       "Code": "LayoutHeightThreshold",
       "Level": "warning",

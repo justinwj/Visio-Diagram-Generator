@@ -1,7 +1,7 @@
 {
-  "generatedAtUtc": "2025-10-27T05:29:51.3613810Z",
-  "commit": "9921958c92e0b0e3bd7c13b875e129acefb590d6",
-  "note": "view-mode multipage plan",
+  "generatedAtUtc": "2025-10-28T16:35:24.9445368Z",
+  "commit": "a08796bd6a874e6dcb24c9575bf870d3edfe7492",
+  "note": "describe the layout change",
   "fixtures": [
     {
       "name": "invSys",
@@ -12,7 +12,7 @@
           "hashes": {
             "ir": "55b836f134c0ad37a21f2b862b033a9b2b8d454d618980de8b1dbd45f6df5653",
             "diagram": "65d5463f09f679141692c7e86dc24513ba1354b17f569be7e70ee75cd644d38f",
-            "diagnostics": "0ee0b688811cad52428424f3e59ac66e8ca3c51802483dbe4e526dda31384bb0",
+            "diagnostics": "467c604ee0dc5ee20535933f766f7025acc22d85edef0fa3f7d45151309b274a",
             "vsdx": "44028c5b9a418abec5d0d9d79bb3c42aa4e6b434b781fa48f5b5945b582eea79"
           },
           "paths": {
@@ -52,7 +52,7 @@
           "hashes": {
             "ir": "55b836f134c0ad37a21f2b862b033a9b2b8d454d618980de8b1dbd45f6df5653",
             "diagram": "14fbb0e3dded26773c83b41b490a858a416c0ff4726c2691a752d0fd49a77921",
-            "diagnostics": "a1a922769956220ffa6ebc11478f746dd5ff0d0535ee46f18c54e4d5d013c1f4",
+            "diagnostics": "b7c834624d7f8f3516074feb4f1deabefbea4e7188ea319c2e6d3495349cae0c",
             "vsdx": "44028c5b9a418abec5d0d9d79bb3c42aa4e6b434b781fa48f5b5945b582eea79"
           },
           "paths": {
@@ -92,7 +92,7 @@
           "hashes": {
             "ir": "55b836f134c0ad37a21f2b862b033a9b2b8d454d618980de8b1dbd45f6df5653",
             "diagram": "2d06feb03520114f0909c82c0badf2640ad2d9018010135ea304c994e5abdb1b",
-            "diagnostics": "05d0780b5e07c5f313b17315767c0c156763850aad8645b54bcf54bb9fc5f644",
+            "diagnostics": "bd67d651ed19f69804058379e142f587abdc6468a84d70e49f4bb8f498b17cca",
             "vsdx": "44028c5b9a418abec5d0d9d79bb3c42aa4e6b434b781fa48f5b5945b582eea79"
           },
           "paths": {
@@ -132,7 +132,7 @@
           "hashes": {
             "ir": "55b836f134c0ad37a21f2b862b033a9b2b8d454d618980de8b1dbd45f6df5653",
             "diagram": "3ea626678e89a747b2bea44b589e007d4b6bd559a680c033da179449fa4ca5d3",
-            "diagnostics": "73682e8c447a269fec64852b6ad4e244d3e05c978ee20f06a4a203611883d77d",
+            "diagnostics": "7cdd96a3b439d72ac7404dd133502ff9592132311d9b6b435489ef25fba9b934",
             "vsdx": "44028c5b9a418abec5d0d9d79bb3c42aa4e6b434b781fa48f5b5945b582eea79"
           },
           "paths": {

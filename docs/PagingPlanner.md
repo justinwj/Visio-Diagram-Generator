@@ -60,6 +60,16 @@ regressions can be detected quickly.
 
 Per-page annotations (`warning: page 12 ...`) are emitted when a page crosses connector caps, crowding limits, or incurs truncations. The metrics payload mirrors those fields so tests and CI runs can assert on the exact set of degraded pages without parsing console output.
 
+## Layer Split Options & Metrics
+
+Large diagrams now carry an explicit layer plan in addition to the page plan:
+
+- Soft layer budgets default to 900 shapes/connectors; hard limits are clamped at 1 000. Set `layout.layers.maxShapes` / `layout.layers.maxConnectors` in diagram metadata to tune the limits (values are automatically clamped to 1–1 000).
+- The planner emits `layoutPlan.Layers[]` (layer index, module list, initial share estimates) and `layoutPlan.Bridges[]` (cross-layer connector records with entry/exit anchors).
+- Diagnostics JSON mirrors the plan with `metrics.layerCount`, `metrics.layerCrowdingCount`, `metrics.layerOverflowCount`, `metrics.bridgeCount`, and a `metrics.layers[]` collection summarising module assignments, shape/connector totals, and bridge counts per layer.
+- `VDG.CLI` consumes the layer plan when rendering: modules and connectors are dropped onto Visio layers named `Layer <n>` (or user-provided names from `layout.layers.names`). Exceeding a soft budget generates a warning; exceeding the hard limit yields a `LayerOverflow` issue and keeps `partialRender=yes` set.
+- Bridges make it possible to audit cross-layer traffic without scanning the console output—the diagnostics payload now records both inbound and outbound bridge counts for each layer.
+
 ## Splitting Heuristics (Quick Reference)
 
 - Segmentation triggers when:

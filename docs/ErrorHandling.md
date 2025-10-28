@@ -21,6 +21,10 @@ signals to watch, and the supported fallback levers when mitigation is applied.
 - Per-page diagnostics list `partial=yes`, connector limits, truncation counts,
   and lane warnings. These are mirrored in `metrics.pages[]` inside the
   diagnostics JSON.
+- Layer-aware runs also report `LayerCrowdingCount`, `LayerOverflowCount`, and
+  per-layer bridge totals. Treat `LayerOverflow` issues as high priority—they
+  mean a single layer crossed the hard 1 000 shape/connector cap and requires
+  rebalance before the diagram can scale further.
 - `tools/render-smoke.ps1` and `tools/render-fixture.ps1` capture the same
   metrics; both scripts surface skipped connector counts on the console.
 

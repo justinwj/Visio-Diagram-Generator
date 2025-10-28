@@ -118,22 +118,46 @@ namespace VDG.CLI
 
         private sealed class LayerRenderContext
         {
-            private LayerRenderContext(bool enabled, Dictionary<string, int> moduleToLayer, Dictionary<int, string> layerNames)
+            private LayerRenderContext(
+                bool enabled,
+                Dictionary<string, int> moduleToLayer,
+                Dictionary<int, string> layerNames,
+                HashSet<int>? visibleLayers)
             {
                 Enabled = enabled;
                 ModuleToLayer = moduleToLayer;
                 LayerNames = layerNames;
+                VisibleLayers = visibleLayers;
             }
 
             public bool Enabled { get; }
             public Dictionary<string, int> ModuleToLayer { get; }
             public Dictionary<int, string> LayerNames { get; }
+            public HashSet<int>? VisibleLayers { get; }
+            public bool HasLayerFilter => Enabled && VisibleLayers != null && VisibleLayers.Count > 0;
+
+            public bool IsLayerVisible(int layerIndex)
+            {
+                if (!Enabled) return true;
+                if (!HasLayerFilter) return true;
+                return VisibleLayers!.Contains(layerIndex);
+            }
+
+            public bool ShouldRenderModule(string? moduleId)
+            {
+                if (!Enabled || string.IsNullOrWhiteSpace(moduleId)) return true;
+                if (!ModuleToLayer.TryGetValue(moduleId.Trim(), out var assignedLayer)) return true;
+                return IsLayerVisible(assignedLayer);
+            }
 
             public static LayerRenderContext Disabled { get; } =
-                new LayerRenderContext(false, new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase), new Dictionary<int, string>());
+                new LayerRenderContext(false, new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase), new Dictionary<int, string>(), null);
 
-            public static LayerRenderContext Create(Dictionary<string, int> moduleToLayer, Dictionary<int, string> layerNames) =>
-                new LayerRenderContext(true, moduleToLayer, layerNames);
+            public static LayerRenderContext Create(
+                Dictionary<string, int> moduleToLayer,
+                Dictionary<int, string> layerNames,
+                HashSet<int>? visibleLayers) =>
+                new LayerRenderContext(true, moduleToLayer, layerNames, visibleLayers);
         }
 
         internal sealed class PageDiagnosticsDetail
@@ -268,6 +292,11 @@ namespace VDG.CLI
                 var moduleExcludeFilters = new List<string>();
                 var modulesFilteredOut = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 int? maxPagesFilter = null;
+                int? layerMaxShapesOverride = null;
+                int? layerMaxConnectorsOverride = null;
+                var layerIncludeFilters = new List<int>();
+                var layerExcludeFilters = new List<int>();
+                bool layerFilterSpecified = false;
 
                 int index = 0;
                 bool diagJsonEnable = false; string? diagJsonPath = null; string? diagLevelOverride = null;
@@ -412,6 +441,98 @@ namespace VDG.CLI
                         if (!bool.TryParse(args[index + 1], out var b)) { throw new UsageException("--paginate must be true or false."); }
                         paginateOverride = b; index += 2; continue;
                     }
+                    else if (string.Equals(flag, "--layer-max-shapes", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (index + 1 >= args.Length) { throw new UsageException("--layer-max-shapes requires integer 1-1000."); }
+                        if (!int.TryParse(args[index + 1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed) || parsed < 1 || parsed > 1000)
+                        {
+                            throw new UsageException("--layer-max-shapes must be an integer between 1 and 1000.");
+                        }
+                        layerMaxShapesOverride = parsed;
+                        index += 2;
+                        continue;
+                    }
+                    else if (string.Equals(flag, "--layer-max-connectors", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (index + 1 >= args.Length) { throw new UsageException("--layer-max-connectors requires integer 1-1000."); }
+                        if (!int.TryParse(args[index + 1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed) || parsed < 1 || parsed > 1000)
+                        {
+                            throw new UsageException("--layer-max-connectors must be an integer between 1 and 1000.");
+                        }
+                        layerMaxConnectorsOverride = parsed;
+                        index += 2;
+                        continue;
+                    }
+                    else if (string.Equals(flag, "--layers", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (index + 1 >= args.Length) { throw new UsageException("--layers requires at least one layer index."); }
+                        var collected = new List<string>();
+                        var cursor = index + 1;
+                        while (cursor < args.Length && !args[cursor].StartsWith("-", StringComparison.Ordinal))
+                        {
+                            var token = args[cursor];
+                            if (!string.IsNullOrWhiteSpace(token))
+                            {
+                                var parts = token.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                                foreach (var part in parts)
+                                {
+                                    var trimmed = part.Trim();
+                                    if (!string.IsNullOrWhiteSpace(trimmed))
+                                    {
+                                        collected.Add(trimmed);
+                                    }
+                                }
+                            }
+                            cursor++;
+                        }
+                        if (collected.Count == 0)
+                        {
+                            throw new UsageException("--layers requires at least one layer index.");
+                        }
+
+                        var mode = "include";
+                        var firstToken = collected[0];
+                        if (string.Equals(firstToken, "include", StringComparison.OrdinalIgnoreCase) ||
+                            string.Equals(firstToken, "exclude", StringComparison.OrdinalIgnoreCase))
+                        {
+                            mode = firstToken.ToLowerInvariant();
+                            collected.RemoveAt(0);
+                            if (collected.Count == 0)
+                            {
+                                throw new UsageException($"--layers {mode} requires at least one layer index.");
+                            }
+                        }
+
+                        if (collected.Count == 1 && string.Equals(collected[0], "all", StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (string.Equals(mode, "exclude", StringComparison.OrdinalIgnoreCase))
+                            {
+                                throw new UsageException("--layers exclude all would hide every layer.");
+                            }
+                            layerIncludeFilters.Clear();
+                            layerFilterSpecified = true;
+                            index = cursor;
+                            continue;
+                        }
+
+                        var parsedLayers = ParseLayerFilterTokens(collected);
+                        if (parsedLayers.Count == 0)
+                        {
+                            throw new UsageException("--layers requires at least one valid layer index.");
+                        }
+
+                        layerFilterSpecified = true;
+                        if (string.Equals(mode, "exclude", StringComparison.OrdinalIgnoreCase))
+                        {
+                            layerExcludeFilters.AddRange(parsedLayers);
+                        }
+                        else
+                        {
+                            layerIncludeFilters.AddRange(parsedLayers);
+                        }
+                        index = cursor;
+                        continue;
+                    }
                     else if (string.Equals(flag, "--route-mode", StringComparison.OrdinalIgnoreCase))
                     {
                         if (index + 1 >= args.Length) { throw new UsageException("--route-mode requires orthogonal|straight."); }
@@ -554,6 +675,8 @@ namespace VDG.CLI
                 if (pageHeightOverride.HasValue) model.Metadata["layout.page.heightIn"] = pageHeightOverride.Value.ToString(CultureInfo.InvariantCulture);
                 if (pageMarginOverride.HasValue) model.Metadata["layout.page.marginIn"] = pageMarginOverride.Value.ToString(CultureInfo.InvariantCulture);
                 if (paginateOverride.HasValue) model.Metadata["layout.page.paginate"] = paginateOverride.Value.ToString();
+                if (layerMaxShapesOverride.HasValue) model.Metadata["layout.layers.maxShapes"] = layerMaxShapesOverride.Value.ToString(CultureInfo.InvariantCulture);
+                if (layerMaxConnectorsOverride.HasValue) model.Metadata["layout.layers.maxConnectors"] = layerMaxConnectorsOverride.Value.ToString(CultureInfo.InvariantCulture);
                 if (!string.IsNullOrWhiteSpace(routeModeOverride)) model.Metadata["layout.routing.mode"] = routeModeOverride!;
                 if (!string.IsNullOrWhiteSpace(bundleByOverride)) model.Metadata["layout.routing.bundleBy"] = bundleByOverride!;
                 if (bundleSepOverride.HasValue) model.Metadata["layout.routing.bundleSeparationIn"] = bundleSepOverride.Value.ToString(CultureInfo.InvariantCulture);
@@ -675,6 +798,13 @@ namespace VDG.CLI
                 }
             }
 
+            var layerVisibility = BuildLayerVisibility(layoutPlan, layerIncludeFilters, layerExcludeFilters, layerFilterSpecified);
+            if (layerFilterSpecified && layerVisibility != null && layerVisibility.Count == 0)
+            {
+                Console.Error.WriteLine("warning: --layers filters removed all layers; no output generated.");
+                return ExitCodes.InvalidInput;
+            }
+
             ValidateViewModeContent(model);
 
             var nodePageAssignments = BuildNodePageAssignments(model, pagePlans, null);
@@ -721,7 +851,7 @@ namespace VDG.CLI
                 else
                 {
                     EnsureDirectory(outputPath);
-                    RunVisio(model, layout, layoutPlan, outputPath, pagePlans, nodePageAssignments);
+                    RunVisio(model, layout, layoutPlan, outputPath, pagePlans, nodePageAssignments, layerVisibility);
                     DeleteErrorLog(outputPath);
 
                     Console.WriteLine($"Saved diagram: {outputPath}");
@@ -781,6 +911,9 @@ namespace VDG.CLI
             Console.Error.WriteLine("  --page-height <in>      Page height (inches)");
             Console.Error.WriteLine("  --page-margin <in>      Page margin (inches)");
             Console.Error.WriteLine("  --paginate <bool>       Enable pagination (future use)");
+            Console.Error.WriteLine("  --layer-max-shapes <1-1000>     Override layer shape soft cap (default 900)");
+            Console.Error.WriteLine("  --layer-max-connectors <1-1000> Override layer connector soft cap (default 900)");
+            Console.Error.WriteLine("  --layers [include|exclude] <list> Render specific layers (e.g., --layers include 1,3)");
             // M3 routing options
             Console.Error.WriteLine("  --route-mode <orthogonal|straight>  Preferred connector style (M3)");
             Console.Error.WriteLine("  --bundle-by <lane|group|nodepair|none> Group edges for bundling (M3)");
@@ -1279,20 +1412,20 @@ namespace VDG.CLI
                 {
                     if (rank > highestRank) highestRank = rank;
                     gatedIssues.Add(new DiagIssue { Code = code, Level = level, Message = message, Lane = lane, Page = page });
-                }
             }
+        }
 
-            static int ClampLayerBudget(string? raw, int defaultValue)
+        static int ClampLayerBudget(string? raw, int defaultValue)
+        {
+            if (!string.IsNullOrWhiteSpace(raw) &&
+                int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed))
             {
-                if (!string.IsNullOrWhiteSpace(raw) &&
-                    int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed))
-                {
-                    if (parsed < 1) return 1;
-                    if (parsed > 1000) return 1000;
-                    return parsed;
-                }
-                return defaultValue;
+                if (parsed < 1) return 1;
+                if (parsed > 1000) return 1000;
+                return parsed;
             }
+            return defaultValue;
+        }
 
             if (pagePlans != null && pagePlans.Length > 0)
             {
@@ -4181,7 +4314,7 @@ namespace VDG.CLI
             return (minLeft, minBottom, maxRight, maxTop);
         }
 
-        private static LayerRenderContext BuildLayerRenderContext(DiagramModel model, LayoutPlan? layoutPlan)
+        private static LayerRenderContext BuildLayerRenderContext(DiagramModel model, LayoutPlan? layoutPlan, HashSet<int>? visibleLayers)
         {
             if (layoutPlan?.Layers == null || layoutPlan.Layers.Length == 0)
             {
@@ -4233,10 +4366,17 @@ namespace VDG.CLI
                 return LayerRenderContext.Disabled;
             }
 
-            return LayerRenderContext.Create(moduleToLayer, layerNames);
+            return LayerRenderContext.Create(moduleToLayer, layerNames, visibleLayers);
         }
 
-        private static void RunVisio(DiagramModel model, LayoutResult layout, LayoutPlan? layoutPlan, string outputPath, PagePlan[] pagePlans, IReadOnlyDictionary<string, int> nodePageAssignments)
+        private static void RunVisio(
+            DiagramModel model,
+            LayoutResult layout,
+            LayoutPlan? layoutPlan,
+            string outputPath,
+            PagePlan[] pagePlans,
+            IReadOnlyDictionary<string, int> nodePageAssignments,
+            HashSet<int>? visibleLayers)
         {
             dynamic? app = null;
             dynamic? documents = null;
@@ -4270,7 +4410,7 @@ namespace VDG.CLI
                     throw new InvalidDataException("Layout produced zero nodes.");
                 }
 
-                var layerContext = BuildLayerRenderContext(model, layoutPlan);
+                var layerContext = BuildLayerRenderContext(model, layoutPlan, visibleLayers);
 
                 if (ShouldPaginate(model, layout))
                 {
@@ -4278,7 +4418,7 @@ namespace VDG.CLI
                 }
                 else
                 {
-                    ComputePlacements(model, layout, placements, firstPageInfo, layerContext);
+                    ComputePlacements(model, layout, layoutPlan, placements, firstPageInfo, layerContext);
                     DrawLaneContainers(model, layout, firstPageInfo.Page);
                     DrawConnectors(model, placements, firstPageInfo, pageManager, layout, layerContext);
                 }
@@ -4631,7 +4771,7 @@ namespace VDG.CLI
             return instance;
         }
 
-        private static void ComputePlacements(DiagramModel model, LayoutResult layout, IDictionary<string, NodePlacement> placements, VisioPageManager.PageInfo pageInfo, LayerRenderContext layerContext)
+        private static void ComputePlacements(DiagramModel model, LayoutResult layout, LayoutPlan? layoutPlan, IDictionary<string, NodePlacement> placements, VisioPageManager.PageInfo pageInfo, LayerRenderContext layerContext)
         {
             if (pageInfo == null) throw new COMException("Visio page metadata was not initialised.");
             dynamic visioPage = pageInfo.Page ?? throw new COMException("Visio page was not created.");
@@ -4679,27 +4819,205 @@ namespace VDG.CLI
                 var right = left + width;
                 var top = bottom + height;
 
+                int? layerIndex = null;
+                string? moduleId = null;
+                if (layerContext.Enabled)
+                {
+                    moduleId = ResolveModuleIdForNode(node, tiers, tiersSet);
+                    if (!layerContext.ShouldRenderModule(moduleId))
+                    {
+                        continue;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(moduleId) && layerContext.ModuleToLayer.TryGetValue(moduleId, out var assignedLayer))
+                    {
+                        layerIndex = assignedLayer;
+                    }
+                }
+
                 dynamic shape = visioPage.DrawRectangle(left, bottom, right, top);
                 shape.Text = node.Label;
                 ApplyNodeStyle(node, shape);
 
-                int layerIndex = -1;
-                if (layerContext.Enabled)
+                if (layerIndex.HasValue)
                 {
-                    var moduleId = ResolveModuleIdForNode(node, tiers, tiersSet);
-                    if (!string.IsNullOrWhiteSpace(moduleId) && layerContext.ModuleToLayer.TryGetValue(moduleId, out var assignedLayer))
-                    {
-                        layerIndex = assignedLayer;
-                        AssignShapeToLayer(layerContext, pageInfo, shape, layerIndex);
-                    }
+                    AssignShapeToLayer(layerContext, pageInfo, shape, layerIndex.Value);
                 }
 
-                placements[nodeLayout.Id] = new NodePlacement(shape, left, bottom, width, height, layerIndex >= 0 ? layerIndex : (int?)null);
+                placements[nodeLayout.Id] = new NodePlacement(shape, left, bottom, width, height, layerIndex);
                 pageInfo.IncrementNodeCount();
             }
+
+            DrawLayerBridgeStubsSinglePage(layoutPlan, pageInfo, visioPage, offsetX, offsetY, layerContext);
         }
 
         private static bool IsFinite(double v) => !(double.IsNaN(v) || double.IsInfinity(v));
+
+        private static void DrawLayerBridgeStubsSinglePage(
+            LayoutPlan? layoutPlan,
+            VisioPageManager.PageInfo pageInfo,
+            dynamic visioPage,
+            double offsetX,
+            double offsetY,
+            LayerRenderContext layerContext)
+        {
+            if (!layerContext.Enabled || !layerContext.HasLayerFilter) return;
+            if (layoutPlan?.Bridges == null || layoutPlan.Bridges.Length == 0) return;
+
+            var dedupe = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var bridge in layoutPlan.Bridges)
+            {
+                if (bridge == null) continue;
+
+                var sourceVisible = layerContext.IsLayerVisible(bridge.SourceLayer);
+                var targetVisible = layerContext.IsLayerVisible(bridge.TargetLayer);
+
+                if (!sourceVisible && !targetVisible)
+                {
+                    continue;
+                }
+
+                if (sourceVisible)
+                {
+                    DrawLayerBridgeStubShape(pageInfo, visioPage, bridge.ExitAnchor, offsetX, offsetY, bridge.SourceLayer, bridge.TargetLayer, true, layerContext, dedupe);
+                }
+
+                if (targetVisible)
+                {
+                    DrawLayerBridgeStubShape(pageInfo, visioPage, bridge.EntryAnchor, offsetX, offsetY, bridge.TargetLayer, bridge.SourceLayer, false, layerContext, dedupe);
+                }
+            }
+        }
+
+        private static void DrawLayerBridgeStubShape(
+            VisioPageManager.PageInfo pageInfo,
+            dynamic visioPage,
+            PointF anchor,
+            double offsetX,
+            double offsetY,
+            int owningLayer,
+            int otherLayer,
+            bool isSource,
+            LayerRenderContext layerContext,
+            HashSet<string> dedupe)
+        {
+            if (visioPage == null) return;
+
+            var x = (double)anchor.X + offsetX;
+            var y = (double)anchor.Y + offsetY;
+
+            if (double.IsNaN(x) || double.IsNaN(y) || double.IsInfinity(x) || double.IsInfinity(y))
+            {
+                return;
+            }
+
+            var key = $"{owningLayer}:{Math.Round(x, 2):F2}:{Math.Round(y, 2):F2}:{(isSource ? "out" : "in")}";
+            if (!dedupe.Add(key))
+            {
+                return;
+            }
+
+            var radius = 0.14;
+            dynamic? stub = null;
+            try
+            {
+                stub = visioPage.DrawOval(x - radius, y - radius, x + radius, y + radius);
+                var arrow = isSource ? "→" : "←";
+                stub.Text = $"{arrow} L{otherLayer + 1}";
+                TrySetFormula(stub, "LinePattern", "2");
+                TrySetFormula(stub, "LineWeight", "0.013");
+                TrySetFormula(stub, "FillForegnd", "RGB(240,240,240)");
+                TrySetFormula(stub, "Char.Size", "6 pt");
+                try { stub.CellsU["LockTextEdit"].FormulaU = "1"; } catch { }
+                AssignShapeToLayer(layerContext, pageInfo, stub, owningLayer);
+                try { stub.SendToFront(); } catch { }
+            }
+            catch
+            {
+                // Ignore failures creating decorative stubs.
+            }
+            finally
+            {
+                if (stub != null)
+                {
+                    ReleaseCom(stub);
+                }
+            }
+        }
+
+        private static void DrawLayerBridgeStubsForPage(
+            LayoutPlan? layoutPlan,
+            LayoutResult layout,
+            VisioPageManager.PageInfo pageInfo,
+            dynamic visioPage,
+            int pageIndex,
+            double minLeft,
+            double minBottom,
+            double usableHeight,
+            double margin,
+            double title,
+            IReadOnlyDictionary<string, int> nodePageAssignments,
+            LayerRenderContext layerContext)
+        {
+            if (!layerContext.Enabled || !layerContext.HasLayerFilter) return;
+            if (layoutPlan?.Bridges == null || layoutPlan.Bridges.Length == 0) return;
+            if (visioPage == null) return;
+
+            var offsetX = margin - minLeft;
+            var bandOffset = IsFinite(usableHeight) ? pageIndex * usableHeight : 0.0;
+            var offsetY = margin + title - minBottom - bandOffset;
+
+            var dedupe = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var layoutNodes = layout?.Nodes?.Where(n => n != null && !string.IsNullOrWhiteSpace(n.Id))
+                                 ?.ToDictionary(n => n.Id, StringComparer.OrdinalIgnoreCase)
+                             ?? new Dictionary<string, NodeLayout>(StringComparer.OrdinalIgnoreCase);
+
+            bool IsBridgeOnPage(LayerBridge bridge, bool source)
+            {
+                var nodeId = source ? bridge.SourceNodeId : bridge.TargetNodeId;
+                if (!string.IsNullOrWhiteSpace(nodeId) && nodePageAssignments != null && nodePageAssignments.TryGetValue(nodeId, out var mappedPage))
+                {
+                    return mappedPage == pageIndex;
+                }
+
+                var anchor = source ? bridge.ExitAnchor : bridge.EntryAnchor;
+                if (IsFinite(usableHeight) && usableHeight > 0.0)
+                {
+                    var normalized = anchor.Y - (float)minBottom;
+                    var idx = (int)Math.Floor(normalized / (float)usableHeight);
+                    return idx == pageIndex;
+                }
+
+                if (!string.IsNullOrWhiteSpace(nodeId) && layoutNodes.TryGetValue(nodeId, out var nodeLayout))
+                {
+                    var normalized = nodeLayout.Position.Y - (float)minBottom;
+                    var idx = usableHeight > 0.0 ? (int)Math.Floor(normalized / (float)usableHeight) : 0;
+                    return idx == pageIndex;
+                }
+
+                return true;
+            }
+
+            foreach (var bridge in layoutPlan.Bridges)
+            {
+                if (bridge == null) continue;
+
+                var sourceVisible = layerContext.IsLayerVisible(bridge.SourceLayer);
+                var targetVisible = layerContext.IsLayerVisible(bridge.TargetLayer);
+                if (!sourceVisible && !targetVisible) continue;
+
+                if (sourceVisible && IsBridgeOnPage(bridge, true))
+                {
+                    DrawLayerBridgeStubShape(pageInfo, visioPage, bridge.ExitAnchor, offsetX, offsetY, bridge.SourceLayer, bridge.TargetLayer, true, layerContext, dedupe);
+                }
+
+                if (targetVisible && IsBridgeOnPage(bridge, false))
+                {
+                    DrawLayerBridgeStubShape(pageInfo, visioPage, bridge.EntryAnchor, offsetX, offsetY, bridge.TargetLayer, bridge.SourceLayer, false, layerContext, dedupe);
+                }
+            }
+        }
 
         private static void DrawLaneContainers(DiagramModel model, LayoutResult layout, dynamic page)
         {
@@ -5870,7 +6188,7 @@ namespace VDG.CLI
                 TrySetResult(page.PageSheet.CellsU["PageHeight"], pageHeight);
 
                 var placements = new Dictionary<string, NodePlacement>(StringComparer.OrdinalIgnoreCase);
-                ComputePlacementsForPage(model, layout, placements, pageInfo, pi, minLeft, minBottom, usable, margin, title, nodePage, layerContext);
+                ComputePlacementsForPage(model, layout, layoutPlan, placements, pageInfo, pi, minLeft, minBottom, usable, margin, title, nodePage, layerContext);
                 DrawLaneContainersForPage(model, layout, page, pi, pageCount, minLeft, minBottom, usable, margin, title, nodePage);
                 placementsPerPage[pi] = placements;
             }
@@ -5878,7 +6196,7 @@ namespace VDG.CLI
             DrawConnectorsPaged(model, layout, placementsPerPage, pageManager, nodePage, layerContext);
         }
 
-        private static void ComputePlacementsForPage(DiagramModel model, LayoutResult layout, IDictionary<string, NodePlacement> placements, VisioPageManager.PageInfo pageInfo, int pageIndex, double minLeft, double minBottom, double usableHeight, double margin, double title, IReadOnlyDictionary<string, int> nodePageAssignments, LayerRenderContext layerContext)
+        private static void ComputePlacementsForPage(DiagramModel model, LayoutResult layout, LayoutPlan? layoutPlan, IDictionary<string, NodePlacement> placements, VisioPageManager.PageInfo pageInfo, int pageIndex, double minLeft, double minBottom, double usableHeight, double margin, double title, IReadOnlyDictionary<string, int> nodePageAssignments, LayerRenderContext layerContext)
         {
             if (pageInfo == null) throw new COMException("Visio page metadata was not initialised.");
             dynamic visioPage = pageInfo.Page ?? throw new COMException("Visio page was not created.");
@@ -5906,24 +6224,36 @@ namespace VDG.CLI
                 var right = left + width;
                 var top = bottom + height;
 
+                int? layerIndex = null;
+                string? moduleId = null;
+                if (layerContext.Enabled)
+                {
+                    moduleId = ResolveModuleIdForNode(node, tiers, tiersSet);
+                    if (!layerContext.ShouldRenderModule(moduleId))
+                    {
+                        continue;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(moduleId) && layerContext.ModuleToLayer.TryGetValue(moduleId, out var assignedLayer))
+                    {
+                        layerIndex = assignedLayer;
+                    }
+                }
+
                 dynamic shape = visioPage.DrawRectangle(left, bottom, right, top);
                 shape.Text = node.Label;
                 ApplyNodeStyle(node, shape);
 
-                int layerIndex = -1;
-                if (layerContext.Enabled)
+                if (layerIndex.HasValue)
                 {
-                    var moduleId = ResolveModuleIdForNode(node, tiers, tiersSet);
-                    if (!string.IsNullOrWhiteSpace(moduleId) && layerContext.ModuleToLayer.TryGetValue(moduleId, out var assignedLayer))
-                    {
-                        layerIndex = assignedLayer;
-                        AssignShapeToLayer(layerContext, pageInfo, shape, layerIndex);
-                    }
+                    AssignShapeToLayer(layerContext, pageInfo, shape, layerIndex.Value);
                 }
 
-                placements[nl.Id] = new NodePlacement(shape, left, bottom, width, height, layerIndex >= 0 ? layerIndex : (int?)null);
+                placements[nl.Id] = new NodePlacement(shape, left, bottom, width, height, layerIndex);
                 pageInfo.IncrementNodeCount();
             }
+
+            DrawLayerBridgeStubsForPage(layoutPlan, layout, pageInfo, visioPage, pageIndex, minLeft, minBottom, usableHeight, margin, title, nodePageAssignments, layerContext);
         }
 
         private static void DrawLaneContainersForPage(DiagramModel model, LayoutResult layout, dynamic page, int pageIndex, int pageCount, double minLeft, double minBottom, double usableHeight, double margin, double title, IReadOnlyDictionary<string, int> nodePageAssignments)
@@ -6461,6 +6791,124 @@ namespace VDG.CLI
         private static string FormatDelta(int delta) => delta >= 0
             ? string.Format(CultureInfo.InvariantCulture, "+{0}", delta)
             : delta.ToString(CultureInfo.InvariantCulture);
+
+        private static List<int> ParseLayerFilterTokens(IEnumerable<string> tokens)
+        {
+            var result = new List<int>();
+            foreach (var token in tokens)
+            {
+                var normalized = token.Trim();
+                if (string.IsNullOrWhiteSpace(normalized))
+                {
+                    continue;
+                }
+
+                if (normalized.IndexOf("-", StringComparison.Ordinal) >= 0)
+                {
+                    var parts = normalized.Split(new[] { '-' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length != 2)
+                    {
+                        throw new UsageException($"Invalid layer range '{token}'.");
+                    }
+
+                    var start = ParseLayerIndexComponent(parts[0], token);
+                    var end = ParseLayerIndexComponent(parts[1], token);
+                    if (end < start)
+                    {
+                        (start, end) = (end, start);
+                    }
+
+                    for (var value = start; value <= end; value++)
+                    {
+                        result.Add(value);
+                    }
+                }
+                else
+                {
+                    var index = ParseLayerIndexComponent(normalized, token);
+                    result.Add(index);
+                }
+            }
+
+            return result;
+        }
+
+        private static int ParseLayerIndexComponent(string component, string originalToken)
+        {
+            if (string.IsNullOrWhiteSpace(component))
+            {
+                throw new UsageException($"Invalid layer index '{originalToken}'.");
+            }
+
+            var trimmed = component.Trim();
+            if (trimmed.StartsWith("L", StringComparison.OrdinalIgnoreCase))
+            {
+                trimmed = trimmed.Substring(1);
+            }
+
+            if (!int.TryParse(trimmed, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed))
+            {
+                throw new UsageException($"Invalid layer index '{originalToken}'.");
+            }
+
+            if (parsed < 1 || parsed > 1000)
+            {
+                throw new UsageException("Layer index must be between 1 and 1000.");
+            }
+
+            return parsed - 1;
+        }
+
+        private static HashSet<int>? BuildLayerVisibility(LayoutPlan? layoutPlan, IEnumerable<int> includeFilters, IEnumerable<int> excludeFilters, bool filterSpecified)
+        {
+            if (layoutPlan?.Layers == null || layoutPlan.Layers.Length == 0)
+            {
+                return null;
+            }
+
+            var available = new HashSet<int>(layoutPlan.Layers.Select(lp => lp.LayerIndex));
+            var includeList = includeFilters?.Where(i => i >= 0).Distinct().ToList() ?? new List<int>();
+            var excludeList = excludeFilters?.Where(i => i >= 0).Distinct().ToList() ?? new List<int>();
+
+            if (!filterSpecified && includeList.Count == 0 && excludeList.Count == 0)
+            {
+                return null;
+            }
+
+            var missingIncludes = includeList.Where(i => !available.Contains(i)).ToList();
+            if (missingIncludes.Count > 0)
+            {
+                Console.Error.WriteLine($"warning: ignoring unknown layer(s) {FormatLayerIndexList(missingIncludes)} for --layers include.");
+                includeList = includeList.Where(available.Contains).ToList();
+            }
+
+            var missingExcludes = excludeList.Where(i => !available.Contains(i)).ToList();
+            if (missingExcludes.Count > 0)
+            {
+                Console.Error.WriteLine($"warning: ignoring unknown layer(s) {FormatLayerIndexList(missingExcludes)} for --layers exclude.");
+                excludeList = excludeList.Where(available.Contains).ToList();
+            }
+
+            var visible = includeList.Count > 0
+                ? new HashSet<int>(includeList)
+                : new HashSet<int>(available);
+
+            foreach (var ex in excludeList)
+            {
+                visible.Remove(ex);
+            }
+
+            return visible;
+        }
+
+        private static string FormatLayerIndexList(IEnumerable<int> zeroBased)
+        {
+            return string.Join(", ",
+                zeroBased
+                    .Distinct()
+                    .OrderBy(i => i)
+                    .Select(i => $"L{i + 1}"));
+        }
 
         private static void PrintPlannerSummary(PlannerSummaryStats stats, PlannerMetrics? segmentationMetrics, DiagnosticsSummary? diagnosticsSummary)
         {

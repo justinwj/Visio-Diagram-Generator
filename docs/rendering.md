@@ -54,6 +54,15 @@ Some fixtures rely on small JSON overrides (e.g., forcing pagination). Drop them
 - All ratios and severities accept overrides via environment variables, allowing experimentation without editing diagram JSON.
 - Any summary that includes `partialRender=yes` means mitigations triggered; see `docs/ErrorHandling.md` for the fallback policy and triage checklist.
 
+### Layer Segmentation & Bridges
+
+- The planner now emits per-layer budgets alongside page plans. `VDG.CLI` honours the plan by creating Visio layers named `Layer <n>` (or the friendly names from `layout.layers.names`) and assigning every shape and connector accordingly.
+- Layer caps default to a soft budget of 900 shapes/connectors and a hard stop at 1 000. Override via diagram metadata (`layout.layers.maxShapes`, `layout.layers.maxConnectors`) or the new CLI switches (`--layer-max-shapes`, `--layer-max-connectors`). Soft breaches emit warnings; hard breaches log `LayerOverflow` issues.
+- Cross-layer connectors produce `layoutPlan.Bridges[]` entries that retain the original edge metadata plus entry/exit anchors. Diagnostics expose a `BridgeCount` summary and include each bridge in `metrics.layers[].bridgesIn/bridgesOut`, making it easy to audit cross-layer traffic.
+- Use `--layers include ...` or `--layers exclude ...` to render a subset of layers during Visio output. When a filter hides one side of a bridge, the visible layer receives a small stub marker so cross-layer connectors remain discoverable.
+- New diagnostics metrics mirror the layer plan: `LayerCount`, `LayerCrowdingCount`, `LayerOverflowCount`, and a sorted `Layers[]` array describing module membership and overflow hints. Fixture baselines have been refreshed to assert on these numbers.
+- When tuning a large fixture, start by lowering the soft budgets (e.g., `layout.layers.maxShapes=600`), re-run the render, and inspect `metrics.layers[]` to verify the split before adjusting page spacing.
+
 ## Render Smoke Script
 
 `tools/render-smoke.ps1` wraps the full pipeline, produces both the `.vsdx` and a summary file (`out/perf/render_diagnostics.json`), and compares the summary with `tests/baselines/render_diagnostics.json`.

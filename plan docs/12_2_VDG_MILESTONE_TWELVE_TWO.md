@@ -20,22 +20,23 @@ Recommended Order of Operations
 
 3. **Renderer & CLI Work (C#)**
    - [x] Teach `VDG.CLI` to create Visio layers dynamically and assign shapes/connectors to the correct layer.  
-   - [ ] Render bridge anchors or stubs for cross-layer connectors; add CLI switches to render specific layers.  
+   - [x] Render bridge anchors or stubs for cross-layer connectors; add CLI switches to render specific layers.  
+     - Added `--layers include|exclude` filtering plus `--layer-max-shapes`/`--layer-max-connectors` overrides; filtered runs draw stub badges on the visible layer so cross-layer routes stay discoverable without cluttering the default view.  
    - [x] Update diagnostics output with `layerCount`, per-layer shape/connector totals, and bridge summaries.
 
 4. **Fixture & CI Alignment**
-   - [ ] Regenerate `invSys` and at least one smaller fixture to confirm layer counts and bridge data.  
-   - [ ] Update smoke/baseline checks to assert new metrics (`layerCount`, `bridges`, layer overflow warnings).
+   - [x] Regenerate `invSys` and at least one smaller fixture to confirm layer counts and bridge data.  
+   - [x] Update smoke/baseline checks to assert new metrics (`layerCount`, `bridges`, layer overflow warnings).
 
 5. **Documentation & Guidance**
-   - [ ] Document layer segmentation, bridge semantics, and multi-layer navigation (README, PagingPlanner, ErrorHandling).  
-   - [ ] Provide regeneration guidance for layered fixtures and troubleshooting tips.
+   - [x] Document layer segmentation, bridge semantics, and multi-layer navigation (README, PagingPlanner, ErrorHandling).  
+   - [x] Provide regeneration guidance for layered fixtures and troubleshooting tips.
 
 Acceptance Criteria
-- [ ] Large diagrams (invSys callgraph) render with automatic layer segmentation; no layer exceeds ~1 000 shapes/1 000 connectors.  
-- [ ] Diagnostics include layer metrics and bridge inventories; CI verifies thresholds.  
-- [ ] Cross-layer connectors round-trip cleanly; bridge anchors are clearly represented.  
-- [ ] Updated docs explain how to work with layered outputs and fixture refresh workflows.  
+- [x] Large diagrams (invSys callgraph) render with automatic layer segmentation; no layer exceeds ~1 000 shapes/1 000 connectors.  
+- [x] Diagnostics include layer metrics and bridge inventories; CI verifies thresholds.  
+- [x] Cross-layer connectors round-trip cleanly; bridge anchors are clearly represented.  
+- [x] Updated docs explain how to work with layered outputs and fixture refresh workflows.  
 - [ ] “partialRender” warnings reduce; unavoidable cases identify offending layer/module.
 
 Risks & Notes

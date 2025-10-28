@@ -1,222 +1,143 @@
 {
   "Version": "1.0",
   "Metrics": {
+    "LayoutOutputMode": "view",
+    "LayoutCanvasWidth": 7.71000099,
+    "LayoutCanvasHeight": 11.5300007,
+    "LayoutNodeCount": 48,
+    "LayoutModuleCount": 7,
+    "LayoutContainerCount": 7,
     "ConnectorCount": 29,
-    "StraightLineCrossings": 0,
+    "StraightLineCrossings": 14,
     "PageHeight": 8.5,
     "UsableHeight": 7.5,
+    "ModuleCount": 0,
+    "SegmentCount": 0,
+    "SegmentDelta": 0,
+    "SplitModuleCount": 0,
+    "AverageSegmentsPerModule": 0,
+    "PlannerPageCount": 2,
+    "PlannerAverageModulesPerPage": 3.5,
+    "PlannerAverageConnectorsPerPage": 27,
+    "PlannerMaxOccupancyPercent": 108.53333791097006,
+    "PlannerMaxConnectorsPerPage": 50,
+    "PageOverflowCount": 2,
+    "PageCrowdingCount": 0,
+    "LaneOverflowCount": 0,
+    "LaneCrowdingCount": 2,
+    "ContainerOverflowCount": 7,
+    "PartialRender": true,
+    "ConnectorOverLimitPageCount": 0,
+    "PagesWithPartialRender": 2,
+    "TruncatedNodeCount": 0,
+    "SkippedModules": [],
     "Pages": [
       {
         "Index": 1,
-        "Name": "Forms",
-        "Nodes": 49,
-        "Connectors": 29,
+        "Name": "frmAdminControls, frmCreateDeleteUser, frmEditUser, frmItemSearch, frmLogin, frmReceivedTally",
+        "Nodes": 45,
+        "Connectors": 50,
         "SkippedConnectors": 0,
-        "Overflow": true
+        "Overflow": false,
+        "ConnectorLimit": 400,
+        "ConnectorOverLimit": 0,
+        "ModuleCount": 6,
+        "Partial": true,
+        "LaneCrowdingWarnings": 1,
+        "LaneCrowdingErrors": 0,
+        "PageCrowding": false,
+        "PageOverflow": true,
+        "TruncatedNodes": 0
+      },
+      {
+        "Index": 2,
+        "Name": "frmShipmentsTally",
+        "Nodes": 4,
+        "Connectors": 4,
+        "SkippedConnectors": 0,
+        "Overflow": false,
+        "ConnectorLimit": 400,
+        "ConnectorOverLimit": 0,
+        "ModuleCount": 1,
+        "Partial": true,
+        "LaneCrowdingWarnings": 1,
+        "LaneCrowdingErrors": 0,
+        "PageCrowding": false,
+        "PageOverflow": true,
+        "TruncatedNodes": 0
       }
     ],
     "LanePages": [
       {
         "Tier": "Forms",
-        "Page": 1,
-        "OccupancyRatio": 0.98666666666666669,
-        "Nodes": 5
-      },
-      {
-        "Tier": "Forms",
         "Page": 2,
-        "OccupancyRatio": 0.98666666666666669,
-        "Nodes": 5
+        "OccupancyRatio": 2.1760000085830686,
+        "Nodes": 18
       },
       {
         "Tier": "Forms",
-        "Page": 3,
-        "OccupancyRatio": 0.98666666666666669,
-        "Nodes": 5
-      },
-      {
-        "Tier": "Forms",
-        "Page": 4,
-        "OccupancyRatio": 0.77333333333333332,
-        "Nodes": 4
-      },
-      {
-        "Tier": "Forms",
-        "Page": 5,
-        "OccupancyRatio": 0.98666666666666669,
-        "Nodes": 5
-      },
-      {
-        "Tier": "Forms",
-        "Page": 6,
-        "OccupancyRatio": 0.98666666666666669,
-        "Nodes": 5
-      },
-      {
-        "Tier": "Forms",
-        "Page": 7,
-        "OccupancyRatio": 0.77333333333333332,
-        "Nodes": 4
-      },
-      {
-        "Tier": "Forms",
-        "Page": 8,
-        "OccupancyRatio": 0.98666666666666669,
-        "Nodes": 5
-      },
-      {
-        "Tier": "Forms",
-        "Page": 9,
-        "OccupancyRatio": 0.98666666666666669,
-        "Nodes": 5
-      },
-      {
-        "Tier": "Forms",
-        "Page": 10,
-        "OccupancyRatio": 0.77333333333333332,
-        "Nodes": 4
-      },
-      {
-        "Tier": "Forms",
-        "Page": 11,
-        "OccupancyRatio": 0.34666666666666668,
-        "Nodes": 2
+        "Page": 1,
+        "OccupancyRatio": 3.5546666804949445,
+        "Nodes": 29
       }
     ],
     "Containers": [
       {
         "Id": "frmAdminControls",
         "Tier": "Forms",
-        "Page": 1,
-        "OccupancyRatio": 0.77333333333333332,
+        "Page": 2,
+        "OccupancyRatio": 0.42133333524068195,
         "Nodes": 4
       },
       {
         "Id": "frmCreateDeleteUser",
         "Tier": "Forms",
-        "Page": 1,
-        "OccupancyRatio": 0.13333333333333333,
-        "Nodes": 1
+        "Page": 2,
+        "OccupancyRatio": 0.92266667048136397,
+        "Nodes": 8
       },
       {
-        "Id": "frmCreateDeleteUser",
+        "Id": "frmEditUser",
         "Tier": "Forms",
         "Page": 2,
-        "OccupancyRatio": 0.98666666666666669,
-        "Nodes": 5
-      },
-      {
-        "Id": "frmCreateDeleteUser",
-        "Tier": "Forms",
-        "Page": 3,
-        "OccupancyRatio": 0.34666666666666668,
-        "Nodes": 2
-      },
-      {
-        "Id": "frmEditUser",
-        "Tier": "Forms",
-        "Page": 3,
-        "OccupancyRatio": 0.56000000000000005,
-        "Nodes": 3
-      },
-      {
-        "Id": "frmEditUser",
-        "Tier": "Forms",
-        "Page": 4,
-        "OccupancyRatio": 0.56000000000000005,
-        "Nodes": 3
+        "OccupancyRatio": 0.6720000028610229,
+        "Nodes": 6
       },
       {
         "Id": "frmItemSearch",
         "Tier": "Forms",
-        "Page": 4,
-        "OccupancyRatio": 0.13333333333333333,
-        "Nodes": 1
-      },
-      {
-        "Id": "frmItemSearch",
-        "Tier": "Forms",
-        "Page": 5,
-        "OccupancyRatio": 0.98666666666666669,
-        "Nodes": 5
-      },
-      {
-        "Id": "frmItemSearch",
-        "Tier": "Forms",
-        "Page": 6,
-        "OccupancyRatio": 0.98666666666666669,
-        "Nodes": 5
-      },
-      {
-        "Id": "frmItemSearch",
-        "Tier": "Forms",
-        "Page": 7,
-        "OccupancyRatio": 0.56000000000000005,
-        "Nodes": 3
+        "Page": 1,
+        "OccupancyRatio": 1.4240000057220459,
+        "Nodes": 12
       },
       {
         "Id": "frmLogin",
         "Tier": "Forms",
-        "Page": 7,
-        "OccupancyRatio": 0.13333333333333333,
-        "Nodes": 1
-      },
-      {
-        "Id": "frmLogin",
-        "Tier": "Forms",
-        "Page": 8,
-        "OccupancyRatio": 0.98666666666666669,
-        "Nodes": 5
-      },
-      {
-        "Id": "frmLogin",
-        "Tier": "Forms",
-        "Page": 9,
-        "OccupancyRatio": 0.56000000000000005,
-        "Nodes": 3
+        "Page": 1,
+        "OccupancyRatio": 1.0480000042915345,
+        "Nodes": 9
       },
       {
         "Id": "frmReceivedTally",
         "Tier": "Forms",
-        "Page": 9,
-        "OccupancyRatio": 0.34666666666666668,
-        "Nodes": 2
-      },
-      {
-        "Id": "frmReceivedTally",
-        "Tier": "Forms",
-        "Page": 10,
-        "OccupancyRatio": 0.34666666666666668,
-        "Nodes": 2
+        "Page": 1,
+        "OccupancyRatio": 0.42133333524068195,
+        "Nodes": 4
       },
       {
         "Id": "frmShipmentsTally",
         "Tier": "Forms",
-        "Page": 10,
-        "OccupancyRatio": 0.34666666666666668,
-        "Nodes": 2
-      },
-      {
-        "Id": "frmShipmentsTally",
-        "Tier": "Forms",
-        "Page": 11,
-        "OccupancyRatio": 0.34666666666666668,
-        "Nodes": 2
+        "Page": 1,
+        "OccupancyRatio": 0.42133333524068195,
+        "Nodes": 4
       }
     ]
   },
   "Issues": [
     {
-      "Code": "PagePlanOccupancy",
-      "Level": "info",
-      "Message": "paging planner occupancy exceeds limit on page 1: occupancy=100.0% limit=95.0%",
-      "Lane": null,
-      "Page": 1
-    },
-    {
       "Code": "LayoutHeightThreshold",
       "Level": "warning",
-      "Message": "layout height 79.8in exceeds threshold 11.0in; consider pagination, reducing spacing, or vertical orientation.",
+      "Message": "layout height 12.3in exceeds threshold 11.0in; consider pagination, reducing spacing, or vertical orientation.",
       "Lane": null,
       "Page": null
     },
@@ -229,101 +150,94 @@
     },
     {
       "Code": "LaneCrowding",
-      "Level": "error",
-      "Message": "lane overcrowded: lane=\u0027Forms\u0027 page=1 occupancy=99% nodes=5 usable=7.50in",
-      "Lane": "Forms",
-      "Page": 1
-    },
-    {
-      "Code": "LaneCrowding",
-      "Level": "error",
-      "Message": "lane overcrowded: lane=\u0027Forms\u0027 page=2 occupancy=99% nodes=5 usable=7.50in",
+      "Level": "warning",
+      "Message": "lane overcrowded: lane=\u0027Forms\u0027 page=2 occupancy=218% nodes=18 usable=7.50in",
       "Lane": "Forms",
       "Page": 2
     },
     {
       "Code": "LaneCrowding",
-      "Level": "error",
-      "Message": "lane overcrowded: lane=\u0027Forms\u0027 page=3 occupancy=99% nodes=5 usable=7.50in",
-      "Lane": "Forms",
-      "Page": 3
-    },
-    {
-      "Code": "LaneCrowding",
-      "Level": "error",
-      "Message": "lane overcrowded: lane=\u0027Forms\u0027 page=5 occupancy=99% nodes=5 usable=7.50in",
-      "Lane": "Forms",
-      "Page": 5
-    },
-    {
-      "Code": "LaneCrowding",
-      "Level": "error",
-      "Message": "lane overcrowded: lane=\u0027Forms\u0027 page=6 occupancy=99% nodes=5 usable=7.50in",
-      "Lane": "Forms",
-      "Page": 6
-    },
-    {
-      "Code": "LaneCrowding",
-      "Level": "error",
-      "Message": "lane overcrowded: lane=\u0027Forms\u0027 page=8 occupancy=99% nodes=5 usable=7.50in",
-      "Lane": "Forms",
-      "Page": 8
-    },
-    {
-      "Code": "LaneCrowding",
-      "Level": "error",
-      "Message": "lane overcrowded: lane=\u0027Forms\u0027 page=9 occupancy=99% nodes=5 usable=7.50in",
-      "Lane": "Forms",
-      "Page": 9
-    },
-    {
-      "Code": "PageCrowding",
       "Level": "warning",
-      "Message": "page crowded: page=1 occupancy=99% (usable 7.50in); top: [frmAdminControls.btnCreateDeleteUser(1.00in), frmAdminControls.btnCreateDeleteUser_Click(1.00in), frmAdminControls.btnEditUser(1.00in)]",
-      "Lane": null,
+      "Message": "lane overcrowded: lane=\u0027Forms\u0027 page=1 occupancy=355% nodes=29 usable=7.50in",
+      "Lane": "Forms",
       "Page": 1
     },
     {
-      "Code": "PageCrowding",
-      "Level": "warning",
-      "Message": "page crowded: page=2 occupancy=99% (usable 7.50in); top: [frmCreateDeleteUser.UserForm_Initialize(1.00in), frmCreateDeleteUser.btnCreateUser(1.00in), frmCreateDeleteUser.btnCreateUser_Click(1.00in)]",
+      "Code": "PageOverflow",
+      "Level": "error",
+      "Message": "page overflow: page=2 occupancy=218% (usable 7.50in); top: [frmAdminControls.btnCreateDeleteUser(0.34in), frmEditUser.btnUpdateUser_Click(0.34in), frmEditUser.btnUpdateUser(0.34in)]",
       "Lane": null,
       "Page": 2
     },
     {
-      "Code": "PageCrowding",
-      "Level": "warning",
-      "Message": "page crowded: page=3 occupancy=99% (usable 7.50in); top: [frmCreateDeleteUser.btnRandomPIN(1.00in), frmCreateDeleteUser.btnRandomPIN_Click(1.00in), frmEditUser.UserForm(1.00in)]",
+      "Code": "PageOverflow",
+      "Level": "error",
+      "Message": "page overflow: page=1 occupancy=355% (usable 7.50in); top: [frmItemSearch.lstBox(0.34in), frmShipmentsTally.btnSend_Click(0.34in), frmShipmentsTally.btnSend(0.34in)]",
       "Lane": null,
-      "Page": 3
+      "Page": 1
     },
     {
-      "Code": "PageCrowding",
+      "Code": "ContainerOverflow",
       "Level": "warning",
-      "Message": "page crowded: page=5 occupancy=99% (usable 7.50in); top: [frmItemSearch.UserForm_Activate(1.00in), frmItemSearch.UserForm_Initialize(1.00in), frmItemSearch.UserForm_KeyDown(1.00in)]",
-      "Lane": null,
-      "Page": 5
+      "Message": "sub-container \u0027frmAdminControls\u0027 overflows lane \u0027Forms\u0027.",
+      "Lane": "Forms",
+      "Page": 1
     },
     {
-      "Code": "PageCrowding",
+      "Code": "ContainerOverflow",
       "Level": "warning",
-      "Message": "page crowded: page=6 occupancy=99% (usable 7.50in); top: [frmItemSearch.lstBox_Change(1.00in), frmItemSearch.lstBox_Click(1.00in), frmItemSearch.lstBox_DblClick(1.00in)]",
-      "Lane": null,
-      "Page": 6
+      "Message": "sub-container \u0027frmCreateDeleteUser\u0027 overflows lane \u0027Forms\u0027.",
+      "Lane": "Forms",
+      "Page": 1
     },
     {
-      "Code": "PageCrowding",
+      "Code": "ContainerOverflow",
       "Level": "warning",
-      "Message": "page crowded: page=8 occupancy=99% (usable 7.50in); top: [frmLogin.UserForm_Activate(1.00in), frmLogin.UserForm_Initialize(1.00in), frmLogin.btnCloseWorkbook(1.00in)]",
-      "Lane": null,
-      "Page": 8
+      "Message": "sub-container \u0027frmEditUser\u0027 overflows lane \u0027Forms\u0027.",
+      "Lane": "Forms",
+      "Page": 1
     },
     {
-      "Code": "PageCrowding",
+      "Code": "ContainerOverflow",
       "Level": "warning",
-      "Message": "page crowded: page=9 occupancy=99% (usable 7.50in); top: [frmLogin.btnLogin_Click(1.00in), frmLogin.btnResetPIN(1.00in), frmLogin.btnResetPIN_Click(1.00in)]",
-      "Lane": null,
-      "Page": 9
+      "Message": "sub-container \u0027frmItemSearch\u0027 overflows lane \u0027Forms\u0027.",
+      "Lane": "Forms",
+      "Page": 1
+    },
+    {
+      "Code": "ContainerCrowding",
+      "Level": "warning",
+      "Message": "container crowded: id=\u0027frmItemSearch\u0027 lane=\u0027Forms\u0027 occupancy=142% nodes=12",
+      "Lane": "Forms",
+      "Page": 1
+    },
+    {
+      "Code": "ContainerOverflow",
+      "Level": "warning",
+      "Message": "sub-container \u0027frmLogin\u0027 overflows lane \u0027Forms\u0027.",
+      "Lane": "Forms",
+      "Page": 1
+    },
+    {
+      "Code": "ContainerCrowding",
+      "Level": "warning",
+      "Message": "container crowded: id=\u0027frmLogin\u0027 lane=\u0027Forms\u0027 occupancy=105% nodes=9",
+      "Lane": "Forms",
+      "Page": 1
+    },
+    {
+      "Code": "ContainerOverflow",
+      "Level": "warning",
+      "Message": "sub-container \u0027frmReceivedTally\u0027 overflows lane \u0027Forms\u0027.",
+      "Lane": "Forms",
+      "Page": 1
+    },
+    {
+      "Code": "ContainerOverflow",
+      "Level": "warning",
+      "Message": "sub-container \u0027frmShipmentsTally\u0027 overflows lane \u0027Forms\u0027.",
+      "Lane": "Forms",
+      "Page": 1
     }
   ]
 }

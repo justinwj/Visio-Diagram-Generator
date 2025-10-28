@@ -1454,6 +1454,11 @@ namespace VDG.CLI
                 }
             }
 
+            var layoutOutputModeValue = model.Metadata.TryGetValue("layout.outputMode", out var layoutOutputModeRaw)
+                ? (layoutOutputModeRaw ?? string.Empty).Trim()
+                : string.Empty;
+            var isViewModeLayout = string.Equals(layoutOutputModeValue, "view", StringComparison.OrdinalIgnoreCase);
+
             // M5: Lane overcrowding diagnostics (per page)
             try
             {
@@ -1476,12 +1481,18 @@ namespace VDG.CLI
                               return null;
                           }
 
-                          double laneWarn = 0.85, laneErr = 0.95, pageWarn = 0.90;
-                          var envLaneWarn = ReadRatioEnv("VDG_DIAG_LANE_WARN");
-                          if (envLaneWarn.HasValue) laneWarn = envLaneWarn.Value;
-                          var envLaneErr = ReadRatioEnv("VDG_DIAG_LANE_ERR");
-                          if (envLaneErr.HasValue) laneErr = envLaneErr.Value;
-                          var envPageWarn = ReadRatioEnv("VDG_DIAG_PAGE_WARN");
+                        double laneWarn = 0.85, laneErr = 0.95, pageWarn = 0.90;
+                        if (isViewModeLayout)
+                        {
+                            laneWarn = 0.92;
+                            laneErr = 1.02;
+                            pageWarn = 0.98;
+                        }
+                        var envLaneWarn = ReadRatioEnv("VDG_DIAG_LANE_WARN");
+                        if (envLaneWarn.HasValue) laneWarn = envLaneWarn.Value;
+                        var envLaneErr = ReadRatioEnv("VDG_DIAG_LANE_ERR");
+                        if (envLaneErr.HasValue) laneErr = envLaneErr.Value;
+                        var envPageWarn = ReadRatioEnv("VDG_DIAG_PAGE_WARN");
                           if (envPageWarn.HasValue) pageWarn = envPageWarn.Value;
                           if (model.Metadata.TryGetValue("layout.diagnostics.laneCrowdWarnRatio", out var lw) && double.TryParse(lw, NumberStyles.Float, CultureInfo.InvariantCulture, out var lwv)) laneWarn = lwv;
                           if (model.Metadata.TryGetValue("layout.diagnostics.laneCrowdErrorRatio", out var le) && double.TryParse(le, NumberStyles.Float, CultureInfo.InvariantCulture, out var lev)) laneErr = lev;
@@ -1523,6 +1534,7 @@ namespace VDG.CLI
                                 var msg = $"lane overcrowded: lane='{tierName}' page={page + 1} occupancy={(ratio * 100):F0}% nodes={count} usable={usable:F2}in";
                                 var degradeToWarning =
                                     (pagePlans != null && pagePlans.Length > 1) ||
+                                    isViewModeLayout ||
                                     (pageOptions != null && pageOptions.LaneSplitAllowed);
                                 var severity = degradeToWarning ? "warning" : "error";
                                 Emit(severity, msg);
@@ -2005,8 +2017,9 @@ namespace VDG.CLI
                                     if (ratio >= laneErr)
                                     {
                                         var msg = $"container crowded: id='{c.Id}' lane='{ctier}' occupancy={(ratio * 100):F0}% nodes={count}";
-                                        Emit("error", msg);
-                                        AddIssue("ContainerCrowding", "error", msg, lane: ctier, page: 1);
+                                        var severity = isViewModeLayout || (pagePlans != null && pagePlans.Length > 1) ? "warning" : "error";
+                                        Emit(severity, msg);
+                                        AddIssue("ContainerCrowding", severity, msg, lane: ctier, page: 1);
                                     }
                                     else if (ratio >= laneWarn)
                                     {

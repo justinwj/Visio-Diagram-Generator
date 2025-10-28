@@ -111,6 +111,18 @@ module ViewModePlanner =
               MaxModulesPerPage = 10
               HeightSlackPercent = 25.0 }
 
+        let isViewMode =
+            match model.Metadata.TryGetValue("layout.outputMode") with
+            | true, value when not (String.IsNullOrWhiteSpace value) ->
+                String.Equals(value.Trim(), "view", StringComparison.OrdinalIgnoreCase)
+            | _ -> false
+
+        if isViewMode then
+            options <- { options with
+                            MaxOccupancyPercent = 95.0
+                            MaxModulesPerPage = 6
+                            HeightSlackPercent = 12.5 }
+
         match getMetadataInt model "layout.page.plan.maxConnectors" with
         | Some value when value > 0 ->
             options <- { options with MaxConnectors = value }

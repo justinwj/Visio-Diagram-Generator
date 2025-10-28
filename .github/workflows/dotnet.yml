@@ -85,6 +85,41 @@ jobs:
             out/perf/render_diagnostics.json
             out/perf/render_diagnostics.raw.json
 
+  render-visio-smoke:
+    if: ${{ vars.VDG_VISIO_SMOKE == '1' }}
+    runs-on: [self-hosted, windows, visio]
+    needs: build-test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore Visio-Diagram-Generator.sln
+
+      - name: Build (Release)
+        run: dotnet build Visio-Diagram-Generator.sln -c Release -v minimal --no-restore
+
+      - name: Render smoke with Visio
+        shell: pwsh
+        env:
+          VDG_DIAG_FAIL_LEVEL: warning
+        run: ./tools/render-smoke.ps1 -UseVisio
+
+      - name: Upload Visio smoke artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: render-visio-smoke
+          path: |
+            out/tmp/render_smoke.vsdx
+            out/tmp/render_smoke.diagnostics.json
+            out/perf/render_diagnostics.json
+            out/perf/render_diagnostics.raw.json
+          if-no-files-found: warn
+
   render-fixtures:
     runs-on: windows-latest
     needs: build-test

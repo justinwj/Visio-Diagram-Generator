@@ -52,6 +52,7 @@ Some fixtures rely on small JSON overrides (e.g., forcing pagination). Drop them
 - Crossing and utilization thresholds default to warnings only; override with `VDG_DIAG_CROSS_WARN`, `VDG_DIAG_CROSS_ERR`, and `VDG_DIAG_UTIL_WARN`.
 - Fail behaviour is warn-only by default. Opt in to stricter gating with `VDG_DIAG_FAIL_LEVEL=warning` or `VDG_DIAG_FAIL_LEVEL=error` (alias `VDG_DIAG_FAIL_ON` still honoured).
 - All ratios and severities accept overrides via environment variables, allowing experimentation without editing diagram JSON.
+- Any summary that includes `partialRender=yes` means mitigations triggered; see `docs/ErrorHandling.md` for the fallback policy and triage checklist.
 
 ## Render Smoke Script
 
@@ -63,6 +64,9 @@ pwsh ./tools/render-smoke.ps1
 
 # Refresh the baseline after intentional styling/layout changes
 pwsh ./tools/render-smoke.ps1 -UpdateBaseline
+
+# Exercise the pipeline with Visio automation (requires Visio on the machine)
+pwsh ./tools/render-smoke.ps1 -UseVisio
 ```
 
 The summary captures connector counts, lane/page occupancy ratios, top container metrics, and grouped diagnostics. Drift beyond +/- 5% on identical fixtures fails the smoke to catch accidental layout regressions. The raw diagnostics JSON emitted by `VDG.CLI` is copied alongside the summary (`out/perf/render_diagnostics.raw.json`) for deeper inspection.
@@ -80,6 +84,7 @@ The `render-smoke` job in `.github/workflows/dotnet.yml` calls the smoke script 
 - Enable failure on warnings by setting `VDG_DIAG_FAIL_LEVEL: warning` once the team is ready to enforce limits.
 - Add fixtures by invoking `./tools/render-smoke.ps1 -In <fixture>` and capturing corresponding baselines under `tests/baselines`.
 - The script also tightens thresholds once per run to ensure diagnostics fail-level gating works (`VDG_DIAG_FAIL_LEVEL=warning`), so CI will fail if warnings no longer trip the guard.
+- Provision a Visio-enabled self-hosted runner (labels `self-hosted`, `windows`, `visio`) and set the repository variable `VDG_VISIO_SMOKE=1` to activate the optional `render-visio-smoke` job, which runs `./tools/render-smoke.ps1 -UseVisio` and publishes the resulting `.vsdx` alongside diagnostics.
 
 ## Appendix: Large Diagram Troubleshooting
 

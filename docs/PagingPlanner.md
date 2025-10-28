@@ -1,7 +1,9 @@
 # Paging Planner Cheat Sheet
 
 The paging planner splits a diagram into printable Visio pages and reports
-segmentation metrics so that large datasets stay readable and regression‐proof.
+segmentation metrics so that large datasets stay readable and regression-proof.
+For guidance on how mitigations map to exit codes and fallback strategies,
+refer to `docs/ErrorHandling.md`.
 
 ## Runtime Summary
 

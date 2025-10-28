@@ -1,5 +1,5 @@
 {
-  "generatedAtUtc": "2025-10-17T20:24:56.4514674Z",
+  "generatedAtUtc": "2025-10-28T16:20:49.6271150Z",
   "input": "tests/fixtures/vba/hello_world",
   "mode": "callgraph",
   "connectorCount": 0,
@@ -21,5 +21,10 @@
       "nodes": 1
     }
   ],
-  "issues": []
+  "issues": [
+    {
+      "code": "PagePlanOccupancy",
+      "count": 1
+    }
+  ]
 }

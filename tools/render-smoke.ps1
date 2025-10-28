@@ -4,7 +4,8 @@ Param(
   [string]$Cli = 'src/VDG.CLI/bin/Release/net48/VDG.CLI.exe',
   [string]$OutDir = 'out/perf',
   [string]$Baseline = 'tests/baselines/render_diagnostics.json',
-  [switch]$UpdateBaseline
+  [switch]$UpdateBaseline,
+  [switch]$UseVisio
 )
 
 Set-StrictMode -Version Latest
@@ -151,16 +152,38 @@ $renderArgs = @(
 
 $previousSkip = $env:VDG_SKIP_RUNNER
 try {
-  $env:VDG_SKIP_RUNNER = '1'
-  Write-Host "Running render smoke for '$In'..."
+  if ($UseVisio) {
+    Write-Host "Running render smoke for '$In' (Visio automation enabled)..."
+    if ($null -ne $previousSkip) {
+      Remove-Item Env:VDG_SKIP_RUNNER -ErrorAction SilentlyContinue
+    }
+  }
+  else {
+    Write-Host "Running render smoke for '$In' (VDG_SKIP_RUNNER engaged)..."
+    $env:VDG_SKIP_RUNNER = '1'
+  }
   Invoke-Dotnet -Arguments $renderArgs
 }
 finally {
-  if ($null -ne $previousSkip) { $env:VDG_SKIP_RUNNER = $previousSkip } else { Remove-Item Env:VDG_SKIP_RUNNER -ErrorAction SilentlyContinue }
+  if ($UseVisio) {
+    if ($null -ne $previousSkip) {
+      $env:VDG_SKIP_RUNNER = $previousSkip
+    }
+    else {
+      Remove-Item Env:VDG_SKIP_RUNNER -ErrorAction SilentlyContinue
+    }
+  }
+  else {
+    if ($null -ne $previousSkip) { $env:VDG_SKIP_RUNNER = $previousSkip } else { Remove-Item Env:VDG_SKIP_RUNNER -ErrorAction SilentlyContinue }
+  }
 }
 
 if (-not (Test-Path $diagPath)) {
   throw "Expected diagnostics JSON was not produced at $diagPath."
+}
+
+if ($UseVisio -and -not (Test-Path $vsdxPath)) {
+  throw "Visio automation was requested but the renderer did not produce a VSDX at $vsdxPath."
 }
 Copy-Item -Path $diagPath -Destination $rawPath -Force
 

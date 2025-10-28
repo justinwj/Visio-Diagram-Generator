@@ -6030,6 +6030,11 @@ namespace VDG.CLI
 
             Console.WriteLine(summaryLine);
 
+            if (diagnosticsSummary?.PartialRender == true)
+            {
+                Console.WriteLine("warning: render completed with mitigations; review docs/ErrorHandling.md for fallback guidance.");
+            }
+
             if (diagnosticsSummary != null)
             {
                 foreach (var page in diagnosticsSummary.Pages.OrderBy(p => p.PageNumber))

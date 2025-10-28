@@ -1,6 +1,7 @@
 namespace VisioDiagramGenerator.Algorithms
 
 open System
+open System.Collections.Generic
 open VDG.Core.Models
 
 /// A point in two-dimensional space represented by single precision floats.
@@ -64,6 +65,25 @@ type PagePlan =
       Nodes: int
       Occupancy: float }
 
+[<CLIMutable>]
+type LayerPlan =
+    { LayerIndex: int
+      Modules: string array
+      ShapeCount: int
+      ConnectorCount: int }
+
+[<CLIMutable>]
+type LayerBridge =
+    { BridgeId: string
+      SourceLayer: int
+      SourceNodeId: string
+      TargetLayer: int
+      TargetNodeId: string
+      ConnectorId: string
+      Metadata: IDictionary<string, string>
+      EntryAnchor: PointF
+      ExitAnchor: PointF }
+
 /// High-level layout plan returned by the algorithms layer.
 [<CLIMutable>]
 type LayoutPlan =
@@ -74,6 +94,8 @@ type LayoutPlan =
       Containers: ContainerLayout array
       Edges: EdgeRoute array
       Pages: PagePlan array
+      Layers: LayerPlan array
+      Bridges: LayerBridge array
       Stats: LayoutStats }
 
 /// The result of a layout operation, containing layouts for nodes and edges.

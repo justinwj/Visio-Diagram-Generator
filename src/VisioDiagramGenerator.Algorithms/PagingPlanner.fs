@@ -28,6 +28,10 @@ type PageSplitOptions =
       MaxModulesPerPage: int
       HeightSlackPercent: float }
 
+type LayerSplitOptions =
+    { MaxShapes: int
+      MaxConnectors: int }
+
 module PagingPlanner =
 
     let private sanitizeModuleId (moduleId: string) =
@@ -103,7 +107,8 @@ module PagingPlanner =
             HeightSlackPercent = slack }
 
     let computePages (thresholds: PageSplitOptions) (dataset: DiagramDataset) =
-        if isNull (box dataset) then invalidArg (nameof dataset) "Diagram dataset must not be null."
+        if isNull (box dataset) then
+            invalidArg (nameof dataset) "Diagram dataset must not be null."
 
         let modules =
             match dataset.Modules with
@@ -253,3 +258,80 @@ module PagingPlanner =
 
             flush()
             plans.ToArray()
+
+    type LayerAssignment =
+        { Plans: LayerPlan array
+          ModuleLayers: IDictionary<string, int> }
+
+    let computeLayers (options: LayerSplitOptions) (dataset: DiagramDataset) =
+        if isNull (box dataset) then invalidArg (nameof dataset) "Diagram dataset must not be null."
+
+        let modules =
+            match dataset.Modules with
+            | null -> Array.empty
+            | _ ->
+                dataset.Modules
+                |> Array.filter (fun m -> not (isNull (box m)) && not (String.IsNullOrWhiteSpace m.ModuleId))
+                |> Array.sortWith (fun a b -> StringComparer.OrdinalIgnoreCase.Compare(a.ModuleId, b.ModuleId))
+
+        if modules.Length = 0 then
+            { Plans = Array.empty
+              ModuleLayers = Dictionary<string, int>(StringComparer.OrdinalIgnoreCase) :> IDictionary<_, _> }
+        else
+            let maxShapes =
+                if options.MaxShapes <= 0 then Int32.MaxValue else Math.Min(1000, Math.Max(1, options.MaxShapes))
+            let maxConnectors =
+                if options.MaxConnectors <= 0 then Int32.MaxValue else Math.Min(1000, Math.Max(1, options.MaxConnectors))
+
+            let layers = ResizeArray<ResizeArray<ModuleStats>>()
+            let mutable current = ResizeArray<ModuleStats>()
+            let mutable shapeTotal = 0
+            let mutable connectorTotal = 0
+
+            let addCurrentLayer () =
+                if current.Count > 0 then
+                    layers.Add(current)
+                    current <- ResizeArray<ModuleStats>()
+                    shapeTotal <- 0
+                    connectorTotal <- 0
+
+            for moduleStats in modules do
+                let shapeShare = Math.Max(1, moduleStats.NodeCount + 1)
+                let connectorShare = Math.Max(1, moduleStats.ConnectorCount / 2)
+                let pendingShapes = shapeTotal + shapeShare
+                let pendingConnectors = connectorTotal + connectorShare
+                let wouldExceed =
+                    (pendingShapes > maxShapes && current.Count > 0)
+                    || (pendingConnectors > maxConnectors && current.Count > 0)
+                if wouldExceed then
+                    addCurrentLayer()
+                current.Add(moduleStats)
+                shapeTotal <- shapeTotal + shapeShare
+                connectorTotal <- connectorTotal + connectorShare
+
+            addCurrentLayer()
+
+            let moduleLayerIndex = Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+            let plans =
+                layers
+                |> Seq.mapi (fun idx bucket ->
+                    let shapeCount =
+                        bucket
+                        |> Seq.sumBy (fun m -> Math.Max(1, m.NodeCount + 1))
+                    let connectorCount =
+                        bucket
+                        |> Seq.sumBy (fun m -> Math.Max(1, m.ConnectorCount / 2))
+                    let moduleIds =
+                        bucket
+                        |> Seq.map (fun m -> m.ModuleId)
+                        |> Seq.toArray
+                    for moduleId in moduleIds do
+                        moduleLayerIndex[moduleId] <- idx
+                    { LayerIndex = idx
+                      Modules = moduleIds
+                      ShapeCount = shapeCount
+                      ConnectorCount = connectorCount })
+                |> Seq.toArray
+
+            { Plans = plans
+              ModuleLayers = moduleLayerIndex :> IDictionary<_, _> }

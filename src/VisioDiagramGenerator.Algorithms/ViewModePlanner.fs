@@ -159,6 +159,19 @@ module ViewModePlanner =
 
         options
 
+    let private clampLayerBudget defaultValue value =
+        match value with
+        | Some raw when raw < 1 -> 1
+        | Some raw when raw > 1000 -> 1000
+        | Some raw -> raw
+        | None -> defaultValue
+
+    let private buildLayerSplitOptions (model: DiagramModel) =
+        let maxShapes = getMetadataInt model "layout.layers.maxShapes" |> clampLayerBudget 900
+        let maxConnectors = getMetadataInt model "layout.layers.maxConnectors" |> clampLayerBudget 900
+        { MaxShapes = maxShapes
+          MaxConnectors = maxConnectors }
+
     let private getModuleEdgeStats (stats: Dictionary<string, ModuleEdgeStats>) (moduleId: string) =
         match stats.TryGetValue moduleId with
         | true, existing -> existing
@@ -256,6 +269,8 @@ module ViewModePlanner =
               Containers = Array.empty
               Edges = Array.empty
               Pages = Array.empty
+              Layers = Array.empty
+              Bridges = Array.empty
               Stats =
                 { NodeCount = 0
                   ConnectorCount = 0
@@ -513,13 +528,120 @@ module ViewModePlanner =
                               HasSpan = true
                               CrossModuleConnectors = edgeStats.CrossModuleCount })
 
+            let dataset = { Modules = moduleStats }
+
             let pagePlans =
                 if moduleStats.Length = 0 then
                     Array.empty
                 else
                     let pageOptions = buildPageSplitOptions model usableHeight
-                    let dataset = { Modules = moduleStats }
                     PagingPlanner.computePages pageOptions dataset
+
+            let layerAssignment: PagingPlanner.LayerAssignment =
+                if moduleStats.Length = 0 then
+                    { Plans = Array.empty
+                      ModuleLayers = Dictionary<string, int>(StringComparer.OrdinalIgnoreCase) :> IDictionary<_, _> }
+                else
+                    let layerOptions = buildLayerSplitOptions model
+                    PagingPlanner.computeLayers layerOptions dataset
+
+            let moduleLayerIndex = layerAssignment.ModuleLayers
+            let layerShapeTotals = Dictionary<int, int>()
+            if moduleStats.Length > 0 then
+                for stats in moduleStats do
+                    match moduleLayerIndex.TryGetValue(stats.ModuleId) with
+                    | true, layerIdx ->
+                        let share = Math.Max(1, stats.NodeCount + 1)
+                        let existing =
+                            match layerShapeTotals.TryGetValue layerIdx with
+                            | true, value -> value
+                            | _ -> 0
+                        layerShapeTotals[layerIdx] <- existing + share
+                    | _ -> ()
+
+            let layerConnectorTotals = Dictionary<int, int>()
+            let layerBridges = ResizeArray<LayerBridge>()
+
+            if not (isNull model.Edges) then
+                for edge in model.Edges do
+                    if not (obj.ReferenceEquals(edge, null))
+                       && not (String.IsNullOrWhiteSpace edge.SourceId)
+                       && not (String.IsNullOrWhiteSpace edge.TargetId) then
+                        match placementCenters.TryGetValue edge.SourceId, placementCenters.TryGetValue edge.TargetId with
+                        | (true, srcCenter), (true, dstCenter) ->
+                            let srcNode = nodeLookup[edge.SourceId]
+                            let dstNode = nodeLookup[edge.TargetId]
+                            let srcModuleId = resolveModuleId srcNode tiers tiersSet
+                            let dstModuleId = resolveModuleId dstNode tiers tiersSet
+                            match moduleLayerIndex.TryGetValue(srcModuleId), moduleLayerIndex.TryGetValue(dstModuleId) with
+                            | (true, srcLayer), (true, dstLayer) ->
+                                if srcLayer = dstLayer then
+                                    let current =
+                                        match layerConnectorTotals.TryGetValue srcLayer with
+                                        | true, total -> total
+                                        | _ -> 0
+                                    layerConnectorTotals[srcLayer] <- current + 1
+                                else
+                                    let hasBounds =
+                                        moduleBounds.ContainsKey srcModuleId && moduleBounds.ContainsKey dstModuleId
+                                    let exitPt, entryPt =
+                                        if hasBounds then
+                                            computeAnchor moduleBounds[srcModuleId] moduleBounds[dstModuleId],
+                                            computeAnchor moduleBounds[dstModuleId] moduleBounds[srcModuleId]
+                                        else
+                                            srcCenter, dstCenter
+                                    let connectorId =
+                                        if String.IsNullOrWhiteSpace edge.Id then
+                                            $"{edge.SourceId}->{edge.TargetId}"
+                                        else
+                                            edge.Id
+                                    let currentSrc =
+                                        match layerConnectorTotals.TryGetValue srcLayer with
+                                        | true, total -> total
+                                        | _ -> 0
+                                    layerConnectorTotals[srcLayer] <- currentSrc + 1
+                                    let currentDst =
+                                        match layerConnectorTotals.TryGetValue dstLayer with
+                                        | true, total -> total
+                                        | _ -> 0
+                                    layerConnectorTotals[dstLayer] <- currentDst + 1
+                                    let metadataCopy =
+                                        if edge.Metadata = null || edge.Metadata.Count = 0 then
+                                            Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) :> IDictionary<_, _>
+                                        else
+                                            Dictionary<string, string>(edge.Metadata, StringComparer.OrdinalIgnoreCase) :> IDictionary<_, _>
+                                    layerBridges.Add(
+                                        { BridgeId = $"{connectorId}#layer"
+                                          SourceLayer = srcLayer
+                                          SourceNodeId = edge.SourceId
+                                          TargetLayer = dstLayer
+                                          TargetNodeId = edge.TargetId
+                                          ConnectorId = connectorId
+                                          Metadata = metadataCopy
+                                          EntryAnchor = entryPt
+                                          ExitAnchor = exitPt })
+                            | _ -> ()
+                        | _ -> ()
+
+            let updatedLayerPlans =
+                if layerAssignment.Plans.Length = 0 then
+                    Array.empty
+                else
+                    layerAssignment.Plans
+                    |> Array.map (fun plan ->
+                        let shapes =
+                            match layerShapeTotals.TryGetValue(plan.LayerIndex) with
+                            | true, value -> value
+                            | _ -> plan.ShapeCount
+                        let connectors =
+                            match layerConnectorTotals.TryGetValue(plan.LayerIndex) with
+                            | true, value -> value
+                            | _ -> plan.ConnectorCount
+                        { plan with
+                            ShapeCount = shapes
+                            ConnectorCount = connectors })
+
+            let bridgeArray = layerBridges.ToArray()
 
             let stats =
                 { NodeCount = nodesArray.Length
@@ -544,4 +666,6 @@ module ViewModePlanner =
               Containers = containersArray
               Edges = edgesArray
               Pages = pagePlans
+              Layers = updatedLayerPlans
+              Bridges = bridgeArray
               Stats = stats }

@@ -76,12 +76,44 @@ namespace VDG.CLI
             public int Nodes { get; set; }
         }
 
+        private sealed class LayerMetric
+        {
+            public int Layer { get; set; }
+            public int ShapeCount { get; set; }
+            public int ConnectorCount { get; set; }
+            public int ModuleCount { get; set; }
+            public int BridgesOut { get; set; }
+            public int BridgesIn { get; set; }
+            public bool SoftShapeLimitExceeded { get; set; }
+            public bool SoftConnectorLimitExceeded { get; set; }
+            public bool HardShapeLimitExceeded { get; set; }
+            public bool HardConnectorLimitExceeded { get; set; }
+            public List<string> Modules { get; set; } = new List<string>();
+            public List<string> OverflowModules { get; set; } = new List<string>();
+        }
+
         internal sealed class LaneAlert
         {
             public string Tier { get; set; } = string.Empty;
             public double OccupancyRatio { get; set; }
             public int Nodes { get; set; }
             public string Severity { get; set; } = "warning";
+        }
+
+        internal sealed class LayerDiagnosticsDetail
+        {
+            public int LayerNumber { get; set; }
+            public int ShapeCount { get; set; }
+            public int ConnectorCount { get; set; }
+            public int ModuleCount { get; set; }
+            public int BridgesOut { get; set; }
+            public int BridgesIn { get; set; }
+            public bool SoftShapeLimitExceeded { get; set; }
+            public bool SoftConnectorLimitExceeded { get; set; }
+            public bool HardShapeLimitExceeded { get; set; }
+            public bool HardConnectorLimitExceeded { get; set; }
+            public List<string> Modules { get; } = new List<string>();
+            public List<string> OverflowModules { get; } = new List<string>();
         }
 
         internal sealed class PageDiagnosticsDetail
@@ -117,6 +149,10 @@ namespace VDG.CLI
             public int LayoutNodeCount { get; set; }
             public int LayoutModuleCount { get; set; }
             public int LayoutContainerCount { get; set; }
+            public int LayerCount { get; set; }
+            public int LayerCrowdingCount { get; set; }
+            public int LayerOverflowCount { get; set; }
+            public int BridgeCount { get; set; }
             public int ConnectorCount { get; set; }
             public int StraightLineCrossings { get; set; }
             public double? PageHeight { get; set; }
@@ -142,6 +178,7 @@ namespace VDG.CLI
             public int TruncatedNodeCount { get; set; }
             public List<string> SkippedModules { get; set; } = new List<string>();
             public List<PageMetric> Pages { get; set; } = new List<PageMetric>();
+            public List<LayerMetric> Layers { get; set; } = new List<LayerMetric>();
             public List<LanePageMetric> LanePages { get; set; } = new List<LanePageMetric>();
             public List<ContainerPageMetric> Containers { get; set; } = new List<ContainerPageMetric>();
         }
@@ -1225,6 +1262,18 @@ namespace VDG.CLI
                 }
             }
 
+            static int ClampLayerBudget(string? raw, int defaultValue)
+            {
+                if (!string.IsNullOrWhiteSpace(raw) &&
+                    int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed))
+                {
+                    if (parsed < 1) return 1;
+                    if (parsed > 1000) return 1000;
+                    return parsed;
+                }
+                return defaultValue;
+            }
+
             if (pagePlans != null && pagePlans.Length > 0)
             {
                 var connectorLimitValue = (pageOptions != null && pageOptions.MaxConnectors > 0)
@@ -1269,6 +1318,123 @@ namespace VDG.CLI
                             AddIssue("PagePlanOccupancy", "info", msg, page: pageNumber);
                         }
                     }
+                }
+            }
+
+            if (layoutPlan?.Layers != null && layoutPlan.Layers.Length > 0)
+            {
+                var layers = layoutPlan.Layers;
+                var bridges = layoutPlan.Bridges ?? Array.Empty<LayerBridge>();
+                var moduleLookup = new Dictionary<string, ModuleStats>(StringComparer.OrdinalIgnoreCase);
+                if (plannerDataset?.Modules != null)
+                {
+                    foreach (var module in plannerDataset.Modules)
+                    {
+                        if (!string.IsNullOrWhiteSpace(module?.ModuleId))
+                        {
+                            moduleLookup[module.ModuleId] = module;
+                        }
+                    }
+                }
+
+                var softShapeLimit = ClampLayerBudget(
+                    model.Metadata.TryGetValue("layout.layers.maxShapes", out var lms) ? lms : null,
+                    900);
+                var softConnectorLimit = ClampLayerBudget(
+                    model.Metadata.TryGetValue("layout.layers.maxConnectors", out var lmc) ? lmc : null,
+                    900);
+                const int hardShapeLimit = 1000;
+                const int hardConnectorLimit = 1000;
+
+                summary.LayerCount = layers.Length;
+                summary.BridgeCount = bridges.Length;
+
+                var orderedLayers = layers.OrderBy(lp => lp.LayerIndex).ToArray();
+                foreach (var plan in orderedLayers)
+                {
+                    var detail = new LayerDiagnosticsDetail
+                    {
+                        LayerNumber = plan.LayerIndex + 1,
+                        ShapeCount = plan.ShapeCount,
+                        ConnectorCount = plan.ConnectorCount,
+                        ModuleCount = plan.Modules?.Length ?? 0
+                    };
+
+                    if (plan.Modules != null)
+                    {
+                        foreach (var moduleId in plan.Modules.Where(m => !string.IsNullOrWhiteSpace(m)))
+                        {
+                            detail.Modules.Add(moduleId);
+                            if (moduleLookup.TryGetValue(moduleId, out var stats))
+                            {
+                                var moduleShapeShare = Math.Max(1, stats.NodeCount + 1);
+                                var moduleConnectorShare = Math.Max(1, stats.ConnectorCount / 2);
+                                if (moduleShapeShare > hardShapeLimit || moduleConnectorShare > hardConnectorLimit)
+                                {
+                                    if (!detail.OverflowModules.Contains(moduleId))
+                                    {
+                                        detail.OverflowModules.Add(moduleId);
+                                    }
+                                }
+                                else
+                                {
+                                    if (moduleShapeShare > softShapeLimit) detail.SoftShapeLimitExceeded = true;
+                                    if (moduleConnectorShare > softConnectorLimit) detail.SoftConnectorLimitExceeded = true;
+                                }
+                            }
+                        }
+                    }
+
+                    if (detail.ShapeCount > softShapeLimit) detail.SoftShapeLimitExceeded = true;
+                    if (detail.ConnectorCount > softConnectorLimit) detail.SoftConnectorLimitExceeded = true;
+                    if (detail.ShapeCount > hardShapeLimit) detail.HardShapeLimitExceeded = true;
+                    if (detail.ConnectorCount > hardConnectorLimit) detail.HardConnectorLimitExceeded = true;
+
+                    var overflowModulesText = detail.OverflowModules.Count > 0
+                        ? $" ({string.Join(", ", detail.OverflowModules)})"
+                        : string.Empty;
+
+                    if (detail.HardShapeLimitExceeded || detail.HardConnectorLimitExceeded || detail.OverflowModules.Count > 0)
+                    {
+                        summary.LayerOverflowCount++;
+                        var msg = detail.OverflowModules.Count > 0
+                            ? $"layer {detail.LayerNumber} contains module(s) exceeding hard layer cap{overflowModulesText}; shapes={detail.ShapeCount}, connectors={detail.ConnectorCount}."
+                            : $"layer {detail.LayerNumber} exceeds hard layer cap; shapes={detail.ShapeCount}, connectors={detail.ConnectorCount}.";
+                        Emit("warning", msg);
+                        AddIssue("LayerOverflow", "warning", msg);
+                    }
+                    else if (detail.SoftShapeLimitExceeded || detail.SoftConnectorLimitExceeded)
+                    {
+                        summary.LayerCrowdingCount++;
+                        var msg = $"layer {detail.LayerNumber} exceeds soft layer budget; shapes={detail.ShapeCount}/{softShapeLimit}, connectors={detail.ConnectorCount}/{softConnectorLimit}.";
+                        Emit("info", msg);
+                        AddIssue("LayerBudget", "info", msg);
+                    }
+
+                    summary.Layers.Add(detail);
+                }
+
+                if (bridges.Length > 0)
+                {
+                    foreach (var bridge in bridges)
+                    {
+                        if (bridge.SourceLayer >= 0 && bridge.SourceLayer < summary.Layers.Count)
+                        {
+                            summary.Layers[bridge.SourceLayer].BridgesOut++;
+                        }
+                        if (bridge.TargetLayer >= 0 && bridge.TargetLayer < summary.Layers.Count)
+                        {
+                            summary.Layers[bridge.TargetLayer].BridgesIn++;
+                        }
+                    }
+
+                    var msg = $"layer planner created {summary.LayerCount} layer(s) with {summary.BridgeCount} bridge(s).";
+                    Emit("info", msg);
+                    AddIssue("LayerBridge", "info", msg);
+                }
+                else
+                {
+                    Emit("info", $"layer planner created {summary.LayerCount} layer(s) (no cross-layer bridges).");
                 }
             }
 
@@ -2217,6 +2383,32 @@ namespace VDG.CLI
                             payload.Metrics.LayoutContainerCount = layoutPlan.Stats.ContainerCount;
                         }
                     }
+                    payload.Metrics.LayerCount = summary.LayerCount;
+                    payload.Metrics.LayerCrowdingCount = summary.LayerCrowdingCount;
+                    payload.Metrics.LayerOverflowCount = summary.LayerOverflowCount;
+                    payload.Metrics.BridgeCount = summary.BridgeCount;
+                    if (summary.Layers.Count > 0)
+                    {
+                        foreach (var layer in summary.Layers.OrderBy(l => l.LayerNumber))
+                        {
+                            payload.Metrics.Layers.Add(
+                                new LayerMetric
+                                {
+                                    Layer = layer.LayerNumber,
+                                    ShapeCount = layer.ShapeCount,
+                                    ConnectorCount = layer.ConnectorCount,
+                                    ModuleCount = layer.ModuleCount,
+                                    BridgesOut = layer.BridgesOut,
+                                    BridgesIn = layer.BridgesIn,
+                                    SoftShapeLimitExceeded = layer.SoftShapeLimitExceeded,
+                                    SoftConnectorLimitExceeded = layer.SoftConnectorLimitExceeded,
+                                    HardShapeLimitExceeded = layer.HardShapeLimitExceeded,
+                                    HardConnectorLimitExceeded = layer.HardConnectorLimitExceeded,
+                                    Modules = new List<string>(layer.Modules),
+                                    OverflowModules = new List<string>(layer.OverflowModules)
+                                });
+                        }
+                    }
                     payload.Metrics.ConnectorCount = model.Edges.Count;
                     if (plannerMetrics != null)
                     {
@@ -2663,12 +2855,18 @@ namespace VDG.CLI
             public int? LayoutNodeCount { get; set; }
             public int? LayoutModuleCount { get; set; }
             public int? LayoutContainerCount { get; set; }
+            public int LayerCount { get; set; }
+            public int LayerCrowdingCount { get; set; }
+            public int LayerOverflowCount { get; set; }
+            public int BridgeCount { get; set; }
             public List<PageDiagnosticsDetail> Pages { get; } = new List<PageDiagnosticsDetail>();
+            public List<LayerDiagnosticsDetail> Layers { get; } = new List<LayerDiagnosticsDetail>();
             public List<string> SkippedModules { get; } = new List<string>();
             public bool HasOverflow =>
                 PageOverflowCount > 0 ||
                 LaneOverflowCount > 0 ||
                 ContainerOverflowCount > 0 ||
+                LayerOverflowCount > 0 ||
                 ConnectorOverLimitPageCount > 0;
         }
 
@@ -5998,6 +6196,22 @@ namespace VDG.CLI
             if (diagnosticsSummary != null)
             {
                 var annotations = new List<string>();
+                if (diagnosticsSummary.LayerCount > 0)
+                {
+                    annotations.Add($"layers={diagnosticsSummary.LayerCount}");
+                }
+                if (diagnosticsSummary.LayerOverflowCount > 0)
+                {
+                    annotations.Add($"layerOverflow={diagnosticsSummary.LayerOverflowCount}");
+                }
+                if (diagnosticsSummary.LayerCrowdingCount > 0)
+                {
+                    annotations.Add($"layerCrowding={diagnosticsSummary.LayerCrowdingCount}");
+                }
+                if (diagnosticsSummary.BridgeCount > 0)
+                {
+                    annotations.Add($"bridges={diagnosticsSummary.BridgeCount}");
+                }
                 if (diagnosticsSummary.PageOverflowCount > 0)
                 {
                     annotations.Add($"overflowPages={diagnosticsSummary.PageOverflowCount}");
@@ -6110,6 +6324,41 @@ namespace VDG.CLI
                     }
 
                     Console.WriteLine($"{severity}: page {page.PageNumber} {string.Join(" ", parts)}");
+                }
+
+                if (diagnosticsSummary.LayerCount > 0)
+                {
+                    foreach (var layer in diagnosticsSummary.Layers.OrderBy(l => l.LayerNumber))
+                    {
+                        var parts = new List<string>
+                        {
+                            $"modules={layer.ModuleCount}",
+                            $"shapes={layer.ShapeCount}",
+                            $"connectors={layer.ConnectorCount}"
+                        };
+                        if (layer.BridgesOut > 0)
+                        {
+                            parts.Add($"bridgesOut={layer.BridgesOut}");
+                        }
+                        if (layer.BridgesIn > 0)
+                        {
+                            parts.Add($"bridgesIn={layer.BridgesIn}");
+                        }
+                        if (layer.OverflowModules.Count > 0)
+                        {
+                            parts.Add($"overflowModules={string.Join(",", layer.OverflowModules)}");
+                        }
+                        var severity = "info";
+                        if (layer.HardShapeLimitExceeded || layer.HardConnectorLimitExceeded || layer.OverflowModules.Count > 0)
+                        {
+                            severity = "error";
+                        }
+                        else if (layer.SoftShapeLimitExceeded || layer.SoftConnectorLimitExceeded)
+                        {
+                            severity = "warning";
+                        }
+                        Console.WriteLine($"{severity}: layer {layer.LayerNumber} {string.Join(" ", parts)}");
+                    }
                 }
 
                 if (diagnosticsSummary.SkippedModules.Count > 0)

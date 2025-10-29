@@ -271,6 +271,7 @@ module ViewModePlanner =
               Pages = Array.empty
               Layers = Array.empty
               Bridges = Array.empty
+              PageBridges = Array.empty
               Stats =
                 { NodeCount = 0
                   ConnectorCount = 0
@@ -537,6 +538,76 @@ module ViewModePlanner =
                     let pageOptions = buildPageSplitOptions model usableHeight
                     PagingPlanner.computePages pageOptions dataset
 
+            let moduleToPage = Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+            for plan in pagePlans do
+                if not (isNull (box plan)) && not (isNull plan.Modules) then
+                    for moduleId in plan.Modules do
+                        if not (String.IsNullOrWhiteSpace moduleId) then
+                            let trimmed = moduleId.Trim()
+                            if not (moduleToPage.ContainsKey trimmed) then
+                                moduleToPage[trimmed] <- plan.PageIndex
+
+            let pageBridges = ResizeArray<PageBridge>()
+            if not (isNull model.Edges) then
+                for edge in model.Edges do
+                    if not (obj.ReferenceEquals(edge, null))
+                       && not (String.IsNullOrWhiteSpace edge.SourceId)
+                       && not (String.IsNullOrWhiteSpace edge.TargetId) then
+                        let connectorId =
+                            if String.IsNullOrWhiteSpace edge.Id then
+                                sprintf "%s->%s" edge.SourceId edge.TargetId
+                            else
+                                edge.Id
+
+                        match nodeLookup.TryGetValue edge.SourceId, nodeLookup.TryGetValue edge.TargetId with
+                        | (true, srcNode), (true, dstNode) ->
+                            let srcModuleId = resolveModuleId srcNode tiers tiersSet
+                            let dstModuleId = resolveModuleId dstNode tiers tiersSet
+                            let srcPage =
+                                match moduleToPage.TryGetValue srcModuleId with
+                                | true, page -> page
+                                | _ -> 0
+                            let dstPage =
+                                match moduleToPage.TryGetValue dstModuleId with
+                                | true, page -> page
+                                | _ -> srcPage
+                            if srcPage <> dstPage then
+                                let exitAnchor, entryAnchor =
+                                    if moduleBounds.ContainsKey srcModuleId && moduleBounds.ContainsKey dstModuleId then
+                                        let exitPt = computeAnchor moduleBounds[srcModuleId] moduleBounds[dstModuleId]
+                                        let entryPt = computeAnchor moduleBounds[dstModuleId] moduleBounds[srcModuleId]
+                                        exitPt, entryPt
+                                    else
+                                        let srcCenter =
+                                            match placementCenters.TryGetValue edge.SourceId with
+                                            | true, value -> value
+                                            | _ -> point 0.f 0.f
+                                        let dstCenter =
+                                            match placementCenters.TryGetValue edge.TargetId with
+                                            | true, value -> value
+                                            | _ -> point 0.f 0.f
+                                        srcCenter, dstCenter
+
+                                let metadataCopy =
+                                    if isNull edge.Metadata || edge.Metadata.Count = 0 then
+                                        Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) :> IDictionary<_, _>
+                                    else
+                                        Dictionary<string, string>(edge.Metadata, StringComparer.OrdinalIgnoreCase) :> IDictionary<_, _>
+
+                                pageBridges.Add(
+                                    { BridgeId = sprintf "%s#page" connectorId
+                                      SourcePage = srcPage
+                                      TargetPage = dstPage
+                                      SourceModuleId = srcModuleId
+                                      TargetModuleId = dstModuleId
+                                      SourceNodeId = edge.SourceId
+                                      TargetNodeId = edge.TargetId
+                                      ConnectorId = connectorId
+                                      Metadata = metadataCopy
+                                      EntryAnchor = entryAnchor
+                                      ExitAnchor = exitAnchor })
+                        | _ -> ()
+
             let layerAssignment: PagingPlanner.LayerAssignment =
                 if moduleStats.Length = 0 then
                     { Plans = Array.empty
@@ -668,4 +739,5 @@ module ViewModePlanner =
               Pages = pagePlans
               Layers = updatedLayerPlans
               Bridges = bridgeArray
+              PageBridges = pageBridges.ToArray()
               Stats = stats }

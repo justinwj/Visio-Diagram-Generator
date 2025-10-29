@@ -84,6 +84,20 @@ type LayerBridge =
       EntryAnchor: PointF
       ExitAnchor: PointF }
 
+[<CLIMutable>]
+type PageBridge =
+    { BridgeId: string
+      SourcePage: int
+      TargetPage: int
+      SourceModuleId: string
+      TargetModuleId: string
+      SourceNodeId: string
+      TargetNodeId: string
+      ConnectorId: string
+      Metadata: IDictionary<string, string>
+      EntryAnchor: PointF
+      ExitAnchor: PointF }
+
 /// High-level layout plan returned by the algorithms layer.
 [<CLIMutable>]
 type LayoutPlan =
@@ -96,6 +110,7 @@ type LayoutPlan =
       Pages: PagePlan array
       Layers: LayerPlan array
       Bridges: LayerBridge array
+      PageBridges: PageBridge array
       Stats: LayoutStats }
 
 /// The result of a layout operation, containing layouts for nodes and edges.

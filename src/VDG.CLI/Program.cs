@@ -2859,7 +2859,8 @@ namespace VDG.CLI
 
                 if (string.IsNullOrWhiteSpace(key)) continue;
                 if (!groups.TryGetValue(key!, out var list)) { list = new List<(string, string, string)>(); groups[key!] = list; }
-                list.Add((e.Id, e.SourceId, e.TargetId));
+                var edgeIdentifier = string.IsNullOrWhiteSpace(e.Id) ? $"{e.SourceId}->{e.TargetId}" : e.Id;
+                list.Add((edgeIdentifier!, e.SourceId, e.TargetId));
             }
 
             foreach (var kv in groups)
@@ -6193,7 +6194,7 @@ namespace VDG.CLI
                 placementsPerPage[pi] = placements;
             }
 
-            DrawConnectorsPaged(model, layout, placementsPerPage, pageManager, nodePage, layerContext);
+            DrawConnectorsPaged(model, layout, placementsPerPage, pageManager, nodePage, layerContext, layoutPlan);
         }
 
         private static void ComputePlacementsForPage(DiagramModel model, LayoutResult layout, LayoutPlan? layoutPlan, IDictionary<string, NodePlacement> placements, VisioPageManager.PageInfo pageInfo, int pageIndex, double minLeft, double minBottom, double usableHeight, double margin, double title, IReadOnlyDictionary<string, int> nodePageAssignments, LayerRenderContext layerContext)
@@ -6337,7 +6338,7 @@ namespace VDG.CLI
             DrawExplicitContainers(model, layout, visioPage, minLeft, minBottom, usableHeight, margin, title, pageIndex);
         }
 
-        private static void DrawConnectorsPaged(DiagramModel model, LayoutResult layout, Dictionary<int, Dictionary<string, NodePlacement>> perPage, VisioPageManager pageManager, IReadOnlyDictionary<string, int> nodePageAssignments, LayerRenderContext layerContext)
+        private static void DrawConnectorsPaged(DiagramModel model, LayoutResult layout, Dictionary<int, Dictionary<string, NodePlacement>> perPage, VisioPageManager pageManager, IReadOnlyDictionary<string, int> nodePageAssignments, LayerRenderContext layerContext, LayoutPlan? layoutPlan)
         {
             var pageCount = perPage.Keys.Count == 0 ? 1 : perPage.Keys.Max() + 1;
             var (minLeft, minBottom, maxRight, maxTop) = ComputeLayoutBounds(layout);
@@ -6360,6 +6361,16 @@ namespace VDG.CLI
             var channelGapIn = (model.Metadata.TryGetValue("layout.routing.channels.gapIn", out var cgap) && double.TryParse(cgap, NumberStyles.Float, CultureInfo.InvariantCulture, out var cg)) ? cg : 0.0;
             var effectiveBundleBy = (string.Equals(bundleByRaw, "none", StringComparison.OrdinalIgnoreCase) && channelGapIn > 0.0) ? "lane" : bundleByRaw;
             var bundles = BuildBundleIndex(model, effectiveBundleBy);
+            var pageBridgeLookup = new Dictionary<string, PageBridge>(StringComparer.OrdinalIgnoreCase);
+            if (layoutPlan?.PageBridges != null)
+            {
+                foreach (var bridge in layoutPlan.PageBridges)
+                {
+                    if (bridge == null) continue;
+                    if (string.IsNullOrWhiteSpace(bridge.ConnectorId)) continue;
+                    pageBridgeLookup[bridge.ConnectorId] = bridge;
+                }
+            }
             for (int pi = 0; pi < pageCount; pi++)
             {
                 if (!pageManager.TryGetPageInfo(pi, out var pageInfo))
@@ -6392,7 +6403,9 @@ namespace VDG.CLI
                     if (edge == null) continue;
                     var sourceId = edge.SourceId ?? string.Empty;
                     var targetId = edge.TargetId ?? string.Empty;
-                    var edgeKey = edge.Id ?? string.Empty;
+                    var edgeKey = !string.IsNullOrWhiteSpace(edge.Id)
+                        ? edge.Id
+                        : $"{sourceId}->{targetId}";
 
                     var hasSrc = placementsOnPage.TryGetValue(sourceId, out var src) && src != null;
                     var hasDst = placementsOnPage.TryGetValue(targetId, out var dst) && dst != null;
@@ -6421,6 +6434,8 @@ namespace VDG.CLI
                     }
 
                     var connectorDrawn = false;
+                    var incrementConnectorCount = false;
+                    string? skipReason = null;
 
                     if (hasSrc && hasDst &&
                         layoutEdgeLookup.TryGetValue(edgeKey, out var predefinedRoute) &&
@@ -6442,6 +6457,7 @@ namespace VDG.CLI
                             ApplyEdgeStyle(edge, line); try { line.SendToBack(); } catch { }
                             ReleaseCom(line);
                             connectorDrawn = true;
+                            incrementConnectorCount = true;
                         }
                         catch
                         {
@@ -6525,7 +6541,7 @@ namespace VDG.CLI
                                         }
                                         if (edge.Directed) TrySetFormula(pl, "EndArrow", "5"); else TrySetFormula(pl, "EndArrow", "0");
                                         ApplyEdgeStyle(edge, pl); try { pl.SendToBack(); } catch { }
-                                        ReleaseCom(pl); usedPolyline = true; connectorDrawn = true;
+                                        ReleaseCom(pl); usedPolyline = true; connectorDrawn = true; incrementConnectorCount = true;
                                     }
                                     catch { usedPolyline = false; }
                                 }
@@ -6645,7 +6661,7 @@ namespace VDG.CLI
                                         }
                                         if (edge.Directed) TrySetFormula(pl, "EndArrow", "5"); else TrySetFormula(pl, "EndArrow", "0");
                                         ApplyEdgeStyle(edge, pl); try { pl.SendToBack(); } catch { }
-                                        ReleaseCom(pl); usedPolyline = true; connectorDrawn = true;
+                                        ReleaseCom(pl); usedPolyline = true; connectorDrawn = true; incrementConnectorCount = true;
                                     }
                                     catch { usedPolyline = false; }
                                 }
@@ -6662,6 +6678,7 @@ namespace VDG.CLI
                                     ApplyEdgeStyle(edge, connector);
                                     try { connector.SendToBack(); } catch { }
                                     connectorDrawn = true;
+                                    incrementConnectorCount = true;
                                 }
                             }
                             finally { if (connector != null) ReleaseCom(connector); }
@@ -6671,43 +6688,123 @@ namespace VDG.CLI
                             dynamic line = page.DrawLine(srcPlacement.CenterX, srcPlacement.CenterY, dstPlacement.CenterX, dstPlacement.CenterY);
                             if (!string.IsNullOrWhiteSpace(edge.Label)) line.Text = edge.Label;
                             if (edge.Directed) TrySetFormula(line, "EndArrow", "5"); else TrySetFormula(line, "EndArrow", "0");
-                            ApplyEdgeStyle(edge, line); ReleaseCom(line); connectorDrawn = true;
+                            ApplyEdgeStyle(edge, line); ReleaseCom(line); connectorDrawn = true; incrementConnectorCount = true;
                         }
 
-                        if (connectorDrawn)
+                        if (!connectorDrawn)
                         {
-                            pageInfo.IncrementConnectorCount();
-                        }
-                        else
-                        {
-                            pageManager.RegisterConnectorSkipped(edge.Id, sourceId, targetId, pi, "connector routing failed");
+                            skipReason ??= "connector routing failed";
                         }
                     }
                     else if (hasSrc && !hasDst)
                     {
-                        if (src != null)
+                        if (pageBridgeLookup.TryGetValue(edgeKey, out var bridge) && bridge != null && bridge.SourcePage == pi)
                         {
-                            var markerLeft = src.Left + src.Width + 0.1; var markerBottom = src.CenterY - 0.1;
-                            dynamic m = page.DrawRectangle(markerLeft, markerBottom, markerLeft + 1.4, markerBottom + 0.35);
-                            m.Text = (usable > 0 && IsFinite(usable)) ? $"to {edge.TargetId} (p{tp + 1})" : $"to {edge.TargetId}";
-                            TrySetFormula(m, "LinePattern", "2"); ReleaseCom(m);
+                            dynamic? stub = null;
+                            dynamic? line = null;
+                            try
+                            {
+                                var anchor = bridge.ExitAnchor;
+                                var stubX = (double.IsNaN(anchor.X) || double.IsInfinity(anchor.X)) ? src!.CenterX : anchor.X + offsetX;
+                                var stubY = (double.IsNaN(anchor.Y) || double.IsInfinity(anchor.Y)) ? src!.CenterY : anchor.Y + offsetY;
+                                const double stubRadius = 0.12;
+                                stub = page.DrawOval(stubX - stubRadius, stubY - stubRadius, stubX + stubRadius, stubY + stubRadius);
+                                stub.Text = $"p{bridge.TargetPage + 1}";
+                                TrySetFormula(stub, "LinePattern", "2");
+                                TrySetFormula(stub, "FillForegnd", "RGB(240,240,240)");
+                                TrySetFormula(stub, "Char.Size", "6 pt");
+                                line = page.DrawLine(src!.CenterX, src.CenterY, stubX, stubY);
+                                if (edge.Directed) TrySetFormula(line, "EndArrow", "5"); else TrySetFormula(line, "EndArrow", "0");
+                                TrySetFormula(line, "LinePattern", "2");
+                                ApplyEdgeStyle(edge, line);
+                                try { line.SendToBack(); } catch { }
+                                connectorDrawn = true;
+                                incrementConnectorCount = true;
+                            }
+                            finally
+                            {
+                                if (line != null) { ReleaseCom(line); line = null; }
+                                if (stub != null) { ReleaseCom(stub); stub = null; }
+                            }
                         }
-                        pageManager.RegisterConnectorSkipped(edge.Id, sourceId, targetId, pi, $"target on page {tp + 1}");
+                        else
+                        {
+                            if (src != null)
+                            {
+                                var markerLeft = src.Left + src.Width + 0.1; var markerBottom = src.CenterY - 0.1;
+                                dynamic m = page.DrawRectangle(markerLeft, markerBottom, markerLeft + 1.4, markerBottom + 0.35);
+                                m.Text = (usable > 0 && IsFinite(usable)) ? $"to {edge.TargetId} (p{tp + 1})" : $"to {edge.TargetId}";
+                                TrySetFormula(m, "LinePattern", "2"); ReleaseCom(m);
+                            }
+                            skipReason = $"target on page {tp + 1}";
+                        }
                     }
                     else if (!hasSrc && hasDst)
                     {
-                        if (dst != null)
+                        if (pageBridgeLookup.TryGetValue(edgeKey, out var bridge) && bridge != null && bridge.TargetPage == pi)
                         {
-                            var markerRight = dst.Left - 0.1; var markerLeft2 = markerRight - 0.8; var markerBottom2 = dst.CenterY - 0.1;
-                            dynamic m = page.DrawRectangle(markerLeft2 - 0.6, markerBottom2, markerRight, markerBottom2 + 0.35);
-                            m.Text = (usable > 0 && IsFinite(usable)) ? $"from {edge.SourceId} (p{sp + 1})" : $"from {edge.SourceId}";
-                            TrySetFormula(m, "LinePattern", "2"); ReleaseCom(m);
+                            dynamic? stub = null;
+                            dynamic? line = null;
+                            try
+                            {
+                                var anchor = bridge.EntryAnchor;
+                                var stubX = (double.IsNaN(anchor.X) || double.IsInfinity(anchor.X)) ? dst!.CenterX : anchor.X + offsetX;
+                                var stubY = (double.IsNaN(anchor.Y) || double.IsInfinity(anchor.Y)) ? dst!.CenterY : anchor.Y + offsetY;
+                                const double stubRadius = 0.12;
+                                stub = page.DrawOval(stubX - stubRadius, stubY - stubRadius, stubX + stubRadius, stubY + stubRadius);
+                                stub.Text = $"p{bridge.SourcePage + 1}";
+                                TrySetFormula(stub, "LinePattern", "2");
+                                TrySetFormula(stub, "FillForegnd", "RGB(240,240,240)");
+                                TrySetFormula(stub, "Char.Size", "6 pt");
+                                line = page.DrawLine(stubX, stubY, dst!.CenterX, dst.CenterY);
+                                TrySetFormula(line, "LinePattern", "4");
+                                TrySetFormula(line, "BeginArrow", "5");
+                                ApplyEdgeStyle(edge, line);
+                                connectorDrawn = true;
+                                // incoming stubs are informative; do not increment connector count to avoid double-count.
+                            }
+                            finally
+                            {
+                                if (line != null) { ReleaseCom(line); line = null; }
+                                if (stub != null) { ReleaseCom(stub); stub = null; }
+                            }
                         }
-                        pageManager.RegisterConnectorSkipped(edge.Id, sourceId, targetId, pi, $"source on page {sp + 1}");
+                        else
+                        {
+                            if (dst != null)
+                            {
+                                var markerRight = dst.Left - 0.1; var markerLeft2 = markerRight - 0.8; var markerBottom2 = dst.CenterY - 0.1;
+                                dynamic m = page.DrawRectangle(markerLeft2 - 0.6, markerBottom2, markerRight, markerBottom2 + 0.35);
+                                m.Text = (usable > 0 && IsFinite(usable)) ? $"from {edge.SourceId} (p{sp + 1})" : $"from {edge.SourceId}";
+                                TrySetFormula(m, "LinePattern", "2"); ReleaseCom(m);
+                            }
+                            skipReason = $"source on page {sp + 1}";
+                        }
                     }
                     else
                     {
-                        pageManager.RegisterConnectorSkipped(edge.Id, sourceId, targetId, pi, "connector endpoints missing on page");
+                        skipReason = "connector endpoints missing on page";
+                    }
+
+                    if (connectorDrawn)
+                    {
+                        if (incrementConnectorCount)
+                        {
+                            pageInfo.IncrementConnectorCount();
+                        }
+                    }
+                    else
+                    {
+                        var reason = skipReason;
+                        if (string.IsNullOrWhiteSpace(reason))
+                        {
+                            if (hasSrc && hasDst) reason = "connector routing failed";
+                            else if (hasSrc) reason = $"target on page {tp + 1}";
+                            else if (hasDst) reason = $"source on page {sp + 1}";
+                            else reason = "connector endpoints missing on page";
+                        }
+
+                        pageManager.RegisterConnectorSkipped(edge.Id, sourceId, targetId, pi, reason!);
                     }
                 }
             }

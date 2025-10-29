@@ -200,6 +200,7 @@ module PrintPlanner =
           Pages = computePagePlans model layout
           Layers = Array.empty
           Bridges = Array.empty
+          PageBridges = Array.empty
           Stats =
             { NodeCount = nodes.Length
               ConnectorCount = connectorCount

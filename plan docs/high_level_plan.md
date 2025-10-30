@@ -5,6 +5,8 @@ Here’s a clear recap of the F# / C# split—the architectural guardrail design
 ### **F# Responsibilities (VisioDiagramGenerator.Algorithms/)**
 - **Pure Logic & Layout Algorithms:**
   - Compute all *layout, paging, tiering, grid slot* and connector planning given an IR input and options.
+  - Split oversized modules into deterministic segments and assign page plans before node placement so every downstream consumer works against segment-aware IDs.
+  - Emit per-page origin/bounds metadata so renderers can place each page in its own coordinate space without recomputing layout geometry.
   - Emit *deterministic, side-effect-free* records/lists: e.g., `LayoutPlan`, `PagePlan`, `GridSlot`, `NodePlacement`.
 - **Heuristics, Metrics, and Grouping:**
   - Apply rules for paging, slotting, module grouping, spillover, and any composite “view/print” logic.
@@ -50,3 +52,6 @@ Here’s a clear recap of the F# / C# split—the architectural guardrail design
 F# = brains of the operation (algorithmic, stateless, predictable).  
 C# = hands and face for the user (Visio automation, reporting, user interaction, file output).  
 Keep all intelligence, decisions, and transforms pure and in F#; push all real-world effect and interop to C#.
+
+### **Separation of Concerns**
+- Cleanly separate rendering for screen/monitor, from paginated “print” mode. Rendering to screen is concerned with number of objects on a Visio layer being 1,000 or less. Pagination for printers is a separate algorithm that tries to get the diagram to fit nicely on the chosen paper size.

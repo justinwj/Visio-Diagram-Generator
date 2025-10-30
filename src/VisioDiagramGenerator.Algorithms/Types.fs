@@ -22,6 +22,19 @@ type EdgeRoute =
     { Id: string
       Points: PointF array }
 
+[<CLIMutable>]
+type NodeModuleAssignment =
+    { NodeId: string
+      ModuleId: string }
+
+[<CLIMutable>]
+type PageLayoutInfo =
+    { PageIndex: int
+      Origin: PointF
+      Width: float32
+      Height: float32
+      BodyHeight: float32 }
+
 /// Axis-aligned rectangle helper used for container bounds.
 [<CLIMutable>]
 type RectangleF =
@@ -104,7 +117,12 @@ type LayoutPlan =
     { OutputMode: string
       CanvasWidth: float32
       CanvasHeight: float32
+      PageHeight: float32
+      PageMargin: float32
+      TitleHeight: float32
       Nodes: NodeLayout array
+      NodeModules: NodeModuleAssignment array
+      PageLayouts: PageLayoutInfo array
       Containers: ContainerLayout array
       Edges: EdgeRoute array
       Pages: PagePlan array

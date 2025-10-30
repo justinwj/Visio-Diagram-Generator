@@ -190,11 +190,21 @@ module PrintPlanner =
         let canvasHeight =
             if Double.IsInfinity minBottom || Double.IsInfinity maxTop then 0.f
             else float32 (maxTop - minBottom)
+        let titleHeight = getTitleHeight model |> float32
+        let margin = getPageMargin model |> Option.defaultValue 1.0 |> float32
 
         { OutputMode = "print"
           CanvasWidth = canvasWidth
           CanvasHeight = canvasHeight
+          PageHeight =
+            match getPageHeight model with
+            | Some h -> float32 h
+            | None -> 0.f
+          PageMargin = margin
+          TitleHeight = titleHeight
           Nodes = nodes
+          NodeModules = Array.empty
+          PageLayouts = Array.empty
           Containers = Array.empty
           Edges = edges
           Pages = computePagePlans model layout

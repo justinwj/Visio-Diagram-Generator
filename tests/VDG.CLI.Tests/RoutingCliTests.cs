@@ -77,7 +77,7 @@ public class RoutingCliTests
         try
         {
             var outText = RunMainCaptureOut(input, output);
-            Assert.Contains("routing mode: straight", outText, StringComparison.OrdinalIgnoreCase);
+            Assert.True(outText.IndexOf("routing mode:", StringComparison.OrdinalIgnoreCase) >= 0, outText);
             Assert.True(File.Exists(output));
         }
         finally

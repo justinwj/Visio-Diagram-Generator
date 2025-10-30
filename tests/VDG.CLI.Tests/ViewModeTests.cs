@@ -157,13 +157,28 @@ namespace VDG.CLI.Tests
                 model.Nodes.Add(node);
             }
 
-            var layout = Program.ComputeViewModeLayoutForTests(model);
-            Assert.NotNull(layout);
-            Assert.True(model.Metadata.TryGetValue("layout.view.truncatedModules", out var raw));
-            var parsed = JsonSerializer.Deserialize<Dictionary<string, int>>(raw);
-            Assert.NotNull(parsed);
-            Assert.True(parsed!.TryGetValue("modA", out var overflow));
-            Assert.Equal(18, overflow);
+            // segmentation should eliminate truncation metadata by splitting the module into parts
+            Assert.False(model.Metadata.ContainsKey("layout.view.truncatedModules"));
+            var plan = Program.ComputeViewModePlanForTests(model);
+            Assert.NotNull(plan);
+            var containers = plan!.Containers ?? Array.Empty<ContainerLayout>();
+            Assert.True(containers.Count(c => c.Id.StartsWith("modA", StringComparison.OrdinalIgnoreCase)) > 1);
+
+            Assert.True(model.Metadata.TryGetValue("layout.view.nodeModules.json", out var nodeMapRaw));
+            Assert.False(string.IsNullOrWhiteSpace(nodeMapRaw));
+            var nodeMap = JsonSerializer.Deserialize<Dictionary<string, string>>(nodeMapRaw!);
+            Assert.NotNull(nodeMap);
+            Assert.Equal(model.Nodes.Count, nodeMap!.Count);
+            var distinctSegments = new HashSet<string>(nodeMap.Values, StringComparer.OrdinalIgnoreCase);
+            Assert.True(distinctSegments.Count > 1);
+            Assert.All(nodeMap, kv => Assert.StartsWith("modA#part", kv.Value, StringComparison.OrdinalIgnoreCase));
+
+            Assert.True(model.Metadata.TryGetValue("layout.view.pageLayouts.json", out var pageLayoutsRaw));
+            Assert.False(string.IsNullOrWhiteSpace(pageLayoutsRaw));
+            var pageLayouts = JsonSerializer.Deserialize<PageLayoutInfo[]>(pageLayoutsRaw!);
+            Assert.NotNull(pageLayouts);
+            Assert.True(pageLayouts!.Length >= 1);
+            Assert.All(pageLayouts!, layout => Assert.True(layout.BodyHeight >= 0f));
         }
 
         [Fact]

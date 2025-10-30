@@ -807,7 +807,27 @@ namespace VDG.CLI
 
             ValidateViewModeContent(model);
 
-            var nodePageAssignments = BuildNodePageAssignments(model, pagePlans, null);
+            IReadOnlyDictionary<string, int> nodePageAssignments;
+            if (layoutPlan?.NodeModules != null && layoutPlan.NodeModules.Length > 0)
+            {
+                var overrides = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                foreach (var assignment in layoutPlan.NodeModules)
+                {
+                    if (assignment == null) continue;
+                    if (string.IsNullOrWhiteSpace(assignment.NodeId)) continue;
+                    if (string.IsNullOrWhiteSpace(assignment.ModuleId)) continue;
+                    var nodeId = assignment.NodeId.Trim();
+                    if (!overrides.ContainsKey(nodeId))
+                    {
+                        overrides[nodeId] = assignment.ModuleId.Trim();
+                    }
+                }
+                nodePageAssignments = BuildNodePageAssignments(model, pagePlans, overrides);
+            }
+            else
+            {
+                nodePageAssignments = BuildNodePageAssignments(model, pagePlans, null);
+            }
             var plannerStats = BuildPlannerSummaryStats(pagePlans);
                 var diagnosticsSummary = EmitDiagnostics(model, layout, diagHeightOverride, diagLaneMaxOverride, pagePlans, pagingOptions, null, plannerStats, null, modulesFilteredOut, layoutPlan);
                 try
@@ -3204,6 +3224,44 @@ namespace VDG.CLI
             {
                 model.Metadata.Remove("layout.view.truncatedModules");
             }
+
+            if (plan?.NodeModules != null && plan.NodeModules.Length > 0)
+            {
+                var nodeModules = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                foreach (var assignment in plan.NodeModules)
+                {
+                    if (assignment == null) continue;
+                    if (string.IsNullOrWhiteSpace(assignment.NodeId)) continue;
+                    if (string.IsNullOrWhiteSpace(assignment.ModuleId)) continue;
+                    var nodeId = assignment.NodeId.Trim();
+                    if (!nodeModules.ContainsKey(nodeId))
+                    {
+                        nodeModules[nodeId] = assignment.ModuleId.Trim();
+                    }
+                }
+
+                if (nodeModules.Count > 0)
+                {
+                    model.Metadata["layout.view.nodeModules.json"] = JsonSerializer.Serialize(nodeModules, JsonOptions);
+                }
+                else
+                {
+                    model.Metadata.Remove("layout.view.nodeModules.json");
+                }
+            }
+            else
+            {
+                model.Metadata.Remove("layout.view.nodeModules.json");
+            }
+
+            if (plan?.PageLayouts != null && plan.PageLayouts.Length > 0)
+            {
+                model.Metadata["layout.view.pageLayouts.json"] = JsonSerializer.Serialize(plan.PageLayouts, JsonOptions);
+            }
+            else
+            {
+                model.Metadata.Remove("layout.view.pageLayouts.json");
+            }
         }
 
         private static ViewModeValidationResult AnalyzeViewModeContent(DiagramModel model)
@@ -4953,21 +5011,22 @@ namespace VDG.CLI
             VisioPageManager.PageInfo pageInfo,
             dynamic visioPage,
             int pageIndex,
-            double minLeft,
-            double minBottom,
+            double originX,
+            double originY,
             double usableHeight,
             double margin,
             double title,
             IReadOnlyDictionary<string, int> nodePageAssignments,
-            LayerRenderContext layerContext)
+            LayerRenderContext layerContext,
+            PageLayoutInfo? pageLayout)
         {
             if (!layerContext.Enabled || !layerContext.HasLayerFilter) return;
             if (layoutPlan?.Bridges == null || layoutPlan.Bridges.Length == 0) return;
             if (visioPage == null) return;
 
-            var offsetX = margin - minLeft;
-            var bandOffset = IsFinite(usableHeight) ? pageIndex * usableHeight : 0.0;
-            var offsetY = margin + title - minBottom - bandOffset;
+            var offsetX = margin - originX;
+            var bandOffset = pageLayout != null ? 0.0 : (IsFinite(usableHeight) ? pageIndex * usableHeight : 0.0);
+            var offsetY = margin + title - originY - bandOffset;
 
             var dedupe = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var layoutNodes = layout?.Nodes?.Where(n => n != null && !string.IsNullOrWhiteSpace(n.Id))
@@ -4985,14 +5044,14 @@ namespace VDG.CLI
                 var anchor = source ? bridge.ExitAnchor : bridge.EntryAnchor;
                 if (IsFinite(usableHeight) && usableHeight > 0.0)
                 {
-                    var normalized = anchor.Y - (float)minBottom;
+                    var normalized = anchor.Y - (float)originY;
                     var idx = (int)Math.Floor(normalized / (float)usableHeight);
                     return idx == pageIndex;
                 }
 
                 if (!string.IsNullOrWhiteSpace(nodeId) && layoutNodes.TryGetValue(nodeId, out var nodeLayout))
                 {
-                    var normalized = nodeLayout.Position.Y - (float)minBottom;
+                    var normalized = nodeLayout.Position.Y - (float)originY;
                     var idx = usableHeight > 0.0 ? (int)Math.Floor(normalized / (float)usableHeight) : 0;
                     return idx == pageIndex;
                 }
@@ -5084,7 +5143,7 @@ namespace VDG.CLI
             }
 
             // Draw explicit sub-containers (single-page)
-            DrawExplicitContainers(model, layout, visioPage, minLeft, minBottom, double.PositiveInfinity, margin, titleHeight, 0);
+            DrawExplicitContainers(model, layout, visioPage, minLeft, minBottom, double.PositiveInfinity, margin, titleHeight, 0, null);
         }
 
         private static void DrawConnectors(DiagramModel model, IDictionary<string, NodePlacement> placements, VisioPageManager.PageInfo pageInfo, VisioPageManager? pageManager, LayoutResult? layout = null, LayerRenderContext? layerContext = null)
@@ -5842,13 +5901,19 @@ namespace VDG.CLI
             return false;
         }
 
-        private static void DrawExplicitContainers(DiagramModel model, LayoutResult layout, dynamic page, double minLeft, double minBottom, double usableHeight, double margin, double title, int pageIndex)
+        private static void DrawExplicitContainers(DiagramModel model, LayoutResult layout, dynamic page, double minLeft, double minBottom, double usableHeight, double margin, double title, int pageIndex, PageLayoutInfo? pageLayout)
         {
             if (!TryGetExplicitContainers(model, out var containers) || containers.Count == 0) return;
             var tiers = GetOrderedTiers(model);
             var nodeMap = BuildNodeMap(model);
             var padding = GetContainerPadding(model);
             var corner = GetContainerCorner(model);
+            var baseOriginX = pageLayout != null ? pageLayout.Origin.X : minLeft;
+            var baseOriginY = pageLayout != null ? pageLayout.Origin.Y : minBottom;
+            var effectiveUsable = (pageLayout != null && pageLayout.BodyHeight > 0f) ? pageLayout.BodyHeight : usableHeight;
+            var offsetXBase = margin - baseOriginX;
+            var bandOffset = pageLayout != null ? 0.0 : (IsFinite(usableHeight) ? pageIndex * usableHeight : 0.0);
+            var offsetYBase = margin + title - baseOriginY - bandOffset;
 
             foreach (var c in containers)
             {
@@ -5860,8 +5925,8 @@ namespace VDG.CLI
                 double tMinL = double.MaxValue, tMinB = double.MaxValue, tMaxR = double.MinValue, tMaxT = double.MinValue;
                 foreach (var nl in layout.Nodes)
                 {
-                    var yNorm = nl.Position.Y - (float)minBottom;
-                    var idx = (usableHeight > 0 && IsFinite(usableHeight)) ? (int)Math.Floor(yNorm / (float)usableHeight) : 0;
+                    var yNorm = nl.Position.Y - (float)baseOriginY;
+                    var idx = (effectiveUsable > 0 && IsFinite(effectiveUsable)) ? (int)Math.Floor(yNorm / (float)effectiveUsable) : 0;
                     if (idx != pageIndex) continue;
                     if (!nodeMap.TryGetValue(nl.Id, out var node)) continue;
                     var nodeTier = node.Tier;
@@ -5871,9 +5936,8 @@ namespace VDG.CLI
 
                     var w = nl.Size.HasValue && nl.Size.Value.Width > 0 ? nl.Size.Value.Width : (float)DefaultNodeWidth;
                     var h = nl.Size.HasValue && nl.Size.Value.Height > 0 ? nl.Size.Value.Height : (float)DefaultNodeHeight;
-                    var offsetX = margin - minLeft;
-                    var bandOffset = (pageIndex * usableHeight);
-                    var offsetY = margin + title - minBottom - (IsFinite(usableHeight) ? bandOffset : 0);
+                    var offsetX = offsetXBase;
+                    var offsetY = offsetYBase;
                     var l = nl.Position.X + offsetX;
                     var b = nl.Position.Y + offsetY;
                     tMinL = Math.Min(tMinL, l); tMinB = Math.Min(tMinB, b);
@@ -5886,9 +5950,8 @@ namespace VDG.CLI
                 bool hasExplicit = (c.Bounds != null && c.Bounds.Width.HasValue && c.Bounds.Height.HasValue);
                 if (hasExplicit)
                 {
-                    var offsetX = margin - minLeft;
-                    var bandOffset = (pageIndex * usableHeight);
-                    var offsetY = margin + title - minBottom - (IsFinite(usableHeight) ? bandOffset : 0);
+                    var offsetX = offsetXBase;
+                    var offsetY = offsetYBase;
                     var l = (c.Bounds!.X ?? 0.0) + offsetX;
                     var b = (c.Bounds!.Y ?? 0.0) + offsetY;
                     var w = c.Bounds!.Width!.Value;
@@ -5899,8 +5962,8 @@ namespace VDG.CLI
                 {
                     foreach (var nl in layout.Nodes)
                     {
-                        var yNorm = nl.Position.Y - (float)minBottom;
-                        var idx = (usableHeight > 0 && IsFinite(usableHeight)) ? (int)Math.Floor(yNorm / (float)usableHeight) : 0;
+                        var yNorm = nl.Position.Y - (float)baseOriginY;
+                        var idx = (effectiveUsable > 0 && IsFinite(effectiveUsable)) ? (int)Math.Floor(yNorm / (float)effectiveUsable) : 0;
                         if (idx != pageIndex) continue;
                         if (!nodeMap.TryGetValue(nl.Id, out var node)) continue;
                         var nodeTier = node.Tier;
@@ -5911,9 +5974,8 @@ namespace VDG.CLI
 
                         var w = nl.Size.HasValue && nl.Size.Value.Width > 0 ? nl.Size.Value.Width : (float)DefaultNodeWidth;
                         var h = nl.Size.HasValue && nl.Size.Value.Height > 0 ? nl.Size.Value.Height : (float)DefaultNodeHeight;
-                        var offsetX = margin - minLeft;
-                        var bandOffset = (pageIndex * usableHeight);
-                        var offsetY = margin + title - minBottom - (IsFinite(usableHeight) ? bandOffset : 0);
+                        var offsetX = offsetXBase;
+                        var offsetY = offsetYBase;
                         var l = nl.Position.X + offsetX;
                         var b = nl.Position.Y + offsetY;
                         cMinL = Math.Min(cMinL, l); cMinB = Math.Min(cMinB, b);
@@ -6138,15 +6200,22 @@ namespace VDG.CLI
 
         private static void DrawMultiPage(DiagramModel model, LayoutResult layout, LayoutPlan? layoutPlan, VisioPageManager pageManager, IReadOnlyDictionary<string, int> plannedPages, LayerRenderContext layerContext)
         {
-            _ = layoutPlan;
-            var pageWidth = GetPageWidth(model) ?? 11.0;
-            var pageHeight = GetPageHeight(model) ?? 8.5;
+            var pageLayoutLookup =
+                layoutPlan?.PageLayouts?
+                    .Where(pl => pl != null)
+                    .ToDictionary(pl => pl.PageIndex, pl => pl);
+
+            var defaultPageWidth = GetPageWidth(model) ?? (double)(layoutPlan?.CanvasWidth ?? 11.0f);
+            var defaultPageHeight =
+                GetPageHeight(model)
+                ?? (layoutPlan != null && layoutPlan.PageHeight > 0f ? layoutPlan.PageHeight : 8.5f);
+
             var margin = GetPageMargin(model) ?? Margin;
             var title = GetTitleHeight(model);
-            var usable = pageHeight - (2 * margin) - title;
-            if (usable <= 0) usable = pageHeight; // fallback
+            var defaultUsable = defaultPageHeight - (2 * margin) - title;
+            if (defaultUsable <= 0) defaultUsable = defaultPageHeight;
 
-            var (minLeft, minBottom, maxRight, maxTop) = ComputeLayoutBounds(layout);
+            var (minLeft, minBottom, _, _) = ComputeLayoutBounds(layout);
 
             // Compute page index for each node
             var nodePage = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
@@ -6171,7 +6240,7 @@ namespace VDG.CLI
                 }
 
                 var y = nl.Position.Y - (float)minBottom;
-                var idx = (int)Math.Floor(y / (float)usable);
+                var idx = (int)Math.Floor(y / (float)defaultUsable);
                 if (idx < 0) idx = 0;
                 nodePage[nl.Id] = idx;
                 if (idx > maxPage) maxPage = idx;
@@ -6182,6 +6251,32 @@ namespace VDG.CLI
             var pageCount = maxPage + 1;
             for (int pi = 0; pi <= maxPage; pi++)
             {
+                PageLayoutInfo? pageLayout = null;
+                if (pageLayoutLookup != null && pageLayoutLookup.TryGetValue(pi, out var info))
+                {
+                    pageLayout = info;
+                }
+
+                var pageWidth = defaultPageWidth;
+                var pageHeight = defaultPageHeight;
+                var usable = defaultUsable;
+                if (pageLayout != null)
+                {
+                    var layoutInfo = pageLayout;
+                    if (layoutInfo.Width > 0f)
+                    {
+                        pageWidth = Math.Max(pageWidth, layoutInfo.Width + (2 * margin));
+                    }
+                    if (layoutInfo.Height > 0f)
+                    {
+                        pageHeight = Math.Max(pageHeight, layoutInfo.Height + (2 * margin) + title);
+                    }
+                    if (layoutInfo.BodyHeight > 0f)
+                    {
+                        usable = layoutInfo.BodyHeight;
+                    }
+                }
+
                 var pageInfo = pageManager.EnsurePage(pi, $"Layered {pi + 1}");
                 dynamic page = pageInfo.Page ?? throw new COMException("Visio page was not created.");
 
@@ -6189,15 +6284,15 @@ namespace VDG.CLI
                 TrySetResult(page.PageSheet.CellsU["PageHeight"], pageHeight);
 
                 var placements = new Dictionary<string, NodePlacement>(StringComparer.OrdinalIgnoreCase);
-                ComputePlacementsForPage(model, layout, layoutPlan, placements, pageInfo, pi, minLeft, minBottom, usable, margin, title, nodePage, layerContext);
-                DrawLaneContainersForPage(model, layout, page, pi, pageCount, minLeft, minBottom, usable, margin, title, nodePage);
+                ComputePlacementsForPage(model, layout, layoutPlan, placements, pageInfo, pi, minLeft, minBottom, usable, margin, title, nodePage, layerContext, pageLayout);
+                DrawLaneContainersForPage(model, layout, page, pi, pageCount, minLeft, minBottom, usable, margin, title, nodePage, pageLayout);
                 placementsPerPage[pi] = placements;
             }
 
-            DrawConnectorsPaged(model, layout, placementsPerPage, pageManager, nodePage, layerContext, layoutPlan);
+            DrawConnectorsPaged(model, layout, placementsPerPage, pageManager, nodePage, layerContext, layoutPlan, pageLayoutLookup, minLeft, minBottom, margin, title);
         }
 
-        private static void ComputePlacementsForPage(DiagramModel model, LayoutResult layout, LayoutPlan? layoutPlan, IDictionary<string, NodePlacement> placements, VisioPageManager.PageInfo pageInfo, int pageIndex, double minLeft, double minBottom, double usableHeight, double margin, double title, IReadOnlyDictionary<string, int> nodePageAssignments, LayerRenderContext layerContext)
+        private static void ComputePlacementsForPage(DiagramModel model, LayoutResult layout, LayoutPlan? layoutPlan, IDictionary<string, NodePlacement> placements, VisioPageManager.PageInfo pageInfo, int pageIndex, double minLeft, double minBottom, double usableHeight, double margin, double title, IReadOnlyDictionary<string, int> nodePageAssignments, LayerRenderContext layerContext, PageLayoutInfo? pageLayout)
         {
             if (pageInfo == null) throw new COMException("Visio page metadata was not initialised.");
             dynamic visioPage = pageInfo.Page ?? throw new COMException("Visio page was not created.");
@@ -6205,20 +6300,35 @@ namespace VDG.CLI
             var tiers = GetOrderedTiers(model);
             var tiersSet = new HashSet<string>(tiers, StringComparer.OrdinalIgnoreCase);
 
+            var effectiveUsable = usableHeight;
+            var baseOriginX = pageLayout != null ? pageLayout.Origin.X : minLeft;
+            var baseOriginY = pageLayout != null ? pageLayout.Origin.Y : minBottom;
+
+            var offsetX = margin - baseOriginX;
+            double bandOffset = 0.0;
+            if (pageLayout != null)
+            {
+                if (pageLayout.BodyHeight > 0f)
+                {
+                    effectiveUsable = pageLayout.BodyHeight;
+                }
+            }
+            else
+            {
+                bandOffset = pageIndex * usableHeight;
+            }
+            var offsetY = margin + title - baseOriginY - bandOffset;
+
             foreach (var nl in layout.Nodes)
             {
-                var yNorm = nl.Position.Y - (float)minBottom;
-                var idx = (int)Math.Floor(yNorm / (float)usableHeight);
+                var yNorm = nl.Position.Y - (float)baseOriginY;
+                var idx = effectiveUsable > 0.0 ? (int)Math.Floor(yNorm / (float)effectiveUsable) : 0;
                 var assignedPage = nodePageAssignments != null && nodePageAssignments.TryGetValue(nl.Id, out var mapped) ? mapped : idx;
                 if (assignedPage != pageIndex) continue;
 
                 if (!nodeMap.TryGetValue(nl.Id, out var node)) continue;
                 var width = nl.Size.HasValue && nl.Size.Value.Width > 0 ? nl.Size.Value.Width : (float)DefaultNodeWidth;
                 var height = nl.Size.HasValue && nl.Size.Value.Height > 0 ? nl.Size.Value.Height : (float)DefaultNodeHeight;
-
-                var offsetX = margin - minLeft;
-                var bandOffset = (pageIndex * usableHeight);
-                var offsetY = margin + title - minBottom - bandOffset;
 
                 var left = nl.Position.X + offsetX;
                 var bottom = nl.Position.Y + offsetY;
@@ -6254,10 +6364,10 @@ namespace VDG.CLI
                 pageInfo.IncrementNodeCount();
             }
 
-            DrawLayerBridgeStubsForPage(layoutPlan, layout, pageInfo, visioPage, pageIndex, minLeft, minBottom, usableHeight, margin, title, nodePageAssignments, layerContext);
+            DrawLayerBridgeStubsForPage(layoutPlan, layout, pageInfo, visioPage, pageIndex, baseOriginX, baseOriginY, effectiveUsable, margin, title, nodePageAssignments, layerContext, pageLayout);
         }
 
-        private static void DrawLaneContainersForPage(DiagramModel model, LayoutResult layout, dynamic page, int pageIndex, int pageCount, double minLeft, double minBottom, double usableHeight, double margin, double title, IReadOnlyDictionary<string, int> nodePageAssignments)
+        private static void DrawLaneContainersForPage(DiagramModel model, LayoutResult layout, dynamic page, int pageIndex, int pageCount, double minLeft, double minBottom, double usableHeight, double margin, double title, IReadOnlyDictionary<string, int> nodePageAssignments, PageLayoutInfo? pageLayout)
         {
             dynamic visioPage = page ?? throw new COMException("Visio page was not created.");
             var nodeMap = BuildNodeMap(model);
@@ -6265,13 +6375,20 @@ namespace VDG.CLI
 
             var padding = GetContainerPadding(model);
             var corner = GetContainerCorner(model);
+            var baseOriginX = pageLayout != null ? pageLayout.Origin.X : minLeft;
+            var baseOriginY = pageLayout != null ? pageLayout.Origin.Y : minBottom;
+            var effectiveUsable = pageLayout != null && pageLayout.BodyHeight > 0f ? pageLayout.BodyHeight : usableHeight;
+            var offsetXBase = margin - baseOriginX;
+            var bandOffset = pageLayout != null ? 0.0 : pageIndex * usableHeight;
+            var offsetYBase = margin + title - baseOriginY - bandOffset;
+
             foreach (var tier in tiers)
             {
                 double tMinL = double.MaxValue, tMinB = double.MaxValue, tMaxR = double.MinValue, tMaxT = double.MinValue;
                 foreach (var nl in layout.Nodes)
                 {
-                    var yNorm = nl.Position.Y - (float)minBottom;
-                    var idx = (int)Math.Floor(yNorm / (float)usableHeight);
+                    var yNorm = nl.Position.Y - (float)baseOriginY;
+                    var idx = effectiveUsable > 0.0 ? (int)Math.Floor(yNorm / (float)effectiveUsable) : 0;
                     var assignedPage = nodePageAssignments != null && nodePageAssignments.TryGetValue(nl.Id, out var mapped) ? mapped : idx;
                     if (assignedPage != pageIndex) continue;
                     if (!nodeMap.TryGetValue(nl.Id, out var node)) continue;
@@ -6282,9 +6399,8 @@ namespace VDG.CLI
 
                     var w = nl.Size.HasValue && nl.Size.Value.Width > 0 ? nl.Size.Value.Width : (float)DefaultNodeWidth;
                     var h = nl.Size.HasValue && nl.Size.Value.Height > 0 ? nl.Size.Value.Height : (float)DefaultNodeHeight;
-                    var offsetX = margin - minLeft;
-                    var bandOffset = (pageIndex * usableHeight);
-                    var offsetY = margin + title - minBottom - bandOffset;
+                    var offsetX = offsetXBase;
+                    var offsetY = offsetYBase;
                     var l = nl.Position.X + offsetX;
                     var b = nl.Position.Y + offsetY;
                     tMinL = Math.Min(tMinL, l); tMinB = Math.Min(tMinB, b);
@@ -6335,21 +6451,19 @@ namespace VDG.CLI
             DrawTitleBanner(model, visioPage, pw, GetTitleHeight(model), margin, pageIndex + 1, pageCount);
 
             // Draw explicit sub-containers on this page
-            DrawExplicitContainers(model, layout, visioPage, minLeft, minBottom, usableHeight, margin, title, pageIndex);
+            DrawExplicitContainers(model, layout, visioPage, baseOriginX, baseOriginY, effectiveUsable, margin, title, pageIndex, pageLayout);
         }
 
-        private static void DrawConnectorsPaged(DiagramModel model, LayoutResult layout, Dictionary<int, Dictionary<string, NodePlacement>> perPage, VisioPageManager pageManager, IReadOnlyDictionary<string, int> nodePageAssignments, LayerRenderContext layerContext, LayoutPlan? layoutPlan)
+        private static void DrawConnectorsPaged(DiagramModel model, LayoutResult layout, Dictionary<int, Dictionary<string, NodePlacement>> perPage, VisioPageManager pageManager, IReadOnlyDictionary<string, int> nodePageAssignments, LayerRenderContext layerContext, LayoutPlan? layoutPlan, IDictionary<int, PageLayoutInfo>? pageLayoutLookup, double defaultMinLeft, double defaultMinBottom, double margin, double title)
         {
             var pageCount = perPage.Keys.Count == 0 ? 1 : perPage.Keys.Max() + 1;
             var (minLeft, minBottom, maxRight, maxTop) = ComputeLayoutBounds(layout);
-            var margin = GetPageMargin(model) ?? Margin;
-            var title = GetTitleHeight(model);
-            var pageHeight = GetPageHeight(model) ?? 8.5;
+            if (double.IsInfinity(minLeft)) { minLeft = defaultMinLeft; }
+            if (double.IsInfinity(minBottom)) { minBottom = defaultMinBottom; }
+            var pageHeight = GetPageHeight(model) ?? (layoutPlan != null && layoutPlan.PageHeight > 0f ? layoutPlan.PageHeight : 8.5f);
             if (pageHeight <= 0) pageHeight = 8.5;
             var usable = pageHeight - (2 * margin) - title;
             if (usable <= 0 || double.IsNaN(usable)) usable = pageHeight;
-            var offsetXBase = margin - minLeft;
-            var offsetYBase = margin + title - minBottom;
             var routeMode = (model.Metadata.TryGetValue("layout.routing.mode", out var rm) && !string.IsNullOrWhiteSpace(rm)) ? rm.Trim() : "orthogonal";
             var useOrthogonal = !string.Equals(routeMode, "straight", StringComparison.OrdinalIgnoreCase);
             var tiers = GetOrderedTiers(model);
@@ -6394,9 +6508,25 @@ namespace VDG.CLI
                     }
                 }
 
-                var bandOffset = IsFinite(usable) ? pi * usable : 0.0;
-                var offsetX = offsetXBase;
-                var offsetY = offsetYBase - bandOffset;
+                var pageOriginX = minLeft;
+                var pageOriginY = minBottom;
+                var usableForPage = usable;
+                if (pageLayoutLookup != null && pageLayoutLookup.TryGetValue(pi, out var layoutInfo))
+                {
+                    pageOriginX = layoutInfo.Origin.X;
+                    pageOriginY = layoutInfo.Origin.Y;
+                    if (layoutInfo.BodyHeight > 0f)
+                    {
+                        usableForPage = layoutInfo.BodyHeight;
+                    }
+                }
+
+                var offsetX = margin - pageOriginX;
+                var offsetY = margin + title - pageOriginY;
+                if (pageLayoutLookup == null)
+                {
+                    offsetY -= (IsFinite(usable) ? pi * usable : 0.0);
+                }
 
                 foreach (var edge in model.Edges)
                 {
@@ -6417,19 +6547,19 @@ namespace VDG.CLI
                         if (!nodePageAssignments.TryGetValue(sourceId, out sp)) sp = 0;
                         if (!nodePageAssignments.TryGetValue(targetId, out tp)) tp = 0;
                     }
-                    else if (usable > 0 && IsFinite(usable))
+                    else if (usableForPage > 0 && IsFinite(usableForPage))
                     {
                         var sNode = layout?.Nodes?.FirstOrDefault(n => string.Equals(n.Id, sourceId, StringComparison.OrdinalIgnoreCase));
                         var tNode = layout?.Nodes?.FirstOrDefault(n => string.Equals(n.Id, targetId, StringComparison.OrdinalIgnoreCase));
                         if (sNode != null && !string.IsNullOrWhiteSpace(sNode.Id))
                         {
-                            var y = sNode.Position.Y - (float)minBottom;
-                            sp = (int)Math.Floor(y / (float)usable);
+                            var y = sNode.Position.Y - (float)pageOriginY;
+                            sp = usableForPage > 0 ? (int)Math.Floor(y / (float)usableForPage) : 0;
                         }
                         if (tNode != null && !string.IsNullOrWhiteSpace(tNode.Id))
                         {
-                            var y2 = tNode.Position.Y - (float)minBottom;
-                            tp = (int)Math.Floor(y2 / (float)usable);
+                            var y2 = tNode.Position.Y - (float)pageOriginY;
+                            tp = usableForPage > 0 ? (int)Math.Floor(y2 / (float)usableForPage) : 0;
                         }
                     }
 

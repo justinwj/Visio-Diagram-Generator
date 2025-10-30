@@ -91,5 +91,7 @@ namespace VDG.CLI
         internal static ViewModeValidationResult AnalyzeViewModeContentForTests(DiagramModel model) => AnalyzeViewModeContent(model);
 
         internal static LayoutResult ComputeViewModeLayoutForTests(DiagramModel model) => ComputeViewModeLayout(model).Layout;
+
+        internal static LayoutPlan? ComputeViewModePlanForTests(DiagramModel model) => ComputeViewModeLayout(model).Plan;
     }
 }

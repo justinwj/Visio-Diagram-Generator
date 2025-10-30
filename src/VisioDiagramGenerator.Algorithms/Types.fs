@@ -20,7 +20,8 @@ type NodeLayout =
 [<CLIMutable>]
 type EdgeRoute =
     { Id: string
-      Points: PointF array }
+      Points: PointF array
+      LabelPoints: PointF array }
 
 [<CLIMutable>]
 type NodeModuleAssignment =

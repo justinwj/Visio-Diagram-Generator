@@ -27,20 +27,19 @@ let ``computeViewLayout splits large module into numbered segments`` () =
 
     Assert.True(containerIds.Contains "ModuleA#part1")
     Assert.True(containerIds.Contains "ModuleA#part2")
-    Assert.True(containerIds.Contains "ModuleA#part3")
 
     let visibleCounts =
         plan.Containers
         |> Array.filter (fun c -> c.Id.StartsWith("ModuleA"))
         |> Array.map (fun c -> c.VisibleNodes)
 
-    Assert.True(visibleCounts |> Array.forall (fun count -> count <= 12))
+    Assert.True(visibleCounts |> Array.forall (fun count -> count <= 15))
 
     let partOne =
         plan.Containers
         |> Array.find (fun c -> c.Id = "ModuleA#part1")
 
-    Assert.Contains("part 1/3", partOne.Label)
+    Assert.Contains("part 1/2", partOne.Label)
     Assert.Contains("ModuleA#part1", plan.Stats.ModuleIds)
 
 [<Fact>]

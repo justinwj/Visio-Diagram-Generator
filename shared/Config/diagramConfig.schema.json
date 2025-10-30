@@ -18,6 +18,11 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "outputMode": {
+          "type": "string",
+          "enum": ["view", "print"],
+          "description": "Planner output variant. 'view' emphasises per-procedure visibility; 'print' optimises for paginated summaries."
+        },
         "orientation": {
           "type": "string",
           "enum": ["horizontal", "vertical"],
@@ -46,7 +51,18 @@
             "heightIn": { "type": "number", "minimum": 1 },
             "marginIn": { "type": "number", "minimum": 0 },
             "paginate": { "type": "boolean" },
-            "errorOnOverflow": { "type": "boolean", "description": "If true, throw an error when a single node cannot fit the usable page height." }
+            "errorOnOverflow": { "type": "boolean", "description": "If true, throw an error when a single node cannot fit the usable page height." },
+            "plan": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "laneSplitAllowed": { "type": "boolean", "description": "Whether the planner may split a module across multiple lanes/pages." },
+                "maxConnectors": { "type": "integer", "minimum": 0, "description": "Soft connector cap per page guiding pagination." },
+                "maxModulesPerPage": { "type": "integer", "minimum": 1, "description": "Maximum module containers to place on a single page." },
+                "heightSlackPercent": { "type": "number", "minimum": 0, "maximum": 1, "description": "Reserved vertical slack applied when estimating pagination." }
+              },
+              "description": "Planner-emitted pagination hints for downstream renderers."
+            }
           },
           "description": "Page settings and pagination preferences (milestone 2)."
         },

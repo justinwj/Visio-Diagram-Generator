@@ -2,11 +2,15 @@
   "Version": "1.0",
   "Metrics": {
     "LayoutOutputMode": "view",
-    "LayoutCanvasWidth": 11.9400015,
-    "LayoutCanvasHeight": 48.8899994,
-    "LayoutNodeCount": 169,
-    "LayoutModuleCount": 33,
-    "LayoutContainerCount": 33,
+    "LayoutCanvasWidth": 25.6000004,
+    "LayoutCanvasHeight": 25.5999985,
+    "LayoutNodeCount": 210,
+    "LayoutModuleCount": 37,
+    "LayoutContainerCount": 37,
+    "LayerCount": 1,
+    "LayerCrowdingCount": 0,
+    "LayerOverflowCount": 0,
+    "BridgeCount": 0,
     "ConnectorCount": 0,
     "StraightLineCrossings": 0,
     "PageHeight": 8.5,
@@ -17,58 +21,24 @@
     "SplitModuleCount": 0,
     "AverageSegmentsPerModule": 0,
     "PlannerPageCount": 7,
-    "PlannerAverageModulesPerPage": 4.7142857142857144,
+    "PlannerAverageModulesPerPage": 5.2857142857142856,
     "PlannerAverageConnectorsPerPage": 0,
-    "PlannerMaxOccupancyPercent": 108.53335062662761,
+    "PlannerMaxOccupancyPercent": 0,
     "PlannerMaxConnectorsPerPage": 0,
-    "PageOverflowCount": 7,
+    "PageOverflowCount": 3,
     "PageCrowdingCount": 0,
     "LaneOverflowCount": 0,
-    "LaneCrowdingCount": 7,
-    "ContainerOverflowCount": 19,
+    "LaneCrowdingCount": 5,
+    "ContainerOverflowCount": 25,
     "PartialRender": true,
     "ConnectorOverLimitPageCount": 0,
-    "PagesWithPartialRender": 7,
+    "PagesWithPartialRender": 3,
     "TruncatedNodeCount": 0,
     "SkippedModules": [],
     "Pages": [
       {
         "Index": 1,
-        "Name": "frmAdminControls, frmCreateDeleteUser, frmEditUser, frmItemSearch, frmLogin, frmReceivedTally",
-        "Nodes": 40,
-        "Connectors": 0,
-        "SkippedConnectors": 0,
-        "Overflow": false,
-        "ConnectorLimit": 400,
-        "ConnectorOverLimit": 0,
-        "ModuleCount": 6,
-        "Partial": true,
-        "LaneCrowdingWarnings": 1,
-        "LaneCrowdingErrors": 0,
-        "PageCrowding": false,
-        "PageOverflow": true,
-        "TruncatedNodes": 0
-      },
-      {
-        "Index": 2,
-        "Name": "frmShipmentsTally, ThisWorkbook",
-        "Nodes": 8,
-        "Connectors": 0,
-        "SkippedConnectors": 0,
-        "Overflow": false,
-        "ConnectorLimit": 400,
-        "ConnectorOverLimit": 0,
-        "ModuleCount": 2,
-        "Partial": true,
-        "LaneCrowdingWarnings": 1,
-        "LaneCrowdingErrors": 0,
-        "PageCrowding": false,
-        "PageOverflow": true,
-        "TruncatedNodes": 0
-      },
-      {
-        "Index": 3,
-        "Name": "clsBulkSnapshot, InventoryManagement, MouseOverControl, ReceivedTally, ShipmentsTally, TestSummary",
+        "Name": "clsBulkSnapshot, frmAdminControls, frmCreateDeleteUser, frmEditUser, frmItemSearch#part1, frmItemSearch#part2",
         "Nodes": 31,
         "Connectors": 0,
         "SkippedConnectors": 0,
@@ -84,8 +54,25 @@
         "TruncatedNodes": 0
       },
       {
-        "Index": 4,
-        "Name": "modAdmin, modErrorHandler, modExportImportAll, modGlobals, modImportExportAll, modInvLogs",
+        "Index": 2,
+        "Name": "frmLogin, frmReceivedTally, frmShipmentsTally, InventoryManagement, modAdmin, modErrorHandler",
+        "Nodes": 25,
+        "Connectors": 0,
+        "SkippedConnectors": 0,
+        "Overflow": false,
+        "ConnectorLimit": 400,
+        "ConnectorOverLimit": 0,
+        "ModuleCount": 6,
+        "Partial": true,
+        "LaneCrowdingWarnings": 2,
+        "LaneCrowdingErrors": 0,
+        "PageCrowding": false,
+        "PageOverflow": true,
+        "TruncatedNodes": 0
+      },
+      {
+        "Index": 3,
+        "Name": "modExportImportAll, modGlobals, modImportExportAll, modInvLogs, modInvMan, modTestModule",
         "Nodes": 38,
         "Connectors": 0,
         "SkippedConnectors": 0,
@@ -94,372 +81,450 @@
         "ConnectorOverLimit": 0,
         "ModuleCount": 6,
         "Partial": true,
-        "LaneCrowdingWarnings": 1,
+        "LaneCrowdingWarnings": 2,
         "LaneCrowdingErrors": 0,
         "PageCrowding": false,
         "PageOverflow": true,
+        "TruncatedNodes": 0
+      },
+      {
+        "Index": 4,
+        "Name": "modTS_Data, modTS_Launchers, modTS_Log, modTS_Received, modTS_Shipments, modTS_Tally",
+        "Nodes": 27,
+        "Connectors": 0,
+        "SkippedConnectors": 0,
+        "Overflow": false,
+        "ConnectorLimit": 400,
+        "ConnectorOverLimit": 0,
+        "ModuleCount": 6,
+        "Partial": false,
+        "LaneCrowdingWarnings": 0,
+        "LaneCrowdingErrors": 0,
+        "PageCrowding": false,
+        "PageOverflow": false,
         "TruncatedNodes": 0
       },
       {
         "Index": 5,
-        "Name": "modInvMan, modTestModule, modTS_Data, modTS_Launchers, modTS_Log, modTS_Received",
-        "Nodes": 23,
+        "Name": "modUR_ExcelIntegration, modUR_Snapshot, modUR_Transaction, modUR_UndoRedo, MouseOverControl#part1, MouseOverControl#part2",
+        "Nodes": 49,
         "Connectors": 0,
         "SkippedConnectors": 0,
         "Overflow": false,
         "ConnectorLimit": 400,
         "ConnectorOverLimit": 0,
         "ModuleCount": 6,
-        "Partial": true,
-        "LaneCrowdingWarnings": 1,
+        "Partial": false,
+        "LaneCrowdingWarnings": 0,
         "LaneCrowdingErrors": 0,
         "PageCrowding": false,
-        "PageOverflow": true,
+        "PageOverflow": false,
         "TruncatedNodes": 0
       },
       {
         "Index": 6,
-        "Name": "modTS_Shipments, modTS_Tally, modUR_ExcelIntegration, modUR_Snapshot, modUR_Transaction, modUR_UndoRedo",
-        "Nodes": 36,
+        "Name": "MouseScroll#part1, MouseScroll#part2, MouseScroll#part3, ReceivedTally, ShipmentsTally, TestSummary",
+        "Nodes": 37,
         "Connectors": 0,
         "SkippedConnectors": 0,
         "Overflow": false,
         "ConnectorLimit": 400,
         "ConnectorOverLimit": 0,
         "ModuleCount": 6,
-        "Partial": true,
-        "LaneCrowdingWarnings": 1,
+        "Partial": false,
+        "LaneCrowdingWarnings": 0,
         "LaneCrowdingErrors": 0,
         "PageCrowding": false,
-        "PageOverflow": true,
+        "PageOverflow": false,
         "TruncatedNodes": 0
       },
       {
         "Index": 7,
-        "Name": "MouseScroll",
-        "Nodes": 34,
+        "Name": "ThisWorkbook",
+        "Nodes": 3,
         "Connectors": 0,
         "SkippedConnectors": 0,
         "Overflow": false,
         "ConnectorLimit": 400,
         "ConnectorOverLimit": 0,
         "ModuleCount": 1,
-        "Partial": true,
-        "LaneCrowdingWarnings": 1,
+        "Partial": false,
+        "LaneCrowdingWarnings": 0,
         "LaneCrowdingErrors": 0,
         "PageCrowding": false,
-        "PageOverflow": true,
+        "PageOverflow": false,
         "TruncatedNodes": 0
+      }
+    ],
+    "Layers": [
+      {
+        "Layer": 1,
+        "ShapeCount": 247,
+        "ConnectorCount": 37,
+        "ModuleCount": 37,
+        "BridgesOut": 0,
+        "BridgesIn": 0,
+        "SoftShapeLimitExceeded": false,
+        "SoftConnectorLimitExceeded": false,
+        "HardShapeLimitExceeded": false,
+        "HardConnectorLimitExceeded": false,
+        "Modules": [
+          "clsBulkSnapshot",
+          "frmAdminControls",
+          "frmCreateDeleteUser",
+          "frmEditUser",
+          "frmItemSearch#part1",
+          "frmItemSearch#part2",
+          "frmLogin",
+          "frmReceivedTally",
+          "frmShipmentsTally",
+          "InventoryManagement",
+          "modAdmin",
+          "modErrorHandler",
+          "modExportImportAll",
+          "modGlobals",
+          "modImportExportAll",
+          "modInvLogs",
+          "modInvMan",
+          "modTestModule",
+          "modTS_Data",
+          "modTS_Launchers",
+          "modTS_Log",
+          "modTS_Received",
+          "modTS_Shipments",
+          "modTS_Tally",
+          "modUR_ExcelIntegration",
+          "modUR_Snapshot",
+          "modUR_Transaction",
+          "modUR_UndoRedo",
+          "MouseOverControl#part1",
+          "MouseOverControl#part2",
+          "MouseScroll#part1",
+          "MouseScroll#part2",
+          "MouseScroll#part3",
+          "ReceivedTally",
+          "ShipmentsTally",
+          "TestSummary",
+          "ThisWorkbook"
+        ],
+        "OverflowModules": []
       }
     ],
     "LanePages": [
       {
         "Tier": "Forms",
-        "Page": 7,
-        "OccupancyRatio": 1.0480000042915345,
-        "Nodes": 9
+        "Page": 3,
+        "OccupancyRatio": 3.9999999475479124,
+        "Nodes": 30
       },
       {
         "Tier": "Forms",
-        "Page": 6,
-        "OccupancyRatio": 3.3040000128746034,
-        "Nodes": 27
-      },
-      {
-        "Tier": "Sheets",
-        "Page": 5,
-        "OccupancyRatio": 0.29600000143051147,
-        "Nodes": 3
-      },
-      {
-        "Tier": "Classes",
-        "Page": 5,
-        "OccupancyRatio": 1.8000000071525575,
-        "Nodes": 15
-      },
-      {
-        "Tier": "Classes",
         "Page": 4,
-        "OccupancyRatio": 0.29600000143051147,
-        "Nodes": 3
+        "OccupancyRatio": 0.59999999125798553,
+        "Nodes": 5
       },
       {
-        "Tier": "Modules",
-        "Page": 4,
-        "OccupancyRatio": 2.6773333438237512,
-        "Nodes": 22
-      },
-      {
-        "Tier": "Modules",
-        "Page": 3,
-        "OccupancyRatio": 4.3066666833559673,
-        "Nodes": 35
-      },
-      {
-        "Tier": "Modules",
+        "Tier": "Forms",
         "Page": 2,
-        "OccupancyRatio": 2.4266666762034097,
-        "Nodes": 20
+        "OccupancyRatio": 1.2799999825159707,
+        "Nodes": 10
+      },
+      {
+        "Tier": "Classes",
+        "Page": 1,
+        "OccupancyRatio": 0.055999998251597086,
+        "Nodes": 1
+      },
+      {
+        "Tier": "Classes",
+        "Page": 2,
+        "OccupancyRatio": 0.3279999947547913,
+        "Nodes": 3
       },
       {
         "Tier": "Modules",
         "Page": 1,
-        "OccupancyRatio": 3.9306666819254557,
-        "Nodes": 32
+        "OccupancyRatio": 10.52799986362457,
+        "Nodes": 78
+      },
+      {
+        "Tier": "Modules",
+        "Page": 2,
+        "OccupancyRatio": 7.1279999073346456,
+        "Nodes": 53
+      },
+      {
+        "Tier": "Classes",
+        "Page": 3,
+        "OccupancyRatio": 3.5919999527931217,
+        "Nodes": 27
+      },
+      {
+        "Tier": "Sheets",
+        "Page": 3,
+        "OccupancyRatio": 0.3279999947547913,
+        "Nodes": 3
       }
     ],
     "Containers": [
       {
         "Id": "frmAdminControls",
         "Tier": "Forms",
-        "Page": 7,
-        "OccupancyRatio": 0.17066666762034099,
+        "Page": 3,
+        "OccupancyRatio": 0.19199999650319419,
         "Nodes": 2
       },
       {
         "Id": "frmCreateDeleteUser",
         "Tier": "Forms",
-        "Page": 7,
-        "OccupancyRatio": 0.42133333524068195,
-        "Nodes": 4
+        "Page": 4,
+        "OccupancyRatio": 0.055999998251597086,
+        "Nodes": 1
+      },
+      {
+        "Id": "frmCreateDeleteUser",
+        "Tier": "Forms",
+        "Page": 3,
+        "OccupancyRatio": 0.3279999947547913,
+        "Nodes": 3
       },
       {
         "Id": "frmEditUser",
         "Tier": "Forms",
-        "Page": 7,
-        "OccupancyRatio": 0.29600000143051147,
-        "Nodes": 3
-      },
-      {
-        "Id": "frmItemSearch",
-        "Tier": "Forms",
-        "Page": 6,
-        "OccupancyRatio": 1.4240000057220459,
-        "Nodes": 12
-      },
-      {
-        "Id": "frmLogin",
-        "Tier": "Forms",
-        "Page": 6,
-        "OccupancyRatio": 0.54666666905085248,
-        "Nodes": 5
-      },
-      {
-        "Id": "frmReceivedTally",
-        "Tier": "Forms",
-        "Page": 6,
-        "OccupancyRatio": 0.54666666905085248,
-        "Nodes": 5
-      },
-      {
-        "Id": "frmShipmentsTally",
-        "Tier": "Forms",
-        "Page": 6,
-        "OccupancyRatio": 0.54666666905085248,
-        "Nodes": 5
-      },
-      {
-        "Id": "ThisWorkbook",
-        "Tier": "Sheets",
-        "Page": 5,
-        "OccupancyRatio": 0.29600000143051147,
+        "Page": 3,
+        "OccupancyRatio": 0.3279999947547913,
         "Nodes": 3
       },
       {
         "Id": "clsBulkSnapshot",
         "Tier": "Classes",
-        "Page": 5,
-        "OccupancyRatio": 0.04533333381017049,
+        "Page": 1,
+        "OccupancyRatio": 0.055999998251597086,
+        "Nodes": 1
+      },
+      {
+        "Id": "frmLogin",
+        "Tier": "Forms",
+        "Page": 4,
+        "OccupancyRatio": 0.19199999650319419,
+        "Nodes": 2
+      },
+      {
+        "Id": "frmLogin",
+        "Tier": "Forms",
+        "Page": 3,
+        "OccupancyRatio": 0.3279999947547913,
+        "Nodes": 3
+      },
+      {
+        "Id": "frmReceivedTally",
+        "Tier": "Forms",
+        "Page": 4,
+        "OccupancyRatio": 0.19199999650319419,
+        "Nodes": 2
+      },
+      {
+        "Id": "frmReceivedTally",
+        "Tier": "Forms",
+        "Page": 3,
+        "OccupancyRatio": 0.3279999947547913,
+        "Nodes": 3
+      },
+      {
+        "Id": "frmShipmentsTally",
+        "Tier": "Forms",
+        "Page": 3,
+        "OccupancyRatio": 0.46399999300638833,
+        "Nodes": 4
+      },
+      {
+        "Id": "frmShipmentsTally",
+        "Tier": "Forms",
+        "Page": 2,
+        "OccupancyRatio": 0.055999998251597086,
         "Nodes": 1
       },
       {
         "Id": "InventoryManagement",
         "Tier": "Classes",
-        "Page": 5,
-        "OccupancyRatio": 0.17066666762034099,
+        "Page": 2,
+        "OccupancyRatio": 0.19199999650319419,
         "Nodes": 2
-      },
-      {
-        "Id": "MouseOverControl",
-        "Tier": "Classes",
-        "Page": 5,
-        "OccupancyRatio": 1.4240000057220459,
-        "Nodes": 12
-      },
-      {
-        "Id": "ReceivedTally",
-        "Tier": "Classes",
-        "Page": 4,
-        "OccupancyRatio": 0.04533333381017049,
-        "Nodes": 1
-      },
-      {
-        "Id": "ShipmentsTally",
-        "Tier": "Classes",
-        "Page": 4,
-        "OccupancyRatio": 0.04533333381017049,
-        "Nodes": 1
-      },
-      {
-        "Id": "TestSummary",
-        "Tier": "Classes",
-        "Page": 4,
-        "OccupancyRatio": 0.04533333381017049,
-        "Nodes": 1
       },
       {
         "Id": "modAdmin",
         "Tier": "Modules",
-        "Page": 4,
-        "OccupancyRatio": 0.17066666762034099,
+        "Page": 1,
+        "OccupancyRatio": 0.19199999650319419,
         "Nodes": 2
       },
       {
         "Id": "modErrorHandler",
         "Tier": "Modules",
-        "Page": 4,
-        "OccupancyRatio": 0.6720000028610229,
+        "Page": 1,
+        "OccupancyRatio": 0.73599998950958256,
         "Nodes": 6
       },
       {
         "Id": "modExportImportAll",
         "Tier": "Modules",
-        "Page": 4,
-        "OccupancyRatio": 1.2986666719118753,
+        "Page": 2,
+        "OccupancyRatio": 1.4159999807675681,
         "Nodes": 11
       },
       {
         "Id": "modGlobals",
         "Tier": "Modules",
-        "Page": 3,
-        "OccupancyRatio": 0.54666666905085248,
+        "Page": 2,
+        "OccupancyRatio": 0.59999999125798553,
         "Nodes": 5
       },
       {
         "Id": "modImportExportAll",
         "Tier": "Modules",
-        "Page": 4,
-        "OccupancyRatio": 0.17066666762034099,
-        "Nodes": 2
+        "Page": 2,
+        "OccupancyRatio": 0.3279999947547913,
+        "Nodes": 3
       },
       {
         "Id": "modImportExportAll",
         "Tier": "Modules",
-        "Page": 3,
-        "OccupancyRatio": 1.0480000042915345,
-        "Nodes": 9
+        "Page": 1,
+        "OccupancyRatio": 1.0079999860127766,
+        "Nodes": 8
       },
       {
         "Id": "modInvLogs",
         "Tier": "Modules",
-        "Page": 4,
-        "OccupancyRatio": 0.04533333381017049,
+        "Page": 2,
+        "OccupancyRatio": 0.055999998251597086,
         "Nodes": 1
       },
       {
         "Id": "modInvLogs",
         "Tier": "Modules",
-        "Page": 3,
-        "OccupancyRatio": 0.17066666762034099,
+        "Page": 1,
+        "OccupancyRatio": 0.19199999650319419,
         "Nodes": 2
       },
       {
         "Id": "modInvMan",
         "Tier": "Modules",
-        "Page": 3,
-        "OccupancyRatio": 0.6720000028610229,
+        "Page": 1,
+        "OccupancyRatio": 0.73599998950958256,
         "Nodes": 6
       },
       {
         "Id": "modTestModule",
         "Tier": "Modules",
-        "Page": 3,
-        "OccupancyRatio": 0.17066666762034099,
+        "Page": 1,
+        "OccupancyRatio": 0.19199999650319419,
         "Nodes": 2
       },
       {
         "Id": "modTS_Data",
         "Tier": "Modules",
-        "Page": 3,
-        "OccupancyRatio": 0.6720000028610229,
+        "Page": 2,
+        "OccupancyRatio": 0.73599998950958256,
         "Nodes": 6
       },
       {
         "Id": "modTS_Launchers",
         "Tier": "Modules",
-        "Page": 3,
-        "OccupancyRatio": 0.17066666762034099,
+        "Page": 2,
+        "OccupancyRatio": 0.19199999650319419,
         "Nodes": 2
       },
       {
         "Id": "modTS_Log",
         "Tier": "Modules",
-        "Page": 3,
-        "OccupancyRatio": 0.04533333381017049,
+        "Page": 2,
+        "OccupancyRatio": 0.055999998251597086,
         "Nodes": 1
       },
       {
         "Id": "modTS_Received",
         "Tier": "Modules",
-        "Page": 3,
-        "OccupancyRatio": 0.17066666762034099,
+        "Page": 2,
+        "OccupancyRatio": 0.19199999650319419,
         "Nodes": 2
       },
       {
         "Id": "modTS_Received",
         "Tier": "Modules",
-        "Page": 2,
-        "OccupancyRatio": 0.42133333524068195,
+        "Page": 1,
+        "OccupancyRatio": 0.46399999300638833,
         "Nodes": 4
       },
       {
         "Id": "modTS_Shipments",
         "Tier": "Modules",
-        "Page": 2,
-        "OccupancyRatio": 0.42133333524068195,
+        "Page": 1,
+        "OccupancyRatio": 0.46399999300638833,
         "Nodes": 4
       },
       {
         "Id": "modTS_Tally",
         "Tier": "Modules",
-        "Page": 2,
-        "OccupancyRatio": 0.92266667048136397,
+        "Page": 1,
+        "OccupancyRatio": 1.0079999860127766,
         "Nodes": 8
       },
       {
         "Id": "modUR_ExcelIntegration",
         "Tier": "Modules",
         "Page": 2,
-        "OccupancyRatio": 0.42133333524068195,
+        "OccupancyRatio": 0.46399999300638833,
         "Nodes": 4
       },
       {
         "Id": "modUR_Snapshot",
         "Tier": "Modules",
-        "Page": 1,
-        "OccupancyRatio": 0.6720000028610229,
+        "Page": 2,
+        "OccupancyRatio": 0.73599998950958256,
         "Nodes": 6
       },
       {
         "Id": "modUR_Transaction",
         "Tier": "Modules",
         "Page": 1,
-        "OccupancyRatio": 0.79733333667119344,
+        "OccupancyRatio": 0.8719999877611796,
         "Nodes": 7
       },
       {
         "Id": "modUR_UndoRedo",
         "Tier": "Modules",
         "Page": 1,
-        "OccupancyRatio": 0.79733333667119344,
+        "OccupancyRatio": 0.8719999877611796,
         "Nodes": 7
       },
       {
-        "Id": "MouseScroll",
-        "Tier": "Modules",
-        "Page": 1,
-        "OccupancyRatio": 1.4240000057220459,
-        "Nodes": 12
+        "Id": "ReceivedTally",
+        "Tier": "Classes",
+        "Page": 3,
+        "OccupancyRatio": 0.055999998251597086,
+        "Nodes": 1
+      },
+      {
+        "Id": "ShipmentsTally",
+        "Tier": "Classes",
+        "Page": 3,
+        "OccupancyRatio": 0.055999998251597086,
+        "Nodes": 1
+      },
+      {
+        "Id": "TestSummary",
+        "Tier": "Classes",
+        "Page": 2,
+        "OccupancyRatio": 0.055999998251597086,
+        "Nodes": 1
+      },
+      {
+        "Id": "ThisWorkbook",
+        "Tier": "Sheets",
+        "Page": 3,
+        "OccupancyRatio": 0.3279999947547913,
+        "Nodes": 3
       }
     ]
   },
@@ -467,7 +532,7 @@
     {
       "Code": "LayoutHeightThreshold",
       "Level": "warning",
-      "Message": "layout height 50.1in exceeds threshold 11.0in; consider pagination, reducing spacing, or vertical orientation.",
+      "Message": "layout height 25.9in exceeds threshold 11.0in; consider pagination, reducing spacing, or vertical orientation.",
       "Lane": null,
       "Page": null
     },
@@ -495,112 +560,77 @@
     {
       "Code": "LaneCrowding",
       "Level": "warning",
-      "Message": "lane overcrowded: lane=\u0027Forms\u0027 page=7 occupancy=105% nodes=9 usable=7.50in",
+      "Message": "lane overcrowded: lane=\u0027Forms\u0027 page=3 occupancy=400% nodes=30 usable=7.50in",
       "Lane": "Forms",
-      "Page": 7
-    },
-    {
-      "Code": "LaneCrowding",
-      "Level": "warning",
-      "Message": "lane overcrowded: lane=\u0027Forms\u0027 page=6 occupancy=330% nodes=27 usable=7.50in",
-      "Lane": "Forms",
-      "Page": 6
-    },
-    {
-      "Code": "LaneCrowding",
-      "Level": "warning",
-      "Message": "lane overcrowded: lane=\u0027Classes\u0027 page=5 occupancy=180% nodes=15 usable=7.50in",
-      "Lane": "Classes",
-      "Page": 5
-    },
-    {
-      "Code": "LaneCrowding",
-      "Level": "warning",
-      "Message": "lane overcrowded: lane=\u0027Modules\u0027 page=4 occupancy=268% nodes=22 usable=7.50in",
-      "Lane": "Modules",
-      "Page": 4
-    },
-    {
-      "Code": "LaneCrowding",
-      "Level": "warning",
-      "Message": "lane overcrowded: lane=\u0027Modules\u0027 page=3 occupancy=431% nodes=35 usable=7.50in",
-      "Lane": "Modules",
       "Page": 3
     },
     {
       "Code": "LaneCrowding",
       "Level": "warning",
-      "Message": "lane overcrowded: lane=\u0027Modules\u0027 page=2 occupancy=243% nodes=20 usable=7.50in",
-      "Lane": "Modules",
+      "Message": "lane overcrowded: lane=\u0027Forms\u0027 page=2 occupancy=128% nodes=10 usable=7.50in",
+      "Lane": "Forms",
       "Page": 2
     },
     {
       "Code": "LaneCrowding",
       "Level": "warning",
-      "Message": "lane overcrowded: lane=\u0027Modules\u0027 page=1 occupancy=393% nodes=32 usable=7.50in",
+      "Message": "lane overcrowded: lane=\u0027Modules\u0027 page=1 occupancy=1053% nodes=78 usable=7.50in",
       "Lane": "Modules",
       "Page": 1
     },
     {
-      "Code": "PageOverflow",
-      "Level": "error",
-      "Message": "page overflow: page=7 occupancy=105% (usable 7.50in); top: [frmAdminControls.btnCreateDeleteUser_Click(0.34in), frmAdminControls.btnEditUser_Click(0.34in), frmCreateDeleteUser.btnCreateUser_Click(0.34in)]",
-      "Lane": null,
-      "Page": 7
+      "Code": "LaneCrowding",
+      "Level": "warning",
+      "Message": "lane overcrowded: lane=\u0027Modules\u0027 page=2 occupancy=713% nodes=53 usable=7.50in",
+      "Lane": "Modules",
+      "Page": 2
+    },
+    {
+      "Code": "LaneCrowding",
+      "Level": "warning",
+      "Message": "lane overcrowded: lane=\u0027Classes\u0027 page=3 occupancy=359% nodes=27 usable=7.50in",
+      "Lane": "Classes",
+      "Page": 3
     },
     {
       "Code": "PageOverflow",
       "Level": "error",
-      "Message": "page overflow: page=6 occupancy=330% (usable 7.50in); top: [frmItemSearch.BuildFirstCharIndex(0.34in), frmShipmentsTally.LogInventoryChange(0.34in), frmShipmentsTally.GetUOMFromDataTable(0.34in)]",
-      "Lane": null,
-      "Page": 6
-    },
-    {
-      "Code": "PageOverflow",
-      "Level": "error",
-      "Message": "page overflow: page=5 occupancy=180% (usable 7.50in); top: [ThisWorkbook.CheckForHiddenPasswords(0.34in), MouseOverControl.m_CommandButton_MouseMove(0.34in), MouseOverControl.m_ComboBox_MouseMove(0.34in)]",
-      "Lane": null,
-      "Page": 5
-    },
-    {
-      "Code": "PageOverflow",
-      "Level": "error",
-      "Message": "page overflow: page=4 occupancy=268% (usable 7.50in); top: [ReceivedTally.Worksheet_SelectionChange(0.34in), modImportExportAll.ExportAllCodeToSingleFiles(0.34in), modExportImportAll.SyncStandardModules(0.34in)]",
-      "Lane": null,
-      "Page": 4
-    },
-    {
-      "Code": "PageOverflow",
-      "Level": "error",
-      "Message": "page overflow: page=3 occupancy=431% (usable 7.50in); top: [modGlobals.CommitSelectionAndCloseWrapper(0.34in), modInvMan.DeductShipments_Click(0.34in), modInvMan.DeductUsed_Click(0.34in)]",
+      "Message": "page overflow: page=3 occupancy=400% (usable 7.50in); top: [frmAdminControls.btnCreateDeleteUser_Click(0.42in), MouseOverControl.CreateFromForm(0.42in), MouseOverControl.FormHandle(0.42in)]",
       "Lane": null,
       "Page": 3
     },
     {
       "Code": "PageOverflow",
       "Level": "error",
-      "Message": "page overflow: page=2 occupancy=243% (usable 7.50in); top: [modTS_Received.GetUOMFromDataTable(0.34in), modUR_ExcelIntegration.EnableEvents(0.34in), modUR_ExcelIntegration.DisableEvents(0.34in)]",
+      "Message": "page overflow: page=2 occupancy=713% (usable 7.50in); top: [frmItemSearch.PopulateListBox(0.42in), modTS_Data.IsInItemsColumn(0.42in), modTS_Data.LoadItemList(0.42in)]",
       "Lane": null,
       "Page": 2
     },
     {
       "Code": "PageOverflow",
       "Level": "error",
-      "Message": "page overflow: page=1 occupancy=393% (usable 7.50in); top: [modUR_Snapshot.CaptureSnapshot(0.34in), MouseScroll.GetUserScrollLines(0.34in), MouseScroll.GetScrollAmount(0.34in)]",
+      "Message": "page overflow: page=1 occupancy=1053% (usable 7.50in); top: [clsBulkSnapshot.class_initialize(0.42in), modUR_UndoRedo.UndoLastAction(0.42in), modUR_UndoRedo.TrackChange(0.42in)]",
       "Lane": null,
+      "Page": 1
+    },
+    {
+      "Code": "ContainerOverflow",
+      "Level": "warning",
+      "Message": "sub-container \u0027clsBulkSnapshot\u0027 overflows lane \u0027Classes\u0027.",
+      "Lane": "Classes",
+      "Page": 1
+    },
+    {
+      "Code": "ContainerOverflow",
+      "Level": "warning",
+      "Message": "sub-container \u0027InventoryManagement\u0027 overflows lane \u0027Classes\u0027.",
+      "Lane": "Classes",
       "Page": 1
     },
     {
       "Code": "ContainerOverflow",
       "Level": "warning",
       "Message": "sub-container \u0027modAdmin\u0027 overflows lane \u0027Modules\u0027.",
-      "Lane": "Modules",
-      "Page": 1
-    },
-    {
-      "Code": "ContainerOverflow",
-      "Level": "warning",
-      "Message": "sub-container \u0027modErrorHandler\u0027 overflows lane \u0027Modules\u0027.",
       "Lane": "Modules",
       "Page": 1
     },
@@ -626,6 +656,13 @@
       "Page": 1
     },
     {
+      "Code": "ContainerCrowding",
+      "Level": "warning",
+      "Message": "container crowded: id=\u0027modImportExportAll\u0027 lane=\u0027Modules\u0027 occupancy=101% nodes=8",
+      "Lane": "Modules",
+      "Page": 1
+    },
+    {
       "Code": "ContainerOverflow",
       "Level": "warning",
       "Message": "sub-container \u0027modInvLogs\u0027 overflows lane \u0027Modules\u0027.",
@@ -636,13 +673,6 @@
       "Code": "ContainerOverflow",
       "Level": "warning",
       "Message": "sub-container \u0027modInvMan\u0027 overflows lane \u0027Modules\u0027.",
-      "Lane": "Modules",
-      "Page": 1
-    },
-    {
-      "Code": "ContainerOverflow",
-      "Level": "warning",
-      "Message": "sub-container \u0027modTestModule\u0027 overflows lane \u0027Modules\u0027.",
       "Lane": "Modules",
       "Page": 1
     },
@@ -689,6 +719,27 @@
       "Page": 1
     },
     {
+      "Code": "ContainerCrowding",
+      "Level": "warning",
+      "Message": "container crowded: id=\u0027modTS_Tally\u0027 lane=\u0027Modules\u0027 occupancy=101% nodes=8",
+      "Lane": "Modules",
+      "Page": 1
+    },
+    {
+      "Code": "ContainerOverflow",
+      "Level": "warning",
+      "Message": "sub-container \u0027MouseOverControl#part1\u0027 overflows lane \u0027Classes\u0027.",
+      "Lane": "Classes",
+      "Page": 1
+    },
+    {
+      "Code": "ContainerOverflow",
+      "Level": "warning",
+      "Message": "sub-container \u0027MouseOverControl#part2\u0027 overflows lane \u0027Classes\u0027.",
+      "Lane": "Classes",
+      "Page": 1
+    },
+    {
       "Code": "ContainerOverflow",
       "Level": "warning",
       "Message": "sub-container \u0027modUR_ExcelIntegration\u0027 overflows lane \u0027Modules\u0027.",
@@ -710,23 +761,58 @@
       "Page": 1
     },
     {
-      "Code": "ContainerOverflow",
+      "Code": "ContainerCrowding",
       "Level": "warning",
-      "Message": "sub-container \u0027modUR_UndoRedo\u0027 overflows lane \u0027Modules\u0027.",
-      "Lane": "Modules",
-      "Page": 1
-    },
-    {
-      "Code": "ContainerOverflow",
-      "Level": "warning",
-      "Message": "sub-container \u0027MouseScroll\u0027 overflows lane \u0027Modules\u0027.",
+      "Message": "container crowded: id=\u0027modUR_Transaction\u0027 lane=\u0027Modules\u0027 occupancy=87% nodes=7",
       "Lane": "Modules",
       "Page": 1
     },
     {
       "Code": "ContainerCrowding",
       "Level": "warning",
-      "Message": "container crowded: id=\u0027MouseScroll\u0027 lane=\u0027Modules\u0027 occupancy=142% nodes=12",
+      "Message": "container crowded: id=\u0027modUR_UndoRedo\u0027 lane=\u0027Modules\u0027 occupancy=87% nodes=7",
+      "Lane": "Modules",
+      "Page": 1
+    },
+    {
+      "Code": "ContainerOverflow",
+      "Level": "warning",
+      "Message": "sub-container \u0027ReceivedTally\u0027 overflows lane \u0027Classes\u0027.",
+      "Lane": "Classes",
+      "Page": 1
+    },
+    {
+      "Code": "ContainerOverflow",
+      "Level": "warning",
+      "Message": "sub-container \u0027ShipmentsTally\u0027 overflows lane \u0027Classes\u0027.",
+      "Lane": "Classes",
+      "Page": 1
+    },
+    {
+      "Code": "ContainerOverflow",
+      "Level": "warning",
+      "Message": "sub-container \u0027TestSummary\u0027 overflows lane \u0027Classes\u0027.",
+      "Lane": "Classes",
+      "Page": 1
+    },
+    {
+      "Code": "ContainerOverflow",
+      "Level": "warning",
+      "Message": "sub-container \u0027MouseScroll#part1\u0027 overflows lane \u0027Modules\u0027.",
+      "Lane": "Modules",
+      "Page": 1
+    },
+    {
+      "Code": "ContainerOverflow",
+      "Level": "warning",
+      "Message": "sub-container \u0027MouseScroll#part2\u0027 overflows lane \u0027Modules\u0027.",
+      "Lane": "Modules",
+      "Page": 1
+    },
+    {
+      "Code": "ContainerOverflow",
+      "Level": "warning",
+      "Message": "sub-container \u0027MouseScroll#part3\u0027 overflows lane \u0027Modules\u0027.",
       "Lane": "Modules",
       "Page": 1
     }

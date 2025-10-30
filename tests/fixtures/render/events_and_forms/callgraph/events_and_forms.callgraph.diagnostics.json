@@ -2,11 +2,15 @@
   "Version": "1.0",
   "Metrics": {
     "LayoutOutputMode": "view",
-    "LayoutCanvasWidth": 1.95000005,
-    "LayoutCanvasHeight": 1.56999993,
+    "LayoutCanvasWidth": 2.8499999,
+    "LayoutCanvasHeight": 2.1500001,
     "LayoutNodeCount": 1,
     "LayoutModuleCount": 1,
     "LayoutContainerCount": 1,
+    "LayerCount": 1,
+    "LayerCrowdingCount": 0,
+    "LayerOverflowCount": 0,
+    "BridgeCount": 0,
     "ConnectorCount": 0,
     "StraightLineCrossings": 0,
     "PageHeight": 8.5,
@@ -19,7 +23,7 @@
     "PlannerPageCount": 1,
     "PlannerAverageModulesPerPage": 1,
     "PlannerAverageConnectorsPerPage": 0,
-    "PlannerMaxOccupancyPercent": 20.933332443237305,
+    "PlannerMaxOccupancyPercent": 0,
     "PlannerMaxConnectorsPerPage": 0,
     "PageOverflowCount": 0,
     "PageCrowdingCount": 0,
@@ -50,11 +54,29 @@
         "TruncatedNodes": 0
       }
     ],
+    "Layers": [
+      {
+        "Layer": 1,
+        "ShapeCount": 2,
+        "ConnectorCount": 1,
+        "ModuleCount": 1,
+        "BridgesOut": 0,
+        "BridgesIn": 0,
+        "SoftShapeLimitExceeded": false,
+        "SoftConnectorLimitExceeded": false,
+        "HardShapeLimitExceeded": false,
+        "HardConnectorLimitExceeded": false,
+        "Modules": [
+          "Form1"
+        ],
+        "OverflowModules": []
+      }
+    ],
     "LanePages": [
       {
         "Tier": "Forms",
         "Page": 1,
-        "OccupancyRatio": 0.04533333381017049,
+        "OccupancyRatio": 0.055999998251597086,
         "Nodes": 1
       }
     ],
@@ -63,7 +85,7 @@
         "Id": "Form1",
         "Tier": "Forms",
         "Page": 1,
-        "OccupancyRatio": 0.04533333381017049,
+        "OccupancyRatio": 0.055999998251597086,
         "Nodes": 1
       }
     ]

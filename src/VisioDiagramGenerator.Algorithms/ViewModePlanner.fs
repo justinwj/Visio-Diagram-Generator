@@ -73,6 +73,9 @@ module ViewModePlanner =
             | _ -> None
         | _ -> None
 
+    let private getMetadataSingle (model: DiagramModel) (key: string) =
+        getMetadataDouble model key |> Option.map float32
+
     let private getMetadataInt (model: DiagramModel) (key: string) =
         match model.Metadata.TryGetValue(key) with
         | true, value when not (String.IsNullOrWhiteSpace value) ->
@@ -294,25 +297,67 @@ module ViewModePlanner =
                   ModuleIds = Array.empty
                   Overflows = Array.empty } }
         else
-            let slotsPerTier = 6
-            let slotsPerRow = 3
-            let tierSpacing = 1.4f
-            let rowSpacing = 0.85f
-            let cardSpacingX = 0.75f
-            let cardSpacingY = 0.8f
-            let cardPadding = 0.3f
-            let baseNodeWidth = 1.35f
+            let slotsPerRow =
+                getMetadataInt model "layout.view.slotsPerRow"
+                |> Option.filter (fun v -> v >= 1)
+                |> Option.defaultValue 2
+            let slotsPerTier =
+                getMetadataInt model "layout.view.slotsPerTier"
+                |> Option.filter (fun v -> v >= slotsPerRow)
+                |> Option.defaultValue (Math.Max(slotsPerRow * 3, 6))
+            let tierSpacing =
+                getMetadataSingle model "layout.view.tierSpacingIn"
+                |> Option.filter (fun v -> v > 0.f)
+                |> Option.defaultValue 3.0f
+            let rowSpacing =
+                getMetadataSingle model "layout.view.rowSpacingIn"
+                |> Option.filter (fun v -> v > 0.f)
+                |> Option.defaultValue 2.0f
+            let cardSpacingX =
+                getMetadataSingle model "layout.view.cardSpacingXIn"
+                |> Option.filter (fun v -> v >= 0.f)
+                |> Option.defaultValue 3.0f
+            let cardSpacingY =
+                getMetadataSingle model "layout.view.cardSpacingYIn"
+                |> Option.filter (fun v -> v >= 0.f)
+                |> Option.defaultValue 2.0f
+            let cardPadding =
+                getMetadataSingle model "layout.view.cardPaddingIn"
+                |> Option.filter (fun v -> v >= 0.f)
+                |> Option.defaultValue 0.5f
+            let baseNodeWidth =
+                getMetadataSingle model "layout.view.baseNodeWidthIn"
+                |> Option.filter (fun v -> v > 0.f)
+                |> Option.defaultValue 1.55f
             let minNodeChars = 16
             let maxNodeChars = 64
             let charWidth = 0.075f
-            let maxNodeWidth = 3.75f
-            let nodeHeight = 0.34f
-            let columnGap = 0.18f
-            let rowGap = 0.08f
+            let maxNodeWidth = 4.5f
+            let nodeHeight =
+                getMetadataSingle model "layout.view.nodeHeightIn"
+                |> Option.filter (fun v -> v > 0.f)
+                |> Option.defaultValue 0.42f
+            let columnGap =
+                getMetadataSingle model "layout.view.columnGapIn"
+                |> Option.filter (fun v -> v >= 0.f)
+                |> Option.defaultValue 0.35f
+            let rowGap =
+                getMetadataSingle model "layout.view.rowGapIn"
+                |> Option.filter (fun v -> v >= 0.f)
+                |> Option.defaultValue 0.18f
             let headerHeight = 0.55f
-            let maxRowsPerColumn = 6
-            let maxColumns = 3
-            let maxCardHeight = 4.0f
+            let maxRowsPerColumn =
+                getMetadataInt model "layout.view.maxRowsPerColumn"
+                |> Option.filter (fun v -> v >= 1)
+                |> Option.defaultValue 5
+            let maxColumns =
+                getMetadataInt model "layout.view.maxColumns"
+                |> Option.filter (fun v -> v >= 1)
+                |> Option.defaultValue 3
+            let maxCardHeight =
+                getMetadataSingle model "layout.view.maxCardHeightIn"
+                |> Option.filter (fun v -> v >= nodeHeight + rowGap + headerHeight + (cardPadding * 2.f))
+                |> Option.defaultValue 5.5f
 
             let computeLongestLabelStats (nodes: seq<Node>) =
                 let mutable longestLabel = 0
@@ -356,7 +401,13 @@ module ViewModePlanner =
                     baseNodeWidth + float32 (candidateChars - minNodeChars) * charWidth
                 width |> max baseNodeWidth |> min maxNodeWidth
 
-            let preLayoutUsableHeight = computeUsableHeight model 0.f
+            let limitByPage =
+                getMetadataBool model "layout.view.limitByPage"
+                |> Option.defaultValue false
+
+            let preLayoutUsableHeight =
+                if limitByPage then computeUsableHeight model 0.f
+                else None
             let maxRowsByHeight =
                 match preLayoutUsableHeight with
                 | Some usable ->
@@ -368,7 +419,7 @@ module ViewModePlanner =
                 | None -> maxRowsPerColumn
 
             let maxRowsByHeight = Math.Max(1, maxRowsByHeight)
-            let segmentCapacity = Math.Max(1, maxRowsByHeight * 2)
+            let segmentCapacity = Math.Max(1, maxRowsByHeight * Math.Max(1, maxColumns))
 
             let computeSegmentMetrics totalNodes =
                 let safeTotal = if totalNodes <= 0 then 0 else totalNodes
@@ -420,6 +471,7 @@ module ViewModePlanner =
             let segmentMetrics = Dictionary<string, SegmentMetrics>(StringComparer.OrdinalIgnoreCase)
             let orderedSegments = ResizeArray<string>()
             let moduleToPage = Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+            let moduleTierIndex = Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
 
             let nodeLookup = Dictionary<string, Node>(StringComparer.OrdinalIgnoreCase)
             for node in model.Nodes do
@@ -437,15 +489,45 @@ module ViewModePlanner =
                         else StringComparer.OrdinalIgnoreCase.Compare(a.Id, b.Id))
                     |> Seq.toArray
 
-                let chunks =
-                    if orderedNodes.Length = 0 then
-                        [| Array.empty<Node> |]
+                let rec adjustSegmentSize requested =
+                    let candidate = Math.Max(1, requested)
+                    let metrics = computeSegmentMetrics candidate
+                    if metrics.Overflow <= 0 then
+                        candidate, metrics
                     else
-                        orderedNodes |> Array.chunkBySize segmentCapacity
+                        let nextVisible = metrics.VisibleCount
+                        let proposed =
+                            if nextVisible > 0 && nextVisible < candidate then nextVisible
+                            else candidate - 1
+                        let nextCandidate = Math.Max(1, proposed)
+                        if nextCandidate >= candidate then
+                            if candidate <= 1 then
+                                1, computeSegmentMetrics 1
+                            else
+                                adjustSegmentSize (candidate - 1)
+                        else
+                            adjustSegmentSize nextCandidate
 
-                let segmentCount = chunks.Length
+                let segmentsForModule =
+                    if orderedNodes.Length = 0 then
+                        [| (Array.empty<Node>, computeSegmentMetrics 0) |]
+                    else
+                        let segments = ResizeArray<Node[] * SegmentMetrics>()
+                        let mutable startIdx = 0
+                        while startIdx < orderedNodes.Length do
+                            let remaining = orderedNodes.Length - startIdx
+                            let requested = Math.Min(segmentCapacity, remaining)
+                            let requested = if requested <= 0 then 1 else requested
+                            let takeCount, metrics = adjustSegmentSize requested
+                            let takeCount = Math.Min(remaining, Math.Max(1, takeCount))
+                            let slice = orderedNodes.[startIdx .. (startIdx + takeCount - 1)]
+                            segments.Add(slice, metrics)
+                            startIdx <- startIdx + takeCount
+                        segments.ToArray()
+
+                let segmentCount = segmentsForModule.Length
                 for idxSeg = 0 to segmentCount - 1 do
-                    let chunk = chunks[idxSeg]
+                    let (chunk, metrics) = segmentsForModule[idxSeg]
                     let segmentId =
                         if segmentCount = 1 then moduleId
                         else sprintf "%s#part%d" moduleId (idxSeg + 1)
@@ -458,8 +540,6 @@ module ViewModePlanner =
                     modules[segmentId] <- segmentModule
                     segmentOrigins[segmentId] <- (moduleId, idxSeg, segmentCount)
                     orderedSegments.Add segmentId
-
-                    let metrics = computeSegmentMetrics segmentModule.Nodes.Count
                     segmentMetrics[segmentId] <- metrics
 
             let segmentEdgeStats = Dictionary<string, ModuleEdgeStats>(StringComparer.OrdinalIgnoreCase)
@@ -617,15 +697,26 @@ module ViewModePlanner =
                 if right > bounds[2] then bounds[2] <- right
                 if top > bounds[3] then bounds[3] <- top
 
-            let pageSpacing = tierSpacing * 3.f
+            let pageSpacing =
+                getMetadataSingle model "layout.view.pageSpacingIn"
+                |> Option.filter (fun v -> v > 0.f)
+                |> Option.defaultValue (tierSpacing * 2.f)
 
             let defaultPageMargin = 1.0
-            let margin = float32 (getMetadataDouble model "layout.page.marginIn" |> Option.defaultValue defaultPageMargin)
-            let titleHeight = float32 (if hasTitle model then 0.6 else 0.0)
+            let margin =
+                if limitByPage then
+                    float32 (getMetadataDouble model "layout.page.marginIn" |> Option.defaultValue defaultPageMargin)
+                else
+                    0.f
+            let titleHeight =
+                if limitByPage && hasTitle model then 0.6f else 0.f
             let pageHeight =
-                match getMetadataDouble model "layout.page.heightIn" with
-                | Some value when value > 0.0 -> float32 value
-                | _ -> 0.f
+                if limitByPage then
+                    match getMetadataDouble model "layout.page.heightIn" with
+                    | Some value when value > 0.0 -> float32 value
+                    | _ -> 0.f
+                else
+                    0.f
             let pageBodyHeight =
                 if pageHeight > 0.f then
                     pageHeight - (2.f * margin) - titleHeight
@@ -762,6 +853,11 @@ module ViewModePlanner =
                                               Height = cardHeight }
                                           VisibleNodes = visibleCount
                                           OverflowCount = overflow })
+                                    let tierIndex =
+                                        tiers
+                                        |> Array.tryFindIndex (fun t -> t.Equals(viewModule.Tier, StringComparison.OrdinalIgnoreCase))
+                                        |> Option.defaultValue 0
+                                    moduleTierIndex[segmentId] <- tierIndex
 
                                     updateExtents left bottom cardWidth cardHeight
 
@@ -786,6 +882,39 @@ module ViewModePlanner =
                 else
                     cursorY <- cursorY - pageSpacing
 
+            let offsetX =
+                if Single.IsPositiveInfinity minLeft then 0.f else minLeft
+            let offsetY =
+                if Single.IsPositiveInfinity minBottom then 0.f else minBottom
+
+            if offsetX <> 0.f || offsetY <> 0.f then
+                for idx = 0 to nodeLayouts.Count - 1 do
+                    let layout = nodeLayouts[idx]
+                    nodeLayouts[idx] <-
+                        { layout with
+                            Position = point (layout.Position.X - offsetX) (layout.Position.Y - offsetY) }
+                for entry in Seq.toArray placementCenters do
+                    placementCenters[entry.Key] <- point (entry.Value.X - offsetX) (entry.Value.Y - offsetY)
+                for idx = 0 to containerLayouts.Count - 1 do
+                    let layout = containerLayouts[idx]
+                    let bounds = layout.Bounds
+                    containerLayouts[idx] <-
+                        { layout with
+                            Bounds =
+                                { bounds with
+                                    Left = bounds.Left - offsetX
+                                    Bottom = bounds.Bottom - offsetY } }
+                for entry in pageExtents do
+                    let bounds = entry.Value
+                    bounds[0] <- bounds[0] - offsetX
+                    bounds[1] <- bounds[1] - offsetY
+                    bounds[2] <- bounds[2] - offsetX
+                    bounds[3] <- bounds[3] - offsetY
+                minLeft <- minLeft - offsetX
+                maxRight <- maxRight - offsetX
+                minBottom <- minBottom - offsetY
+                maxTop <- maxTop - offsetY
+
             let moduleBounds = Dictionary<string, RectangleF>(StringComparer.OrdinalIgnoreCase)
             for container in containerLayouts do
                 if not (String.IsNullOrWhiteSpace container.Id) then
@@ -797,6 +926,25 @@ module ViewModePlanner =
                     nodeLookup[node.Id] <- node
 
             let edgeRoutes = ResizeArray<EdgeRoute>()
+            let corridorSequence = Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+            let corridorSpacing =
+                getMetadataSingle model "layout.view.corridorSpacingIn"
+                |> Option.filter (fun v -> v >= 0.f)
+                |> Option.defaultValue 0.6f
+            let labelLeader =
+                getMetadataSingle model "layout.view.labelLeaderIn"
+                |> Option.filter (fun v -> v > 0.f)
+                |> Option.defaultValue 1.0f
+
+            let nextCorridorOffset (key: string) =
+                let idx =
+                    match corridorSequence.TryGetValue key with
+                    | true, value -> value
+                    | _ -> 0
+                corridorSequence[key] <- idx + 1
+                let magnitude = float32 ((idx / 2) + 1) * corridorSpacing
+                if idx % 2 = 0 then magnitude else -magnitude
+
             for edge in model.Edges do
                 if not (isNull edge) && not (String.IsNullOrWhiteSpace edge.SourceId) && not (String.IsNullOrWhiteSpace edge.TargetId) then
                     match placementCenters.TryGetValue edge.SourceId, placementCenters.TryGetValue edge.TargetId with
@@ -811,16 +959,77 @@ module ViewModePlanner =
                             match nodeToSegment.TryGetValue edge.TargetId with
                             | true, segId -> segId
                             | _ -> resolveModuleId dstNode tiers tiersSet
-                        let points =
+                        let points, labelPoints =
                             if srcModuleId.Equals(dstModuleId, StringComparison.OrdinalIgnoreCase)
                                || not (moduleBounds.ContainsKey srcModuleId)
                                || not (moduleBounds.ContainsKey dstModuleId) then
-                                [| srcCenter; dstCenter |]
+                                [| srcCenter; dstCenter |], Array.empty
                             else
-                                let exitPt = computeAnchor moduleBounds[srcModuleId] moduleBounds[dstModuleId]
-                                let entryPt = computeAnchor moduleBounds[dstModuleId] moduleBounds[srcModuleId]
-                                let mid = midpoint exitPt entryPt
-                                [| srcCenter; exitPt; mid; entryPt; dstCenter |]
+                                let srcBounds = moduleBounds[srcModuleId]
+                                let dstBounds = moduleBounds[dstModuleId]
+                                let srcTier =
+                                    match moduleTierIndex.TryGetValue srcModuleId with
+                                    | true, idx -> idx
+                                    | _ -> 0
+                                let dstTier =
+                                    match moduleTierIndex.TryGetValue dstModuleId with
+                                    | true, idx -> idx
+                                    | _ -> srcTier
+                                let srcSide, dstSide =
+                                    if srcTier = dstTier then
+                                        if srcCenter.X <= dstCenter.X then
+                                            ("right", "left")
+                                        else
+                                            ("left", "right")
+                                    elif srcTier < dstTier then
+                                        ("right", "left")
+                                    else
+                                        ("left", "right")
+                                let anchorPoint (rect: RectangleF) side =
+                                    match side with
+                                    | "left" -> point rect.Left (rect.Bottom + rect.Height / 2.f)
+                                    | "right" -> point (rect.Left + rect.Width) (rect.Bottom + rect.Height / 2.f)
+                                    | "top" -> point (rect.Left + rect.Width / 2.f) (rect.Bottom + rect.Height)
+                                    | "bottom" -> point (rect.Left + rect.Width / 2.f) rect.Bottom
+                                    | _ -> point (rect.Left + rect.Width / 2.f) (rect.Bottom + rect.Height / 2.f)
+                                let exitPt = anchorPoint srcBounds srcSide
+                                let entryPt = anchorPoint dstBounds dstSide
+                                let corridorKey =
+                                    if srcTier = dstTier then
+                                        let leftModule, rightModule =
+                                            if srcCenter.X <= dstCenter.X then srcModuleId, dstModuleId
+                                            else dstModuleId, srcModuleId
+                                        sprintf "tier:%d:%s->%s" srcTier leftModule rightModule
+                                    elif srcTier < dstTier then
+                                        sprintf "down:%d:%d:%s->%s" srcTier dstTier srcModuleId dstModuleId
+                                    else
+                                        sprintf "up:%d:%d:%s->%s" dstTier srcTier dstModuleId srcModuleId
+                                let offset = nextCorridorOffset corridorKey
+                                if srcTier = dstTier then
+                                    let corridorY = exitPt.Y + offset
+                                    let sweepLeft =
+                                        if srcSide = "right" then exitPt.X + (cardSpacingX * 0.5f)
+                                        else exitPt.X - (cardSpacingX * 0.5f)
+                                    let sweepRight =
+                                        if dstSide = "left" then entryPt.X - (cardSpacingX * 0.5f)
+                                        else entryPt.X + (cardSpacingX * 0.5f)
+                                    let mid1 = point sweepLeft corridorY
+                                    let mid2 = point sweepRight corridorY
+                                    let horizontalSpan = Math.Abs(mid2.X - mid1.X)
+                                    let direction = if srcSide = "right" then 1.f else -1.f
+                                    let anchorOffset = Math.Min(labelLeader, horizontalSpan / 2.f)
+                                    let labelAnchor = point (mid1.X + (direction * anchorOffset)) corridorY
+                                    [| srcCenter; exitPt; mid1; mid2; entryPt; dstCenter |], [| mid1; labelAnchor |]
+                                else
+                                    let sweepX =
+                                        if srcSide = "right" then exitPt.X + cardSpacingX else exitPt.X - cardSpacingX
+                                    let mid1 = point sweepX (exitPt.Y + offset)
+                                    let mid2 = point sweepX (entryPt.Y + offset)
+                                    let verticalSpan = Math.Abs(mid2.Y - mid1.Y)
+                                    let direction = if dstCenter.Y >= srcCenter.Y then 1.f else -1.f
+                                    let anchorOffset = Math.Min(labelLeader, verticalSpan / 2.f)
+                                    let labelAnchor = point sweepX (mid1.Y + (direction * anchorOffset))
+                                    [| srcCenter; exitPt; mid1; mid2; entryPt; dstCenter |], [| mid1; labelAnchor |]
 
                         let isCrossModule = not (srcModuleId.Equals(dstModuleId, StringComparison.OrdinalIgnoreCase))
                         let recordEdge moduleId =
@@ -833,7 +1042,8 @@ module ViewModePlanner =
                         recordEdge dstModuleId
                         edgeRoutes.Add(
                             { Id = if String.IsNullOrWhiteSpace edge.Id then $"{edge.SourceId}->{edge.TargetId}" else edge.Id
-                              Points = points })
+                              Points = points
+                              LabelPoints = labelPoints })
                     | _ -> ()
 
             let nodesArray = nodeLayouts.ToArray()

@@ -147,9 +147,9 @@ module LayoutEngine =
                         let dstSize = sizeOrDefault dstLayout
                         let srcCenter = { X = srcLayout.Position.X + (srcSize.Width / 2.0f); Y = srcLayout.Position.Y + (srcSize.Height / 2.0f) }
                         let dstCenter = { X = dstLayout.Position.X + (dstSize.Width / 2.0f); Y = dstLayout.Position.Y + (dstSize.Height / 2.0f) }
-                        { Id = edge.Id; Points = [| srcCenter; dstCenter |] }
+                        { Id = edge.Id; Points = [| srcCenter; dstCenter |]; LabelPoints = Array.empty }
                     else
-                        { Id = edge.Id; Points = Array.empty })
+                        { Id = edge.Id; Points = Array.empty; LabelPoints = Array.empty })
                 |> Seq.toArray
 
             { Nodes = layoutArray; Edges = edgeRoutes }

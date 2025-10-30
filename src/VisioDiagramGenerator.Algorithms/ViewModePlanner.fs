@@ -301,26 +301,32 @@ module ViewModePlanner =
                 getMetadataInt model "layout.view.slotsPerRow"
                 |> Option.filter (fun v -> v >= 1)
                 |> Option.defaultValue 2
-            let slotsPerTier =
+            let baseSlotsPerTier =
                 getMetadataInt model "layout.view.slotsPerTier"
                 |> Option.filter (fun v -> v >= slotsPerRow)
                 |> Option.defaultValue (Math.Max(slotsPerRow * 3, 6))
-            let tierSpacing =
+            let maxModulesPerLane =
+                getMetadataInt model "layout.view.maxModulesPerLane"
+                |> Option.filter (fun v -> v >= slotsPerRow)
+                |> Option.defaultValue (Math.Max(slotsPerRow * 2, 4))
+            let mutable slotsPerTier =
+                Math.Max(slotsPerRow, Math.Min(baseSlotsPerTier, maxModulesPerLane))
+            let mutable tierSpacing =
                 getMetadataSingle model "layout.view.tierSpacingIn"
                 |> Option.filter (fun v -> v > 0.f)
-                |> Option.defaultValue 3.0f
-            let rowSpacing =
+                |> Option.defaultValue 4.5f
+            let mutable rowSpacing =
                 getMetadataSingle model "layout.view.rowSpacingIn"
                 |> Option.filter (fun v -> v > 0.f)
-                |> Option.defaultValue 2.0f
-            let cardSpacingX =
+                |> Option.defaultValue 3.0f
+            let mutable cardSpacingX =
                 getMetadataSingle model "layout.view.cardSpacingXIn"
                 |> Option.filter (fun v -> v >= 0.f)
-                |> Option.defaultValue 3.0f
-            let cardSpacingY =
+                |> Option.defaultValue 6.0f
+            let mutable cardSpacingY =
                 getMetadataSingle model "layout.view.cardSpacingYIn"
                 |> Option.filter (fun v -> v >= 0.f)
-                |> Option.defaultValue 2.0f
+                |> Option.defaultValue 4.0f
             let cardPadding =
                 getMetadataSingle model "layout.view.cardPaddingIn"
                 |> Option.filter (fun v -> v >= 0.f)
@@ -340,11 +346,11 @@ module ViewModePlanner =
             let columnGap =
                 getMetadataSingle model "layout.view.columnGapIn"
                 |> Option.filter (fun v -> v >= 0.f)
-                |> Option.defaultValue 0.35f
+                |> Option.defaultValue 0.6f
             let rowGap =
                 getMetadataSingle model "layout.view.rowGapIn"
                 |> Option.filter (fun v -> v >= 0.f)
-                |> Option.defaultValue 0.18f
+                |> Option.defaultValue 0.28f
             let headerHeight = 0.55f
             let maxRowsPerColumn =
                 getMetadataInt model "layout.view.maxRowsPerColumn"
@@ -697,10 +703,40 @@ module ViewModePlanner =
                 if right > bounds[2] then bounds[2] <- right
                 if top > bounds[3] then bounds[3] <- top
 
-            let pageSpacing =
+            let mutable pageSpacing =
                 getMetadataSingle model "layout.view.pageSpacingIn"
                 |> Option.filter (fun v -> v > 0.f)
                 |> Option.defaultValue (tierSpacing * 2.f)
+
+            let distinctPageCount =
+                if plannedPagePlans.Length = 0 then 1
+                else
+                    plannedPagePlans
+                    |> Array.map (fun p -> p.PageIndex)
+                    |> Array.distinct
+                    |> Array.length
+            let avgModulesPerPage =
+                if distinctPageCount <= 0 then float32 modules.Count
+                else float32 modules.Count / float32 distinctPageCount
+            let densityScale =
+                if Single.IsNaN avgModulesPerPage || avgModulesPerPage <= 6.f then 1.f
+                else
+                    let bump = (avgModulesPerPage - 6.f) / 4.f
+                    let limited = if bump > 1.6f then 1.6f else bump
+                    1.f + limited
+            if densityScale > 1.f then
+                tierSpacing <- tierSpacing * densityScale
+                let rowFactor = if densityScale < 1.25f then densityScale else 1.25f
+                rowSpacing <- rowSpacing * rowFactor
+                cardSpacingX <- cardSpacingX * densityScale
+                let yFactor = if densityScale < 1.35f then densityScale else 1.35f
+                cardSpacingY <- cardSpacingY * yFactor
+                let pageFactor = if densityScale < 1.4f then densityScale else 1.4f
+                pageSpacing <- pageSpacing * pageFactor
+                let tightened =
+                    Math.Ceiling(float slotsPerTier / float densityScale)
+                    |> int
+                slotsPerTier <- Math.Max(slotsPerRow, Math.Max(1, tightened))
 
             let defaultPageMargin = 1.0
             let margin =
@@ -930,7 +966,7 @@ module ViewModePlanner =
             let corridorSpacing =
                 getMetadataSingle model "layout.view.corridorSpacingIn"
                 |> Option.filter (fun v -> v >= 0.f)
-                |> Option.defaultValue 0.6f
+                |> Option.defaultValue (max 3.0f (cardSpacingY * 0.9f))
             let labelLeader =
                 getMetadataSingle model "layout.view.labelLeaderIn"
                 |> Option.filter (fun v -> v > 0.f)

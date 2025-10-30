@@ -1,78 +1,34 @@
-PS C:\Users\justu\source\repos\Visio-Diagram-Generator> # Optional: build if the binaries aren't current
->> dotnet build Visio-Diagram-Generator.sln -c Release
+PS C:\Users\justu\source\repos\Visio-Diagram-Generator> $repoRoot = (git rev-parse --show-toplevel).Trim()
+>> if ([string]::IsNullOrWhiteSpace($repoRoot)) {
+>>     throw "Unable to locate repo root; run inside the Visio-Diagram-Generator checkout."
+>> }
 >> 
->> # Explicitly enable the Visio runner
+>> $stamp  = Get-Date -Format 'yyyyMMdd-HHmmss'
+>> $outDir = Join-Path $repoRoot "out\runs\invSys-view-$stamp"
+>> New-Item $outDir -ItemType Directory -Force | Out-Null
+>> 
+>> $vsdxPath    = Join-Path $outDir 'invSys.callgraph.view.vsdx'
+>> $diagramPath = Join-Path $outDir 'invSys.callgraph.view.diagram.json'
+>> $diagPath    = Join-Path $outDir 'invSys.callgraph.view.diagnostics.json'
+>> 
+>> $oldSkipRunner = $env:VDG_SKIP_RUNNER
 >> $env:VDG_SKIP_RUNNER = '0'
->> 
->> # Render invSys end-to-end (Visio will launch)
->> dotnet run --project src/VDG.VBA.CLI -- render `
->>     --in samples/invSys `
->>     --mode callgraph `
->>     --out out/tmp/invsys.vsdx `
->>     --diagram-json out/tmp/invsys.diagram.json `
->>     --diag-json out/tmp/invsys.diagnostics.json
->> 
-  Determining projects to restore...
-C:\Users\justu\source\repos\Visio-Diagram-Generator\src\VisioDiagramGenerator.CliFs\VisioDiagramGenerator.CliFs.fsproj 
-: warning NU1902: Package 'Azure.Identity' 1.10.4 has a known moderate severity vulnerability, https://github.com/advis
-ories/GHSA-m5vv-6r4h-3vj9 [C:\Users\justu\source\repos\Visio-Diagram-Generator\Visio-Diagram-Generator.sln]
-C:\Users\justu\source\repos\Visio-Diagram-Generator\src\VisioDiagramGenerator.CliFs\VisioDiagramGenerator.CliFs.fsproj 
-: warning NU1902: Package 'Azure.Identity' 1.10.4 has a known moderate severity vulnerability, https://github.com/advis
-ories/GHSA-wvxc-855f-jvrv [C:\Users\justu\source\repos\Visio-Diagram-Generator\Visio-Diagram-Generator.sln]
-  All projects are up-to-date for restore.
-C:\Users\justu\source\repos\Visio-Diagram-Generator\src\VisioDiagramGenerator.CliFs\VisioDiagramGenerator.CliFs.fsproj 
-: warning NU1902: Package 'Azure.Identity' 1.10.4 has a known moderate severity vulnerability, https://github.com/advis
-ories/GHSA-m5vv-6r4h-3vj9
-C:\Users\justu\source\repos\Visio-Diagram-Generator\src\VisioDiagramGenerator.CliFs\VisioDiagramGenerator.CliFs.fsproj 
-: warning NU1902: Package 'Azure.Identity' 1.10.4 has a known moderate severity vulnerability, https://github.com/advis
-ories/GHSA-wvxc-855f-jvrv
-  VDG.Core.Contracts -> C:\Users\justu\source\repos\Visio-Diagram-Generator\src\VDG.Core.Contracts\bin\Release\net8.0\V
-  DG.Core.Contracts.dll
-  VDG.VBA.CLI -> C:\Users\justu\source\repos\Visio-Diagram-Generator\src\VDG.VBA.CLI\bin\Release\net8.0\VDG.VBA.CLI.dll
-  VDG.VBA.CLI.Tests -> C:\Users\justu\source\repos\Visio-Diagram-Generator\tests\VDG.VBA.CLI.Tests\bin\Release\net8.0\V
-  DG.VBA.CLI.Tests.dll
-  VDG.Core.Contracts -> C:\Users\justu\source\repos\Visio-Diagram-Generator\src\VDG.Core.Contracts\bin\Release\netstand
-  ard2.0\VDG.Core.Contracts.dll
-C:\Program Files\dotnet\sdk\8.0.415\Microsoft.Common.CurrentVersion.targets(1890,5): warning NU1702: ProjectReference '
-C:\Users\justu\source\repos\Visio-Diagram-Generator\src\VDG.CLI\VDG.CLI.csproj' was resolved using '.NETFramework,Versi 
-on=v4.8' instead of the project target framework '.NETCoreApp,Version=v8.0'. This project may not be fully compatible w
-ith your project. [C:\Users\justu\source\repos\Visio-Diagram-Generator\tests\VDG.Core.Tests\VDG.Core.Tests.csproj]      
-  VDG.Core -> C:\Users\justu\source\repos\Visio-Diagram-Generator\src\VDG.Core\bin\Release\net8.0\VDG.Core.dll
-  VDG.Core -> C:\Users\justu\source\repos\Visio-Diagram-Generator\src\VDG.Core\bin\Release\netstandard2.0\VDG.Core.dll
-  VisioDiagramGenerator.Algorithms -> C:\Users\justu\source\repos\Visio-Diagram-Generator\src\VisioDiagramGenerator.Alg
-  orithms\bin\Release\netstandard2.0\VisioDiagramGenerator.Algorithms.dll
-  VDG.CLI -> C:\Users\justu\source\repos\Visio-Diagram-Generator\src\VDG.CLI\bin\Release\net48\VDG.CLI.exe
-  VisioDiagramGenerator.CliFs -> C:\Users\justu\source\repos\Visio-Diagram-Generator\src\VisioDiagramGenerator.CliFs\bi
-  n\Release\net8.0-windows\VisioDiagramGenerator.CliFs.dll
-  VisioDiagramGenerator.Algorithms.Tests -> C:\Users\justu\source\repos\Visio-Diagram-Generator\tests\VisioDiagramGener
-  ator.Algorithms.Tests\bin\Release\net8.0\VisioDiagramGenerator.Algorithms.Tests.dll
-  VDG.Core.Tests -> C:\Users\justu\source\repos\Visio-Diagram-Generator\tests\VDG.Core.Tests\bin\Release\net8.0\VDG.Cor
-  e.Tests.dll
-  VisioDiagramGenerator.CliFs.Tests -> C:\Users\justu\source\repos\Visio-Diagram-Generator\tests\VisioDiagramGenerator.
-  CliFs.Tests\bin\Release\net8.0-windows\VisioDiagramGenerator.CliFs.Tests.dll
-
-Build succeeded.
-
-C:\Users\justu\source\repos\Visio-Diagram-Generator\src\VisioDiagramGenerator.CliFs\VisioDiagramGenerator.CliFs.fsproj  
-: warning NU1902: Package 'Azure.Identity' 1.10.4 has a known moderate severity vulnerability, https://github.com/advis 
-ories/GHSA-m5vv-6r4h-3vj9 [C:\Users\justu\source\repos\Visio-Diagram-Generator\Visio-Diagram-Generator.sln]
-C:\Users\justu\source\repos\Visio-Diagram-Generator\src\VisioDiagramGenerator.CliFs\VisioDiagramGenerator.CliFs.fsproj  
-: warning NU1902: Package 'Azure.Identity' 1.10.4 has a known moderate severity vulnerability, https://github.com/advis 
-ories/GHSA-wvxc-855f-jvrv [C:\Users\justu\source\repos\Visio-Diagram-Generator\Visio-Diagram-Generator.sln]
-C:\Users\justu\source\repos\Visio-Diagram-Generator\src\VisioDiagramGenerator.CliFs\VisioDiagramGenerator.CliFs.fsproj  
-: warning NU1902: Package 'Azure.Identity' 1.10.4 has a known moderate severity vulnerability, https://github.com/advis 
-ories/GHSA-m5vv-6r4h-3vj9
-C:\Users\justu\source\repos\Visio-Diagram-Generator\src\VisioDiagramGenerator.CliFs\VisioDiagramGenerator.CliFs.fsproj  
-: warning NU1902: Package 'Azure.Identity' 1.10.4 has a known moderate severity vulnerability, https://github.com/advis 
-ories/GHSA-wvxc-855f-jvrv
-C:\Program Files\dotnet\sdk\8.0.415\Microsoft.Common.CurrentVersion.targets(1890,5): warning NU1702: ProjectReference ' 
-C:\Users\justu\source\repos\Visio-Diagram-Generator\src\VDG.CLI\VDG.CLI.csproj' was resolved using '.NETFramework,Versi 
-on=v4.8' instead of the project target framework '.NETCoreApp,Version=v8.0'. This project may not be fully compatible w 
-ith your project. [C:\Users\justu\source\repos\Visio-Diagram-Generator\tests\VDG.Core.Tests\VDG.Core.Tests.csproj]      
-    5 Warning(s)
-    0 Error(s)
-
-Time Elapsed 00:00:03.19
+>> try {
+>>     dotnet run --project src/VDG.VBA.CLI/VDG.VBA.CLI.csproj -- render `
+>>         --in samples/invSys `
+>>         --mode callgraph `
+>>         --diagram-json $diagramPath `
+>>         --diag-json $diagPath `
+>>         --out $vsdxPath
+>> }
+>> finally {
+>>     if ($null -ne $oldSkipRunner) { $env:VDG_SKIP_RUNNER = $oldSkipRunner }
+>>     else { Remove-Item Env:\VDG_SKIP_RUNNER -ErrorAction SilentlyContinue }
+>> }
+>>
+>> Write-Host "Diagram:      $vsdxPath"
+>> Write-Host "Layout JSON:  $diagramPath"
+>> Write-Host "Diagnostics:  $diagPath"
 modules:5 procedures:1 edges:2 (progress)
 modules:10 procedures:7 edges:42 (progress)
 modules:13 procedures:16 edges:143 (progress)
@@ -101,12 +57,12 @@ warning: Procedure 'MouseScroll.ScrollY' calls itself.
 Hyperlink Summary (callgraph):
 Procedure/Control | File Path | Module | Start Line | End Line | Hyperlink
 class_initialize | Class Modules/clsBulkSnapshot.cls | clsBulkSnapshot | 20 | 22 | Class Modules/clsBulkSnapshot.cls#L20
-btnCreateDeleteUser_Click | Forms/frmAdminControls.frm | frmAdminControls | 16 | 18 | Forms/frmAdminControls.frm#L16    
+btnCreateDeleteUser_Click | Forms/frmAdminControls.frm | frmAdminControls | 16 | 18 | Forms/frmAdminControls.frm#L16
 btnEditUser_Click | Forms/frmAdminControls.frm | frmAdminControls | 19 | 21 | Forms/frmAdminControls.frm#L19
-btnCreateUser_Click | Forms/frmCreateDeleteUser.frm | frmCreateDeleteUser | 20 | 72 | Forms/frmCreateDeleteUser.frm#L20 
+btnCreateUser_Click | Forms/frmCreateDeleteUser.frm | frmCreateDeleteUser | 20 | 72 | Forms/frmCreateDeleteUser.frm#L20
 btnDeleteUser_Click | Forms/frmCreateDeleteUser.frm | frmCreateDeleteUser | 80 | 107 | Forms/frmCreateDeleteUser.frm#L80
-btnRandomPIN_Click | Forms/frmCreateDeleteUser.frm | frmCreateDeleteUser | 73 | 79 | Forms/frmCreateDeleteUser.frm#L73  
-UserForm_Initialize | Forms/frmCreateDeleteUser.frm | frmCreateDeleteUser | 16 | 19 | Forms/frmCreateDeleteUser.frm#L16 
+btnRandomPIN_Click | Forms/frmCreateDeleteUser.frm | frmCreateDeleteUser | 73 | 79 | Forms/frmCreateDeleteUser.frm#L73
+UserForm_Initialize | Forms/frmCreateDeleteUser.frm | frmCreateDeleteUser | 16 | 19 | Forms/frmCreateDeleteUser.frm#L16
 btnNewPIN_Click | Forms/frmEditUser.frm | frmEditUser | 80 | 86 | Forms/frmEditUser.frm#L80
 btnUpdateUser_Click | Forms/frmEditUser.frm | frmEditUser | 22 | 79 | Forms/frmEditUser.frm#L22
 UserForm_Initialize | Forms/frmEditUser.frm | frmEditUser | 16 | 21 | Forms/frmEditUser.frm#L16
@@ -137,51 +93,51 @@ btnResetPIN_Click | Forms/frmLogin.frm | frmLogin | 57 | 59 | Forms/frmLogin.frm
 UserForm_Activate | Forms/frmLogin.frm | frmLogin | 68 | 71 | Forms/frmLogin.frm#L68
 UserForm_Initialize | Forms/frmLogin.frm | frmLogin | 64 | 67 | Forms/frmLogin.frm#L64
 btnSend_Click | Forms/frmReceivedTally.frm | frmReceivedTally | 19 | 22 | Forms/frmReceivedTally.frm#L19
-GetUOMFromDataTable | Forms/frmReceivedTally.frm | frmReceivedTally | 110 | 147 | Forms/frmReceivedTally.frm#L110       
-LogInventoryChange | Forms/frmReceivedTally.frm | frmReceivedTally | 104 | 108 | Forms/frmReceivedTally.frm#L104        
+GetUOMFromDataTable | Forms/frmReceivedTally.frm | frmReceivedTally | 110 | 147 | Forms/frmReceivedTally.frm#L110
+LogInventoryChange | Forms/frmReceivedTally.frm | frmReceivedTally | 104 | 108 | Forms/frmReceivedTally.frm#L104
 UpdateInventory | Forms/frmReceivedTally.frm | frmReceivedTally | 33 | 101 | Forms/frmReceivedTally.frm#L33
 UserForm_Initialize | Forms/frmReceivedTally.frm | frmReceivedTally | 24 | 30 | Forms/frmReceivedTally.frm#L24
 btnSend_Click | Forms/frmShipmentsTally.frm | frmShipmentsTally | 25 | 29 | Forms/frmShipmentsTally.frm#L25
-GetUOMFromDataTable | Forms/frmShipmentsTally.frm | frmShipmentsTally | 118 | 155 | Forms/frmShipmentsTally.frm#L118    
-LogInventoryChange | Forms/frmShipmentsTally.frm | frmShipmentsTally | 112 | 116 | Forms/frmShipmentsTally.frm#L112     
+GetUOMFromDataTable | Forms/frmShipmentsTally.frm | frmShipmentsTally | 118 | 155 | Forms/frmShipmentsTally.frm#L118
+LogInventoryChange | Forms/frmShipmentsTally.frm | frmShipmentsTally | 112 | 116 | Forms/frmShipmentsTally.frm#L112
 UpdateInventory | Forms/frmShipmentsTally.frm | frmShipmentsTally | 41 | 109 | Forms/frmShipmentsTally.frm#L41
-UserForm_Initialize | Forms/frmShipmentsTally.frm | frmShipmentsTally | 31 | 39 | Forms/frmShipmentsTally.frm#L31       
-Worksheet_Change | Sheets/InventoryManagement.cls | InventoryManagement | 11 | 79 | Sheets/InventoryManagement.cls#L11  
+UserForm_Initialize | Forms/frmShipmentsTally.frm | frmShipmentsTally | 31 | 39 | Forms/frmShipmentsTally.frm#L31
+Worksheet_Change | Sheets/InventoryManagement.cls | InventoryManagement | 11 | 79 | Sheets/InventoryManagement.cls#L11
 Worksheet_TableUpdate | Sheets/InventoryManagement.cls | InventoryManagement | 81 | 87 | Sheets/InventoryManagement.cls#L81
 Admin_Click | Modules/modAdmin.bas | modAdmin | 3 | 5 | Modules/modAdmin.bas#L3
 Open_CreateDeleteUser | Modules/modAdmin.bas | modAdmin | 6 | 8 | Modules/modAdmin.bas#L6
 HandleError | Modules/modErrorHandler.bas | modErrorHandler | 23 | 27 | Modules/modErrorHandler.bas#L23
-HandleItemCodeOverflow | Modules/modErrorHandler.bas | modErrorHandler | 41 | 43 | Modules/modErrorHandler.bas#L41      
+HandleItemCodeOverflow | Modules/modErrorHandler.bas | modErrorHandler | 41 | 43 | Modules/modErrorHandler.bas#L41
 LogAndHandleError | Modules/modErrorHandler.bas | modErrorHandler | 61 | 66 | Modules/modErrorHandler.bas#L61
 LogError | Modules/modErrorHandler.bas | modErrorHandler | 45 | 59 | Modules/modErrorHandler.bas#L45
 SafeExecute | Modules/modErrorHandler.bas | modErrorHandler | 28 | 40 | Modules/modErrorHandler.bas#L28
-ValidateAndProcessInput | Modules/modErrorHandler.bas | modErrorHandler | 5 | 22 | Modules/modErrorHandler.bas#L5       
-ExportAllCodeToSingleFiles | Modules/modExportImportAll.bas | modExportImportAll | 398 | 464 | Modules/modExportImportAll.bas#L398
-ExportAllModules | Modules/modExportImportAll.bas | modExportImportAll | 23 | 72 | Modules/modExportImportAll.bas#L23   
-ExportTablesHeadersAndControls | Modules/modExportImportAll.bas | modExportImportAll | 296 | 363 | Modules/modExportImportAll.bas#L296
+ValidateAndProcessInput | Modules/modErrorHandler.bas | modErrorHandler | 5 | 22 | Modules/modErrorHandler.bas#L5
+ExportAllCodeToSingleFiles | Modules/modExportImportAll.bas | modExportImportAll | 398 | 464 | Modules/modExportImportAll.bas#L398        
+ExportAllModules | Modules/modExportImportAll.bas | modExportImportAll | 23 | 72 | Modules/modExportImportAll.bas#L23
+ExportTablesHeadersAndControls | Modules/modExportImportAll.bas | modExportImportAll | 296 | 363 | Modules/modExportImportAll.bas#L296    
 ExportUserFormControls | Modules/modExportImportAll.bas | modExportImportAll | 364 | 393 | Modules/modExportImportAll.bas#L364
 ListSheetCodeNames | Modules/modExportImportAll.bas | modExportImportAll | 466 | 473 | Modules/modExportImportAll.bas#L466
 ReplaceAllCodeFromFiles | Modules/modExportImportAll.bas | modExportImportAll | 74 | 80 | Modules/modExportImportAll.bas#L74
 SyncClassModules | Modules/modExportImportAll.bas | modExportImportAll | 115 | 142 | Modules/modExportImportAll.bas#L115
 SyncFormsCodeBehind | Modules/modExportImportAll.bas | modExportImportAll | 145 | 199 | Modules/modExportImportAll.bas#L145
 SyncSheetsCodeBehind | Modules/modExportImportAll.bas | modExportImportAll | 202 | 257 | Modules/modExportImportAll.bas#L202
-SyncSheetsCodeBehind_Diagnostics | Modules/modExportImportAll.bas | modExportImportAll | 259 | 294 | Modules/modExportImportAll.bas#L259
+SyncSheetsCodeBehind_Diagnostics | Modules/modExportImportAll.bas | modExportImportAll | 259 | 294 | Modules/modExportImportAll.bas#L259  
 SyncStandardModules | Modules/modExportImportAll.bas | modExportImportAll | 82 | 112 | Modules/modExportImportAll.bas#L82
 CommitSelectionAndCloseWrapper | Modules/modGlobals.bas | modGlobals | 14 | 16 | Modules/modGlobals.bas#L14
 GetItemUOMByRowNum | Modules/modGlobals.bas | modGlobals | 24 | 70 | Modules/modGlobals.bas#L24
 InitializeGlobalVariables | Modules/modGlobals.bas | modGlobals | 18 | 23 | Modules/modGlobals.bas#L18
 IsFormLoaded | Modules/modGlobals.bas | modGlobals | 78 | 89 | Modules/modGlobals.bas#L78
 OpenItemSearchForCurrentCell | Modules/modGlobals.bas | modGlobals | 71 | 76 | Modules/modGlobals.bas#L71
-ExportAllCodeToSingleFiles | Modules/modImportExportAll.bas | modImportExportAll | 397 | 463 | Modules/modImportExportAll.bas#L397
-ExportAllModules | Modules/modImportExportAll.bas | modImportExportAll | 22 | 71 | Modules/modImportExportAll.bas#L22   
-ExportTablesHeadersAndControls | Modules/modImportExportAll.bas | modImportExportAll | 295 | 362 | Modules/modImportExportAll.bas#L295
+ExportAllCodeToSingleFiles | Modules/modImportExportAll.bas | modImportExportAll | 397 | 463 | Modules/modImportExportAll.bas#L397        
+ExportAllModules | Modules/modImportExportAll.bas | modImportExportAll | 22 | 71 | Modules/modImportExportAll.bas#L22
+ExportTablesHeadersAndControls | Modules/modImportExportAll.bas | modImportExportAll | 295 | 362 | Modules/modImportExportAll.bas#L295    
 ExportUserFormControls | Modules/modImportExportAll.bas | modImportExportAll | 363 | 392 | Modules/modImportExportAll.bas#L363
 ListSheetCodeNames | Modules/modImportExportAll.bas | modImportExportAll | 465 | 472 | Modules/modImportExportAll.bas#L465
 ReplaceAllCodeFromFiles | Modules/modImportExportAll.bas | modImportExportAll | 73 | 79 | Modules/modImportExportAll.bas#L73
 SyncClassModules | Modules/modImportExportAll.bas | modImportExportAll | 114 | 141 | Modules/modImportExportAll.bas#L114
 SyncFormsCodeBehind | Modules/modImportExportAll.bas | modImportExportAll | 144 | 198 | Modules/modImportExportAll.bas#L144
 SyncSheetsCodeBehind | Modules/modImportExportAll.bas | modImportExportAll | 201 | 256 | Modules/modImportExportAll.bas#L201
-SyncSheetsCodeBehind_Diagnostics | Modules/modImportExportAll.bas | modImportExportAll | 258 | 293 | Modules/modImportExportAll.bas#L258
+SyncSheetsCodeBehind_Diagnostics | Modules/modImportExportAll.bas | modImportExportAll | 258 | 293 | Modules/modImportExportAll.bas#L258  
 SyncStandardModules | Modules/modImportExportAll.bas | modImportExportAll | 81 | 111 | Modules/modImportExportAll.bas#L81
 LogMultipleInventoryChanges | Modules/modInvLogs.bas | modInvLogs | 6 | 34 | Modules/modInvLogs.bas#L6
 ReAddBulkLogEntries | Modules/modInvLogs.bas | modInvLogs | 56 | 78 | Modules/modInvLogs.bas#L56
@@ -203,15 +159,15 @@ SetupAllHandlers | Modules/modTS_Data.bas | modTS_Data | 195 | 204 | Modules/mod
 LaunchReceivedTally | Modules/modTS_Launchers.bas | modTS_Launchers | 15 | 19 | Modules/modTS_Launchers.bas#L15
 LaunchShipmentsTally | Modules/modTS_Launchers.bas | modTS_Launchers | 9 | 13 | Modules/modTS_Launchers.bas#L9
 LogReceivedDetailed | Modules/modTS_Log.bas | modTS_Log | 15 | 70 | Modules/modTS_Log.bas#L15
-AppendReceivedLogRecord | Modules/modTS_Received.bas | modTS_Received | 239 | 264 | Modules/modTS_Received.bas#L239     
+AppendReceivedLogRecord | Modules/modTS_Received.bas | modTS_Received | 239 | 264 | Modules/modTS_Received.bas#L239
 GetReceivingDetails | Modules/modTS_Received.bas | modTS_Received | 202 | 236 | Modules/modTS_Received.bas#L202
 GetUOMFromDataTable | Modules/modTS_Received.bas | modTS_Received | 266 | 307 | Modules/modTS_Received.bas#L266
 PopulateReceivedForm | Modules/modTS_Received.bas | modTS_Received | 58 | 130 | Modules/modTS_Received.bas#L58
-ProcessReceivedBatch | Modules/modTS_Received.bas | modTS_Received | 132 | 199 | Modules/modTS_Received.bas#L132        
+ProcessReceivedBatch | Modules/modTS_Received.bas | modTS_Received | 132 | 199 | Modules/modTS_Received.bas#L132
 TallyReceived | Modules/modTS_Received.bas | modTS_Received | 10 | 56 | Modules/modTS_Received.bas#L10
-GetUOMFromDataTable | Modules/modTS_Shipments.bas | modTS_Shipments | 202 | 243 | Modules/modTS_Shipments.bas#L202      
-PopulateShipmentsForm | Modules/modTS_Shipments.bas | modTS_Shipments | 31 | 141 | Modules/modTS_Shipments.bas#L31      
-ProcessShipmentsBatch | Modules/modTS_Shipments.bas | modTS_Shipments | 143 | 200 | Modules/modTS_Shipments.bas#L143    
+GetUOMFromDataTable | Modules/modTS_Shipments.bas | modTS_Shipments | 202 | 243 | Modules/modTS_Shipments.bas#L202
+PopulateShipmentsForm | Modules/modTS_Shipments.bas | modTS_Shipments | 31 | 141 | Modules/modTS_Shipments.bas#L31
+ProcessShipmentsBatch | Modules/modTS_Shipments.bas | modTS_Shipments | 143 | 200 | Modules/modTS_Shipments.bas#L143
 TallyShipments | Modules/modTS_Shipments.bas | modTS_Shipments | 5 | 29 | Modules/modTS_Shipments.bas#L5
 ColumnIndex | Modules/modTS_Tally.bas | modTS_Tally | 31 | 40 | Modules/modTS_Tally.bas#L31
 FindRowByValue | Modules/modTS_Tally.bas | modTS_Tally | 67 | 84 | Modules/modTS_Tally.bas#L67
@@ -231,13 +187,13 @@ GetInventoryTable | Modules/modUR_Snapshot.bas | modUR_Snapshot | 74 | 81 | Modu
 GetSchemaHash | Modules/modUR_Snapshot.bas | modUR_Snapshot | 93 | 115 | Modules/modUR_Snapshot.bas#L93
 InitializeSnapshots | Modules/modUR_Snapshot.bas | modUR_Snapshot | 6 | 9 | Modules/modUR_Snapshot.bas#L6
 RestoreSnapshot | Modules/modUR_Snapshot.bas | modUR_Snapshot | 41 | 73 | Modules/modUR_Snapshot.bas#L41
-BeginTransaction | Modules/modUR_Transaction.bas | modUR_Transaction | 34 | 41 | Modules/modUR_Transaction.bas#L34      
-CommitTransaction | Modules/modUR_Transaction.bas | modUR_Transaction | 42 | 63 | Modules/modUR_Transaction.bas#L42     
+BeginTransaction | Modules/modUR_Transaction.bas | modUR_Transaction | 34 | 41 | Modules/modUR_Transaction.bas#L34
+CommitTransaction | Modules/modUR_Transaction.bas | modUR_Transaction | 42 | 63 | Modules/modUR_Transaction.bas#L42
 GetCurrentTransactionID | Modules/modUR_Transaction.bas | modUR_Transaction | 69 | 71 | Modules/modUR_Transaction.bas#L69
-IsInTransaction | Modules/modUR_Transaction.bas | modUR_Transaction | 65 | 67 | Modules/modUR_Transaction.bas#L65       
-RollbackTransaction | Modules/modUR_Transaction.bas | modUR_Transaction | 76 | 83 | Modules/modUR_Transaction.bas#L76   
+IsInTransaction | Modules/modUR_Transaction.bas | modUR_Transaction | 65 | 67 | Modules/modUR_Transaction.bas#L65
+RollbackTransaction | Modules/modUR_Transaction.bas | modUR_Transaction | 76 | 83 | Modules/modUR_Transaction.bas#L76
 SetCurrentTransactionLogCount | Modules/modUR_Transaction.bas | modUR_Transaction | 73 | 75 | Modules/modUR_Transaction.bas#L73
-TrackTransactionChange | Modules/modUR_Transaction.bas | modUR_Transaction | 8 | 33 | Modules/modUR_Transaction.bas#L8  
+TrackTransactionChange | Modules/modUR_Transaction.bas | modUR_Transaction | 8 | 33 | Modules/modUR_Transaction.bas#L8
 AddToUndoStack | Modules/modUR_UndoRedo.bas | modUR_UndoRedo | 62 | 66 | Modules/modUR_UndoRedo.bas#L62
 ClearRedoStack | Modules/modUR_UndoRedo.bas | modUR_UndoRedo | 67 | 69 | Modules/modUR_UndoRedo.bas#L67
 GetUndoStack | Modules/modUR_UndoRedo.bas | modUR_UndoRedo | 70 | 72 | Modules/modUR_UndoRedo.bas#L70
@@ -253,22 +209,22 @@ GetControl | Class Modules/MouseOverControl.cls | MouseOverControl | 200 | 202 |
 InitFromControl | Class Modules/MouseOverControl.cls | MouseOverControl | 113 | 133 | Class Modules/MouseOverControl.cls#L113
 InitFromForm | Class Modules/MouseOverControl.cls | MouseOverControl | 135 | 142 | Class Modules/MouseOverControl.cls#L135
 IsAsyncCallback | Class Modules/MouseOverControl.cls | MouseOverControl | 210 | 212 | Class Modules/MouseOverControl.cls#L210
-m_CheckBox_MouseMove | Class Modules/MouseOverControl.cls | MouseOverControl | 144 | 146 | Class Modules/MouseOverControl.cls#L144
-m_ComboBox_MouseMove | Class Modules/MouseOverControl.cls | MouseOverControl | 147 | 149 | Class Modules/MouseOverControl.cls#L147
-m_CommandButton_MouseMove | Class Modules/MouseOverControl.cls | MouseOverControl | 150 | 152 | Class Modules/MouseOverControl.cls#L150
+m_CheckBox_MouseMove | Class Modules/MouseOverControl.cls | MouseOverControl | 144 | 146 | Class Modules/MouseOverControl.cls#L144        
+m_ComboBox_MouseMove | Class Modules/MouseOverControl.cls | MouseOverControl | 147 | 149 | Class Modules/MouseOverControl.cls#L147        
+m_CommandButton_MouseMove | Class Modules/MouseOverControl.cls | MouseOverControl | 150 | 152 | Class Modules/MouseOverControl.cls#L150   
 m_Frame_MouseMove | Class Modules/MouseOverControl.cls | MouseOverControl | 153 | 155 | Class Modules/MouseOverControl.cls#L153
 m_Frame_Scroll | Class Modules/MouseOverControl.cls | MouseOverControl | 192 | 195 | Class Modules/MouseOverControl.cls#L192
 m_Image_MouseMove | Class Modules/MouseOverControl.cls | MouseOverControl | 156 | 158 | Class Modules/MouseOverControl.cls#L156
 m_Label_MouseMove | Class Modules/MouseOverControl.cls | MouseOverControl | 159 | 161 | Class Modules/MouseOverControl.cls#L159
 m_ListBox_MouseMove | Class Modules/MouseOverControl.cls | MouseOverControl | 162 | 164 | Class Modules/MouseOverControl.cls#L162
-m_ListView_MouseMove | Class Modules/MouseOverControl.cls | MouseOverControl | 165 | 167 | Class Modules/MouseOverControl.cls#L165
-m_MultiPage_MouseMove | Class Modules/MouseOverControl.cls | MouseOverControl | 168 | 170 | Class Modules/MouseOverControl.cls#L168
+m_ListView_MouseMove | Class Modules/MouseOverControl.cls | MouseOverControl | 165 | 167 | Class Modules/MouseOverControl.cls#L165        
+m_MultiPage_MouseMove | Class Modules/MouseOverControl.cls | MouseOverControl | 168 | 170 | Class Modules/MouseOverControl.cls#L168       
 m_MultiPage_Scroll | Class Modules/MouseOverControl.cls | MouseOverControl | 196 | 199 | Class Modules/MouseOverControl.cls#L196
-m_OptionButton_MouseMove | Class Modules/MouseOverControl.cls | MouseOverControl | 171 | 173 | Class Modules/MouseOverControl.cls#L171
-M_TabStrip_MouseMove | Class Modules/MouseOverControl.cls | MouseOverControl | 174 | 176 | Class Modules/MouseOverControl.cls#L174
+m_OptionButton_MouseMove | Class Modules/MouseOverControl.cls | MouseOverControl | 171 | 173 | Class Modules/MouseOverControl.cls#L171    
+M_TabStrip_MouseMove | Class Modules/MouseOverControl.cls | MouseOverControl | 174 | 176 | Class Modules/MouseOverControl.cls#L174        
 m_TextBox_MouseMove | Class Modules/MouseOverControl.cls | MouseOverControl | 177 | 179 | Class Modules/MouseOverControl.cls#L177
 m_ToggleButton_MouseMove | Class Modules/MouseOverControl.cls | MouseOverControl | 180 | 182 | Class Modules/MouseOverControl.cls#L180
-m_UserForm_MouseMove | Class Modules/MouseOverControl.cls | MouseOverControl | 183 | 185 | Class Modules/MouseOverControl.cls#L183
+m_UserForm_MouseMove | Class Modules/MouseOverControl.cls | MouseOverControl | 183 | 185 | Class Modules/MouseOverControl.cls#L183        
 m_UserForm_Scroll | Class Modules/MouseOverControl.cls | MouseOverControl | 188 | 191 | Class Modules/MouseOverControl.cls#L188
 AddForm | Modules/MouseScroll.bas | MouseScroll | 341 | 371 | Modules/MouseScroll.bas#L341
 CollectionHasKey | Modules/MouseScroll.bas | MouseScroll | 439 | 444 | Modules/MouseScroll.bas#L439
@@ -305,45 +261,51 @@ UnHookMouse | Modules/MouseScroll.bas | MouseScroll | 306 | 316 | Modules/MouseS
 UpdateLastCombo | Modules/MouseScroll.bas | MouseScroll | 470 | 477 | Modules/MouseScroll.bas#L470
 Zoom | Modules/MouseScroll.bas | MouseScroll | 988 | 1036 | Modules/MouseScroll.bas#L988
 Worksheet_SelectionChange | Sheets/ReceivedTally.cls | ReceivedTally | 15 | 27 | Sheets/ReceivedTally.cls#L15
-Worksheet_SelectionChange | Sheets/ShipmentsTally.cls | ShipmentsTally | 16 | 28 | Sheets/ShipmentsTally.cls#L16        
+Worksheet_SelectionChange | Sheets/ShipmentsTally.cls | ShipmentsTally | 16 | 28 | Sheets/ShipmentsTally.cls#L16
 RunTest_Click | Sheets/TestSummary.cls | TestSummary | 11 | 12 | Sheets/TestSummary.cls#L11
 CheckForHiddenPasswords | Sheets/ThisWorkbook.cls | ThisWorkbook | 25 | 30 | Sheets/ThisWorkbook.cls#L25
 Workbook_Open | Sheets/ThisWorkbook.cls | ThisWorkbook | 11 | 18 | Sheets/ThisWorkbook.cls#L11
 Workbook_SheetActivate | Sheets/ThisWorkbook.cls | ThisWorkbook | 19 | 24 | Sheets/ThisWorkbook.cls#L19
-modules:65 procedures:210 edges:1684 dynamicSkipped:1 dynamicIncluded:0 progressEmits:23 progressLastMs:5
-info: invoking C:\Users\justu\source\repos\Visio-Diagram-Generator\src\VDG.CLI\bin\Debug\net48\VDG.CLI.exe --diag-json "out/tmp/invsys.diagnostics.json" "out/tmp/invsys.diagram.json" "out/tmp/invsys.vsdx"
-warning: view-mode truncated modules => MouseScroll(+22), MouseOverControl(+13), frmItemSearch(+9)
+modules:65 procedures:210 edges:1684 dynamicSkipped:1 dynamicIncluded:0 progressEmits:23 progressLastMs:7
+info: invoking C:\Users\justu\source\repos\Visio-Diagram-Generator\src\VDG.CLI\bin\Debug\net48\VDG.CLI.exe --diag-json "C:\Users\justu\source\repos\Visio-Diagram-Generator\out\runs\invSys-view-20251030-144748\invSys.callgraph.view.diagnostics.json" "C:\Users\justu\source\repos\Visio-Diagram-Generator\out\runs\invSys-view-20251030-144748\invSys.callgraph.view.diagram.json" "C:\Users\justu\source\repos\Visio-Diagram-Generator\out\runs\invSys-view-20251030-144748\invSys.callgraph.view.vsdx"
+warning: view-mode forms lacking procedures: frmItemSearch#part1, frmItemSearch#part2
+warning: view-mode modules lacking procedures: MouseOverControl#part1, MouseOverControl#part2, MouseScroll#part1, MouseScroll#part2, MouseScroll#part3
 info: paging planner planned 7 page(s) (connector limit 400)
 info: layer planner created 1 layer(s) (no cross-layer bridges).
 info: routing mode: orthogonal
 info: connector count: 1684
-info: layout height 50.1in exceeds threshold 11.0in; consider pagination, reducing spacing, or vertical orientation.    
+info: layout height 28.0in exceeds threshold 11.0in; consider pagination, reducing spacing, or vertical orientation.
 info: lane 'Forms' contains 45 nodes (max 12); consider splitting the lane or paginating.
 info: lane 'Classes' contains 31 nodes (max 12); consider splitting the lane or paginating.
 info: lane 'Modules' contains 131 nodes (max 12); consider splitting the lane or paginating.
-info: pagination analysis - usable height 7.50in, predicted pages 7.
-info: lane 'Forms' nodes per page => 1:1, 5:1, 6:28, 7:9
-info: lane 'Sheets' nodes per page => 5:3
-info: lane 'Classes' nodes per page => 4:3, 5:15
-info: lane 'Modules' nodes per page => 1:32, 2:20, 3:35, 4:22
-info: cross-page edges: 51
-warning: lane overcrowded: lane='Forms' page=7 occupancy=105% nodes=9 usable=7.50in
-warning: lane overcrowded: lane='Forms' page=6 occupancy=330% nodes=27 usable=7.50in
-warning: lane overcrowded: lane='Classes' page=5 occupancy=180% nodes=15 usable=7.50in
-warning: lane overcrowded: lane='Modules' page=4 occupancy=268% nodes=22 usable=7.50in
-warning: lane overcrowded: lane='Modules' page=3 occupancy=431% nodes=35 usable=7.50in
-warning: lane overcrowded: lane='Modules' page=2 occupancy=243% nodes=20 usable=7.50in
-warning: lane overcrowded: lane='Modules' page=1 occupancy=393% nodes=32 usable=7.50in
-error: page overflow: page=7 occupancy=105% (usable 7.50in); top: [frmAdminControls.btnCreateDeleteUser_Click(0.34in), frmAdminControls.btnEditUser_Click(0.34in), frmCreateDeleteUser.btnCreateUser_Click(0.34in)]
-error: page overflow: page=6 occupancy=330% (usable 7.50in); top: [frmItemSearch.BuildFirstCharIndex(0.34in), frmShipmentsTally.LogInventoryChange(0.34in), frmShipmentsTally.GetUOMFromDataTable(0.34in)]
-error: page overflow: page=5 occupancy=180% (usable 7.50in); top: [ThisWorkbook.CheckForHiddenPasswords(0.34in), MouseOverControl.m_CommandButton_MouseMove(0.34in), MouseOverControl.m_ComboBox_MouseMove(0.34in)]
-error: page overflow: page=4 occupancy=268% (usable 7.50in); top: [ReceivedTally.Worksheet_SelectionChange(0.34in), modImportExportAll.ExportAllCodeToSingleFiles(0.34in), modExportImportAll.SyncStandardModules(0.34in)]
-error: page overflow: page=3 occupancy=431% (usable 7.50in); top: [modGlobals.CommitSelectionAndCloseWrapper(0.34in), modInvMan.DeductShipments_Click(0.34in), modInvMan.DeductUsed_Click(0.34in)]
-error: page overflow: page=2 occupancy=243% (usable 7.50in); top: [modTS_Received.GetUOMFromDataTable(0.34in), modUR_ExcelIntegration.EnableEvents(0.34in), modUR_ExcelIntegration.DisableEvents(0.34in)]
-error: page overflow: page=1 occupancy=393% (usable 7.50in); top: [modUR_Snapshot.CaptureSnapshot(0.34in), MouseScroll.GetUserScrollLines(0.34in), MouseScroll.GetScrollAmount(0.34in)]
-info: estimated straight-line crossings: 1281881
-info: containers: 33
+info: pagination analysis - usable height 7.50in, predicted pages 4.
+info: lane 'Forms' nodes per page => 2:6, 3:23, 4:16
+info: lane 'Sheets' nodes per page => 3:3
+info: lane 'Classes' nodes per page => 1:1, 2:3, 3:27
+info: lane 'Modules' nodes per page => 1:46, 2:74, 3:11
+info: cross-page edges: 28
+warning: lane overcrowded: lane='Forms' page=4 occupancy=210% nodes=16 usable=7.50in
+warning: lane overcrowded: lane='Forms' page=3 occupancy=305% nodes=23 usable=7.50in
+warning: lane overcrowded: lane='Modules' page=1 occupancy=618% nodes=46 usable=7.50in
+warning: lane overcrowded: lane='Modules' page=3 occupancy=142% nodes=11 usable=7.50in
+warning: lane overcrowded: lane='Modules' page=2 occupancy=998% nodes=74 usable=7.50in
+warning: lane overcrowded: lane='Classes' page=3 occupancy=359% nodes=27 usable=7.50in
+error: page overflow: page=4 occupancy=210% (usable 7.50in); top: [frmAdminControls.btnCreateDeleteUser_Click(0.42in), frmAdminControls.btnEditUser_Click(0.42in), frmCreateDeleteUser.btnCreateUser_Click(0.42in)]
+error: page overflow: page=3 occupancy=359% (usable 7.50in); top: [frmEditUser.btnNewPIN_Click(0.42in), MouseOverControl.Class_Terminate(0.42in), MouseOverControl.CreateFromControl(0.42in)]
+error: page overflow: page=2 occupancy=998% (usable 7.50in); top: [frmItemSearch.txtBox_KeyDown(0.42in), MouseScroll.GetFormHandle(0.42in), MouseScroll.GetControlType(0.42in)]
+error: page overflow: page=1 occupancy=618% (usable 7.50in); top: [clsBulkSnapshot.class_initialize(0.42in), modTS_Tally.GetUOMFromInvSys(0.42in), modTS_Tally.lstBox_DblClick(0.42in)]
+info: bundles planned: 7 groups; max bundle size: 69
+info: channels gapIn=1.20in; vertical corridors at X~ 15.73, 2.59, 11.20
+info: estimated straight-line crossings: 1269670
+info: corridor staggering applied where available (lane bundles with >1 edges: 79).
+info: planned route crossings: 608; avg path length: 0.35in
+info: channel utilization: 14/14 cross-lane edges (100.0%)
+error: crossing density high: planned crossings=608 (>= 400)
+info: containers: 37
 info: containers paddingIn=0.20in; cornerIn=0.12in
+warning: 80 node(s) assigned to unknown container id(s).
+warning: sub-container 'clsBulkSnapshot' overflows lane 'Classes'.
+warning: sub-container 'InventoryManagement' overflows lane 'Classes'.
 warning: sub-container 'modAdmin' overflows lane 'Modules'.
 warning: sub-container 'modErrorHandler' overflows lane 'Modules'.
 warning: sub-container 'modExportImportAll' overflows lane 'Modules'.
@@ -358,88 +320,108 @@ warning: sub-container 'modTS_Log' overflows lane 'Modules'.
 warning: sub-container 'modTS_Received' overflows lane 'Modules'.
 warning: sub-container 'modTS_Shipments' overflows lane 'Modules'.
 warning: sub-container 'modTS_Tally' overflows lane 'Modules'.
+warning: container crowded: id='modTS_Tally' lane='Modules' occupancy=101% nodes=8
+warning: sub-container 'MouseOverControl#part1' overflows lane 'Classes'.
+warning: sub-container 'MouseOverControl#part2' overflows lane 'Classes'.
 warning: sub-container 'modUR_ExcelIntegration' overflows lane 'Modules'.
 warning: sub-container 'modUR_Snapshot' overflows lane 'Modules'.
 warning: sub-container 'modUR_Transaction' overflows lane 'Modules'.
+warning: container crowded: id='modUR_Transaction' lane='Modules' occupancy=87% nodes=7
 warning: sub-container 'modUR_UndoRedo' overflows lane 'Modules'.
-warning: sub-container 'MouseScroll' overflows lane 'Modules'.
-warning: container crowded: id='MouseScroll' lane='Modules' occupancy=142% nodes=12
-info: diagnostics JSON written: C:\Users\justu\source\repos\Visio-Diagram-Generator\out\tmp\invsys.diagnostics.json
+warning: container crowded: id='modUR_UndoRedo' lane='Modules' occupancy=87% nodes=7
+warning: sub-container 'ReceivedTally' overflows lane 'Classes'.
+warning: sub-container 'ShipmentsTally' overflows lane 'Classes'.
+warning: sub-container 'TestSummary' overflows lane 'Classes'.
+warning: sub-container 'MouseScroll#part1' overflows lane 'Modules'.
+warning: sub-container 'MouseScroll#part2' overflows lane 'Modules'.
+warning: sub-container 'MouseScroll#part3' overflows lane 'Modules'.
+warning: bundle separation 0.25in may be ineffective for 1769 end(s) due to small node height; consider reducing layout.routing.bundleSeparationIn or increasing node heights.
+info: diagnostics JSON written: C:\Users\justu\source\repos\Visio-Diagram-Generator\out\runs\invSys-view-20251030-144748\invSys.callgraph.view.diagnostics.json
 info: layout outputMode=view
-info: layout canvas 11.94in x 48.89in
-info: layout nodes=169 modules=33 containers=33
-info: planner summary modules=0 segments=0 delta=+0 splitModules=0 avgSegments/module=0.00 pages=7 avgModules/page=4.7 avgConnectors/page=20.3 maxOccupancy=108.5% maxConnectors=54 layers=1 overflowPages=7 overflowContainers=19 crowdedLanes=7 partialRender=yes
+info: layout canvas 31.45in x 27.70in
+info: layout nodes=210 modules=37 containers=37
+info: planner summary modules=0 segments=0 delta=+0 splitModules=0 avgSegments/module=0.00 pages=7 avgModules/page=5.3 avgConnectors/page=24.3 maxOccupancy=0.0% maxConnectors=62 layers=1 overflowPages=4 overflowContainers=28 crowdedLanes=6 partialRender=yes
 warning: render completed with mitigations; review docs/ErrorHandling.md for fallback guidance.
 error: page 1 connectors=3 limit=400 modules=6 laneWarnings=1 pageOverflow=yes partial=yes
-error: page 2 connectors=3 limit=400 modules=2 laneWarnings=1 pageOverflow=yes partial=yes
-error: page 3 connectors=10 limit=400 modules=6 laneWarnings=1 pageOverflow=yes partial=yes
-error: page 4 connectors=17 limit=400 modules=6 laneWarnings=1 pageOverflow=yes partial=yes
-error: page 5 connectors=54 limit=400 modules=6 laneWarnings=1 pageOverflow=yes partial=yes
-error: page 6 connectors=53 limit=400 modules=6 laneWarnings=1 pageOverflow=yes partial=yes
-error: page 7 connectors=2 limit=400 modules=1 laneWarnings=1 pageOverflow=yes partial=yes
-info: layer 1 modules=33 shapes=243 connectors=71
-warning: sub-container 'modAdmin' overflows lane 'Modules'.
-warning: sub-container 'modErrorHandler' overflows lane 'Modules'.
-warning: sub-container 'modExportImportAll' overflows lane 'Modules'.
-warning: sub-container 'modGlobals' overflows lane 'Modules'.
-warning: sub-container 'modImportExportAll' overflows lane 'Modules'.
-warning: sub-container 'modInvLogs' overflows lane 'Modules'.
-warning: sub-container 'modInvMan' overflows lane 'Modules'.
-warning: sub-container 'modTestModule' overflows lane 'Modules'.
-warning: sub-container 'modTS_Data' overflows lane 'Modules'.
-warning: sub-container 'modTS_Launchers' overflows lane 'Modules'.
-warning: sub-container 'modTS_Log' overflows lane 'Modules'.
-warning: sub-container 'modTS_Received' overflows lane 'Modules'.
-warning: sub-container 'modTS_Shipments' overflows lane 'Modules'.
-warning: sub-container 'modTS_Tally' overflows lane 'Modules'.
-warning: sub-container 'modUR_ExcelIntegration' overflows lane 'Modules'.
-warning: sub-container 'modUR_Snapshot' overflows lane 'Modules'.
-warning: sub-container 'modUR_Transaction' overflows lane 'Modules'.
-warning: sub-container 'modUR_UndoRedo' overflows lane 'Modules'.
-warning: sub-container 'MouseScroll' overflows lane 'Modules'.
-warning: sub-container 'modAdmin' overflows lane 'Modules'.
-warning: sub-container 'modErrorHandler' overflows lane 'Modules'.
-warning: sub-container 'modExportImportAll' overflows lane 'Modules'.
-warning: sub-container 'modGlobals' overflows lane 'Modules'.
-warning: sub-container 'modImportExportAll' overflows lane 'Modules'.
-warning: sub-container 'modInvLogs' overflows lane 'Modules'.
-warning: sub-container 'modInvMan' overflows lane 'Modules'.
-warning: sub-container 'modTestModule' overflows lane 'Modules'.
-warning: sub-container 'modTS_Data' overflows lane 'Modules'.
-warning: sub-container 'modTS_Launchers' overflows lane 'Modules'.
-warning: sub-container 'modTS_Log' overflows lane 'Modules'.
-warning: sub-container 'modTS_Received' overflows lane 'Modules'.
-warning: sub-container 'modTS_Shipments' overflows lane 'Modules'.
-warning: sub-container 'modTS_Tally' overflows lane 'Modules'.
-warning: sub-container 'modUR_ExcelIntegration' overflows lane 'Modules'.
-warning: sub-container 'modUR_Snapshot' overflows lane 'Modules'.
-warning: sub-container 'modUR_Transaction' overflows lane 'Modules'.
-warning: sub-container 'modUR_UndoRedo' overflows lane 'Modules'.
-warning: sub-container 'MouseScroll' overflows lane 'Modules'.
-warning: sub-container 'modAdmin' overflows lane 'Modules'.
-warning: sub-container 'modErrorHandler' overflows lane 'Modules'.
-warning: sub-container 'modExportImportAll' overflows lane 'Modules'.
-warning: sub-container 'modGlobals' overflows lane 'Modules'.
-warning: sub-container 'modImportExportAll' overflows lane 'Modules'.
-warning: sub-container 'modInvLogs' overflows lane 'Modules'.
-warning: sub-container 'modInvMan' overflows lane 'Modules'.
-warning: sub-container 'modTS_Data' overflows lane 'Modules'.
-warning: sub-container 'modTS_Launchers' overflows lane 'Modules'.
-warning: sub-container 'modTS_Log' overflows lane 'Modules'.
-warning: sub-container 'modTS_Received' overflows lane 'Modules'.
-warning: sub-container 'modTS_Shipments' overflows lane 'Modules'.
-warning: sub-container 'modTS_Tally' overflows lane 'Modules'.
-warning: sub-container 'modUR_ExcelIntegration' overflows lane 'Modules'.
-warning: sub-container 'modUR_Snapshot' overflows lane 'Modules'.
-warning: sub-container 'modUR_Transaction' overflows lane 'Modules'.
-warning: sub-container 'modUR_UndoRedo' overflows lane 'Modules'.
-warning: sub-container 'MouseScroll' overflows lane 'Modules'.
+error: page 2 connectors=2 limit=400 modules=6 laneWarnings=1 pageOverflow=yes partial=yes
+error: page 3 connectors=62 limit=400 modules=6 laneWarnings=3 pageOverflow=yes partial=yes
+error: page 4 connectors=12 limit=400 modules=6 laneWarnings=1 pageOverflow=yes partial=yes
+info: page 5 connectors=58 limit=400 modules=6
+info: page 6 connectors=31 limit=400 modules=6
+info: page 7 connectors=2 limit=400 modules=1
+info: layer 1 modules=37 shapes=247 connectors=85
 warning: sub-container 'clsBulkSnapshot' overflows lane 'Classes'.
 warning: sub-container 'InventoryManagement' overflows lane 'Classes'.
-warning: sub-container 'MouseOverControl' overflows lane 'Classes'.
+warning: sub-container 'modAdmin' overflows lane 'Modules'.
+warning: sub-container 'modErrorHandler' overflows lane 'Modules'.
+warning: sub-container 'modExportImportAll' overflows lane 'Modules'.
+warning: sub-container 'modGlobals' overflows lane 'Modules'.
+warning: sub-container 'modImportExportAll' overflows lane 'Modules'.
+warning: sub-container 'modInvLogs' overflows lane 'Modules'.
+warning: sub-container 'modInvMan' overflows lane 'Modules'.
+warning: sub-container 'modTestModule' overflows lane 'Modules'.
+warning: sub-container 'modTS_Data' overflows lane 'Modules'.
+warning: sub-container 'modTS_Launchers' overflows lane 'Modules'.
+warning: sub-container 'modTS_Log' overflows lane 'Modules'.
+warning: sub-container 'modTS_Received' overflows lane 'Modules'.
+warning: sub-container 'modTS_Shipments' overflows lane 'Modules'.
+warning: sub-container 'modTS_Tally' overflows lane 'Modules'.
+warning: sub-container 'MouseOverControl#part1' overflows lane 'Classes'.
+warning: sub-container 'MouseOverControl#part2' overflows lane 'Classes'.
+warning: sub-container 'modUR_ExcelIntegration' overflows lane 'Modules'.
+warning: sub-container 'modUR_Snapshot' overflows lane 'Modules'.
+warning: sub-container 'modUR_Transaction' overflows lane 'Modules'.
+warning: sub-container 'modUR_UndoRedo' overflows lane 'Modules'.
 warning: sub-container 'ReceivedTally' overflows lane 'Classes'.
 warning: sub-container 'ShipmentsTally' overflows lane 'Classes'.
 warning: sub-container 'TestSummary' overflows lane 'Classes'.
+warning: sub-container 'MouseScroll#part1' overflows lane 'Modules'.
+warning: sub-container 'MouseScroll#part2' overflows lane 'Modules'.
+warning: sub-container 'MouseScroll#part3' overflows lane 'Modules'.
+warning: sub-container 'frmAdminControls' overflows lane 'Forms'.
+warning: sub-container 'frmCreateDeleteUser' overflows lane 'Forms'.
+warning: sub-container 'frmEditUser' overflows lane 'Forms'.
+warning: sub-container 'frmItemSearch#part1' overflows lane 'Forms'.
+warning: sub-container 'frmItemSearch#part2' overflows lane 'Forms'.
+warning: sub-container 'clsBulkSnapshot' overflows lane 'Classes'.
+warning: sub-container 'frmLogin' overflows lane 'Forms'.
+warning: sub-container 'frmReceivedTally' overflows lane 'Forms'.
+warning: sub-container 'frmShipmentsTally' overflows lane 'Forms'.
+warning: sub-container 'InventoryManagement' overflows lane 'Classes'.
+warning: sub-container 'modAdmin' overflows lane 'Modules'.
+warning: sub-container 'modErrorHandler' overflows lane 'Modules'.
+warning: sub-container 'modExportImportAll' overflows lane 'Modules'.
+warning: sub-container 'modGlobals' overflows lane 'Modules'.
+warning: sub-container 'modImportExportAll' overflows lane 'Modules'.
+warning: sub-container 'modInvLogs' overflows lane 'Modules'.
+warning: sub-container 'modInvMan' overflows lane 'Modules'.
+warning: sub-container 'modTestModule' overflows lane 'Modules'.
+warning: sub-container 'modTS_Data' overflows lane 'Modules'.
+warning: sub-container 'modTS_Log' overflows lane 'Modules'.
+warning: sub-container 'modTS_Received' overflows lane 'Modules'.
+warning: sub-container 'modTS_Shipments' overflows lane 'Modules'.
+warning: sub-container 'modTS_Tally' overflows lane 'Modules'.
+warning: sub-container 'MouseOverControl#part1' overflows lane 'Classes'.
+warning: sub-container 'MouseOverControl#part2' overflows lane 'Classes'.
+warning: sub-container 'modUR_ExcelIntegration' overflows lane 'Modules'.
+warning: sub-container 'modUR_Snapshot' overflows lane 'Modules'.
+warning: sub-container 'modUR_Transaction' overflows lane 'Modules'.
+warning: sub-container 'modUR_UndoRedo' overflows lane 'Modules'.
+warning: sub-container 'ReceivedTally' overflows lane 'Classes'.
+warning: sub-container 'TestSummary' overflows lane 'Classes'.
+warning: sub-container 'MouseScroll#part1' overflows lane 'Modules'.
+warning: sub-container 'MouseScroll#part2' overflows lane 'Modules'.
+warning: sub-container 'MouseScroll#part3' overflows lane 'Modules'.
+warning: sub-container 'frmAdminControls' overflows lane 'Forms'.
+warning: sub-container 'frmCreateDeleteUser' overflows lane 'Forms'.
+warning: sub-container 'frmEditUser' overflows lane 'Forms'.
+warning: sub-container 'frmItemSearch#part1' overflows lane 'Forms'.
+warning: sub-container 'frmItemSearch#part2' overflows lane 'Forms'.
+warning: sub-container 'clsBulkSnapshot' overflows lane 'Classes'.
+warning: sub-container 'frmLogin' overflows lane 'Forms'.
+warning: sub-container 'frmReceivedTally' overflows lane 'Forms'.
+warning: sub-container 'frmShipmentsTally' overflows lane 'Forms'.
+warning: sub-container 'InventoryManagement' overflows lane 'Classes'.
 warning: sub-container 'modAdmin' overflows lane 'Modules'.
 warning: sub-container 'modErrorHandler' overflows lane 'Modules'.
 warning: sub-container 'modExportImportAll' overflows lane 'Modules'.
@@ -454,48 +436,46 @@ warning: sub-container 'modTS_Log' overflows lane 'Modules'.
 warning: sub-container 'modTS_Received' overflows lane 'Modules'.
 warning: sub-container 'modTS_Shipments' overflows lane 'Modules'.
 warning: sub-container 'modTS_Tally' overflows lane 'Modules'.
+warning: sub-container 'MouseOverControl#part1' overflows lane 'Classes'.
+warning: sub-container 'MouseOverControl#part2' overflows lane 'Classes'.
 warning: sub-container 'modUR_ExcelIntegration' overflows lane 'Modules'.
 warning: sub-container 'modUR_Snapshot' overflows lane 'Modules'.
 warning: sub-container 'modUR_Transaction' overflows lane 'Modules'.
 warning: sub-container 'modUR_UndoRedo' overflows lane 'Modules'.
-warning: sub-container 'MouseScroll' overflows lane 'Modules'.
+warning: sub-container 'ReceivedTally' overflows lane 'Classes'.
+warning: sub-container 'ShipmentsTally' overflows lane 'Classes'.
+warning: sub-container 'TestSummary' overflows lane 'Classes'.
+warning: sub-container 'MouseScroll#part1' overflows lane 'Modules'.
+warning: sub-container 'MouseScroll#part2' overflows lane 'Modules'.
+warning: sub-container 'MouseScroll#part3' overflows lane 'Modules'.
 warning: sub-container 'ThisWorkbook' overflows lane 'Sheets'.
-warning: sub-container 'clsBulkSnapshot' overflows lane 'Classes'.
-warning: sub-container 'InventoryManagement' overflows lane 'Classes'.
-warning: sub-container 'MouseOverControl' overflows lane 'Classes'.
-warning: sub-container 'ReceivedTally' overflows lane 'Classes'.
-warning: sub-container 'ShipmentsTally' overflows lane 'Classes'.
-warning: sub-container 'TestSummary' overflows lane 'Classes'.
 warning: sub-container 'frmAdminControls' overflows lane 'Forms'.
 warning: sub-container 'frmCreateDeleteUser' overflows lane 'Forms'.
 warning: sub-container 'frmEditUser' overflows lane 'Forms'.
-warning: sub-container 'frmItemSearch' overflows lane 'Forms'.
+warning: sub-container 'frmItemSearch#part1' overflows lane 'Forms'.
+warning: sub-container 'frmItemSearch#part2' overflows lane 'Forms'.
 warning: sub-container 'frmLogin' overflows lane 'Forms'.
 warning: sub-container 'frmReceivedTally' overflows lane 'Forms'.
 warning: sub-container 'frmShipmentsTally' overflows lane 'Forms'.
-warning: sub-container 'frmAdminControls' overflows lane 'Forms'.
-warning: sub-container 'frmCreateDeleteUser' overflows lane 'Forms'.
-warning: sub-container 'frmEditUser' overflows lane 'Forms'.
-warning: sub-container 'frmItemSearch' overflows lane 'Forms'.
-warning: sub-container 'frmLogin' overflows lane 'Forms'.
-warning: sub-container 'frmReceivedTally' overflows lane 'Forms'.
-warning: sub-container 'frmShipmentsTally' overflows lane 'Forms'.
-info: created 7 page(s) (166 nodes, 0 connectors, avg 0.0 connectors/page)
-warning: skipped 11772 connector(s); see diagnostics for pagination details
+info: created 7 page(s) (210 nodes, 85 connectors, avg 12.1 connectors/page)
+warning: skipped 11651 connector(s); see diagnostics for pagination details
 info: planner suggested 7 page(s); rendered 7 page(s)
-info: page plan 1: nodes=40, connectors=3, occupancy≈97.3%, modules=frmAdminControls, frmCreateDeleteUser, frmEditUser, frmItemSearch, frmLogin, frmReceivedTally
-info: page plan 2: nodes=8, connectors=3, occupancy≈84.7%, modules=frmShipmentsTally, ThisWorkbook
-info: page plan 3: nodes=31, connectors=10, occupancy≈80.5%, modules=clsBulkSnapshot, InventoryManagement, MouseOverControl, ReceivedTally, ShipmentsTally, TestSummary
-info: page plan 4: nodes=38, connectors=17, occupancy≈108.5%, modules=modAdmin, modErrorHandler, modExportImportAll, modGlobals, modImportExportAll, modInvLogs
-info: page plan 5: nodes=23, connectors=54, occupancy≈108.5%, modules=modInvMan, modTestModule, modTS_Data, modTS_Launchers, modTS_Log, modTS_Received
-info: page plan 6: nodes=36, connectors=53, occupancy≈97.3%, modules=modTS_Shipments, modTS_Tally, modUR_ExcelIntegration, modUR_Snapshot, modUR_Transaction, modUR_UndoRedo
-info: page plan 7: nodes=34, connectors=2, occupancy≈48.9%, modules=MouseScroll
-info: rendered page 1: nodes=31, connectors=0, skippedConnectors=1684
-info: rendered page 2: nodes=8, connectors=0, skippedConnectors=1684
-info: rendered page 3: nodes=18, connectors=0, skippedConnectors=1682
-info: rendered page 4: nodes=38, connectors=0, skippedConnectors=1684
-info: rendered page 5: nodes=23, connectors=0, skippedConnectors=1679
-info: rendered page 6: nodes=36, connectors=0, skippedConnectors=1675
-info: rendered page 7: nodes=12, connectors=0, skippedConnectors=1684
-Saved diagram: C:\Users\justu\source\repos\Visio-Diagram-Generator\out\tmp\invsys.vsdx
-Saved diagram: out/tmp/invsys.vsdx
+info: page plan 1: nodes=31, connectors=3, occupancy≈0.0%, modules=clsBulkSnapshot, frmAdminControls, frmCreateDeleteUser, frmEditUser, frmItemSearch#part1, frmItemSearch#part2
+info: page plan 2: nodes=25, connectors=2, occupancy≈0.0%, modules=frmLogin, frmReceivedTally, frmShipmentsTally, InventoryManagement, modAdmin, modErrorHandler
+info: page plan 3: nodes=38, connectors=62, occupancy≈0.0%, modules=modExportImportAll, modGlobals, modImportExportAll, modInvLogs, modInvMan, modTestModule
+info: page plan 4: nodes=27, connectors=12, occupancy≈0.0%, modules=modTS_Data, modTS_Launchers, modTS_Log, modTS_Received, modTS_Shipments, modTS_Tally
+info: page plan 5: nodes=49, connectors=58, occupancy≈0.0%, modules=modUR_ExcelIntegration, modUR_Snapshot, modUR_Transaction, modUR_UndoRedo, MouseOverControl#part1, MouseOverControl#part2
+info: page plan 6: nodes=37, connectors=31, occupancy≈0.0%, modules=MouseScroll#part1, MouseScroll#part2, MouseScroll#part3, ReceivedTally, ShipmentsTally, TestSummary
+info: page plan 7: nodes=3, connectors=2, occupancy≈0.0%, modules=ThisWorkbook
+info: rendered page 1: nodes=31, connectors=2, skippedConnectors=1681
+info: rendered page 2: nodes=25, connectors=2, skippedConnectors=1682
+info: rendered page 3: nodes=38, connectors=42, skippedConnectors=1632
+info: rendered page 4: nodes=27, connectors=5, skippedConnectors=1672
+info: rendered page 5: nodes=49, connectors=13, skippedConnectors=1637
+info: rendered page 6: nodes=37, connectors=19, skippedConnectors=1665
+info: rendered page 7: nodes=3, connectors=2, skippedConnectors=1682
+Saved diagram: C:\Users\justu\source\repos\Visio-Diagram-Generator\out\runs\invSys-view-20251030-144748\invSys.callgraph.view.vsdx
+Saved diagram: C:\Users\justu\source\repos\Visio-Diagram-Generator\out\runs\invSys-view-20251030-144748\invSys.callgraph.view.vsdx
+Diagram:      C:\Users\justu\source\repos\Visio-Diagram-Generator\out\runs\invSys-view-20251030-144748\invSys.callgraph.view.vsdx
+Layout JSON:  C:\Users\justu\source\repos\Visio-Diagram-Generator\out\runs\invSys-view-20251030-144748\invSys.callgraph.view.diagram.json 
+Diagnostics:  C:\Users\justu\source\repos\Visio-Diagram-Generator\out\runs\invSys-view-20251030-144748\invSys.callgraph.view.diagnostics.json

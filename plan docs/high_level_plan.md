@@ -53,6 +53,9 @@ F# = brains of the operation (algorithmic, stateless, predictable).
 C# = hands and face for the user (Visio automation, reporting, user interaction, file output).  
 Keep all intelligence, decisions, and transforms pure and in F#; push all real-world effect and interop to C#.
 
+***
+# Other matters
+
 ### **Separation of Concerns**
 - Cleanly separate rendering for screen/monitor, from paginated “print” mode. Rendering to screen is concerned with number of objects on a Visio layer being 1,000 or less. Pagination for printers is a separate algorithm that tries to get the diagram to fit nicely on the chosen paper size.
 

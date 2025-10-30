@@ -4276,6 +4276,39 @@ namespace VDG.CLI
             return (shape.Left + xr * shape.Width, shape.Bottom + yr * shape.Height);
         }
 
+        private static List<double> BuildFallbackPolyline(double sx, double sy, double tx, double ty, double srcLeft, double srcBottom, double srcWidth, double srcHeight, double dstLeft, double dstBottom, double dstWidth, double dstHeight)
+        {
+            var pts = new List<double>(10) { sx, sy };
+            var horizontal = Math.Abs(sx - tx);
+            var vertical = Math.Abs(sy - ty);
+            if (horizontal >= vertical)
+            {
+                var srcTop = srcBottom + srcHeight;
+                var dstTop = dstBottom + dstHeight;
+                var buffer = Math.Max(Math.Max(srcHeight, dstHeight) * 0.5, 2.0);
+                var corridorY = Math.Max(srcTop, dstTop) + buffer;
+                pts.Add(sx); pts.Add(corridorY);
+                pts.Add(tx); pts.Add(corridorY);
+            }
+            else
+            {
+                var srcRight = srcLeft + srcWidth;
+                var dstRight = dstLeft + dstWidth;
+                var buffer = Math.Max(Math.Max(srcWidth, dstWidth) * 0.5, 2.0);
+                var corridorLeft = Math.Min(srcLeft, dstLeft) - buffer;
+                var corridorRight = Math.Max(srcRight, dstRight) + buffer;
+                var corridorX = corridorLeft;
+                if (double.IsNaN(corridorX) || double.IsInfinity(corridorX) || corridorX > Math.Min(srcLeft, dstLeft))
+                {
+                    corridorX = corridorRight;
+                }
+                pts.Add(corridorX); pts.Add(sy);
+                pts.Add(corridorX); pts.Add(ty);
+            }
+            pts.Add(tx); pts.Add(ty);
+            return pts;
+        }
+
         private static double? CorridorXForEdge(DiagramModel model, IDictionary<string, NodePlacement> placements, string srcId, string dstId)
         {
             var tiers = GetOrderedTiers(model);
@@ -5249,11 +5282,9 @@ namespace VDG.CLI
                 }
                 else if (useOrthogonal)
                 {
-                    dynamic? connector = null;
                     try
                     {
                         var app = visioPage.Application;
-                        connector = visioPage.Drop(app.ConnectorToolDataObject, sourcePlacement.CenterX, sourcePlacement.CenterY);
                         // Corridor-aware: choose side based on relative tier positions
                         string srcSide = "right";
                         string dstSide = "left";
@@ -5423,31 +5454,42 @@ namespace VDG.CLI
                         }
                         if (!usedPolyline)
                         {
-                            connector = visioPage.Drop(app.ConnectorToolDataObject, sourcePlacement.CenterX, sourcePlacement.CenterY);
-                            // Prefer GlueToPos if available; fall back to PinX
-                            try { connector.CellsU["BeginX"].GlueToPos(((dynamic)sourcePlacement.Shape), sxr, syr); }
-                            catch { connector.CellsU["BeginX"].GlueTo(((dynamic)sourcePlacement.Shape).CellsU["PinX"]); }
-                            try { connector.CellsU["EndX"].GlueToPos(((dynamic)targetPlacement.Shape), dxr, dyr); }
-                            catch { connector.CellsU["EndX"].GlueTo(((dynamic)targetPlacement.Shape).CellsU["PinX"]); }
-
-                            if (!string.IsNullOrWhiteSpace(edge.Label))
+                            var (sx, sy) = ToAbsAttach(sourcePlacement, srcSide, sxr, syr);
+                            var (tx, ty) = ToAbsAttach(targetPlacement, dstSide, dxr, dyr);
+                            var pts = BuildFallbackPolyline(
+                                sx, sy, tx, ty,
+                                sourcePlacement.Left, sourcePlacement.Bottom, sourcePlacement.Width, sourcePlacement.Height,
+                                targetPlacement.Left, targetPlacement.Bottom, targetPlacement.Width, targetPlacement.Height);
+                            try
                             {
-                                connector.Text = edge.Label;
+                                dynamic pl = visioPage.DrawPolyline(pts.ToArray(), 0);
+                                if (!string.IsNullOrWhiteSpace(edge.Label))
+                                {
+                                    var arrPts = pts.ToArray();
+                                    double maxLen = -1; double mx = sx, my = sy; int segs = (arrPts.Length / 2) - 1;
+                                    for (int i = 0; i < segs; i++)
+                                    {
+                                        var x1 = arrPts[i * 2]; var y1 = arrPts[i * 2 + 1]; var x2 = arrPts[(i + 1) * 2]; var y2 = arrPts[(i + 1) * 2 + 1];
+                                        var len = Math.Sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+                                        if (len > maxLen) { maxLen = len; mx = (x1 + x2) / 2.0; my = (y1 + y2) / 2.0; }
+                                    }
+                                    DrawLabelBox(visioPage, edge.Label!, mx, my, 0.0, 0.0);
+                                }
+                                if (edge.Directed) TrySetFormula(pl, "EndArrow", "5"); else TrySetFormula(pl, "EndArrow", "0");
+                                AssignConnectorToLayers(layerContext, pageInfo, pl, sourcePlacement, targetPlacement);
+                                ApplyEdgeStyle(edge, pl);
+                                try { pl.SendToBack(); } catch { }
+                                ReleaseCom(pl);
+                                connectorDrawn = true;
                             }
-
-                            if (edge.Directed) TrySetFormula(connector, "EndArrow", "5"); else TrySetFormula(connector, "EndArrow", "0");
-                            AssignConnectorToLayers(layerContext, pageInfo, connector, sourcePlacement, targetPlacement);
-                            // Prefer right-angle routing
-                            TrySetFormula(connector, "Routestyle", "16");
-                            try { TrySetFormula(connector, "LineRouteExt", "2"); } catch { }
-                            ApplyEdgeStyle(edge, connector);
-                            try { connector.SendToBack(); } catch { }
-                            connectorDrawn = true;
+                            catch
+                            {
+                                connectorDrawn = false;
+                            }
                         }
                     }
                     finally
                     {
-                        if (connector != null) ReleaseCom(connector);
                     }
                 }
                 else
@@ -6670,11 +6712,6 @@ namespace VDG.CLI
                         var dstPlacement = dst!;
                         if (useOrthogonal)
                         {
-                            dynamic? connector = null;
-                            try
-                            {
-                                var app = page.Application;
-                                connector = page.Drop(app.ConnectorToolDataObject, srcPlacement.CenterX, srcPlacement.CenterY);
                                 // Corridor-aware: choose side based on relative tier positions (same logic as single-page)
                                 string GetTier2(VDG.Core.Models.Node n)
                                 {
@@ -6867,21 +6904,43 @@ namespace VDG.CLI
                                 }
                                 if (!usedPolyline)
                                 {
-                                    try { connector.CellsU["BeginX"].GlueToPos(((dynamic)srcPlacement.Shape), sxr, syr); }
-                                    catch { connector.CellsU["BeginX"].GlueTo(((dynamic)srcPlacement.Shape).CellsU["PinX"]); }
-                                    try { connector.CellsU["EndX"].GlueToPos(((dynamic)dstPlacement.Shape), dxr, dyr); }
-                                    catch { connector.CellsU["EndX"].GlueTo(((dynamic)dstPlacement.Shape).CellsU["PinX"]); }
-                                    if (!string.IsNullOrWhiteSpace(edge.Label)) connector.Text = edge.Label;
-                                    if (edge.Directed) TrySetFormula(connector, "EndArrow", "5"); else TrySetFormula(connector, "EndArrow", "0");
-                                    TrySetFormula(connector, "Routestyle", "16");
-                                    try { TrySetFormula(connector, "LineRouteExt", "2"); } catch { }
-                                    ApplyEdgeStyle(edge, connector);
-                                    try { connector.SendToBack(); } catch { }
-                                    connectorDrawn = true;
-                                    incrementConnectorCount = true;
+                                    var (sxAbs, syAbs) = ToAbsAttach(srcPlacement, srcSide, sxr, syr);
+                                    var (txAbs, tyAbs) = ToAbsAttach(dstPlacement, dstSide, dxr, dyr);
+                                    var sx = sxAbs + offsetX;
+                                    var sy = syAbs + offsetY;
+                                    var tx = txAbs + offsetX;
+                                    var ty = tyAbs + offsetY;
+                                    var pts = BuildFallbackPolyline(
+                                        sx, sy, tx, ty,
+                                        srcPlacement.Left + offsetX, srcPlacement.Bottom + offsetY, srcPlacement.Width, srcPlacement.Height,
+                                        dstPlacement.Left + offsetX, dstPlacement.Bottom + offsetY, dstPlacement.Width, dstPlacement.Height);
+                                    try
+                                    {
+                                        dynamic pl = page.DrawPolyline(pts.ToArray(), 0);
+                                        if (!string.IsNullOrWhiteSpace(edge.Label))
+                                        {
+                                            var arrPts = pts.ToArray();
+                                            double maxLen = -1; double mx = sx, my = sy; int segs = (arrPts.Length / 2) - 1;
+                                            for (int i = 0; i < segs; i++)
+                                            {
+                                                var x1 = arrPts[i * 2]; var y1 = arrPts[i * 2 + 1]; var x2 = arrPts[(i + 1) * 2]; var y2 = arrPts[(i + 1) * 2 + 1];
+                                                var len = Math.Sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+                                                if (len > maxLen) { maxLen = len; mx = (x1 + x2) / 2.0; my = (y1 + y2) / 2.0; }
+                                            }
+                                            DrawLabelBox(page, edge.Label!, mx, my, 0.0, 0.0);
+                                        }
+                                        if (edge.Directed) TrySetFormula(pl, "EndArrow", "5"); else TrySetFormula(pl, "EndArrow", "0");
+                                        ApplyEdgeStyle(edge, pl);
+                                        try { pl.SendToBack(); } catch { }
+                                        ReleaseCom(pl);
+                                        connectorDrawn = true;
+                                        incrementConnectorCount = true;
+                                    }
+                                    catch
+                                    {
+                                        connectorDrawn = false;
+                                    }
                                 }
-                            }
-                            finally { if (connector != null) ReleaseCom(connector); }
                         }
                         else
                         {

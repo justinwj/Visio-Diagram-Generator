@@ -1,7 +1,7 @@
 {
-  "generatedAtUtc": "2025-10-30T19:12:50.8849089Z",
-  "commit": "3d8236ae8f34492d1efa91412386b497dd14102a",
-  "note": "Label leader offsets and cleared connector text",
+  "generatedAtUtc": "2025-10-30T20:08:31.6299804Z",
+  "commit": "02d4b64703741242da4e325e4a14a510ca6df134",
+  "note": "Callout leaders for connector labels",
   "fixtures": [
     {
       "name": "cross_module_calls",

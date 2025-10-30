@@ -15,13 +15,20 @@ type NodeLayout =
       Position: PointF
       Size: Nullable<Size> }
 
+/// Describes a decoupled leader/label to accompany an edge.
+[<CLIMutable>]
+type EdgeCallout =
+    { StubStart: PointF
+      StubEnd: PointF
+      LabelCenter: PointF }
+
 /// Describes a polyline route for an edge. Points are expected to include
 /// at least a start and end point.
 [<CLIMutable>]
 type EdgeRoute =
     { Id: string
       Points: PointF array
-      LabelPoints: PointF array }
+      Callout: EdgeCallout option }
 
 [<CLIMutable>]
 type NodeModuleAssignment =

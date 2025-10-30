@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Globalization;
 using Microsoft.CSharp.RuntimeBinder;
+using Microsoft.FSharp.Core;
 using VDG.Core.Models;
 using VDG.Core.Safety;
 using VisioDiagramGenerator.Algorithms;
@@ -5226,21 +5227,14 @@ namespace VDG.CLI
                             pts.Add(pt.Y);
                         }
                         dynamic line = visioPage.DrawPolyline(pts.ToArray(), 0);
-                        if (!string.IsNullOrWhiteSpace(edge.Label))
+                        var calloutPlaced = DrawConnectorCallout(visioPage, edge, predefinedRoute, 0.0, 0.0, layerContext, pageInfo, sourcePlacement, targetPlacement);
+                        if (!calloutPlaced && !string.IsNullOrWhiteSpace(edge.Label))
                         {
-                            if (predefinedRoute.LabelPoints != null && predefinedRoute.LabelPoints.Length >= 2)
-                            {
-                                var stub = predefinedRoute.LabelPoints[0];
-                                var labelAnchor = predefinedRoute.LabelPoints[1];
-                                var offX = (double)(labelAnchor.X - stub.X);
-                                var offY = (double)(labelAnchor.Y - stub.Y);
-                                DrawLabelBox(visioPage, edge.Label!, labelAnchor.X, labelAnchor.Y, offX, offY);
-                                line.Text = string.Empty;
-                            }
-                            else
-                            {
-                                line.Text = edge.Label;
-                            }
+                            line.Text = edge.Label;
+                        }
+                        else
+                        {
+                            line.Text = string.Empty;
                         }
                         if (edge.Directed) TrySetFormula(line, "EndArrow", "5"); else TrySetFormula(line, "EndArrow", "0");
                         AssignConnectorToLayers(layerContext, pageInfo, line, sourcePlacement, targetPlacement);
@@ -5556,6 +5550,47 @@ namespace VDG.CLI
             if (instance != null && Marshal.IsComObject(instance))
             {
                 try { Marshal.FinalReleaseComObject(instance); } catch { /* ignore */ }
+            }
+        }
+
+        private static bool DrawConnectorCallout(dynamic page, Edge edge, EdgeRoute? route, double offsetX, double offsetY, LayerRenderContext layerContext, VisioPageManager.PageInfo pageInfo, NodePlacement? sourcePlacement, NodePlacement? targetPlacement)
+        {
+            if (route?.Callout == null) return false;
+            if (string.IsNullOrWhiteSpace(edge.Label)) return false;
+
+            try
+            {
+                var calloutOpt = route.Callout;
+                if (calloutOpt == null || !FSharpOption<EdgeCallout>.get_IsSome(calloutOpt))
+                    return false;
+                var callout = calloutOpt.Value;
+                var stub = callout.StubStart;
+                var anchor = callout.StubEnd;
+                var label = callout.LabelCenter;
+                var stubX = stub.X + offsetX;
+                var stubY = stub.Y + offsetY;
+                var anchorX = anchor.X + offsetX;
+                var anchorY = anchor.Y + offsetY;
+                var labelX = label.X + offsetX;
+                var labelY = label.Y + offsetY;
+                var dx = anchorX - stubX;
+                var dy = anchorY - stubY;
+                if (Math.Abs(dx) < 0.001 && Math.Abs(dy) < 0.001)
+                    return false;
+
+                dynamic leader = page.DrawPolyline(new[] { stubX, stubY, anchorX, anchorY }, 0);
+                TrySetFormula(leader, "LinePattern", "2");
+                TrySetFormula(leader, "LineWeight", "0.01");
+                AssignConnectorToLayers(layerContext, pageInfo, leader, sourcePlacement, targetPlacement);
+                try { leader.SendToBack(); } catch { }
+                ReleaseCom(leader);
+
+                DrawLabelBox(page, edge.Label!, labelX, labelY, 0.0, 0.0);
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
 
@@ -6609,21 +6644,14 @@ namespace VDG.CLI
                         try
                         {
                             dynamic line = page.DrawPolyline(pts.ToArray(), 0);
-                            if (!string.IsNullOrWhiteSpace(edge.Label))
+                            var calloutPlaced = DrawConnectorCallout(page, edge, predefinedRoute, offsetX, offsetY, layerContext, pageInfo, src, dst);
+                            if (!calloutPlaced && !string.IsNullOrWhiteSpace(edge.Label))
                             {
-                                if (predefinedRoute.LabelPoints != null && predefinedRoute.LabelPoints.Length >= 2)
-                                {
-                                    var stub = predefinedRoute.LabelPoints[0];
-                                    var labelAnchor = predefinedRoute.LabelPoints[1];
-                                    var offX = (double)(labelAnchor.X - stub.X);
-                                    var offY = (double)(labelAnchor.Y - stub.Y);
-                                    DrawLabelBox(page, edge.Label!, labelAnchor.X + offsetX, labelAnchor.Y + offsetY, offX, offY);
-                                    line.Text = string.Empty;
-                                }
-                                else
-                                {
-                                    line.Text = edge.Label;
-                                }
+                                line.Text = edge.Label;
+                            }
+                            else
+                            {
+                                line.Text = string.Empty;
                             }
                             if (edge.Directed) TrySetFormula(line, "EndArrow", "5"); else TrySetFormula(line, "EndArrow", "0");
                             ApplyEdgeStyle(edge, line); try { line.SendToBack(); } catch { }

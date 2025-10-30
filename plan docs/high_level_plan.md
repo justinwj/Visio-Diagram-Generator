@@ -55,3 +55,6 @@ Keep all intelligence, decisions, and transforms pure and in F#; push all real-w
 
 ### **Separation of Concerns**
 - Cleanly separate rendering for screen/monitor, from paginated “print” mode. Rendering to screen is concerned with number of objects on a Visio layer being 1,000 or less. Pagination for printers is a separate algorithm that tries to get the diagram to fit nicely on the chosen paper size.
+
+### **Some important points to remember**
+- Keep everything in the repo, including generated folders and files

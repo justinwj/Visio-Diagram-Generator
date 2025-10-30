@@ -935,6 +935,18 @@ module ViewModePlanner =
                 getMetadataSingle model "layout.view.labelLeaderIn"
                 |> Option.filter (fun v -> v > 0.f)
                 |> Option.defaultValue 1.0f
+            let calloutStubLength =
+                getMetadataSingle model "layout.view.calloutStubIn"
+                |> Option.filter (fun v -> v > 0.f)
+                |> Option.defaultValue (max 0.6f (labelLeader * 0.75f))
+            let calloutNormalOffset =
+                getMetadataSingle model "layout.view.calloutNormalIn"
+                |> Option.filter (fun v -> v > 0.f)
+                |> Option.defaultValue (max 1.2f (cardSpacingY + 0.6f))
+            let calloutTangentialOffset =
+                getMetadataSingle model "layout.view.calloutTangentialIn"
+                |> Option.filter (fun v -> v >= 0.f)
+                |> Option.defaultValue (max 0.4f (cardSpacingX * 0.35f))
 
             let nextCorridorOffset (key: string) =
                 let idx =
@@ -959,11 +971,46 @@ module ViewModePlanner =
                             match nodeToSegment.TryGetValue edge.TargetId with
                             | true, segId -> segId
                             | _ -> resolveModuleId dstNode tiers tiersSet
-                        let points, labelPoints =
-                            if srcModuleId.Equals(dstModuleId, StringComparison.OrdinalIgnoreCase)
-                               || not (moduleBounds.ContainsKey srcModuleId)
-                               || not (moduleBounds.ContainsKey dstModuleId) then
-                                [| srcCenter; dstCenter |], Array.empty
+                        let points, callout =
+                            if srcModuleId.Equals(dstModuleId, StringComparison.OrdinalIgnoreCase) then
+                                if moduleBounds.ContainsKey srcModuleId then
+                                    let bounds = moduleBounds[srcModuleId]
+                                    let moduleCenter = point (bounds.Left + (bounds.Width / 2.f)) (bounds.Bottom + (bounds.Height / 2.f))
+                                    let midPoint = point ((srcCenter.X + dstCenter.X) / 2.f) ((srcCenter.Y + dstCenter.Y) / 2.f)
+                                    let dx = dstCenter.X - srcCenter.X
+                                    let dy = dstCenter.Y - srcCenter.Y
+                                    let inline tangentialShift (hx: float32) (hy: float32) =
+                                        if dx = 0.f && dy = 0.f then point hx hy
+                                        else
+                                            let len = Math.Sqrt(float (dx * dx + dy * dy))
+                                            if len < 0.0001 then point hx hy
+                                            else
+                                                let ux = float dx / len
+                                                let uy = float dy / len
+                                                point (hx + float32 (ux * float calloutTangentialOffset)) (hy + float32 (uy * float calloutTangentialOffset))
+                                    if abs dx >= abs dy then
+                                        let normal = if midPoint.Y >= moduleCenter.Y then 1.f else -1.f
+                                        let boundary = if normal > 0.f then bounds.Bottom + bounds.Height else bounds.Bottom
+                                        let stubStart = midPoint
+                                        let stubEnd = point midPoint.X (boundary + (normal * calloutStubLength))
+                                        let labelCenterBase = point midPoint.X (boundary + (normal * calloutNormalOffset))
+                                        let labelCenter = tangentialShift labelCenterBase.X labelCenterBase.Y
+                                        [| srcCenter; dstCenter |],
+                                        Some { StubStart = stubStart; StubEnd = stubEnd; LabelCenter = labelCenter }
+                                    else
+                                        let lateral = if midPoint.X >= moduleCenter.X then 1.f else -1.f
+                                        let boundary = if lateral > 0.f then bounds.Left + bounds.Width else bounds.Left
+                                        let stubStart = midPoint
+                                        let stubEnd = point (boundary + (lateral * calloutStubLength)) midPoint.Y
+                                        let labelCenterBase = point (boundary + (lateral * calloutNormalOffset)) midPoint.Y
+                                        let labelCenter = tangentialShift labelCenterBase.X labelCenterBase.Y
+                                        [| srcCenter; dstCenter |],
+                                        Some { StubStart = stubStart; StubEnd = stubEnd; LabelCenter = labelCenter }
+                                else
+                                    [| srcCenter; dstCenter |], None
+                            elif not (moduleBounds.ContainsKey srcModuleId)
+                                 || not (moduleBounds.ContainsKey dstModuleId) then
+                                [| srcCenter; dstCenter |], None
                             else
                                 let srcBounds = moduleBounds[srcModuleId]
                                 let dstBounds = moduleBounds[dstModuleId]
@@ -1015,21 +1062,57 @@ module ViewModePlanner =
                                         else entryPt.X + (cardSpacingX * 0.5f)
                                     let mid1 = point sweepLeft corridorY
                                     let mid2 = point sweepRight corridorY
-                                    let horizontalSpan = Math.Abs(mid2.X - mid1.X)
-                                    let direction = if srcSide = "right" then 1.f else -1.f
-                                    let anchorOffset = Math.Min(labelLeader, horizontalSpan / 2.f)
-                                    let labelAnchor = point (mid1.X + (direction * anchorOffset)) corridorY
-                                    [| srcCenter; exitPt; mid1; mid2; entryPt; dstCenter |], [| mid1; labelAnchor |]
+                                    let forward = if srcSide = "right" then 1.f else -1.f
+                                    let normal =
+                                        if offset > 0.f then 1.f
+                                        elif offset < 0.f then -1.f
+                                        elif dstCenter.Y >= srcCenter.Y then 1.f
+                                        else -1.f
+                                    let srcTop = srcBounds.Bottom + srcBounds.Height
+                                    let dstTop = dstBounds.Bottom + dstBounds.Height
+                                    let srcBottom = srcBounds.Bottom
+                                    let dstBottom = dstBounds.Bottom
+                                    let labelY =
+                                        if normal >= 0.f then
+                                            max srcTop dstTop + calloutNormalOffset
+                                        else
+                                            min srcBottom dstBottom - calloutNormalOffset
+                                    let spanToLabel = abs (labelY - corridorY)
+                                    let stubStep = min calloutStubLength (spanToLabel * 0.6f)
+                                    let stubEndY = corridorY + (normal * stubStep)
+                                    let stubEnd =
+                                        if spanToLabel <= 0.01f then mid1
+                                        else point mid1.X stubEndY
+                                    let labelX = mid1.X + (forward * calloutTangentialOffset)
+                                    let labelCenter = point labelX labelY
+                                    [| srcCenter; exitPt; mid1; mid2; entryPt; dstCenter |],
+                                    Some { StubStart = mid1; StubEnd = stubEnd; LabelCenter = labelCenter }
                                 else
                                     let sweepX =
                                         if srcSide = "right" then exitPt.X + cardSpacingX else exitPt.X - cardSpacingX
                                     let mid1 = point sweepX (exitPt.Y + offset)
                                     let mid2 = point sweepX (entryPt.Y + offset)
-                                    let verticalSpan = Math.Abs(mid2.Y - mid1.Y)
                                     let direction = if dstCenter.Y >= srcCenter.Y then 1.f else -1.f
-                                    let anchorOffset = Math.Min(labelLeader, verticalSpan / 2.f)
-                                    let labelAnchor = point sweepX (mid1.Y + (direction * anchorOffset))
-                                    [| srcCenter; exitPt; mid1; mid2; entryPt; dstCenter |], [| mid1; labelAnchor |]
+                                    let lateralDir = if String.Equals(srcSide, "right", StringComparison.OrdinalIgnoreCase) then 1.f else -1.f
+                                    let srcRight = srcBounds.Left + srcBounds.Width
+                                    let dstRight = dstBounds.Left + dstBounds.Width
+                                    let srcLeft = srcBounds.Left
+                                    let dstLeft = dstBounds.Left
+                                    let labelX =
+                                        if lateralDir >= 0.f then
+                                            max srcRight dstRight + calloutNormalOffset
+                                        else
+                                            min srcLeft dstLeft - calloutNormalOffset
+                                    let spanToLabel = abs (labelX - sweepX)
+                                    let stubStep = min calloutStubLength (spanToLabel * 0.6f)
+                                    let stubEndX = sweepX + (lateralDir * stubStep)
+                                    let stubEnd =
+                                        if spanToLabel <= 0.01f then mid1
+                                        else point stubEndX mid1.Y
+                                    let labelY = mid1.Y + (direction * calloutTangentialOffset)
+                                    let labelCenter = point labelX labelY
+                                    [| srcCenter; exitPt; mid1; mid2; entryPt; dstCenter |],
+                                    Some { StubStart = mid1; StubEnd = stubEnd; LabelCenter = labelCenter }
 
                         let isCrossModule = not (srcModuleId.Equals(dstModuleId, StringComparison.OrdinalIgnoreCase))
                         let recordEdge moduleId =
@@ -1043,7 +1126,7 @@ module ViewModePlanner =
                         edgeRoutes.Add(
                             { Id = if String.IsNullOrWhiteSpace edge.Id then $"{edge.SourceId}->{edge.TargetId}" else edge.Id
                               Points = points
-                              LabelPoints = labelPoints })
+                              Callout = callout })
                     | _ -> ()
 
             let nodesArray = nodeLayouts.ToArray()

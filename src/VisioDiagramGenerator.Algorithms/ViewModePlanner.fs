@@ -799,115 +799,146 @@ module ViewModePlanner =
                     if modulesInTier.Length = 0 then
                         cursorY <- cursorY - tierSpacing
                     else
-                        let mutable slotIndex = 0
-                        for segmentId in modulesInTier do
-                            match modules.TryGetValue segmentId with
-                            | true, viewModule ->
-                                let orderedNodes =
-                                    viewModule.Nodes
-                                    |> Seq.filter (fun n -> not (isNull n))
-                                    |> Seq.toArray
+                        let rows =
+                            modulesInTier
+                            |> Array.chunkBySize slotsPerRow
+                        let mutable accumulatedHeight = 0.f
 
-                                if orderedNodes.Length = 0 then
-                                    slotIndex <- slotIndex + 1
-                                else
-                                    let metrics =
-                                        match segmentMetrics.TryGetValue segmentId with
-                                        | true, value -> value
+                        for rowIdx = 0 to rows.Length - 1 do
+                            let rowSegments = rows[rowIdx]
+                            if rowSegments.Length > 0 then
+                                let rowHeight =
+                                    rowSegments
+                                    |> Array.choose (fun segId ->
+                                        match segmentMetrics.TryGetValue segId with
+                                        | true, metrics -> Some metrics.CardHeight
                                         | _ ->
-                                            let computed = computeSegmentMetrics orderedNodes.Length
-                                            segmentMetrics[segmentId] <- computed
-                                            computed
+                                            match modules.TryGetValue segId with
+                                            | true, moduleInfo ->
+                                                let computed = computeSegmentMetrics moduleInfo.Nodes.Count
+                                                segmentMetrics[segId] <- computed
+                                                Some computed.CardHeight
+                                            | _ -> None)
+                                    |> function
+                                        | [||] -> 0.f
+                                        | arr -> arr |> Array.max
 
-                                    let columns = Math.Max(1, metrics.Columns)
-                                    let cardWidth = metrics.CardWidth
-                                    let cardHeight = metrics.CardHeight
-                                    let visibleCount = Math.Min(metrics.VisibleCount, orderedNodes.Length)
-                                    let overflow = Math.Max(0, orderedNodes.Length - visibleCount)
+                                let mutable currentLeft = 0.f
 
-                                    let slotRow = slotIndex / slotsPerRow
-                                    let slotCol = slotIndex % slotsPerRow
-                                    let left = float32 slotCol * (cardWidth + cardSpacingX)
-                                    let bottom = cursorY - float32 slotRow * (cardHeight + cardSpacingY)
-                                    let bodyTop = bottom + cardHeight - headerHeight - rowGap
-                                    updatePageExtents pageIndex left bottom cardWidth cardHeight
+                                for segmentId in rowSegments do
+                                    match modules.TryGetValue segmentId with
+                                    | true, viewModule ->
+                                        let orderedNodes =
+                                            viewModule.Nodes
+                                            |> Seq.filter (fun n -> not (isNull n))
+                                            |> Seq.toArray
 
-                                    for idx = 0 to visibleCount - 1 do
-                                        let node = orderedNodes[idx]
-                                        let col = idx % columns
-                                        let rowIndex = idx / columns
-                                        let nodeLeft = left + cardPadding + float32 col * (nodeWidth + columnGap)
-                                        let nodeTop = bodyTop - float32 rowIndex * (nodeHeight + rowGap)
-                                        let nodeBottom = nodeTop - nodeHeight
-                                        let layout =
-                                            { Id = node.Id
-                                              Position = point nodeLeft nodeBottom
-                                              Size = Nullable<Size>(Size(nodeWidth, nodeHeight)) }
-                                        nodeLayouts.Add layout
-                                        placementCenters[node.Id] <- point (nodeLeft + (nodeWidth / 2.f)) (nodeBottom + (nodeHeight / 2.f))
-                                        updatePageExtents pageIndex nodeLeft nodeBottom nodeWidth nodeHeight
-
-                                    if overflow > 0 then
-                                        let baseId =
-                                            match segmentOrigins.TryGetValue segmentId with
-                                            | true, (originalId, _, _) -> originalId
-                                            | _ -> segmentId
-                                        let existing =
-                                            match truncated.TryGetValue baseId with
-                                            | true, value -> value
-                                            | _ -> 0
-                                        truncated[baseId] <- existing + overflow
-                                        let badgeText = sprintf "+%d." overflow
-                                        let badgeWidth = fmax 0.9f (float32 badgeText.Length * 0.1f)
-                                        let badgeLeft = left + cardWidth - cardPadding - badgeWidth
-                                        let badgeBottom = bottom + cardPadding * 0.5f
-                                        let badgeLayout =
-                                            { Id = $"{segmentId}#overflow"
-                                              Position = point badgeLeft badgeBottom
-                                              Size = Nullable<Size>(Size(badgeWidth, 0.3f)) }
-                                        nodeLayouts.Add badgeLayout
-
-                                    let baseLabel =
-                                        match segmentOrigins.TryGetValue segmentId with
-                                        | true, (originalId, index, count) when count > 1 -> sprintf "%s (part %d/%d)" originalId (index + 1) count
-                                        | true, (originalId, _, _) -> originalId
-                                        | _ -> segmentId
-                                    let label =
-                                        if overflow > 0 then
-                                            sprintf "%s (+%d)" baseLabel overflow
+                                        if orderedNodes.Length = 0 then
+                                            currentLeft <- currentLeft + cardSpacingX
                                         else
-                                            baseLabel
+                                            let metrics =
+                                                match segmentMetrics.TryGetValue segmentId with
+                                                | true, value -> value
+                                                | _ ->
+                                                    let computed = computeSegmentMetrics orderedNodes.Length
+                                                    segmentMetrics[segmentId] <- computed
+                                                    computed
 
-                                    containerLayouts.Add(
-                                        { Id = segmentId
-                                          Label = label
-                                          Tier = viewModule.Tier
-                                          Bounds =
-                                            { Left = left
-                                              Bottom = bottom
-                                              Width = cardWidth
-                                              Height = cardHeight }
-                                          VisibleNodes = visibleCount
-                                          OverflowCount = overflow })
-                                    let tierIndex =
-                                        tiers
-                                        |> Array.tryFindIndex (fun t -> t.Equals(viewModule.Tier, StringComparison.OrdinalIgnoreCase))
-                                        |> Option.defaultValue 0
-                                    moduleTierIndex[segmentId] <- tierIndex
+                                            let columns = Math.Max(1, metrics.Columns)
+                                            let cardWidth = metrics.CardWidth
+                                            let cardHeight = metrics.CardHeight
+                                            let visibleCount = Math.Min(metrics.VisibleCount, orderedNodes.Length)
+                                            let overflow = Math.Max(0, orderedNodes.Length - visibleCount)
 
-                                    updateExtents left bottom cardWidth cardHeight
+                                            let left = currentLeft
+                                            let bottom = cursorY - accumulatedHeight - cardHeight
+                                            let bodyTop = bottom + cardHeight - headerHeight - rowGap
+                                            updatePageExtents pageIndex left bottom cardWidth cardHeight
 
-                                    slotIndex <- slotIndex + 1
-                                    if slotIndex >= slotsPerTier then
-                                        cursorY <- bottom - cardHeight - tierSpacing
-                                        slotIndex <- 0
-                            | _ -> slotIndex <- slotIndex + 1
+                                            for idx = 0 to visibleCount - 1 do
+                                                let node = orderedNodes[idx]
+                                                let col = idx % columns
+                                                let rowIndex = idx / columns
+                                                let nodeLeft = left + cardPadding + float32 col * (nodeWidth + columnGap)
+                                                let nodeTop = bodyTop - float32 rowIndex * (nodeHeight + rowGap)
+                                                let nodeBottom = nodeTop - nodeHeight
+                                                let layout =
+                                                    { Id = node.Id
+                                                      Position = point nodeLeft nodeBottom
+                                                      Size = Nullable<Size>(Size(nodeWidth, nodeHeight)) }
+                                                nodeLayouts.Add layout
+                                                placementCenters[node.Id] <- point (nodeLeft + (nodeWidth / 2.f)) (nodeBottom + (nodeHeight / 2.f))
+                                                updatePageExtents pageIndex nodeLeft nodeBottom nodeWidth nodeHeight
 
-                        if slotIndex > 0 then
-                            let usedRows = int (Math.Ceiling(float slotIndex / float slotsPerRow))
-                            cursorY <- cursorY - (float32 usedRows * (headerHeight + cardPadding + rowSpacing))
+                                            if overflow > 0 then
+                                                let baseId =
+                                                    match segmentOrigins.TryGetValue segmentId with
+                                                    | true, (originalId, _, _) -> originalId
+                                                    | _ -> segmentId
+                                                let existing =
+                                                    match truncated.TryGetValue baseId with
+                                                    | true, value -> value
+                                                    | _ -> 0
+                                                truncated[baseId] <- existing + overflow
+                                                let badgeText = sprintf "+%d." overflow
+                                                let badgeWidth = fmax 0.9f (float32 badgeText.Length * 0.1f)
+                                                let badgeLeft = left + cardWidth - cardPadding - badgeWidth
+                                                let badgeBottom = bottom + cardPadding * 0.5f
+                                                let badgeLayout =
+                                                    { Id = $"{segmentId}#overflow"
+                                                      Position = point badgeLeft badgeBottom
+                                                      Size = Nullable<Size>(Size(badgeWidth, 0.3f)) }
+                                                nodeLayouts.Add badgeLayout
 
-                        cursorY <- cursorY - tierSpacing
+                                            let baseLabel =
+                                                match segmentOrigins.TryGetValue segmentId with
+                                                | true, (originalId, index, count) when count > 1 -> sprintf "%s (part %d/%d)" originalId (index + 1) count
+                                                | true, (originalId, _, _) -> originalId
+                                                | _ -> segmentId
+                                            let label =
+                                                if overflow > 0 then
+                                                    sprintf "%s (+%d)" baseLabel overflow
+                                                else
+                                                    baseLabel
+
+                                            containerLayouts.Add(
+                                                { Id = segmentId
+                                                  Label = label
+                                                  Tier = viewModule.Tier
+                                                  Bounds =
+                                                    { Left = left
+                                                      Bottom = bottom
+                                                      Width = cardWidth
+                                                      Height = cardHeight }
+                                                  VisibleNodes = visibleCount
+                                                  OverflowCount = overflow })
+                                            let tierIndex =
+                                                tiers
+                                                |> Array.tryFindIndex (fun t -> t.Equals(viewModule.Tier, StringComparison.OrdinalIgnoreCase))
+                                                |> Option.defaultValue 0
+                                            moduleTierIndex[segmentId] <- tierIndex
+
+                                            updateExtents left bottom cardWidth cardHeight
+
+                                            let spacingMultiplier =
+                                                match segmentEdgeStats.TryGetValue segmentId with
+                                                | true, stats ->
+                                                    let baseVisible = Math.Max(1, metrics.VisibleCount)
+                                                    let density = float stats.ConnectorCount / float baseVisible
+                                                    let scaled = 1.0 + Math.Min(density / 8.0, 3.0)
+                                                    float32 scaled
+                                                | _ -> 1.f
+
+                                            currentLeft <- currentLeft + cardWidth + (cardSpacingX * spacingMultiplier)
+                                    | _ -> ()
+
+                                if rowHeight > 0.f then
+                                    accumulatedHeight <- accumulatedHeight + rowHeight + cardSpacingY
+
+                        if accumulatedHeight > 0.f then
+                            accumulatedHeight <- accumulatedHeight - cardSpacingY
+
+                        cursorY <- cursorY - accumulatedHeight - tierSpacing
 
                 if pageBodyHeight > 0.f then
                     let excess = cursorY - (-pageBodyHeight)
@@ -1008,42 +1039,61 @@ module ViewModePlanner =
                             | true, segId -> segId
                             | _ -> resolveModuleId dstNode tiers tiersSet
                         let points, callout =
-                            if srcModuleId.Equals(dstModuleId, StringComparison.OrdinalIgnoreCase) then
-                                if moduleBounds.ContainsKey srcModuleId then
-                                    let bounds = moduleBounds[srcModuleId]
-                                    let moduleCenter = point (bounds.Left + (bounds.Width / 2.f)) (bounds.Bottom + (bounds.Height / 2.f))
-                                    let midPoint = point ((srcCenter.X + dstCenter.X) / 2.f) ((srcCenter.Y + dstCenter.Y) / 2.f)
-                                    let dx = dstCenter.X - srcCenter.X
-                                    let dy = dstCenter.Y - srcCenter.Y
-                                    let inline tangentialShift (hx: float32) (hy: float32) =
-                                        if dx = 0.f && dy = 0.f then point hx hy
-                                        else
-                                            let len = Math.Sqrt(float (dx * dx + dy * dy))
-                                            if len < 0.0001 then point hx hy
-                                            else
-                                                let ux = float dx / len
-                                                let uy = float dy / len
-                                                point (hx + float32 (ux * float calloutTangentialOffset)) (hy + float32 (uy * float calloutTangentialOffset))
-                                    if abs dx >= abs dy then
-                                        let normal = if midPoint.Y >= moduleCenter.Y then 1.f else -1.f
-                                        let boundary = if normal > 0.f then bounds.Bottom + bounds.Height else bounds.Bottom
-                                        let stubStart = midPoint
-                                        let stubEnd = point midPoint.X (boundary + (normal * calloutStubLength))
-                                        let labelCenterBase = point midPoint.X (boundary + (normal * calloutNormalOffset))
-                                        let labelCenter = tangentialShift labelCenterBase.X labelCenterBase.Y
-                                        [| srcCenter; dstCenter |],
-                                        Some { StubStart = stubStart; StubEnd = stubEnd; LabelCenter = labelCenter }
-                                    else
-                                        let lateral = if midPoint.X >= moduleCenter.X then 1.f else -1.f
-                                        let boundary = if lateral > 0.f then bounds.Left + bounds.Width else bounds.Left
-                                        let stubStart = midPoint
-                                        let stubEnd = point (boundary + (lateral * calloutStubLength)) midPoint.Y
-                                        let labelCenterBase = point (boundary + (lateral * calloutNormalOffset)) midPoint.Y
-                                        let labelCenter = tangentialShift labelCenterBase.X labelCenterBase.Y
-                                        [| srcCenter; dstCenter |],
-                                        Some { StubStart = stubStart; StubEnd = stubEnd; LabelCenter = labelCenter }
+                            if srcModuleId.Equals(dstModuleId, StringComparison.OrdinalIgnoreCase) && moduleBounds.ContainsKey srcModuleId then
+                                let bounds = moduleBounds[srcModuleId]
+                                let dx = dstCenter.X - srcCenter.X
+                                let dy = dstCenter.Y - srcCenter.Y
+                                let horizontal = Math.Abs(dx) >= Math.Abs(dy)
+                                let selfKey = $"self:{srcModuleId}"
+                                let offset = nextCorridorOffset selfKey
+                                if horizontal then
+                                    let top = bounds.Bottom + bounds.Height
+                                    let bottom = bounds.Bottom
+                                    let baseAbove = top + calloutNormalOffset
+                                    let baseBelow = bottom - calloutNormalOffset
+                                    let corridorY =
+                                        if offset >= 0.f then baseAbove + offset
+                                        else baseBelow + offset
+                                    let exitY = if corridorY >= top then top else bottom
+                                    let routePoints =
+                                        [| srcCenter
+                                           point srcCenter.X exitY
+                                           point srcCenter.X corridorY
+                                           point dstCenter.X corridorY
+                                           point dstCenter.X exitY
+                                           dstCenter |]
+                                    let midX = (srcCenter.X + dstCenter.X) / 2.f
+                                    let stubDir = if corridorY >= top then 1.f else -1.f
+                                    let stubStart = point midX corridorY
+                                    let stubEnd = point midX (corridorY + (stubDir * calloutStubLength))
+                                    let labelCenter =
+                                        point midX (corridorY + (stubDir * (calloutStubLength + calloutTangentialOffset)))
+                                    routePoints,
+                                    Some { StubStart = stubStart; StubEnd = stubEnd; LabelCenter = labelCenter }
                                 else
-                                    [| srcCenter; dstCenter |], None
+                                    let left = bounds.Left
+                                    let right = bounds.Left + bounds.Width
+                                    let baseRight = right + calloutNormalOffset
+                                    let baseLeft = left - calloutNormalOffset
+                                    let corridorX =
+                                        if offset >= 0.f then baseRight + offset
+                                        else baseLeft + offset
+                                    let exitX = if corridorX >= right then right else left
+                                    let routePoints =
+                                        [| srcCenter
+                                           point exitX srcCenter.Y
+                                           point corridorX srcCenter.Y
+                                           point corridorX dstCenter.Y
+                                           point exitX dstCenter.Y
+                                           dstCenter |]
+                                    let midY = (srcCenter.Y + dstCenter.Y) / 2.f
+                                    let stubDir = if corridorX >= right then 1.f else -1.f
+                                    let stubStart = point corridorX midY
+                                    let stubEnd = point (corridorX + (stubDir * calloutStubLength)) midY
+                                    let labelCenter =
+                                        point (corridorX + (stubDir * (calloutStubLength + calloutTangentialOffset))) midY
+                                    routePoints,
+                                    Some { StubStart = stubStart; StubEnd = stubEnd; LabelCenter = labelCenter }
                             elif not (moduleBounds.ContainsKey srcModuleId)
                                  || not (moduleBounds.ContainsKey dstModuleId) then
                                 [| srcCenter; dstCenter |], None

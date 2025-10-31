@@ -43,3 +43,251 @@ jobs:
           path: |
             **/TestResults/**/*.xml
             **/TestResults/**/*.cobertura.xml
+
+      - name: Generate diagram (callgraph) for schema validation
+        run: |
+          dotnet run --project src/VDG.VBA.CLI -- vba2json --in tests/fixtures/vba/cross_module_calls --out out/tmp/ci_ir.json
+          dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in out/tmp/ci_ir.json --out out/tmp/ci_diag.json --mode callgraph
+
+      - name: Validate diagram schema (1.2)
+        shell: pwsh
+        run: ./tools/diagram-validate.ps1 -InputPath out/tmp/ci_diag.json
+
+  render-smoke:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore Visio-Diagram-Generator.sln
+
+      - name: Build (Release)
+        run: dotnet build Visio-Diagram-Generator.sln -c Release -v minimal --no-restore
+
+      - name: Render smoke (callgraph)
+        shell: pwsh
+        run: ./tools/render-smoke.ps1
+
+      - name: Show render diagnostics summary
+        shell: pwsh
+        run: |
+          Get-Content -Raw out/perf/render_diagnostics.json | ConvertFrom-Json | Format-List
+
+      - name: Upload render diagnostics
+        uses: actions/upload-artifact@v4
+        with:
+          name: render-diagnostics
+          path: |
+            out/perf/render_diagnostics.json
+            out/perf/render_diagnostics.raw.json
+
+  render-visio-smoke:
+    if: ${{ vars.VDG_VISIO_SMOKE == '1' }}
+    runs-on: [self-hosted, windows, visio]
+    needs: build-test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore Visio-Diagram-Generator.sln
+
+      - name: Build (Release)
+        run: dotnet build Visio-Diagram-Generator.sln -c Release -v minimal --no-restore
+
+      - name: Render smoke with Visio
+        shell: pwsh
+        env:
+          VDG_DIAG_FAIL_LEVEL: warning
+        run: ./tools/render-smoke.ps1 -UseVisio
+
+      - name: Upload Visio smoke artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: render-visio-smoke
+          path: |
+            out/tmp/render_smoke.vsdx
+            out/tmp/render_smoke.diagnostics.json
+            out/perf/render_diagnostics.json
+            out/perf/render_diagnostics.raw.json
+          if-no-files-found: warn
+
+  render-fixtures:
+    runs-on: windows-latest
+    needs: build-test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore Visio-Diagram-Generator.sln
+
+      - name: Build (Release)
+        run: dotnet build Visio-Diagram-Generator.sln -c Release -v minimal --no-restore
+
+      - name: Verify fixture hashes
+        shell: pwsh
+        run: ./tools/render-fixture.ps1
+
+      - name: Upload fixture outputs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: render-fixtures
+          path: out/fixtures
+          if-no-files-found: ignore
+
+  invsys-fixture:
+    runs-on: windows-latest
+    needs: build-test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore Visio-Diagram-Generator.sln
+
+      - name: Build (Release)
+        run: dotnet build Visio-Diagram-Generator.sln -c Release -v minimal --no-restore
+
+      - name: Verify invSys fixture hashes
+        shell: pwsh
+        run: ./tools/render-fixture.ps1 -FixtureName invSys
+
+      - name: Upload invSys outputs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: render-invSys
+          path: out/fixtures/invSys
+          if-no-files-found: ignore
+
+  perf-smoke:
+    runs-on: ubuntu-latest
+    needs: build-test
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore Visio-Diagram-Generator.sln
+
+      - name: Build (Release)
+        run: dotnet build Visio-Diagram-Generator.sln -c Release -v minimal --no-restore
+
+      - name: Perf smoke (callgraph)
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path out/perf | Out-Null
+          ./tools/perf-smoke.ps1 -In tests/fixtures/vba/cross_module_calls -Mode callgraph -TimeoutMs 15000 | Tee-Object -FilePath out/perf/perf.log
+
+      - name: Echo perf summary (jq)
+        run: |
+          echo "vba2json(ms): $(jq -r .vba2json.ms out/perf/perf.json)"
+          echo "ir2diagram(ms): $(jq -r .ir2diagram.ms out/perf/perf.json)"
+          echo "nodes: $(jq -r .ir2diagram.counts.nodes out/perf/perf.json) edges: $(jq -r .ir2diagram.counts.edges out/perf/perf.json)"
+          echo "dynamicSkipped: $(jq -r .ir2diagram.summary.dynamicSkipped out/perf/perf.json) dynamicIncluded: $(jq -r .ir2diagram.summary.dynamicIncluded out/perf/perf.json)"
+
+      - name: Validate perf metrics JSON
+        shell: pwsh
+        run: |
+          $schema = Get-Content -Raw shared/Config/perfMetrics.schema.json
+          $json = Get-Content -Raw out/perf/perf.json
+          $null = $json | Test-Json -Schema $schema -ErrorAction Stop
+          Write-Host "Perf metrics JSON is valid"
+
+      - name: Upload perf artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-smoke
+          path: out/perf
+
+      - name: Publish perf summary
+        run: |
+          echo "### Perf Smoke Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- vba2json: $(jq -r .vba2json.ms out/perf/perf.json) ms" >> $GITHUB_STEP_SUMMARY
+          echo "- ir2diagram: $(jq -r .ir2diagram.ms out/perf/perf.json) ms" >> $GITHUB_STEP_SUMMARY
+          echo "- nodes: $(jq -r .ir2diagram.counts.nodes out/perf/perf.json)" >> $GITHUB_STEP_SUMMARY
+          echo "- edges: $(jq -r .ir2diagram.counts.edges out/perf/perf.json)" >> $GITHUB_STEP_SUMMARY
+          echo "- dynamicSkipped: $(jq -r .ir2diagram.summary.dynamicSkipped out/perf/perf.json)" >> $GITHUB_STEP_SUMMARY
+          echo "- dynamicIncluded: $(jq -r .ir2diagram.summary.dynamicIncluded out/perf/perf.json)" >> $GITHUB_STEP_SUMMARY
+
+  validate-matrix:
+    runs-on: ubuntu-latest
+    needs: build-test
+    strategy:
+      matrix:
+        validate-mode: [normal, strict]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore Visio-Diagram-Generator.sln
+
+      - name: Build (Release)
+        run: dotnet build Visio-Diagram-Generator.sln -c Release -v minimal --no-restore
+
+      - name: Generate IR
+        run: |
+          mkdir -p out/tmp
+          dotnet run --project src/VDG.VBA.CLI -- vba2json --in tests/fixtures/vba/cross_module_calls --out out/tmp/ci_ir.json
+
+      - name: Generate diagram with ${{ matrix.validate-mode }} mode
+        shell: pwsh
+        run: |
+          $strict = ('${{ matrix.validate-mode }}' -eq 'strict')
+          $args = @('ir2diagram','--in','out/tmp/ci_ir.json','--out','out/tmp/ci_diag.json','--mode','callgraph')
+          if ($strict) { $args += '--strict-validate' }
+          dotnet run --project src/VDG.VBA.CLI -- @args
+
+      - name: Validate diagram schema (1.2)
+        shell: pwsh
+        run: ./tools/diagram-validate.ps1 -InputPath out/tmp/ci_diag.json
+
+      - name: Strict should catch bad IR
+        if: ${{ matrix.validate-mode == 'strict' }}
+        shell: pwsh
+        run: |
+          $bad = @'{
+            "irSchemaVersion": "0.1",
+            "project": { "name": "Bad", "modules": [
+              { "id": "M1", "name": "M1", "kind": "Module", "file": "M1.bas", "procedures": [
+                { "id": "M1.P", "name": "P", "kind": "Sub",
+                  "locs": { "file": "M1.bas", "startLine": 1, "endLine": 2 },
+                  "calls": [ { "target": "~unknown", "isDynamic": false, "site": { "module": "M1", "file": "M1.bas", "line": 1 } } ]
+                }
+              ]}
+            ]}
+          }'@
+          Set-Content -Path out/tmp/ci_bad.ir.json -Value $bad -Encoding UTF8
+          $psi = New-Object System.Diagnostics.ProcessStartInfo 'dotnet'
+          $psi.ArgumentList.Add('run'); $psi.ArgumentList.Add('--project'); $psi.ArgumentList.Add('src/VDG.VBA.CLI'); $psi.ArgumentList.Add('--')
+          $psi.ArgumentList.Add('ir2diagram'); $psi.ArgumentList.Add('--in'); $psi.ArgumentList.Add('out/tmp/ci_bad.ir.json');
+          $psi.ArgumentList.Add('--out'); $psi.ArgumentList.Add('out/tmp/ci_bad.out.json'); $psi.ArgumentList.Add('--mode'); $psi.ArgumentList.Add('callgraph');
+          $psi.ArgumentList.Add('--strict-validate')
+          $psi.RedirectStandardOutput = $true; $psi.RedirectStandardError = $true; $psi.UseShellExecute = $false
+          $p = [System.Diagnostics.Process]::Start($psi); $out = $p.StandardOutput.ReadToEnd(); $err = $p.StandardError.ReadToEnd(); $p.WaitForExit()
+          if ($p.ExitCode -eq 0) { Write-Host $out; Write-Error "Expected strict validation failure for bad IR"; exit 1 }
+          else { Write-Host "strict-validate correctly failed: exit=$($p.ExitCode)"; Write-Host $err }

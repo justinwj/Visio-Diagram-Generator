@@ -1,0 +1,30 @@
+{
+  "generatedAtUtc": "2025-10-28T22:11:44.9008412Z",
+  "input": "tests/fixtures/vba/hello_world",
+  "mode": "callgraph",
+  "connectorCount": 0,
+  "straightLineCrossings": 0,
+  "lanePages": [
+    {
+      "tier": "Modules",
+      "page": 1,
+      "occupancyRatio": 0.04533,
+      "nodes": 1
+    }
+  ],
+  "containers": [
+    {
+      "id": "Module1",
+      "tier": "Modules",
+      "page": 1,
+      "occupancyRatio": 0.04533,
+      "nodes": 1
+    }
+  ],
+  "issues": [
+    {
+      "code": "ContainerOverflow",
+      "count": 1
+    }
+  ]
+}

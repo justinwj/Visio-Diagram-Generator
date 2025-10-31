@@ -1,8 +1,8 @@
 {
-  "irSchemaVersion": "0.1",
+  "irSchemaVersion": "0.2",
   "generator": {
     "name": "vba2json",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "project": {
     "name": "cfg_nested",
@@ -12,18 +12,73 @@
         "name": "ModuleNested",
         "kind": "Module",
         "file": "ModuleNested.bas",
+        "source": {
+          "file": "ModuleNested.bas",
+          "module": "ModuleNested",
+          "line": 1
+        },
+        "metrics": {
+          "cyclomatic": 6,
+          "lines": 21,
+          "sloc": 11
+        },
         "procedures": [
+          {
+            "id": "ModuleNested.HelperEven",
+            "name": "HelperEven",
+            "kind": "Sub",
+            "access": "Public",
+            "locs": {
+              "file": "ModuleNested.bas",
+              "startLine": 16,
+              "endLine": 17
+            },
+            "source": {
+              "file": "ModuleNested.bas",
+              "module": "ModuleNested",
+              "line": 16
+            },
+            "metrics": {
+              "cyclomatic": 1,
+              "lines": 2,
+              "sloc": 1
+            }
+          },
+          {
+            "id": "ModuleNested.HelperOdd",
+            "name": "HelperOdd",
+            "kind": "Sub",
+            "access": "Public",
+            "locs": {
+              "file": "ModuleNested.bas",
+              "startLine": 19,
+              "endLine": 20
+            },
+            "source": {
+              "file": "ModuleNested.bas",
+              "module": "ModuleNested",
+              "line": 19
+            },
+            "metrics": {
+              "cyclomatic": 1,
+              "lines": 2,
+              "sloc": 1
+            }
+          },
           {
             "id": "ModuleNested.LoopWithBranch",
             "name": "LoopWithBranch",
             "kind": "Sub",
             "access": "Public",
-            "static": false,
-            "params": [],
             "locs": {
               "file": "ModuleNested.bas",
               "startLine": 4,
               "endLine": 14
+            },
+            "source": {
+              "file": "ModuleNested.bas",
+              "module": "ModuleNested",
+              "line": 4
             },
             "calls": [
               {
@@ -48,48 +103,14 @@
               }
             ],
             "metrics": {
-              "lines": 11
+              "cyclomatic": 4,
+              "lines": 11,
+              "sloc": 9
             },
             "tags": [
               "hasIf",
               "hasLoop"
             ]
-          },
-          {
-            "id": "ModuleNested.HelperEven",
-            "name": "HelperEven",
-            "kind": "Sub",
-            "access": "Public",
-            "static": false,
-            "params": [],
-            "locs": {
-              "file": "ModuleNested.bas",
-              "startLine": 16,
-              "endLine": 17
-            },
-            "calls": [],
-            "metrics": {
-              "lines": 2
-            },
-            "tags": []
-          },
-          {
-            "id": "ModuleNested.HelperOdd",
-            "name": "HelperOdd",
-            "kind": "Sub",
-            "access": "Public",
-            "static": false,
-            "params": [],
-            "locs": {
-              "file": "ModuleNested.bas",
-              "startLine": 19,
-              "endLine": 20
-            },
-            "calls": [],
-            "metrics": {
-              "lines": 2
-            },
-            "tags": []
           }
         ]
       }

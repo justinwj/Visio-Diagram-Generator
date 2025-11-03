@@ -1,4 +1,4 @@
-# temporary file for drafting project strategy document
+# High level plan that considers the technology being used
 
 # View-Mode Presentation Strategy (this portion is more of a to do list needs some adaptation or something)
 
@@ -38,15 +38,7 @@
 ### 5. Testing & Tooling
 - Add F# tests for lane spillover, bundle generation, and corridor spacing to guarantee deterministic output.
 - Capture a set of snapshot fixtures (JSON-only) for representative VBA inputs, validating there are no skipped connectors and layout bounds remain within target page sizes.
-
-## Immediate Engineering Steps
-1. Formalize capacity constants in F# (`layout.view.maxModulesPerLane`, `layout.view.maxConnectorsPerRow`, etc.) and enforce them during segment splitting.
-2. Design a corridor descriptor type (`EdgeChannel`?) and thread it through `EdgeRoute` so the runner can distinguish planner-guided paths from fallbacks.
-3. Update spillover logic to record row-level offsets, ensuring future runner spacing uses planner data instead of heuristics.
-4. Begin writing unit tests for `computeViewLayout` focusing on module spillover and channel emission.
-
-
-
+***
 # F# C# Split Strategy
 
 ### **F# Responsibilities (VisioDiagramGenerator.Algorithms/)**
@@ -61,8 +53,6 @@
 - **No Rendering or IO:**
   - Never touch Visio COM, file IO, or CLI output—just export strongly-typed F# records.
 
-***
-
 ### **C# Responsibilities (VDG.CLI/ & Interop)**
 - **Orchestration & Rendering:**
   - Handle all Visio COM automation: shape placement, page/sheet creation, and connector drawing, as directed by F# layout plans.
@@ -76,27 +66,21 @@
 - **Integration/Smoke Testing:**
   - Run end-to-end smoke tests, including diagram creation, file output, and full fixture regression checks.
 
-***
-
 ### **Data & API Boundary**
 - **Pure Data Hand-off:**
   - C# CLI sends IR and options (input), F# returns a typed `LayoutPlan`/`PagePlan` (output).
   - Layout plan is the authoritative source—C# never re-computes layout or paging, only renders in the right order.
-
-***
 
 ### **Benefits**
 - **F# stays pure and highly testable.**
 - **C# manages side-effects, automation, rendering, and integration.**
 - **Future changes to layout/paging/heuristics are isolated, predictable, and easy to unit test.**
 
-***
-
 **Quick summary:**  
 F# = brains of the operation (algorithmic, stateless, predictable).  
 C# = hands and face for the user (Visio automation, reporting, user interaction, file output).  
 Keep all intelligence, decisions, and transforms pure and in F#; push all real-world effect and interop to C#.
-
+***
 ## Threshold Calibration
 - Establish reference datasets (e.g., invSys full callgraph, cross_module_calls) and automate metric collection: modules per lane, connectors per channel, skipped edge counts.
 - Run iterative planner sweeps, adjusting caps (`maxModulesPerLane`, `maxConnectorsPerRow`, corridor width) and storing results in a calibration log so density vs. readability trends are documented.
@@ -127,59 +111,7 @@ Keep all intelligence, decisions, and transforms pure and in F#; push all real-w
 - Allow profiles to inherit common defaults while overriding key metrics (tier spacing, corridor width, max nodes per page).
 - Document recommended usage per profile and provide CLI switches (`--profile screen|print|export`) so users can generate the appropriate layout without manual tuning.
 
-# Open Questions to Prioritize and answered
-For high-density, algorithm-driven output—far beyond consensus VBA workflows—advanced strategies, many borrowed from graph visualization, data science, and scalable UI/UX design. Here are solutions optimized for automation, clarity, and performance:
-# How will channel/edge bundles interact visually with overlapping modules or multiple layers/pages?
-1. Visual Organization: Rendering High-Density Bundles/Channels
-    • Hierarchical Layouts:
-Use multi-level grouping (modules → submodules → nodes) so each visual band is only responsible for a manageable subset. Collapse low-activity regions and expand only hot spots, giving context and clarity even in deep diagrams.
-Cap each Visio VSDX file at 25,000 shapes (nodes plus connectors across all layers/pages) aligns with proven Visio limits for stability, performance, and compatibility.
-Recommendations for VDG Chunking Strategy
-    • Set VSDX Cap:
-Make 25,000 shapes the upper limit per VSDX output. This keeps each file responsive and safe for both authoring and view-mode navigation, even on typical business hardware.
-    • Automate Overflow:
-When the planner algorithm reaches the cap, seamlessly begin outputting the next VSDX file. Link files via navigable connector stubs, hyperlinks, index pages, or external metadata.
-    • User Experience: 
-        ○ Provide clear navigation cues: "Go to next segment," "Open continuation file," etc.
-        ○ Include summary/overview pages in each file for context when crossing boundaries.
-    • Diagnostics:
-Emit metadata or warnings anytime a chunk splits to a new VSDX, so users can audit overflow and maintain traceability.
-Why This Works
-    • Improves stability: Prevents large diagrams from crashing or breaking Visio features.
-    • Eases export/import: Facilitates incremental generation, review, and distribution.
-    • Future-proofs for web, Power BI, and shared cloud scenarios.
-Summary: With VDG, implement 25,000 shapes as the per-file threshold, then overflow to new files automatically—establishing a scalable, reliable, and maintainable process for massive diagrams. This approach is widely used for complex technical modeling in Visio workflows.
-    • Edge Bundling Algorithms:
-Apply edge bundling (curving, merging, or visually clustering related connectors into smooth, grouped paths) to minimize visual overlap. This is common in tools like D3.js and Graphviz, and reduces visual clutter even with thousands of edges.
-    • Layered Views/Chunked Navigation:
-Split diagrams into layers/pages by density, function, or flow, then let users toggle, filter, or drill down. Provide summary “overviews” with interactive zoom or “expand” controls for dense areas.
-    • Interactive Callouts:
-Replace dense connector clouds with clickable callouts, stubs, or “expand for details” icons. Only render full connector clouds on demand.
-# Can you automate feedback (does the rendered Visio diagram match the planner JSON—are channels, bundles, and bridges realized as planned)?
-2. Planner–Renderer Consistency and Validation
-    • Round-trip Model Checking:
-Build automated “diff” checks that compare planner (JSON/meta) expectations with rendered output—flagging discrepancies, missing connectors, overlaps, or visualization failures.
-    • Metadata-Embedded Shapes:
-Every shape and connector gets a unique, machine-readable ID and bundle/channel tag; automation scripts can verify layout completeness, trace cross-layer connections, and update diagrams incrementally.
-    • Diagnostics Dashboard:
-Render a diagnostics dashboard panel in every diagram—summarizing skip counts, overflow flags, anchor-to-bridge traces, and click-to-debug links—so users and developers instantly see problem areas.
-# What conventions will you use for anchor/label naming and diagnostics so output remains human-readable and debuggable?
-3. Anchor/Labeling, Debuggability in Dense Diagrams
-    • Semantic Anchoring:
-Assign meaningful, human and machine-readable anchor IDs that encode module, tier, page/layer, and connector class. Use anchor maps for navigation and debugging.
-    • Hyperlink Navigation:
-Equip stubs, callouts, and summary shapes with hyperlinks (internal, external, macro-driven) so users can click to jump to dense or remote nodes—making navigation as easy as browsing hyperlinks in web docs.
-    • Error Tolerance and Summarization:
-When unavoidable truncation or overflow occurs, automatically summarize what’s omitted (counts, example links, hover-over details), so density never translates to total loss of context.
-Implementation Best Practices
-    • Iterative Testing:
-Use automated test fixtures—benchmark density, clarity, interactivity, and navigation, adjusting algorithms until output meets real user goals.
-    • Parameterization:
-Make capacity, chunking, and bundling logic tunable—adapt to different data sets and user needs.
-    • Export Strategies:
-Allow multi-output options (.vsdx per chunk, layers, interactive SVG, etc.), using whatever output best supports scale and clarity.
-These solutions transcend consensus VBA. They borrow from scalable network visualization, interactive UI/UX, and automated testing—equipping your diagram generator to deliver clarity, usability, and robust analytics even at the largest data scales. Applying them makes VDG more like modern visualization engines than legacy automation scripts, positioning it for broad, high-value use.
-
+***
 # “gotchas” and advanced considerations to help bulletproof your design:
 
 1. Cross-File Navigation & User Context Loss
@@ -220,10 +152,10 @@ These solutions transcend consensus VBA. They borrow from scalable network visua
     • Solution: 
         ○ Include quickstart guides or navigation how-tos in the repo.
         ○ Automate documentation export with each diagram batch.
-
+***
 # Advanced Strategies For Big Diagrams
-Yes, for high-density, algorithm-driven output—far beyond consensus VBA workflows—there are advanced strategies, many borrowed from graph visualization, data science, and scalable UI/UX design. Here are solutions optimized for automation, clarity, and performance:
-
+For high-density, algorithm-driven output—far beyond consensus VBA workflows—there are advanced strategies, many borrowed from graph visualization, data science, and scalable UI/UX design. Here are solutions optimized for automation, clarity, and performance:
+# How will channel/edge bundles interact visually with overlapping modules or multiple layers/pages?
 ### 1. Visual Organization: Rendering High-Density Bundles/Channels
 
 - **Hierarchical Layouts:**  
@@ -237,7 +169,7 @@ Yes, for high-density, algorithm-driven output—far beyond consensus VBA workfl
 
 - **Interactive Callouts:**  
   Replace dense connector clouds with clickable callouts, stubs, or “expand for details” icons. Only render full connector clouds on demand.
-
+# Can you automate feedback (does the rendered Visio diagram match the planner JSON—are channels, bundles, and bridges realized as planned)?
 ### 2. Planner–Renderer Consistency and Validation
 
 - **Round-trip Model Checking:**  
@@ -248,7 +180,7 @@ Yes, for high-density, algorithm-driven output—far beyond consensus VBA workfl
 
 - **Diagnostics Dashboard:**  
   Render a diagnostics dashboard panel in every diagram—summarizing skip counts, overflow flags, anchor-to-bridge traces, and click-to-debug links—so users and developers instantly see problem areas.
-
+# What conventions will you use for anchor/label naming and diagnostics so output remains human-readable and debuggable?
 ### 3. Anchor/Labeling, Debuggability in Dense Diagrams
 
 - **Semantic Anchoring:**  
@@ -268,7 +200,7 @@ Yes, for high-density, algorithm-driven output—far beyond consensus VBA workfl
   Make capacity, chunking, and bundling logic tunable—adapt to different data sets and user needs.
 - **Export Strategies:**  
   Allow multi-output options (.vsdx per chunk, layers, interactive SVG, etc.), using whatever output best supports scale and clarity.
-
+***
 # implementing high-density, algorithmic layouts 
 (with bundling, layered navigation, round-trip validation, and diagnostics)—is challenging, but technically doable with VDG’s .NET-to-Visio automation pipeline, provided you carefully adapt to Visio’s model and performance limits.
 
@@ -290,9 +222,8 @@ What’s Doable with VDG’s .NET to Visio Pipeline
     • Yes: .NET can programmatically place diagnostics callout shapes, clickable tooltips, and summary panels within each Visio diagram or page, including links and drill-down targets.
 5. Parameterization
     • Yes: All planner and output logic can be parameterized at the .NET application level, with CLI/config options surfaced to users.
-
-# Capping object count per WSDX file
-Yes, that’s a strong and practical strategy. Capping each Visio VSDX file at 25,000 shapes (nodes plus connectors across all layers/pages) aligns with proven Visio limits for stability, performance, and compatibility.
+***
+# Capping object count per VSDX file
 
 ## Recommendations for VDG Chunking Strategy
 
@@ -305,41 +236,35 @@ Yes, that’s a strong and practical strategy. Capping each Visio VSDX file at 2
   - Include summary/overview pages in each file for context when crossing boundaries.
 - **Diagnostics:**  
   Emit metadata or warnings anytime a chunk splits to a new VSDX, so users can audit overflow and maintain traceability.
+***
+# Turn Visio Features Off
+Certain Visio behaviors can be toggled while the runner is generating diagrams so the planner's geometry stays intact and Visio does not "fix" algorithmic layouts.
 
-# Turn Visio Features off
-Certain Visio features can be turned off or programmatically suppressed while generating diagrams with .NET automation or VBA. This helps produce more predictable, planner-driven output by limiting Visio’s automatic behaviors that may interfere with algorithmic layouts.()
-Features You Can Disable or Control
-    1. Connector Routing & Reroute
-        ○ Disable Auto Routing:
-For individual connectors, set Shape.CellsU("Reroute") = 0 (or via COM: shape.CellsU["Reroute"].ResultIU = 0) to turn off auto-rerouting when shapes move or get re-glued.
-        ○ Lock to Geometry:
-Use polylines or static lines (not “Connectors”) if you want to override Visio’s dynamic pathfinding entirely.
-    2. Snap & Glue
-        ○ Turn Off Snapping and Gluing (Globally):
-Temporarily disable these settings during automation:
-Application.ActiveWindow.GlueSettings = False
-Application.ActiveWindow.SnapSettings = False
+## Features You Can Disable or Control
+### 1. Connector Routing & Reroute
+- **Disable auto routing:** Set `Shape.CellsU("Reroute") = 0` (or via COM: `shape.CellsU["Reroute"].ResultIU = 0`) to keep connectors on the path produced by the planner.
+- **Lock to geometry:** Use polylines or static lines (not smart connectors) when bundles must remain fixed.
 
-Remember to restore original settings after automation is complete, to not affect user experience.
-    3. Layout and Auto-Align
-        ○ Disable Dynamic Layout:
-On the page or document, you can adjust the layout properties to prevent shapes from auto-arranging:
-Application.ActiveWindow.Page.LayoutStyle = visLFSManual
-        ○ Prevent Overlap:
-Optionally set manual placement on all shapes: shape.CellsU("LockMoveX").FormulaU = "1"; shape.CellsU("LockMoveY").FormulaU = "1"
-    4. Event Reactions
-        ○ Suspend Events:
-Use Application.EventsEnabled = False to prevent event triggers and macro reactions while generating diagrams (just remember to turn back on).
-    5. Protection Locks
-        ○ Lock Shape Behavior:
-Set ShapeSheet cells like LockGroup, LockSelect, LockDelete to prevent user or automation from modifying certain objects after creation.
-    6. Undo Buffer
-        ○ Suspend Undo Logging:
-Use Application.DeferRecalc and Application.UndoEnabled = False for complex batch operations for speed and memory.
+### 2. Snap & Glue
+- **Turn off during automation:** Set `Application.ActiveWindow.GlueSettings = $false` and `Application.ActiveWindow.SnapSettings = $false` before placing shapes programmatically.
+- **Restore afterwards:** Re-enable both settings after rendering so day-to-day authoring behavior returns.
 
-Implementation Advice
-    • Temporarily Suppress features: Always restore original settings after generation to keep normal Visio usability.
-    • Combine with Planner Output: Apply these suppression settings only while running your automation—the runner (CLI) can toggle these features as needed per step.
-    • Selective Use: You may want to selectively turn off snapping, glue, or reroute for specific shapes/connectors only—leaving core Visio functionality available for user tweaking after generation.
+### 3. Layout and Auto-Align
+- **Disable dynamic layout:** Set `Application.ActiveWindow.Page.LayoutStyle = visLFSManual` so Visio does not reshuffle the page.
+- **Prevent overlap adjustments:** Lock placement with `shape.CellsU("LockMoveX").FormulaU = "1"` and `shape.CellsU("LockMoveY").FormulaU = "1"` when the planner controls positioning.
 
-By controlling these automation-targeted features, you gain much more deterministic output and minimize the risk of Visio “fixing” your algorithmically generated geometry or layouts. This control is critical to producing professional, high-fidelity diagrams with VDG.
+### 4. Event Reactions
+- **Suspend events:** Toggle `Application.EventsEnabled = False` during batch updates to prevent macros or event handlers from firing, then set it back to `True`.
+
+### 5. Protection Locks
+- **Lock generated artifacts:** Set ShapeSheet protection cells (`LockGroup`, `LockSelect`, `LockDelete`, etc.) wherever automation must freeze shapes after placement.
+
+### 6. Undo Buffer
+- **Suspend undo logging:** Use `Application.DeferRecalc` and `Application.UndoEnabled = False` for large renders, then restore both settings to preserve user undo history.
+
+## Implementation Advice
+- **Suppress features temporarily:** Always revert every flag you change once rendering finishes so standard Visio ergonomics stay intact.
+- **Coordinate with planner output:** Only disable automation while the runner applies planner-driven geometry; let the CLI toggle these settings step by step.
+- **Apply selectively:** Prefer shape- or connector-level overrides when possible, leaving core Visio functionality available for post-generation tweaks.
+
+Actively managing these features keeps the pipeline deterministic and preserves professional fidelity in the generated diagrams.

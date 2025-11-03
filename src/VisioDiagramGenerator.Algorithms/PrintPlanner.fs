@@ -206,6 +206,7 @@ module PrintPlanner =
           NodeModules = Array.empty
           PageLayouts = Array.empty
           Containers = Array.empty
+          RowLayouts = Array.empty
           Edges = edges
           Pages = computePagePlans model layout
           Layers = Array.empty

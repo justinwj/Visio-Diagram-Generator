@@ -1,5 +1,6 @@
 module VisioDiagramGenerator.Algorithms.Tests.ViewModePlannerTests
 
+open System
 open Xunit
 open VDG.Core.Models
 open VisioDiagramGenerator.Algorithms
@@ -95,3 +96,74 @@ let ``long labels expand node layouts`` () =
         |> Array.find (fun c -> c.Id = "ModuleWide")
 
     Assert.True(container.Bounds.Width > 2.1f)
+
+[<Fact>]
+let ``lane capacity splits modules into additional pages`` () =
+    let nodes =
+        [| for i in 1 .. 18 ->
+               let moduleIndex = ((i - 1) / 3) + 1
+               let moduleId = sprintf "Module%02d" moduleIndex
+               mkNode moduleId "Services" i |]
+    let model = DiagramModel(nodes, Array.empty)
+    model.Metadata["layout.view.maxModulesPerLane"] <- "2"
+    model.Metadata["layout.page.plan.maxModulesPerPage"] <- "10"
+
+    let plan = ViewModePlanner.computeViewLayout model
+    let orderedPages =
+        plan.Pages
+        |> Array.sortBy (fun page -> page.PageIndex)
+
+    Assert.True(orderedPages.Length >= 3)
+    Assert.True(orderedPages.Length <= 6)
+    Assert.All(orderedPages, fun page -> Assert.InRange(page.Modules.Length, 1, 2))
+
+    let moduleAssignments =
+        orderedPages
+        |> Array.collect (fun page ->
+            page.Modules
+            |> Array.map (fun moduleId -> moduleId, page.PageIndex))
+        |> dict
+
+    let flattened =
+        orderedPages
+        |> Array.collect (fun page -> page.Modules)
+
+    Assert.Equal<string array>(
+        [| "Module01"; "Module02"; "Module03"; "Module04"; "Module05"; "Module06" |],
+        flattened)
+
+    for i = 1 to 5 do
+        Assert.True(moduleAssignments[sprintf "Module%02d" (i + 1)] >= moduleAssignments[sprintf "Module%02d" i])
+
+    Assert.True(plan.RowLayouts.Length > 0)
+    Assert.All(plan.RowLayouts, fun row -> Assert.True(row.Top > row.Bottom))
+
+[<Fact>]
+let ``edge routes emit channel metadata`` () =
+    let nodes =
+        [| mkNode "ModuleA" "Services" 1
+           mkNode "ModuleA" "Services" 2
+           mkNode "ModuleB" "Services" 3 |]
+    let edges =
+        [| Edge("loop", nodeId 1, nodeId 2)
+           Edge("cross", nodeId 1, nodeId 3) |]
+    let model = DiagramModel(nodes, edges)
+
+    let plan = ViewModePlanner.computeViewLayout model
+    let loopRoute =
+        plan.Edges
+        |> Array.find (fun route -> route.Id = "loop")
+    Assert.True(loopRoute.Channel.IsSome)
+    let loopChannel = loopRoute.Channel.Value
+    Assert.Equal("ModuleA", loopChannel.SourceModuleId)
+    Assert.Equal("ModuleA", loopChannel.TargetModuleId)
+    Assert.Equal("self:ModuleA", loopChannel.Key)
+
+    let crossRoute =
+        plan.Edges
+        |> Array.find (fun route -> route.Id = "cross")
+    Assert.True(crossRoute.Channel.IsSome)
+    let crossChannel = crossRoute.Channel.Value
+    Assert.Equal("ModuleA", crossChannel.SourceModuleId)
+    Assert.Equal("ModuleB", crossChannel.TargetModuleId)
+    Assert.False(String.IsNullOrWhiteSpace crossChannel.Key)

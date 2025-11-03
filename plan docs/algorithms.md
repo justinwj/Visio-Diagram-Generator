@@ -53,3 +53,4 @@
 - [ ] Prototype `EdgeChannel` metadata and wire it to the runner.
 - [ ] Capture updated diagnostics showing zero skipped connectors for invSys once spillover/bundling is in place.
 - [ ] Expand test suite to lock in corridor computations and pagination decisions.
+***

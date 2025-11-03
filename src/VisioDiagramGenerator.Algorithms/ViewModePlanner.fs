@@ -36,6 +36,19 @@ module ViewModePlanner =
           VisibleCount: int
           Overflow: int }
 
+    type private LaneCapacityOptions =
+        { MaxModulesPerLane: int
+          MaxNodesPerLane: int
+          MaxConnectorsPerLane: int
+          MaxLaneHeightIn: float
+          RowSpacingIn: float32 }
+
+    type private LaneState =
+        { mutable ModuleCount: int
+          mutable NodeCount: int
+          mutable ConnectorCount: int
+          mutable Height: float }
+
     let private defaultTiers =
         [| "External"; "Edge"; "Services"; "Data"; "Observability"; "Modules" |]
 
@@ -284,6 +297,7 @@ module ViewModePlanner =
               NodeModules = Array.empty
               PageLayouts = Array.empty
               Containers = Array.empty
+              RowLayouts = Array.empty
               Edges = Array.empty
               Pages = Array.empty
               Layers = Array.empty
@@ -305,10 +319,11 @@ module ViewModePlanner =
                 getMetadataInt model "layout.view.slotsPerTier"
                 |> Option.filter (fun v -> v >= slotsPerRow)
                 |> Option.defaultValue (Math.Max(slotsPerRow * 3, 6))
-            let maxModulesPerLane =
+            let explicitMaxModulesPerLane =
                 getMetadataInt model "layout.view.maxModulesPerLane"
                 |> Option.filter (fun v -> v >= slotsPerRow)
-                |> Option.defaultValue (Math.Max(slotsPerRow * 2, 4))
+            let mutable maxModulesPerLane =
+                explicitMaxModulesPerLane |> Option.defaultValue (Math.Max(slotsPerRow * 3, 12))
             let mutable slotsPerTier =
                 Math.Max(slotsPerRow, Math.Min(baseSlotsPerTier, maxModulesPerLane))
             let mutable tierSpacing =
@@ -425,7 +440,40 @@ module ViewModePlanner =
                 | None -> maxRowsPerColumn
 
             let maxRowsByHeight = Math.Max(1, maxRowsByHeight)
+
+            if explicitMaxModulesPerLane.IsNone then
+                let preferred = Math.Max(maxModulesPerLane, slotsPerRow * maxRowsByHeight)
+                if preferred <> maxModulesPerLane then
+                    maxModulesPerLane <- preferred
+                    slotsPerTier <- Math.Max(slotsPerRow, Math.Min(baseSlotsPerTier, maxModulesPerLane))
+
             let segmentCapacity = Math.Max(1, maxRowsByHeight * Math.Max(1, maxColumns))
+
+            let laneNodeCapDefault =
+                let baseline = slotsPerRow * maxRowsByHeight
+                Math.Max(baseline, 12)
+
+            let laneNodeCap =
+                getMetadataInt model "layout.view.maxNodesPerLane"
+                |> Option.filter (fun v -> v > 0)
+                |> Option.defaultValue laneNodeCapDefault
+
+            let laneConnectorCap =
+                getMetadataInt model "layout.view.maxConnectorsPerLane"
+                |> Option.filter (fun v -> v > 0)
+                |> Option.defaultValue 400
+
+            let laneHeightLimit =
+                getMetadataDouble model "layout.view.maxLaneHeightIn"
+                |> Option.filter (fun v -> v > 0.0)
+                |> Option.defaultValue Double.PositiveInfinity
+
+            let laneCapacity =
+                { MaxModulesPerLane = maxModulesPerLane
+                  MaxNodesPerLane = laneNodeCap
+                  MaxConnectorsPerLane = laneConnectorCap
+                  MaxLaneHeightIn = laneHeightLimit
+                  RowSpacingIn = rowSpacing }
 
             let computeSegmentMetrics totalNodes =
                 let safeTotal = if totalNodes <= 0 then 0 else totalNodes
@@ -576,6 +624,138 @@ module ViewModePlanner =
                             recordEdgeStats srcModuleId
                             recordEdgeStats dstModuleId
 
+            let enforceLaneCapacity (plans: PagePlan array) =
+                if isNull (box plans) || plans.Length = 0 then
+                    plans
+                else
+                    let sortedPlans =
+                        plans
+                        |> Array.filter (fun p -> not (isNull (box p)))
+                        |> Array.sortBy (fun p -> p.PageIndex)
+                    let result = ResizeArray<PagePlan>()
+                    let laneStates = Dictionary<string, LaneState>(StringComparer.OrdinalIgnoreCase)
+                    let mutable currentModules = ResizeArray<string>()
+                    let mutable currentConnectors = 0
+                    let mutable currentNodes = 0
+                    let mutable currentMaxOccupancy = 0.0
+                    let mutable nextPageIndex = 0
+
+                    let resetPage () =
+                        laneStates.Clear()
+                        currentModules <- ResizeArray<string>()
+                        currentConnectors <- 0
+                        currentNodes <- 0
+                        currentMaxOccupancy <- 0.0
+
+                    let flushPage () =
+                        if currentModules.Count > 0 then
+                            result.Add(
+                                { PageIndex = nextPageIndex
+                                  Modules = currentModules.ToArray()
+                                  Connectors = currentConnectors
+                                  Nodes = currentNodes
+                                  Occupancy = currentMaxOccupancy })
+                            nextPageIndex <- nextPageIndex + 1
+                            resetPage()
+
+                    let maxModulesLimit =
+                        if laneCapacity.MaxModulesPerLane <= 0 then Int32.MaxValue
+                        else laneCapacity.MaxModulesPerLane
+                    let maxNodesLimit =
+                        if laneCapacity.MaxNodesPerLane <= 0 then Int32.MaxValue
+                        else laneCapacity.MaxNodesPerLane
+                    let maxConnectorsLimit =
+                        if laneCapacity.MaxConnectorsPerLane <= 0 then Int32.MaxValue
+                        else laneCapacity.MaxConnectorsPerLane
+                    let maxHeightLimit =
+                        if laneCapacity.MaxLaneHeightIn <= 0.0 then Double.PositiveInfinity
+                        else laneCapacity.MaxLaneHeightIn
+                    let rowSpacingDelta = float laneCapacity.RowSpacingIn
+
+                    let rec addModule (moduleId: string) =
+                        if String.IsNullOrWhiteSpace moduleId then
+                            ()
+                        else
+                            let trimmedId = moduleId.Trim()
+                            let viewModuleOpt =
+                                match modules.TryGetValue trimmedId with
+                                | true, value -> Some value
+                                | _ -> None
+                            let tier =
+                                match viewModuleOpt with
+                                | Some vm when not (String.IsNullOrWhiteSpace vm.Tier) -> vm.Tier
+                                | _ -> String.Empty
+                            let nodeCount =
+                                match viewModuleOpt with
+                                | Some vm -> vm.Nodes.Count
+                                | _ -> 0
+                            let connectorCount =
+                                match segmentEdgeStats.TryGetValue trimmedId with
+                                | true, stats -> stats.ConnectorCount
+                                | _ -> 0
+                            let metrics =
+                                match segmentMetrics.TryGetValue trimmedId with
+                                | true, value -> value
+                                | _ ->
+                                    match viewModuleOpt with
+                                    | Some vm ->
+                                        let computed = computeSegmentMetrics vm.Nodes.Count
+                                        segmentMetrics[trimmedId] <- computed
+                                        computed
+                                    | None ->
+                                        let computed = computeSegmentMetrics nodeCount
+                                        segmentMetrics[trimmedId] <- computed
+                                        computed
+                            let cardHeight = float metrics.CardHeight
+                            let laneState =
+                                match laneStates.TryGetValue tier with
+                                | true, state -> state
+                                | _ ->
+                                    let state = { ModuleCount = 0; NodeCount = 0; ConnectorCount = 0; Height = 0.0 }
+                                    laneStates[tier] <- state
+                                    state
+
+                            let pendingModules = laneState.ModuleCount + 1
+                            let pendingNodes = laneState.NodeCount + nodeCount
+                            let pendingConnectors = laneState.ConnectorCount + connectorCount
+                            let additionalHeight =
+                                if laneState.ModuleCount > 0 then cardHeight + rowSpacingDelta else cardHeight
+                            let pendingHeight = laneState.Height + additionalHeight
+                            let laneWouldOverflow =
+                                (pendingModules > maxModulesLimit)
+                                || (pendingNodes > maxNodesLimit)
+                                || (pendingConnectors > maxConnectorsLimit)
+                                || (pendingHeight > maxHeightLimit)
+
+                            if currentModules.Count > 0 && laneWouldOverflow then
+                                flushPage()
+                                addModule trimmedId
+                            else
+                                laneState.ModuleCount <- pendingModules
+                                laneState.NodeCount <- pendingNodes
+                                laneState.ConnectorCount <- pendingConnectors
+                                laneState.Height <- pendingHeight
+                                currentModules.Add trimmedId
+                                currentConnectors <- currentConnectors + connectorCount
+                                currentNodes <- currentNodes + nodeCount
+
+                                if not (Double.IsInfinity maxHeightLimit) && pendingHeight > 0.0 then
+                                    let occupancy = (pendingHeight / maxHeightLimit) * 100.0
+                                    if occupancy > currentMaxOccupancy then
+                                        currentMaxOccupancy <- occupancy
+                                elif maxNodesLimit <> Int32.MaxValue && pendingNodes > 0 then
+                                    let occupancy = (float pendingNodes / float maxNodesLimit) * 100.0
+                                    if occupancy > currentMaxOccupancy then
+                                        currentMaxOccupancy <- occupancy
+
+                    for plan in sortedPlans do
+                        if not (isNull plan.Modules) then
+                            for moduleId in plan.Modules do
+                                addModule moduleId
+                        flushPage()
+
+                    if result.Count = 0 then plans else result.ToArray()
+
             let buildModuleStatsForSegment segmentId =
                 match modules.TryGetValue segmentId with
                 | true, segmentModule ->
@@ -626,7 +806,7 @@ module ViewModePlanner =
                 else
                     PagingPlanner.computePages pageOptionsPre datasetForPlan
 
-            let plannedPagePlans =
+            let basePagePlans =
                 if initialPagePlans.Length = 0 && orderedSegments.Count > 0 then
                     [| { PageIndex = 0
                          Modules = orderedSegments.ToArray()
@@ -635,6 +815,11 @@ module ViewModePlanner =
                          Occupancy = 0.0 } |]
                 else
                     initialPagePlans
+
+            let enforcedPagePlans = enforceLaneCapacity basePagePlans
+
+            let plannedPagePlans =
+                if enforcedPagePlans.Length = 0 then basePagePlans else enforcedPagePlans
 
             for plan in plannedPagePlans do
                 if not (isNull (box plan)) && not (isNull plan.Modules) then
@@ -681,6 +866,7 @@ module ViewModePlanner =
             let containerLayouts = ResizeArray<ContainerLayout>()
             let truncated = Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
             let pageExtents = Dictionary<int, float32[]>(HashIdentity.Structural)
+            let rowLayouts = ResizeArray<RowLayout>()
 
             let getPageExtents index =
                 match pageExtents.TryGetValue index with
@@ -785,12 +971,18 @@ module ViewModePlanner =
                 let pageIndex = plan.PageIndex
                 if pageIndex > 0 then
                     cursorY <- 0.f
+                let mutable pageRowIndex = 0
+                let rowIndexForTier = Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
                 let tierMap =
                     match segmentsByPageTier.TryGetValue pageIndex with
                     | true, value -> value
                     | _ -> Dictionary<string, ResizeArray<string>>(StringComparer.OrdinalIgnoreCase)
 
                 for tier in tiers do
+                    let mutable tierRowIndex =
+                        match rowIndexForTier.TryGetValue tier with
+                        | true, value -> value
+                        | _ -> 0
                     let modulesInTier =
                         match tierMap.TryGetValue tier with
                         | true, bucket when bucket.Count > 0 -> bucket |> Seq.toArray
@@ -807,6 +999,7 @@ module ViewModePlanner =
                         for rowIdx = 0 to rows.Length - 1 do
                             let rowSegments = rows[rowIdx]
                             if rowSegments.Length > 0 then
+                                let rowTop = cursorY - accumulatedHeight
                                 let rowHeight =
                                     rowSegments
                                     |> Array.choose (fun segId ->
@@ -933,12 +1126,25 @@ module ViewModePlanner =
                                     | _ -> ()
 
                                 if rowHeight > 0.f then
+                                    let rowBottom = rowTop - rowHeight
+                                    rowLayouts.Add(
+                                        { PageIndex = pageIndex
+                                          Tier = tier
+                                          RowIndex = pageRowIndex
+                                          TierRowIndex = tierRowIndex
+                                          Top = rowTop
+                                          Bottom = rowBottom
+                                          Height = rowHeight })
+                                    tierRowIndex <- tierRowIndex + 1
+                                    pageRowIndex <- pageRowIndex + 1
                                     accumulatedHeight <- accumulatedHeight + rowHeight + cardSpacingY
 
                         if accumulatedHeight > 0.f then
                             accumulatedHeight <- accumulatedHeight - cardSpacingY
 
                         cursorY <- cursorY - accumulatedHeight - tierSpacing
+
+                    rowIndexForTier[tier] <- tierRowIndex
 
                 if pageBodyHeight > 0.f then
                     let excess = cursorY - (-pageBodyHeight)
@@ -981,6 +1187,12 @@ module ViewModePlanner =
                 maxRight <- maxRight - offsetX
                 minBottom <- minBottom - offsetY
                 maxTop <- maxTop - offsetY
+                for idx = 0 to rowLayouts.Count - 1 do
+                    let row = rowLayouts[idx]
+                    rowLayouts[idx] <-
+                        { row with
+                            Top = row.Top - offsetY
+                            Bottom = row.Bottom - offsetY }
 
             let moduleBounds = Dictionary<string, RectangleF>(StringComparer.OrdinalIgnoreCase)
             for container in containerLayouts do
@@ -1015,14 +1227,34 @@ module ViewModePlanner =
                 |> Option.filter (fun v -> v >= 0.f)
                 |> Option.defaultValue (max 0.4f (cardSpacingX * 0.35f))
 
-            let nextCorridorOffset (key: string) =
+            let nextCorridor (key: string) =
                 let idx =
                     match corridorSequence.TryGetValue key with
                     | true, value -> value
                     | _ -> 0
                 corridorSequence[key] <- idx + 1
                 let magnitude = float32 ((idx / 2) + 1) * corridorSpacing
-                if idx % 2 = 0 then magnitude else -magnitude
+                let offset = if idx % 2 = 0 then magnitude else -magnitude
+                offset, idx
+
+            let makeChannel (key: string) (orientation: string) (center: float32) (offset: float32) (bundleIndex: int)
+                             (sourceModule: string) (targetModule: string) (sourceSide: string) (targetSide: string) =
+                let spacing =
+                    let orientLower = orientation.ToLowerInvariant()
+                    if orientLower.Contains("vertical") then
+                        if cardSpacingX > 0.f then cardSpacingX else corridorSpacing
+                    else
+                        if corridorSpacing > 0.f then corridorSpacing else 1.0f
+                { Key = key
+                  Orientation = orientation
+                  Center = center
+                  Offset = offset
+                  BundleIndex = bundleIndex
+                  Spacing = spacing
+                  SourceModuleId = sourceModule
+                  TargetModuleId = targetModule
+                  SourceSide = sourceSide
+                  TargetSide = targetSide }
 
             for edge in model.Edges do
                 if not (isNull edge) && not (String.IsNullOrWhiteSpace edge.SourceId) && not (String.IsNullOrWhiteSpace edge.TargetId) then
@@ -1038,14 +1270,14 @@ module ViewModePlanner =
                             match nodeToSegment.TryGetValue edge.TargetId with
                             | true, segId -> segId
                             | _ -> resolveModuleId dstNode tiers tiersSet
-                        let points, callout =
+                        let points, callout, channel =
                             if srcModuleId.Equals(dstModuleId, StringComparison.OrdinalIgnoreCase) && moduleBounds.ContainsKey srcModuleId then
                                 let bounds = moduleBounds[srcModuleId]
                                 let dx = dstCenter.X - srcCenter.X
                                 let dy = dstCenter.Y - srcCenter.Y
                                 let horizontal = Math.Abs(dx) >= Math.Abs(dy)
                                 let selfKey = $"self:{srcModuleId}"
-                                let offset = nextCorridorOffset selfKey
+                                let offset, bundleIndex = nextCorridor selfKey
                                 if horizontal then
                                     let top = bounds.Bottom + bounds.Height
                                     let bottom = bounds.Bottom
@@ -1069,7 +1301,8 @@ module ViewModePlanner =
                                     let labelCenter =
                                         point midX (corridorY + (stubDir * (calloutStubLength + calloutTangentialOffset)))
                                     routePoints,
-                                    Some { StubStart = stubStart; StubEnd = stubEnd; LabelCenter = labelCenter }
+                                    Some { StubStart = stubStart; StubEnd = stubEnd; LabelCenter = labelCenter },
+                                    Some (makeChannel selfKey "loop-horizontal" corridorY offset bundleIndex srcModuleId dstModuleId (if stubDir >= 0.f then "top" else "bottom") (if stubDir >= 0.f then "top" else "bottom"))
                                 else
                                     let left = bounds.Left
                                     let right = bounds.Left + bounds.Width
@@ -1093,10 +1326,11 @@ module ViewModePlanner =
                                     let labelCenter =
                                         point (corridorX + (stubDir * (calloutStubLength + calloutTangentialOffset))) midY
                                     routePoints,
-                                    Some { StubStart = stubStart; StubEnd = stubEnd; LabelCenter = labelCenter }
+                                    Some { StubStart = stubStart; StubEnd = stubEnd; LabelCenter = labelCenter },
+                                    Some (makeChannel selfKey "loop-vertical" corridorX offset bundleIndex srcModuleId dstModuleId (if stubDir >= 0.f then "right" else "left") (if stubDir >= 0.f then "right" else "left"))
                             elif not (moduleBounds.ContainsKey srcModuleId)
                                  || not (moduleBounds.ContainsKey dstModuleId) then
-                                [| srcCenter; dstCenter |], None
+                                [| srcCenter; dstCenter |], None, None
                             else
                                 let srcBounds = moduleBounds[srcModuleId]
                                 let dstBounds = moduleBounds[dstModuleId]
@@ -1137,7 +1371,7 @@ module ViewModePlanner =
                                         sprintf "down:%d:%d:%s->%s" srcTier dstTier srcModuleId dstModuleId
                                     else
                                         sprintf "up:%d:%d:%s->%s" dstTier srcTier dstModuleId srcModuleId
-                                let offset = nextCorridorOffset corridorKey
+                                let offset, bundleIndex = nextCorridor corridorKey
                                 if srcTier = dstTier then
                                     let corridorY = exitPt.Y + offset
                                     let sweepLeft =
@@ -1172,7 +1406,8 @@ module ViewModePlanner =
                                     let labelX = mid1.X + (forward * calloutTangentialOffset)
                                     let labelCenter = point labelX labelY
                                     [| srcCenter; exitPt; mid1; mid2; entryPt; dstCenter |],
-                                    Some { StubStart = mid1; StubEnd = stubEnd; LabelCenter = labelCenter }
+                                    Some { StubStart = mid1; StubEnd = stubEnd; LabelCenter = labelCenter },
+                                    Some (makeChannel corridorKey "horizontal" corridorY offset bundleIndex srcModuleId dstModuleId srcSide dstSide)
                                 else
                                     let sweepX =
                                         if srcSide = "right" then exitPt.X + cardSpacingX else exitPt.X - cardSpacingX
@@ -1198,7 +1433,8 @@ module ViewModePlanner =
                                     let labelY = mid1.Y + (direction * calloutTangentialOffset)
                                     let labelCenter = point labelX labelY
                                     [| srcCenter; exitPt; mid1; mid2; entryPt; dstCenter |],
-                                    Some { StubStart = mid1; StubEnd = stubEnd; LabelCenter = labelCenter }
+                                    Some { StubStart = mid1; StubEnd = stubEnd; LabelCenter = labelCenter },
+                                    Some (makeChannel corridorKey "vertical" sweepX offset bundleIndex srcModuleId dstModuleId srcSide dstSide)
 
                         let isCrossModule = not (srcModuleId.Equals(dstModuleId, StringComparison.OrdinalIgnoreCase))
                         let recordEdge moduleId =
@@ -1212,7 +1448,8 @@ module ViewModePlanner =
                         edgeRoutes.Add(
                             { Id = if String.IsNullOrWhiteSpace edge.Id then $"{edge.SourceId}->{edge.TargetId}" else edge.Id
                               Points = points
-                              Callout = callout })
+                              Callout = callout
+                              Channel = channel })
                     | _ -> ()
 
             let nodesArray = nodeLayouts.ToArray()
@@ -1547,6 +1784,7 @@ module ViewModePlanner =
               NodeModules = nodeModules
               PageLayouts = pageLayouts
               Containers = containersArray
+              RowLayouts = rowLayouts.ToArray()
               Edges = edgesArray
               Pages = pagePlans
               Layers = updatedLayerPlans

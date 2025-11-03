@@ -22,13 +22,27 @@ type EdgeCallout =
       StubEnd: PointF
       LabelCenter: PointF }
 
+[<CLIMutable>]
+type EdgeChannel =
+    { Key: string
+      Orientation: string
+      Center: float32
+      Offset: float32
+      BundleIndex: int
+      Spacing: float32
+      SourceModuleId: string
+      TargetModuleId: string
+      SourceSide: string
+      TargetSide: string }
+
 /// Describes a polyline route for an edge. Points are expected to include
 /// at least a start and end point.
 [<CLIMutable>]
 type EdgeRoute =
     { Id: string
       Points: PointF array
-      Callout: EdgeCallout option }
+      Callout: EdgeCallout option
+      Channel: EdgeChannel option }
 
 [<CLIMutable>]
 type NodeModuleAssignment =
@@ -60,6 +74,16 @@ type ContainerLayout =
       Bounds: RectangleF
       VisibleNodes: int
       OverflowCount: int }
+
+[<CLIMutable>]
+type RowLayout =
+    { PageIndex: int
+      Tier: string
+      RowIndex: int
+      TierRowIndex: int
+      Top: float32
+      Bottom: float32
+      Height: float32 }
 
 /// Aggregated overflow metadata for nodes trimmed from a container/module.
 [<CLIMutable>]
@@ -132,6 +156,7 @@ type LayoutPlan =
       NodeModules: NodeModuleAssignment array
       PageLayouts: PageLayoutInfo array
       Containers: ContainerLayout array
+      RowLayouts: RowLayout array
       Edges: EdgeRoute array
       Pages: PagePlan array
       Layers: LayerPlan array

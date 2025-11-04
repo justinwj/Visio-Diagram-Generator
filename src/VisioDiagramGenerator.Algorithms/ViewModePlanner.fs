@@ -321,7 +321,7 @@ module ViewModePlanner =
                 |> Option.defaultValue (Math.Max(slotsPerRow * 3, 6))
             let explicitMaxModulesPerLane =
                 getMetadataInt model "layout.view.maxModulesPerLane"
-                |> Option.filter (fun v -> v >= slotsPerRow)
+                |> Option.filter (fun v -> v >= 1)
             let mutable maxModulesPerLane =
                 explicitMaxModulesPerLane |> Option.defaultValue (Math.Max(slotsPerRow * 3, 12))
             let mutable slotsPerTier =
@@ -453,15 +453,17 @@ module ViewModePlanner =
                 let baseline = slotsPerRow * maxRowsByHeight
                 Math.Max(baseline, 12)
 
-            let laneNodeCap =
+            let explicitLaneNodeCap =
                 getMetadataInt model "layout.view.maxNodesPerLane"
                 |> Option.filter (fun v -> v > 0)
-                |> Option.defaultValue laneNodeCapDefault
+            let laneNodeCap =
+                explicitLaneNodeCap |> Option.defaultValue laneNodeCapDefault
 
-            let laneConnectorCap =
+            let explicitLaneConnectorCap =
                 getMetadataInt model "layout.view.maxConnectorsPerLane"
                 |> Option.filter (fun v -> v > 0)
-                |> Option.defaultValue 400
+            let laneConnectorCap =
+                explicitLaneConnectorCap |> Option.defaultValue 400
 
             let laneHeightLimit =
                 getMetadataDouble model "layout.view.maxLaneHeightIn"
@@ -474,6 +476,19 @@ module ViewModePlanner =
                   MaxConnectorsPerLane = laneConnectorCap
                   MaxLaneHeightIn = laneHeightLimit
                   RowSpacingIn = rowSpacing }
+
+            let rowModuleLimit =
+                let laneLimit =
+                    if laneCapacity.MaxModulesPerLane > 0 then laneCapacity.MaxModulesPerLane
+                    else Int32.MaxValue
+                let limit = Math.Min(slotsPerRow, laneLimit)
+                if limit <= 0 then 1 else limit
+            let rowNodeLimit =
+                if laneCapacity.MaxNodesPerLane > 0 then laneCapacity.MaxNodesPerLane
+                else Int32.MaxValue
+            let rowConnectorLimit =
+                if laneCapacity.MaxConnectorsPerLane > 0 then laneCapacity.MaxConnectorsPerLane
+                else Int32.MaxValue
 
             let computeSegmentMetrics totalNodes =
                 let safeTotal = if totalNodes <= 0 then 0 else totalNodes
@@ -639,6 +654,7 @@ module ViewModePlanner =
                     let mutable currentNodes = 0
                     let mutable currentMaxOccupancy = 0.0
                     let mutable nextPageIndex = 0
+                    let rowSpacingDelta = float laneCapacity.RowSpacingIn
 
                     let resetPage () =
                         laneStates.Clear()
@@ -658,19 +674,27 @@ module ViewModePlanner =
                             nextPageIndex <- nextPageIndex + 1
                             resetPage()
 
-                    let maxModulesLimit =
+                    let baseModulesLimit =
                         if laneCapacity.MaxModulesPerLane <= 0 then Int32.MaxValue
                         else laneCapacity.MaxModulesPerLane
-                    let maxNodesLimit =
+                    let baseNodesLimit =
                         if laneCapacity.MaxNodesPerLane <= 0 then Int32.MaxValue
                         else laneCapacity.MaxNodesPerLane
-                    let maxConnectorsLimit =
+                    let baseConnectorsLimit =
                         if laneCapacity.MaxConnectorsPerLane <= 0 then Int32.MaxValue
                         else laneCapacity.MaxConnectorsPerLane
+                    let maxModulesLimit =
+                        if explicitMaxModulesPerLane.IsSome && slotsPerRow > baseModulesLimit then Int32.MaxValue
+                        else baseModulesLimit
+                    let maxNodesLimit =
+                        if explicitLaneNodeCap.IsSome then Int32.MaxValue
+                        else baseNodesLimit
+                    let maxConnectorsLimit =
+                        if explicitLaneConnectorCap.IsSome then Int32.MaxValue
+                        else baseConnectorsLimit
                     let maxHeightLimit =
                         if laneCapacity.MaxLaneHeightIn <= 0.0 then Double.PositiveInfinity
                         else laneCapacity.MaxLaneHeightIn
-                    let rowSpacingDelta = float laneCapacity.RowSpacingIn
 
                     let rec addModule (moduleId: string) =
                         if String.IsNullOrWhiteSpace moduleId then
@@ -868,6 +892,60 @@ module ViewModePlanner =
             let pageExtents = Dictionary<int, float32[]>(HashIdentity.Structural)
             let rowLayouts = ResizeArray<RowLayout>()
 
+            let partitionTierRows (tierModules: string array) =
+                if isNull (box tierModules) || tierModules.Length = 0 then
+                    Array.empty
+                else
+                    let rows = ResizeArray<string[]>()
+                    let mutable currentRow = ResizeArray<string>()
+                    let mutable rowModules = 0
+                    let mutable rowNodes = 0
+                    let mutable rowConnectors = 0
+
+                    let flushRow () =
+                        if currentRow.Count > 0 then
+                            rows.Add(currentRow.ToArray())
+                            currentRow <- ResizeArray<string>()
+                            rowModules <- 0
+                            rowNodes <- 0
+                            rowConnectors <- 0
+
+                    for segmentId in tierModules do
+                        if not (String.IsNullOrWhiteSpace segmentId) then
+                            let moduleNodes =
+                                match modules.TryGetValue segmentId with
+                                | true, vm -> vm.Nodes.Count
+                                | _ -> 0
+                            let moduleConnectors =
+                                match segmentEdgeStats.TryGetValue segmentId with
+                                | true, stats -> stats.ConnectorCount
+                                | _ -> 0
+
+                            let overflowBeforeAdd =
+                                (rowModules > 0 && rowModules + 1 > rowModuleLimit)
+                                || (rowModules > 0 && rowNodeLimit <> Int32.MaxValue && rowNodes + moduleNodes > rowNodeLimit)
+                                || (rowModules > 0 && rowConnectorLimit <> Int32.MaxValue && rowConnectors + moduleConnectors > rowConnectorLimit)
+
+                            if overflowBeforeAdd then
+                                flushRow()
+
+                            currentRow.Add segmentId
+                            rowModules <- rowModules + 1
+                            rowNodes <- rowNodes + moduleNodes
+                            rowConnectors <- rowConnectors + moduleConnectors
+
+                            let rowReachedCapacity =
+                                (rowModules >= rowModuleLimit)
+                                || (rowNodeLimit <> Int32.MaxValue && rowNodes >= rowNodeLimit)
+                                || (rowConnectorLimit <> Int32.MaxValue && rowConnectors >= rowConnectorLimit)
+
+                            if rowReachedCapacity then
+                                flushRow()
+
+                    flushRow()
+                    let result = rows.ToArray()
+                    result
+
             let getPageExtents index =
                 match pageExtents.TryGetValue index with
                 | true, bounds -> bounds
@@ -991,9 +1069,7 @@ module ViewModePlanner =
                     if modulesInTier.Length = 0 then
                         cursorY <- cursorY - tierSpacing
                     else
-                        let rows =
-                            modulesInTier
-                            |> Array.chunkBySize slotsPerRow
+                        let rows = partitionTierRows modulesInTier
                         let mutable accumulatedHeight = 0.f
 
                         for rowIdx = 0 to rows.Length - 1 do

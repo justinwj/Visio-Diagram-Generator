@@ -1,6 +1,6 @@
 # Immediate Plan (delete below lists when done, this MD should not get long)
 
-1. Formalize capacity constants in F# (`layout.view.maxModulesPerLane`, `layout.view.maxConnectorsPerRow`, etc.) and enforce them during segment splitting.
-2. Design a corridor descriptor type (`EdgeChannel`?) and thread it through `EdgeRoute` so the runner can distinguish planner-guided paths from fallbacks.
-3. Update spillover logic to record row-level offsets, ensuring future runner spacing uses planner data instead of heuristics.
-4. Begin writing unit tests for `computeViewLayout` focusing on module spillover and channel emission.
+1. Fix `computeViewLayout` row/page segmentation so tiers split when `maxModulesPerLane`/`maxNodesPerLane` caps are hit; cover with unit tests on wide fixtures (include `invSys` slice).
+2. Tune default layout caps (lane + page occupancy, tier spacing) or introduce an `invSys` profile, then rerun the guardrail render to confirm occupancy drops below 100 %.
+3. Inspect bridge/callout generation on the refreshed layout; trim or redesign any skyscraper artifacts once new pagination is in place.
+4. Refresh corridor/channel diagnostics after the layout changes so runner vs. planner drift stays transparent.

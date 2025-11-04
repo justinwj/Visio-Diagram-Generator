@@ -281,12 +281,28 @@ foreach ($fixtureEntry in $fixtureMatrix) {
     }
 
     Invoke-Dotnet -Arguments @('run', '--project', 'src/VDG.VBA.CLI', '--', 'vba2json', '--in', $sourcePath, '--out', $irPath, '--infer-metrics')
-    Invoke-Dotnet -Arguments @('run', '--project', 'src/VDG.VBA.CLI', '--', 'ir2diagram', '--in', $irPath, '--out', $diagramPath, '--mode', $mode)
+
     $overridePath = Join-Path $repoRoot "tests/fixtures/config/$($fixtureEntry.Name)/$mode.diagram.override.json"
+    $overrideJson = $null
     if (Test-Path $overridePath) {
-      Write-Host "Applying diagram override: $overridePath"
-      $diagramJson = Get-Content $diagramPath -Raw | ConvertFrom-Json -Depth 100
+      Write-Host "Applying overrides from: $overridePath"
       $overrideJson = Get-Content $overridePath -Raw | ConvertFrom-Json -Depth 100
+      if ($overrideJson.PSObject.Properties.Match('metadata').Count -gt 0 -and $overrideJson.metadata -ne $null) {
+        $irJson = Get-Content $irPath -Raw | ConvertFrom-Json -Depth 100
+        if ($irJson.PSObject.Properties.Match('metadata').Count -eq 0) {
+          Add-Member -InputObject $irJson -NotePropertyName 'metadata' -NotePropertyValue ([pscustomobject]@{})
+        }
+        elseif ($irJson.metadata -eq $null) {
+          $irJson.metadata = [pscustomobject]@{}
+        }
+        Merge-JsonObject -Target $irJson.metadata -Overrides $overrideJson.metadata
+        $irJson | ConvertTo-Json -Depth 100 | Out-File $irPath -Encoding utf8
+      }
+    }
+
+    Invoke-Dotnet -Arguments @('run', '--project', 'src/VDG.VBA.CLI', '--', 'ir2diagram', '--in', $irPath, '--out', $diagramPath, '--mode', $mode)
+    if ($overrideJson -ne $null) {
+      $diagramJson = Get-Content $diagramPath -Raw | ConvertFrom-Json -Depth 100
       Merge-JsonObject -Target $diagramJson -Overrides $overrideJson
       $diagramJson | ConvertTo-Json -Depth 100 | Out-File $diagramPath -Encoding utf8
     }

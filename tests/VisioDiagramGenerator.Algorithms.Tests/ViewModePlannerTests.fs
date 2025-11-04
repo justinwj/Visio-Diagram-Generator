@@ -139,6 +139,56 @@ let ``lane capacity splits modules into additional pages`` () =
     Assert.All(plan.RowLayouts, fun row -> Assert.True(row.Top > row.Bottom))
 
 [<Fact>]
+let ``row segmentation honours lane module caps even with wide slot setting`` () =
+    let nodes =
+        [| for moduleIdx in 1 .. 8 ->
+               mkNode (sprintf "Module%02d" moduleIdx) "Services" moduleIdx |]
+    let model = DiagramModel(nodes, Array.empty)
+    model.Metadata["layout.view.slotsPerRow"] <- "24"
+    model.Metadata["layout.view.maxModulesPerLane"] <- "3"
+    model.Metadata["layout.page.plan.maxModulesPerPage"] <- "24"
+
+    let plan = ViewModePlanner.computeViewLayout model
+
+    Assert.True(plan.Pages.Length >= 1)
+    let tierRows =
+        plan.RowLayouts
+        |> Array.filter (fun row -> row.Tier.Equals("Services", StringComparison.OrdinalIgnoreCase))
+        |> Array.sortBy (fun row -> row.TierRowIndex)
+
+    Assert.Equal(3, tierRows.Length)
+    Assert.Equal(0, tierRows[0].TierRowIndex)
+    Assert.Equal(1, tierRows[1].TierRowIndex)
+    Assert.Equal(2, tierRows[2].TierRowIndex)
+
+[<Fact>]
+let ``row segmentation honours lane node caps before pagination`` () =
+    let nodes =
+        [| for moduleIdx in 0 .. 3 do
+               for nodeIdx in 1 .. 40 ->
+                   let globalIdx = moduleIdx * 40 + nodeIdx
+                   mkNode (sprintf "Module%02d" (moduleIdx + 1)) "Services" globalIdx |]
+    let model = DiagramModel(nodes, Array.empty)
+    model.Metadata["layout.view.slotsPerRow"] <- "50"
+    model.Metadata["layout.view.maxModulesPerLane"] <- "50"
+    model.Metadata["layout.view.maxNodesPerLane"] <- "80"
+    model.Metadata["layout.page.plan.maxModulesPerPage"] <- "50"
+
+    let plan = ViewModePlanner.computeViewLayout model
+
+    Assert.Equal(1, plan.Pages.Length)
+    let tierRows =
+        plan.RowLayouts
+        |> Array.filter (fun row -> row.Tier.Equals("Services", StringComparison.OrdinalIgnoreCase))
+        |> Array.sortBy (fun row -> row.TierRowIndex)
+
+    Assert.Equal(2, tierRows.Length)
+    Assert.Equal(0, tierRows[0].TierRowIndex)
+    Assert.Equal(1, tierRows[1].TierRowIndex)
+    Assert.True(tierRows[0].Height > 0.f)
+    Assert.True(tierRows[1].Top < tierRows[0].Top)
+
+[<Fact>]
 let ``edge routes emit channel metadata`` () =
     let nodes =
         [| mkNode "ModuleA" "Services" 1

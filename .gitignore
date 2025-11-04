@@ -36,6 +36,7 @@ diag_cli*.txt
 *.env
 local.settings.json
 appsettings.Development.json
+.dotnet-cli-home/
 
 # Archives / legacy (created by Convert-ToCLI)
 backlog/

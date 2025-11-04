@@ -1,3 +1,5 @@
+# MD for writing hypothetical algorithms to implement and see if it works
+
 # View-Mode Presentation Strategy
 
 ## Why This Is Needed

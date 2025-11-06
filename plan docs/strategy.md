@@ -236,6 +236,8 @@ What’s Doable with VDG’s .NET to Visio Pipeline
   - Include summary/overview pages in each file for context when crossing boundaries.
 - **Diagnostics:**  
   Emit metadata or warnings anytime a chunk splits to a new VSDX, so users can audit overflow and maintain traceability.
+- **Layer Cap:**  
+  Min 1 - Max 1,000 shapes per layer. When layer max reached, a clickable connector is created to the next layer and so on.
 ***
 # Turn Visio Features Off
 Certain Visio behaviors can be toggled while the runner is generating diagrams so the planner's geometry stays intact and Visio does not "fix" algorithmic layouts.

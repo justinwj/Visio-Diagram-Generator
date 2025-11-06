@@ -139,6 +139,28 @@ let ``lane capacity splits modules into additional pages`` () =
     Assert.All(plan.RowLayouts, fun row -> Assert.True(row.Top > row.Bottom))
 
 [<Fact>]
+let ``channel labels aggregate corridor callouts`` () =
+    let nodes =
+        [| mkNode "ModuleA" "Modules" 1
+           mkNode "ModuleA" "Modules" 2
+           mkNode "ModuleB" "Modules" 3 |]
+    let e1 = Edge("edge1", nodeId 1, nodeId 3)
+    e1.Label <- "Alpha"
+    let e2 = Edge("edge2", nodeId 2, nodeId 3)
+    e2.Label <- "Beta"
+    let edges = [| e1; e2 |]
+    let model = DiagramModel(nodes, edges)
+
+    let plan = ViewModePlanner.computeViewLayout model
+
+    match plan.ChannelLabels |> Array.tryFind (fun ch -> ch.Key.Contains("ModuleA", StringComparison.OrdinalIgnoreCase)) with
+    | Some channel ->
+        Assert.Contains("Alpha", channel.Lines)
+        Assert.Contains("Beta", channel.Lines)
+    | None ->
+        Assert.True(false, "Expected channel label was not generated")
+
+[<Fact>]
 let ``row segmentation honours lane module caps even with wide slot setting`` () =
     let nodes =
         [| for moduleIdx in 1 .. 8 ->

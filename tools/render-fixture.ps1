@@ -307,9 +307,22 @@ foreach ($fixtureEntry in $fixtureMatrix) {
       $diagramJson | ConvertTo-Json -Depth 100 | Out-File $diagramPath -Encoding utf8
     }
 
+    $skipRunnerFlag = $true
+    if ($overrideJson -ne $null -and $overrideJson.PSObject.Properties.Match('options').Count -gt 0) {
+      $renderOptions = $overrideJson.options?.render
+      if ($renderOptions -ne $null -and $renderOptions.PSObject.Properties.Match('skipRunner').Count -gt 0) {
+        $skipRunnerFlag = [bool]$renderOptions.skipRunner
+      }
+    }
+
     $previousSkip = [System.Environment]::GetEnvironmentVariable('VDG_SKIP_RUNNER', [System.EnvironmentVariableTarget]::Process)
     try {
-      [System.Environment]::SetEnvironmentVariable('VDG_SKIP_RUNNER', '1', [System.EnvironmentVariableTarget]::Process)
+      if ($skipRunnerFlag) {
+        [System.Environment]::SetEnvironmentVariable('VDG_SKIP_RUNNER', '1', [System.EnvironmentVariableTarget]::Process)
+      }
+      else {
+        [System.Environment]::SetEnvironmentVariable('VDG_SKIP_RUNNER', $null, [System.EnvironmentVariableTarget]::Process)
+      }
       $psi = New-Object System.Diagnostics.ProcessStartInfo
       $psi.FileName = $cliPath
       $psi.ArgumentList.Add('--diag-json')

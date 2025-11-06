@@ -4417,14 +4417,21 @@ namespace VDG.CLI
         private static void DrawLabelBox(dynamic page, string text, double midX, double midY, double offX, double offY)
         {
             if (string.IsNullOrWhiteSpace(text)) return;
-            var width = Math.Max(0.6, Math.Min(3.0, text.Length * 0.09));
-            var height = 0.25;
+            var lines = text.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            if (lines.Length == 0)
+            {
+                lines = new[] { text };
+            }
+            var maxLen = lines.Max(l => l.Length);
+            var width = Math.Max(0.6, Math.Min(3.5, maxLen * 0.09));
+            var height = Math.Max(0.25, 0.25 * lines.Length);
+            var normalized = string.Join("\n", lines);
             var left = midX + offX - (width / 2.0);
             var bottom = midY + offY - (height / 2.0);
             try
             {
                 dynamic box = page.DrawRectangle(left, bottom, left + width, bottom + height);
-                box.Text = text;
+                box.Text = normalized;
                 TrySetFormula(box, "LinePattern", "1");
                 TrySetFormula(box, "LineColor", "RGB(200,200,200)");
                 TrySetFormula(box, "FillForegnd", "RGB(255,255,255)");
@@ -4560,7 +4567,7 @@ namespace VDG.CLI
                 {
                     ComputePlacements(model, layout, layoutPlan, placements, firstPageInfo, layerContext);
                     DrawLaneContainers(model, layout, firstPageInfo.Page);
-                    DrawConnectors(model, placements, firstPageInfo, pageManager, layout, layerContext);
+                    DrawConnectors(model, placements, firstPageInfo, pageManager, layout, layerContext, null);
                 }
 
                 EmitPageSummary(pageManager);
@@ -5227,7 +5234,7 @@ namespace VDG.CLI
             DrawExplicitContainers(model, layout, visioPage, minLeft, minBottom, double.PositiveInfinity, margin, titleHeight, 0, null);
         }
 
-        private static void DrawConnectors(DiagramModel model, IDictionary<string, NodePlacement> placements, VisioPageManager.PageInfo pageInfo, VisioPageManager? pageManager, LayoutResult? layout = null, LayerRenderContext? layerContext = null)
+        private static void DrawConnectors(DiagramModel model, IDictionary<string, NodePlacement> placements, VisioPageManager.PageInfo pageInfo, VisioPageManager? pageManager, LayoutResult? layout = null, LayerRenderContext? layerContext = null, LayoutPlan? layoutPlan = null)
         {
             if (pageInfo == null) throw new COMException("Visio page metadata was not initialised.");
             dynamic visioPage = pageInfo.Page ?? throw new COMException("Visio page was not created.");
@@ -5296,7 +5303,8 @@ namespace VDG.CLI
                         }
                         dynamic line = visioPage.DrawPolyline(pts.ToArray(), 0);
                         var calloutPlaced = DrawConnectorCallout(visioPage, edge, predefinedRoute, 0.0, 0.0, layerContext, pageInfo, sourcePlacement, targetPlacement);
-                        if (!calloutPlaced && !string.IsNullOrWhiteSpace(edge.Label))
+                        var hasChannel = predefinedRoute.Channel != null && FSharpOption<EdgeChannel>.get_IsSome(predefinedRoute.Channel);
+                        if (!calloutPlaced && !hasChannel && !string.IsNullOrWhiteSpace(edge.Label))
                         {
                             line.Text = edge.Label;
                         }
@@ -5690,6 +5698,40 @@ namespace VDG.CLI
             catch
             {
                 return false;
+            }
+        }
+
+        private static void DrawChannelLabelsForPage(dynamic page, LayoutPlan? layoutPlan, int pageIndex, double offsetX, double offsetY, LayerRenderContext context, VisioPageManager.PageInfo pageInfo)
+        {
+            if (layoutPlan?.ChannelLabels == null) return;
+
+            foreach (var label in layoutPlan.ChannelLabels)
+            {
+                if (label == null || label.PageIndex != pageIndex) continue;
+                var lines = label.Lines;
+                if (lines == null || lines.Length == 0) continue;
+
+                try
+                {
+                    var stub = label.StubStart;
+                    var anchor = label.StubEnd;
+                    dynamic leader = page.DrawPolyline(new[] { stub.X + offsetX, stub.Y + offsetY, anchor.X + offsetX, anchor.Y + offsetY }, 0);
+                    TrySetFormula(leader, "LinePattern", "2");
+                    TrySetFormula(leader, "LineWeight", "0.01");
+                    AssignConnectorToLayers(context, pageInfo, leader, null, null);
+                    try { leader.SendToBack(); } catch { }
+                    ReleaseCom(leader);
+
+                    var center = label.LabelCenter;
+                    var text = string.Join("\n", lines);
+                    DrawLabelBox(page, text, center.X + offsetX, center.Y + offsetY, 0.0, 0.0);
+                }
+                catch
+                {
+                    // Ignore drawing issues for aggregated channel labels
+                }
+
+                DrawChannelLabelsForPage(page, layoutPlan, pi, offsetX, offsetY, layerContext, pageInfo);
             }
         }
 
@@ -6817,14 +6859,15 @@ namespace VDG.CLI
 
                         try
                         {
-                            dynamic line = page.DrawPolyline(pts.ToArray(), 0);
-                            var calloutPlaced = DrawConnectorCallout(page, edge, predefinedRoute, offsetX, offsetY, layerContext, pageInfo, src, dst);
-                            if (!calloutPlaced && !string.IsNullOrWhiteSpace(edge.Label))
-                            {
-                                line.Text = edge.Label;
-                            }
-                            else
-                            {
+                        dynamic line = page.DrawPolyline(pts.ToArray(), 0);
+                        var calloutPlaced = DrawConnectorCallout(page, edge, predefinedRoute, offsetX, offsetY, layerContext, pageInfo, src, dst);
+                        var hasChannel = predefinedRoute.Channel != null && FSharpOption<EdgeChannel>.get_IsSome(predefinedRoute.Channel);
+                        if (!calloutPlaced && !hasChannel && !string.IsNullOrWhiteSpace(edge.Label))
+                        {
+                            line.Text = edge.Label;
+                        }
+                        else
+                        {
                                 line.Text = string.Empty;
                             }
                             if (edge.Directed) TrySetFormula(line, "EndArrow", "5"); else TrySetFormula(line, "EndArrow", "0");
@@ -7618,9 +7661,10 @@ namespace VDG.CLI
                     Console.WriteLine($"warning: skipped modules {preview}{suffix}");
                 }
             }
-        }
+            }
 
-    }
+            DrawChannelLabelsForPage(visioPage, layoutPlan, pageIndex, 0.0, 0.0, layerContext, pageInfo);
+        }
 }
 
 

@@ -29,6 +29,17 @@ module ViewModePlanner =
           Tier: string
           Nodes: ResizeArray<Node> }
 
+    type private ChannelLabelBucket =
+        { PageIndex: int
+          Channel: EdgeChannel
+          mutable StubStart: PointF
+          mutable StubEnd: PointF
+          mutable LabelCenter: PointF
+          Labels: ResizeArray<string>
+          LabelSet: HashSet<string>
+          mutable OverflowCount: int
+          mutable SampleCount: int }
+
     type private SegmentMetrics =
         { Columns: int
           CardWidth: float32
@@ -301,6 +312,7 @@ module ViewModePlanner =
               Edges = Array.empty
               Pages = Array.empty
               Layers = Array.empty
+              ChannelLabels = Array.empty
               Bridges = Array.empty
               PageBridges = Array.empty
               Stats =
@@ -638,6 +650,38 @@ module ViewModePlanner =
                                     if isCross then stats.CrossModuleCount <- stats.CrossModuleCount + 1
                             recordEdgeStats srcModuleId
                             recordEdgeStats dstModuleId
+
+            let channelLabelBuckets = Dictionary<(int * string * int * string), ChannelLabelBucket>(HashIdentity.Structural)
+            let maxChannelLabelLines = 12
+            let ensureChannelLabelBucket pageIndex (channel: EdgeChannel) (callout: EdgeCallout) =
+                let key = (pageIndex, channel.Key, channel.BundleIndex, channel.Orientation)
+                match channelLabelBuckets.TryGetValue key with
+                | true, bucket -> bucket
+                | _ ->
+                    let bucket =
+                        { PageIndex = pageIndex
+                          Channel = channel
+                          StubStart = callout.StubStart
+                          StubEnd = callout.StubEnd
+                          LabelCenter = callout.LabelCenter
+                          Labels = ResizeArray<string>()
+                          LabelSet = HashSet<string>(StringComparer.Ordinal)
+                          OverflowCount = 0
+                          SampleCount = 0 }
+                    channelLabelBuckets[key] <- bucket
+                    bucket
+                |> fun bucket ->
+                    let countPrev = float32 bucket.SampleCount
+                    let countNew = countPrev + 1.0f
+                    if bucket.SampleCount > 0 then
+                        bucket.StubStart <- point ((bucket.StubStart.X * countPrev + callout.StubStart.X) / countNew)
+                                                  ((bucket.StubStart.Y * countPrev + callout.StubStart.Y) / countNew)
+                        bucket.StubEnd <- point ((bucket.StubEnd.X * countPrev + callout.StubEnd.X) / countNew)
+                                                ((bucket.StubEnd.Y * countPrev + callout.StubEnd.Y) / countNew)
+                        bucket.LabelCenter <- point ((bucket.LabelCenter.X * countPrev + callout.LabelCenter.X) / countNew)
+                                                    ((bucket.LabelCenter.Y * countPrev + callout.LabelCenter.Y) / countNew)
+                    bucket.SampleCount <- bucket.SampleCount + 1
+                    bucket
 
             let enforceLaneCapacity (plans: PagePlan array) =
                 if isNull (box plans) || plans.Length = 0 then
@@ -1282,6 +1326,161 @@ module ViewModePlanner =
 
             let edgeRoutes = ResizeArray<EdgeRoute>()
             let corridorSequence = Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+            let moduleSideChannelBuckets =
+                Dictionary<string, Dictionary<string, ResizeArray<string * float32>>>(StringComparer.OrdinalIgnoreCase)
+
+            let registerChannelBucket (moduleId: string) (side: string) (channelKey: string) (sortValue: float32) =
+                if String.IsNullOrWhiteSpace moduleId || String.IsNullOrWhiteSpace side || String.IsNullOrWhiteSpace channelKey then
+                    ()
+                else
+                    let sideMap =
+                        match moduleSideChannelBuckets.TryGetValue moduleId with
+                        | true, existing -> existing
+                        | _ ->
+                            let created = Dictionary<string, ResizeArray<string * float32>>(StringComparer.OrdinalIgnoreCase)
+                            moduleSideChannelBuckets[moduleId] <- created
+                            created
+                    let entries =
+                        match sideMap.TryGetValue side with
+                        | true, existing -> existing
+                        | _ ->
+                            let created = ResizeArray<string * float32>()
+                            sideMap[side] <- created
+                            created
+                    if not (entries |> Seq.exists (fun (key, _) -> key.Equals(channelKey, StringComparison.OrdinalIgnoreCase))) then
+                        entries.Add(channelKey, sortValue)
+
+            let getTierIndex moduleId =
+                match moduleTierIndex.TryGetValue moduleId with
+                | true, idx -> idx
+                | _ -> 0
+
+            let computeChannelDescriptor (srcModuleId: string) (dstModuleId: string) (srcCenter: PointF) (dstCenter: PointF) =
+                if String.IsNullOrWhiteSpace srcModuleId || String.IsNullOrWhiteSpace dstModuleId then
+                    None
+                elif srcModuleId.Equals(dstModuleId, StringComparison.OrdinalIgnoreCase) then
+                    match moduleBounds.TryGetValue srcModuleId with
+                    | true, bounds ->
+                        let dx = Math.Abs(float (dstCenter.X - srcCenter.X))
+                        let dy = Math.Abs(float (dstCenter.Y - srcCenter.Y))
+                        let horizontal = dx >= dy
+                        if horizontal then
+                            let corridorKey = $"self:{srcModuleId}"
+                            let midX = (srcCenter.X + dstCenter.X) / 2.f
+                            Some (corridorKey, "loop-horizontal", (if dstCenter.Y >= srcCenter.Y then "top" else "bottom"), (if dstCenter.Y >= srcCenter.Y then "top" else "bottom"), midX, midX)
+                        else
+                            let corridorKey = $"self:{srcModuleId}"
+                            let midY = (srcCenter.Y + dstCenter.Y) / 2.f
+                            Some (corridorKey, "loop-vertical", (if dstCenter.X >= srcCenter.X then "right" else "left"), (if dstCenter.X >= srcCenter.X then "right" else "left"), midY, midY)
+                    | _ -> None
+                else
+                    if not (moduleBounds.ContainsKey srcModuleId) || not (moduleBounds.ContainsKey dstModuleId) then
+                        None
+                    else
+                        let srcTier = getTierIndex srcModuleId
+                        let dstTier = getTierIndex dstModuleId
+                        let srcSide, dstSide =
+                            if srcTier = dstTier then
+                                if srcCenter.X <= dstCenter.X then
+                                    ("right", "left")
+                                else
+                                    ("left", "right")
+                            elif srcTier < dstTier then
+                                ("right", "left")
+                            else
+                                ("left", "right")
+
+                        let corridorKey =
+                            if srcTier = dstTier then
+                                let leftModule, rightModule =
+                                    if srcCenter.X <= dstCenter.X then srcModuleId, dstModuleId
+                                    else dstModuleId, srcModuleId
+                                sprintf "tier:%d:%s->%s" srcTier leftModule rightModule
+                            elif srcTier < dstTier then
+                                sprintf "down:%d:%d:%s->%s" srcTier dstTier srcModuleId dstModuleId
+                            else
+                                sprintf "up:%d:%d:%s->%s" dstTier srcTier dstModuleId srcModuleId
+
+                        let orientation =
+                            if srcTier = dstTier then "horizontal" else "vertical"
+
+                        let sortSrc =
+                            if srcTier = dstTier then srcCenter.Y else srcCenter.X
+                        let sortDst =
+                            if srcTier = dstTier then dstCenter.Y else dstCenter.X
+
+                        Some (corridorKey, orientation, srcSide, dstSide, sortSrc, sortDst)
+
+            if not (isNull model.Edges) then
+                for edge in model.Edges do
+                    if not (isNull edge)
+                       && not (String.IsNullOrWhiteSpace edge.SourceId)
+                       && not (String.IsNullOrWhiteSpace edge.TargetId) then
+                        match placementCenters.TryGetValue edge.SourceId, placementCenters.TryGetValue edge.TargetId with
+                        | (true, srcCenter), (true, dstCenter) ->
+                            match nodeLookup.TryGetValue edge.SourceId, nodeLookup.TryGetValue edge.TargetId with
+                            | (true, srcNode), (true, dstNode) ->
+                                let srcModuleId =
+                                    match nodeToSegment.TryGetValue edge.SourceId with
+                                    | true, segId -> segId
+                                    | _ -> resolveModuleId srcNode tiers tiersSet
+                                let dstModuleId =
+                                    match nodeToSegment.TryGetValue edge.TargetId with
+                                    | true, segId -> segId
+                                    | _ -> resolveModuleId dstNode tiers tiersSet
+                                match computeChannelDescriptor srcModuleId dstModuleId srcCenter dstCenter with
+                                | Some (corridorKey, orientation, srcSide, dstSide, sortSrc, sortDst) ->
+                                    registerChannelBucket srcModuleId srcSide corridorKey sortSrc
+                                    registerChannelBucket dstModuleId dstSide corridorKey sortDst
+                                | None -> ()
+                            | _ -> ()
+                        | _ -> ()
+
+            let moduleSideSlotMap =
+                let map = Dictionary<struct (string * string * string), float32>(HashIdentity.Structural)
+                for KeyValue(moduleId, sideMap) in moduleSideChannelBuckets do
+                    for KeyValue(side, entries) in sideMap do
+                        let grouped =
+                            entries
+                            |> Seq.groupBy fst
+                            |> Seq.map (fun (key, vals) ->
+                                let avg =
+                                    vals
+                                    |> Seq.map snd
+                                    |> Seq.averageBy float
+                                    |> float32
+                                key, avg)
+                            |> Seq.toArray
+                        let sorted =
+                            grouped
+                            |> Array.sortBy snd
+                        let count = sorted.Length
+                        if count > 0 then
+                            for idx = 0 to count - 1 do
+                                let key, _ = sorted[idx]
+                                let normalized = float32 (idx + 1) / float32 (count + 1)
+                                map[struct(moduleId, side, key)] <- normalized
+                map
+
+            let tryGetSlotNormalized moduleId side key =
+                let structKey = struct(moduleId, side, key)
+                match moduleSideSlotMap.TryGetValue structKey with
+                | true, value -> value
+                | _ -> 0.5f
+
+            let adjustPointAlongSide moduleId side channelKey (bounds: RectangleF) (pt: PointF) =
+                let slot = tryGetSlotNormalized moduleId side channelKey
+                match side.ToLowerInvariant() with
+                | "left"
+                | "right" ->
+                    let newY = bounds.Bottom + bounds.Height * slot
+                    point pt.X newY
+                | "top"
+                | "bottom" ->
+                    let newX = bounds.Left + bounds.Width * slot
+                    point newX pt.Y
+                | _ -> pt
+
             let corridorSpacing =
                 getMetadataSingle model "layout.view.corridorSpacingIn"
                 |> Option.filter (fun v -> v >= 0.f)
@@ -1346,7 +1545,7 @@ module ViewModePlanner =
                             match nodeToSegment.TryGetValue edge.TargetId with
                             | true, segId -> segId
                             | _ -> resolveModuleId dstNode tiers tiersSet
-                        let points, callout, channel =
+                        let points, calloutRaw, channelRaw =
                             if srcModuleId.Equals(dstModuleId, StringComparison.OrdinalIgnoreCase) && moduleBounds.ContainsKey srcModuleId then
                                 let bounds = moduleBounds[srcModuleId]
                                 let dx = dstCenter.X - srcCenter.X
@@ -1428,15 +1627,6 @@ module ViewModePlanner =
                                         ("right", "left")
                                     else
                                         ("left", "right")
-                                let anchorPoint (rect: RectangleF) side =
-                                    match side with
-                                    | "left" -> point rect.Left (rect.Bottom + rect.Height / 2.f)
-                                    | "right" -> point (rect.Left + rect.Width) (rect.Bottom + rect.Height / 2.f)
-                                    | "top" -> point (rect.Left + rect.Width / 2.f) (rect.Bottom + rect.Height)
-                                    | "bottom" -> point (rect.Left + rect.Width / 2.f) rect.Bottom
-                                    | _ -> point (rect.Left + rect.Width / 2.f) (rect.Bottom + rect.Height / 2.f)
-                                let exitPt = anchorPoint srcBounds srcSide
-                                let entryPt = anchorPoint dstBounds dstSide
                                 let corridorKey =
                                     if srcTier = dstTier then
                                         let leftModule, rightModule =
@@ -1447,6 +1637,15 @@ module ViewModePlanner =
                                         sprintf "down:%d:%d:%s->%s" srcTier dstTier srcModuleId dstModuleId
                                     else
                                         sprintf "up:%d:%d:%s->%s" dstTier srcTier dstModuleId srcModuleId
+                                let anchorPoint (rect: RectangleF) side =
+                                    match side with
+                                    | "left" -> point rect.Left (rect.Bottom + rect.Height / 2.f)
+                                    | "right" -> point (rect.Left + rect.Width) (rect.Bottom + rect.Height / 2.f)
+                                    | "top" -> point (rect.Left + rect.Width / 2.f) (rect.Bottom + rect.Height)
+                                    | "bottom" -> point (rect.Left + rect.Width / 2.f) rect.Bottom
+                                    | _ -> point (rect.Left + rect.Width / 2.f) (rect.Bottom + rect.Height / 2.f)
+                                let exitPt = anchorPoint srcBounds srcSide |> adjustPointAlongSide srcModuleId srcSide corridorKey srcBounds
+                                let entryPt = anchorPoint dstBounds dstSide |> adjustPointAlongSide dstModuleId dstSide corridorKey dstBounds
                                 let offset, bundleIndex = nextCorridor corridorKey
                                 if srcTier = dstTier then
                                     let corridorY = exitPt.Y + offset
@@ -1511,6 +1710,139 @@ module ViewModePlanner =
                                     [| srcCenter; exitPt; mid1; mid2; entryPt; dstCenter |],
                                     Some { StubStart = mid1; StubEnd = stubEnd; LabelCenter = labelCenter },
                                     Some (makeChannel corridorKey "vertical" sweepX offset bundleIndex srcModuleId dstModuleId srcSide dstSide)
+                        let mutable callout = calloutRaw
+                        let channel = channelRaw
+                        let findPageByPoint (pt: PointF) =
+                            let px = float pt.X
+                            let py = float pt.Y
+                            pageExtents
+                            |> Seq.tryPick (fun kv ->
+                                let bounds = kv.Value
+                                if bounds.Length = 4 then
+                                    let left = float bounds[0]
+                                    let bottom = float bounds[1]
+                                    let right = float bounds[2]
+                                    let top = float bounds[3]
+                                    if px >= left && px <= right && py >= bottom && py <= top then
+                                        Some kv.Key
+                                    else
+                                        None
+                                else
+                                    None)
+
+                        let aggregateChannelCallout () =
+                            match callout, channel with
+                            | Some calloutRecord, Some channelRecord ->
+                                let pageIndexOpt =
+                                    match moduleToPage.TryGetValue srcModuleId with
+                                    | true, pageIdx -> Some pageIdx
+                                    | _ ->
+                                        match moduleToPage.TryGetValue dstModuleId with
+                                        | true, pageIdx -> Some pageIdx
+                                        | _ -> None
+                                match pageIndexOpt with
+                                | Some pageIndex ->
+                                    let labelRaw =
+                                        if String.IsNullOrWhiteSpace edge.Label then
+                                            if String.IsNullOrWhiteSpace edge.TargetId then null
+                                            else edge.TargetId.Trim()
+                                        else edge.Label.Trim()
+                                    if not (String.IsNullOrWhiteSpace labelRaw) then
+                                        let bucket = ensureChannelLabelBucket pageIndex channelRecord calloutRecord
+                                        if bucket.LabelSet.Add labelRaw then
+                                            if bucket.Labels.Count < maxChannelLabelLines then
+                                                bucket.Labels.Add labelRaw
+                                            else
+                                                bucket.OverflowCount <- bucket.OverflowCount + 1
+                                    callout <- None
+                                | None ->
+                                    let candidate =
+                                        findPageByPoint calloutRecord.LabelCenter
+                                        |> Option.orElseWith (fun () ->
+                                            let midPoint = point ((srcCenter.X + dstCenter.X) / 2.f) ((srcCenter.Y + dstCenter.Y) / 2.f)
+                                            findPageByPoint midPoint)
+                                        |> Option.defaultValue 0
+                                    let labelRaw =
+                                        if String.IsNullOrWhiteSpace edge.Label then
+                                            if String.IsNullOrWhiteSpace edge.TargetId then null
+                                            else edge.TargetId.Trim()
+                                        else edge.Label.Trim()
+                                    if not (String.IsNullOrWhiteSpace labelRaw) then
+                                        let bucket = ensureChannelLabelBucket candidate channelRecord calloutRecord
+                                        if bucket.LabelSet.Add labelRaw then
+                                            if bucket.Labels.Count < maxChannelLabelLines then
+                                                bucket.Labels.Add labelRaw
+                                            else
+                                                bucket.OverflowCount <- bucket.OverflowCount + 1
+                                    callout <- None
+                            | _ -> ()
+
+                        aggregateChannelCallout()
+                        let aggregateExternalCallout () =
+                            match callout, channel with
+                            | Some calloutRecord, None ->
+                                match moduleBounds.TryGetValue srcModuleId with
+                                | true, srcBounds ->
+                                    let distLeft = Math.Abs(float (calloutRecord.StubStart.X - srcBounds.Left))
+                                    let distRight = Math.Abs(float (calloutRecord.StubStart.X - (srcBounds.Left + srcBounds.Width)))
+                                    let distTop = Math.Abs(float (calloutRecord.StubStart.Y - (srcBounds.Bottom + srcBounds.Height)))
+                                    let distBottom = Math.Abs(float (calloutRecord.StubStart.Y - srcBounds.Bottom))
+                                    let minDist = [| distLeft; distRight; distTop; distBottom |] |> Array.min
+                                    let side =
+                                        if minDist = distLeft then "left"
+                                        elif minDist = distRight then "right"
+                                        elif minDist = distTop then "top"
+                                        else "bottom"
+                                    let sortValue =
+                                        match side.ToLowerInvariant() with
+                                        | "top"
+                                        | "bottom" -> calloutRecord.StubStart.X
+                                        | _ -> calloutRecord.StubStart.Y
+                                    let externalKey = $"external:{srcModuleId}:{side}"
+                                    registerChannelBucket srcModuleId side externalKey sortValue
+                                    let orientation =
+                                        match side.ToLowerInvariant() with
+                                        | "top"
+                                        | "bottom" -> "external-horizontal"
+                                        | _ -> "external-vertical"
+                                    let spacing =
+                                        if orientation.Contains("vertical") then cardSpacingX else corridorSpacing
+                                    let centerVal =
+                                        if orientation.Contains("horizontal") then calloutRecord.StubStart.Y else calloutRecord.StubStart.X
+                                    let extChannel =
+                                        { Key = externalKey
+                                          Orientation = orientation
+                                          Center = centerVal
+                                          Offset = 0.f
+                                          BundleIndex = 0
+                                          Spacing = spacing
+                                          SourceModuleId = srcModuleId
+                                          TargetModuleId = srcModuleId
+                                          SourceSide = side
+                                          TargetSide = side }
+                                    let pageIndex =
+                                        match moduleToPage.TryGetValue srcModuleId with
+                                        | true, pageIdx -> pageIdx
+                                        | _ ->
+                                            findPageByPoint calloutRecord.LabelCenter
+                                            |> Option.defaultValue 0
+                                    let labelText =
+                                        if String.IsNullOrWhiteSpace edge.Label then
+                                            if String.IsNullOrWhiteSpace edge.TargetId then edge.Id
+                                            else edge.TargetId.Trim()
+                                        else edge.Label.Trim()
+                                    if not (String.IsNullOrWhiteSpace labelText) then
+                                        let bucket = ensureChannelLabelBucket pageIndex extChannel calloutRecord
+                                        if bucket.LabelSet.Add labelText then
+                                            if bucket.Labels.Count < maxChannelLabelLines then
+                                                bucket.Labels.Add labelText
+                                            else
+                                                bucket.OverflowCount <- bucket.OverflowCount + 1
+                                        callout <- None
+                                | _ -> ()
+                            | _ -> ()
+
+                        aggregateExternalCallout()
 
                         let isCrossModule = not (srcModuleId.Equals(dstModuleId, StringComparison.OrdinalIgnoreCase))
                         let recordEdge moduleId =
@@ -1531,6 +1863,28 @@ module ViewModePlanner =
             let nodesArray = nodeLayouts.ToArray()
             let containersArray = containerLayouts.ToArray()
             let edgesArray = edgeRoutes.ToArray()
+            let channelLabels =
+                channelLabelBuckets
+                |> Seq.map (fun kvp ->
+                    let bucket = kvp.Value
+                    let arr =
+                        bucket.Labels
+                        |> Seq.toArray
+                        |> Array.sort
+                    let lines =
+                        if bucket.OverflowCount > 0 then
+                            Array.append arr [| sprintf "+%d more" bucket.OverflowCount |]
+                        else
+                            arr
+                    { PageIndex = bucket.PageIndex
+                      Key = bucket.Channel.Key
+                      BundleIndex = bucket.Channel.BundleIndex
+                      Orientation = bucket.Channel.Orientation
+                      StubStart = bucket.StubStart
+                      StubEnd = bucket.StubEnd
+                      LabelCenter = bucket.LabelCenter
+                      Lines = lines })
+                |> Seq.toArray
 
             let nodeModules =
                 let assignments = ResizeArray<NodeModuleAssignment>(nodeLookup.Count)
@@ -1864,6 +2218,7 @@ module ViewModePlanner =
               Edges = edgesArray
               Pages = pagePlans
               Layers = updatedLayerPlans
+              ChannelLabels = channelLabels
               Bridges = bridgeArray
               PageBridges = pageBridges.ToArray()
               Stats = stats }

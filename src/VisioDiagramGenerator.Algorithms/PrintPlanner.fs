@@ -210,6 +210,7 @@ module PrintPlanner =
           Edges = edges
           Pages = computePagePlans model layout
           Layers = Array.empty
+          ChannelLabels = Array.empty
           Bridges = Array.empty
           PageBridges = Array.empty
           Stats =

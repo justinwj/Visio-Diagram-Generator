@@ -35,6 +35,17 @@ type EdgeChannel =
       SourceSide: string
       TargetSide: string }
 
+[<CLIMutable>]
+type ChannelLabel =
+    { PageIndex: int
+      Key: string
+      BundleIndex: int
+      Orientation: string
+      StubStart: PointF
+      StubEnd: PointF
+      LabelCenter: PointF
+      Lines: string array }
+
 /// Describes a polyline route for an edge. Points are expected to include
 /// at least a start and end point.
 [<CLIMutable>]
@@ -160,6 +171,7 @@ type LayoutPlan =
       Edges: EdgeRoute array
       Pages: PagePlan array
       Layers: LayerPlan array
+      ChannelLabels: ChannelLabel array
       Bridges: LayerBridge array
       PageBridges: PageBridge array
       Stats: LayoutStats }

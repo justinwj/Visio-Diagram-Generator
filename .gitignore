@@ -32,6 +32,10 @@ coverage/
 *.coveragexml
 diag_cli*.txt
 
+# Generated fixture outputs
+tests/fixtures/render/
+tests/fixtures/vsdx/
+
 # Local config
 *.env
 local.settings.json

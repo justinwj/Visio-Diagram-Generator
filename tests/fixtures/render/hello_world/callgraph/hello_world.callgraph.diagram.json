@@ -4,10 +4,8 @@
     "properties": {
       "semantics.taxonomy.path": "D:\\justinwj\\Solutions\\Visio Diagram Generator\\out\\fixtures\\hello_world\\callgraph\\hello_world.callgraph.taxonomy.json",
       "semantics.taxonomy.schema": "1.0",
-      "semantics.taxonomy.generatedAt": "2025-11-09T02:29:57.5690425\u002B00:00",
       "semantics.flows.path": "D:\\justinwj\\Solutions\\Visio Diagram Generator\\out\\fixtures\\hello_world\\callgraph\\hello_world.callgraph.flows.json",
-      "semantics.flows.schema": "1.0",
-      "semantics.flows.generatedAt": "2025-11-09T02:29:57.5690425\u002B00:00"
+      "semantics.flows.schema": "1.0"
     }
   },
   "layout": {

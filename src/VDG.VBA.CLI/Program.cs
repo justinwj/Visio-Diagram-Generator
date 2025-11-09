@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -976,13 +976,11 @@ internal static class Program
         {
             metadataProperties["semantics.taxonomy.path"] = taxonomyPath!;
             metadataProperties["semantics.taxonomy.schema"] = semantics.Taxonomy.SchemaVersion;
-            metadataProperties["semantics.taxonomy.generatedAt"] = semantics.Taxonomy.GeneratedAt.ToString("o", CultureInfo.InvariantCulture);
         }
         if (!string.IsNullOrWhiteSpace(flowsPath))
         {
             metadataProperties["semantics.flows.path"] = flowsPath!;
             metadataProperties["semantics.flows.schema"] = semantics.Flow.SchemaVersion;
-            metadataProperties["semantics.flows.generatedAt"] = semantics.Flow.GeneratedAt.ToString("o", CultureInfo.InvariantCulture);
         }
         var metadataObject = metadataProperties.Count == 0 ? null : new { properties = metadataProperties };
 
@@ -1683,3 +1681,4 @@ internal sealed class CallIr { public string Target { get; set; } = ""; public b
 internal sealed class SiteIr { public string Module { get; set; } = ""; public string File { get; set; } = ""; public int Line { get; set; } }
 internal sealed class SourceIr { public string File { get; set; } = ""; public string? Module { get; set; } public int? Line { get; set; } }
 internal sealed class MetricsIr { public int? Cyclomatic { get; set; } public int? Lines { get; set; } public int? Sloc { get; set; } }
+

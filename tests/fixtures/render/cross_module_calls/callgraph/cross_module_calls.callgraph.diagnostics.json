@@ -1,15 +1,83 @@
 {
   "Version": "1.0",
   "Metrics": {
+    "LayoutOutputMode": "view",
+    "LayoutCanvasWidth": 11.8500004,
+    "LayoutCanvasHeight": 2.25,
+    "LayoutNodeCount": 2,
+    "LayoutModuleCount": 2,
+    "LayoutContainerCount": 2,
+    "LayerCount": 1,
+    "LayerCrowdingCount": 0,
+    "LayerOverflowCount": 0,
+    "BridgeCount": 0,
     "ConnectorCount": 1,
     "StraightLineCrossings": 0,
     "PageHeight": 8.5,
     "UsableHeight": 7.5,
+    "ModuleCount": 0,
+    "SegmentCount": 0,
+    "SegmentDelta": 0,
+    "SplitModuleCount": 0,
+    "AverageSegmentsPerModule": 0,
+    "PlannerPageCount": 1,
+    "PlannerAverageModulesPerPage": 2,
+    "PlannerAverageConnectorsPerPage": 2,
+    "PlannerMaxOccupancyPercent": 16.666666666666664,
+    "PlannerMaxConnectorsPerPage": 2,
+    "PageOverflowCount": 0,
+    "PageCrowdingCount": 0,
+    "LaneOverflowCount": 0,
+    "LaneCrowdingCount": 0,
+    "ContainerOverflowCount": 2,
+    "PartialRender": false,
+    "ConnectorOverLimitPageCount": 0,
+    "PagesWithPartialRender": 0,
+    "TruncatedNodeCount": 0,
+    "SkippedModules": [],
+    "Pages": [
+      {
+        "Index": 1,
+        "Name": "Module1, Module2",
+        "Nodes": 2,
+        "Connectors": 2,
+        "SkippedConnectors": 0,
+        "Overflow": false,
+        "ConnectorLimit": 400,
+        "ConnectorOverLimit": 0,
+        "ModuleCount": 2,
+        "Partial": false,
+        "LaneCrowdingWarnings": 0,
+        "LaneCrowdingErrors": 0,
+        "PageCrowding": false,
+        "PageOverflow": false,
+        "TruncatedNodes": 0
+      }
+    ],
+    "Layers": [
+      {
+        "Layer": 1,
+        "ShapeCount": 4,
+        "ConnectorCount": 1,
+        "ModuleCount": 2,
+        "BridgesOut": 0,
+        "BridgesIn": 0,
+        "SoftShapeLimitExceeded": false,
+        "SoftConnectorLimitExceeded": false,
+        "HardShapeLimitExceeded": false,
+        "HardConnectorLimitExceeded": false,
+        "Modules": [
+          "Module1",
+          "Module2"
+        ],
+        "OverflowModules": []
+      }
+    ],
     "LanePages": [
       {
         "Tier": "Modules",
         "Page": 1,
-        "OccupancyRatio": 0.34666666666666668,
+        "OccupancyRatio": 0.19199999650319419,
         "Nodes": 2
       }
     ],
@@ -18,17 +86,32 @@
         "Id": "Module1",
         "Tier": "Modules",
         "Page": 1,
-        "OccupancyRatio": 0.13333333333333333,
+        "OccupancyRatio": 0.055999998251597086,
         "Nodes": 1
       },
       {
         "Id": "Module2",
         "Tier": "Modules",
         "Page": 1,
-        "OccupancyRatio": 0.13333333333333333,
+        "OccupancyRatio": 0.055999998251597086,
         "Nodes": 1
       }
     ]
   },
-  "Issues": []
+  "Issues": [
+    {
+      "Code": "ContainerOverflow",
+      "Level": "warning",
+      "Message": "sub-container \u0027Module1\u0027 overflows lane \u0027Modules\u0027.",
+      "Lane": "Modules",
+      "Page": 1
+    },
+    {
+      "Code": "ContainerOverflow",
+      "Level": "warning",
+      "Message": "sub-container \u0027Module2\u0027 overflows lane \u0027Modules\u0027.",
+      "Lane": "Modules",
+      "Page": 1
+    }
+  ]
 }

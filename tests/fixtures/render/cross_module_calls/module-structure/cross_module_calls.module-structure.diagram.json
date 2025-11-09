@@ -4,10 +4,8 @@
     "properties": {
       "semantics.taxonomy.path": "D:\\justinwj\\Solutions\\Visio Diagram Generator\\out\\fixtures\\cross_module_calls\\module-structure\\cross_module_calls.module-structure.taxonomy.json",
       "semantics.taxonomy.schema": "1.0",
-      "semantics.taxonomy.generatedAt": "2025-11-09T02:30:01.9625716\u002B00:00",
       "semantics.flows.path": "D:\\justinwj\\Solutions\\Visio Diagram Generator\\out\\fixtures\\cross_module_calls\\module-structure\\cross_module_calls.module-structure.flows.json",
-      "semantics.flows.schema": "1.0",
-      "semantics.flows.generatedAt": "2025-11-09T02:30:01.9625716\u002B00:00"
+      "semantics.flows.schema": "1.0"
     }
   },
   "layout": {

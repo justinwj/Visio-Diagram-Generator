@@ -19,6 +19,13 @@ type private ModuleEdgeStats =
     { mutable ConnectorCount: int
       mutable CrossModuleCount: int }
 
+type private ModuleSemanticSummary =
+    { mutable PrimarySubsystem: string option
+      SecondarySubsystems: HashSet<string>
+      Tags: HashSet<string>
+      mutable Confidence: float option
+      RoleCounts: Dictionary<string, int> }
+
 module ViewModePlanner =
 
     let private jsonOptions =
@@ -55,10 +62,81 @@ module ViewModePlanner =
           RowSpacingIn: float32 }
 
     type private LaneState =
-        { mutable ModuleCount: int
+        { mutable ModuleCount: float
           mutable NodeCount: int
           mutable ConnectorCount: int
           mutable Height: float }
+
+    let private createModuleSemanticSummary () =
+        { PrimarySubsystem = None
+          SecondarySubsystems = HashSet<string>(StringComparer.OrdinalIgnoreCase)
+          Tags = HashSet<string>(StringComparer.OrdinalIgnoreCase)
+          Confidence = None
+          RoleCounts = Dictionary<string, int>(StringComparer.OrdinalIgnoreCase) }
+
+    let private tryNodeMetadata (node: Node) (key: string) =
+        if isNull node || obj.ReferenceEquals(node.Metadata, null) then
+            None
+        else
+            match node.Metadata.TryGetValue key with
+            | true, value when not (String.IsNullOrWhiteSpace value) -> Some(value.Trim())
+            | _ -> None
+
+    let private splitMetadataTokens (value: string) =
+        value.Split([| ','; ';'; '|' |], StringSplitOptions.RemoveEmptyEntries)
+        |> Array.map (fun s -> s.Trim())
+        |> Array.filter (fun s -> not (String.IsNullOrWhiteSpace s))
+
+    let private updateModuleSemantics (summary: ModuleSemanticSummary) (node: Node) =
+        tryNodeMetadata node "semantics.module.subsystem.primary"
+        |> Option.iter (fun primary ->
+            if summary.PrimarySubsystem.IsNone then
+                summary.PrimarySubsystem <- Some primary)
+
+        tryNodeMetadata node "semantics.module.subsystem.secondary"
+        |> Option.iter (fun secondary ->
+            splitMetadataTokens secondary
+            |> Array.iter (fun token -> summary.SecondarySubsystems.Add token |> ignore))
+
+        tryNodeMetadata node "semantics.module.tags"
+        |> Option.iter (fun tags ->
+            splitMetadataTokens tags
+            |> Array.iter (fun tag -> summary.Tags.Add tag |> ignore))
+
+        tryNodeMetadata node "semantics.module.confidence"
+        |> Option.iter (fun confidence ->
+            match Double.TryParse(confidence, NumberStyles.Float, CultureInfo.InvariantCulture) with
+            | true, parsed -> summary.Confidence <- Some parsed
+            | _ -> ())
+
+        tryNodeMetadata node "semantics.proc.role.primary"
+        |> Option.iter (fun role ->
+            let current =
+                match summary.RoleCounts.TryGetValue role with
+                | true, value -> value
+                | _ -> 0
+            summary.RoleCounts[role] <- current + 1)
+
+    let private computeModuleWeight nodeCount (summary: ModuleSemanticSummary option) =
+        let mutable weight = 1.0
+        if nodeCount >= 40 then weight <- weight + 0.5
+        match summary with
+        | Some sem ->
+            match sem.PrimarySubsystem with
+            | Some primary when primary.StartsWith("UI.", StringComparison.OrdinalIgnoreCase) ->
+                weight <- weight + 0.5
+            | Some primary when primary.StartsWith("Domain.", StringComparison.OrdinalIgnoreCase) ->
+                weight <- weight + 0.25
+            | _ -> ()
+
+            if sem.Tags.Contains("ui") then weight <- weight + 0.25
+            if sem.Tags.Contains("security") || sem.Tags.Contains("telemetry") then
+                weight <- weight + 0.2
+            if sem.RoleCounts.ContainsKey("EventHandler") then weight <- weight + 0.2
+            if sem.RoleCounts.ContainsKey("Validator") then weight <- weight + 0.1
+        | None -> ()
+
+        Math.Max(1.0, weight)
 
     let private defaultTiers =
         [| "External"; "Edge"; "Services"; "Data"; "Observability"; "Modules" |]
@@ -255,6 +333,9 @@ module ViewModePlanner =
     let private midpoint (a: PointF) (b: PointF) =
         point ((a.X + b.X) / 2.f) ((a.Y + b.Y) / 2.f)
 
+    let inline private isFinite (value: float) =
+        not (Double.IsNaN value) && not (Double.IsInfinity value)
+
     let private computeAnchor (fromRect: RectangleF) (toRect: RectangleF) =
         let fromCenterX = fromRect.Left + (fromRect.Width / 2.f)
         let fromCenterY = fromRect.Bottom + (fromRect.Height / 2.f)
@@ -277,6 +358,10 @@ module ViewModePlanner =
         let tiersSet = HashSet<string>(tiers, StringComparer.OrdinalIgnoreCase)
         let containerTierMap = tryGetContainerTierMap model
 
+        let moduleSemantics = Dictionary<string, ModuleSemanticSummary>(StringComparer.OrdinalIgnoreCase)
+        let moduleWeights = Dictionary<string, float>(StringComparer.OrdinalIgnoreCase)
+        let tierSubsystemSets = Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase)
+
         let baseModules = Dictionary<string, ViewModule>(StringComparer.OrdinalIgnoreCase)
         let moduleOrder = ResizeArray<string>()
         let moduleEdgeStats = Dictionary<string, ModuleEdgeStats>(StringComparer.OrdinalIgnoreCase)
@@ -295,7 +380,32 @@ module ViewModePlanner =
                         baseModules[moduleId] <- created
                         moduleOrder.Add moduleId
                         created
+                let summary =
+                    match moduleSemantics.TryGetValue moduleId with
+                    | true, existing -> existing
+                    | _ ->
+                        let created = createModuleSemanticSummary()
+                        moduleSemantics[moduleId] <- created
+                        created
                 viewModule.Nodes.Add node
+                updateModuleSemantics summary node
+
+        for KeyValue(moduleId, moduleInfo) in baseModules do
+            match moduleSemantics.TryGetValue moduleId with
+            | true, summary ->
+                match summary.PrimarySubsystem with
+                | Some primary when not (String.IsNullOrWhiteSpace primary) ->
+                    let tierKey = if String.IsNullOrWhiteSpace moduleInfo.Tier then "Modules" else moduleInfo.Tier
+                    let set =
+                        match tierSubsystemSets.TryGetValue tierKey with
+                        | true, existing -> existing
+                        | _ ->
+                            let created = HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                            tierSubsystemSets[tierKey] <- created
+                            created
+                    set.Add primary |> ignore
+                | _ -> ()
+            | _ -> ()
 
         if baseModules.Count = 0 then
             { OutputMode = "view"
@@ -489,6 +599,18 @@ module ViewModePlanner =
                   MaxLaneHeightIn = laneHeightLimit
                   RowSpacingIn = rowSpacing }
 
+            let tierModuleBudgets =
+                let dict = Dictionary<string, float>(StringComparer.OrdinalIgnoreCase)
+                let baseLimit =
+                    if laneCapacity.MaxModulesPerLane <= 0 then
+                        if slotsPerTier > 0 then float slotsPerTier else Double.PositiveInfinity
+                    else float laneCapacity.MaxModulesPerLane
+                for KeyValue(tierKey, subsystems) in tierSubsystemSets do
+                    if subsystems <> null && subsystems.Count > 1 && isFinite baseLimit then
+                        let scaled = Math.Max(2.0, baseLimit / float subsystems.Count)
+                        dict[tierKey] <- scaled
+                dict
+
             let rowModuleLimit =
                 let laneLimit =
                     if laneCapacity.MaxModulesPerLane > 0 then laneCapacity.MaxModulesPerLane
@@ -618,6 +740,15 @@ module ViewModePlanner =
                         segmentModule.Nodes.Add node
                         nodeToSegment[node.Id] <- segmentId
 
+                    let segmentSummary =
+                        match moduleSemantics.TryGetValue moduleId with
+                        | true, summary ->
+                            moduleSemantics[segmentId] <- summary
+                            Some summary
+                        | _ -> None
+                    let segmentWeight = computeModuleWeight segmentModule.Nodes.Count segmentSummary
+                    moduleWeights[segmentId] <- segmentWeight
+
                     modules[segmentId] <- segmentModule
                     segmentOrigins[segmentId] <- (moduleId, idxSeg, segmentCount)
                     orderedSegments.Add segmentId
@@ -651,10 +782,10 @@ module ViewModePlanner =
                             recordEdgeStats srcModuleId
                             recordEdgeStats dstModuleId
 
-            let channelLabelBuckets = Dictionary<(int * string * int * string), ChannelLabelBucket>(HashIdentity.Structural)
+            let channelLabelBuckets = Dictionary<(int * string * string), ChannelLabelBucket>(HashIdentity.Structural)
             let maxChannelLabelLines = 12
             let ensureChannelLabelBucket pageIndex (channel: EdgeChannel) (callout: EdgeCallout) =
-                let key = (pageIndex, channel.Key, channel.BundleIndex, channel.Orientation)
+                let key = (pageIndex, channel.Key, channel.Orientation)
                 match channelLabelBuckets.TryGetValue key with
                 | true, bucket -> bucket
                 | _ ->
@@ -700,6 +831,11 @@ module ViewModePlanner =
                     let mutable nextPageIndex = 0
                     let rowSpacingDelta = float laneCapacity.RowSpacingIn
 
+                    let getModuleWeight moduleId =
+                        match moduleWeights.TryGetValue moduleId with
+                        | true, value when value > 0.0 -> value
+                        | _ -> 1.0
+
                     let resetPage () =
                         laneStates.Clear()
                         currentModules <- ResizeArray<string>()
@@ -740,6 +876,21 @@ module ViewModePlanner =
                         if laneCapacity.MaxLaneHeightIn <= 0.0 then Double.PositiveInfinity
                         else laneCapacity.MaxLaneHeightIn
 
+                    let baseModulesLimitFloat =
+                        if laneCapacity.MaxModulesPerLane <= 0 then Double.PositiveInfinity
+                        else float laneCapacity.MaxModulesPerLane
+                    let maxModulesLimit =
+                        if explicitMaxModulesPerLane.IsSome
+                           && laneCapacity.MaxModulesPerLane > 0
+                           && slotsPerRow > laneCapacity.MaxModulesPerLane then
+                            Double.PositiveInfinity
+                        else baseModulesLimitFloat
+
+                    let getTierModuleLimit tier =
+                        match tierModuleBudgets.TryGetValue tier with
+                        | true, limit -> Math.Min(limit, maxModulesLimit)
+                        | _ -> maxModulesLimit
+
                     let rec addModule (moduleId: string) =
                         if String.IsNullOrWhiteSpace moduleId then
                             ()
@@ -779,18 +930,20 @@ module ViewModePlanner =
                                 match laneStates.TryGetValue tier with
                                 | true, state -> state
                                 | _ ->
-                                    let state = { ModuleCount = 0; NodeCount = 0; ConnectorCount = 0; Height = 0.0 }
+                                    let state = { ModuleCount = 0.0; NodeCount = 0; ConnectorCount = 0; Height = 0.0 }
                                     laneStates[tier] <- state
                                     state
 
-                            let pendingModules = laneState.ModuleCount + 1
+                            let moduleWeight = getModuleWeight trimmedId
+                            let pendingModules = laneState.ModuleCount + moduleWeight
                             let pendingNodes = laneState.NodeCount + nodeCount
                             let pendingConnectors = laneState.ConnectorCount + connectorCount
                             let additionalHeight =
-                                if laneState.ModuleCount > 0 then cardHeight + rowSpacingDelta else cardHeight
+                                if laneState.ModuleCount > 0.0 then cardHeight + rowSpacingDelta else cardHeight
                             let pendingHeight = laneState.Height + additionalHeight
+                            let tierLimit = getTierModuleLimit tier
                             let laneWouldOverflow =
-                                (pendingModules > maxModulesLimit)
+                                (pendingModules > tierLimit)
                                 || (pendingNodes > maxNodesLimit)
                                 || (pendingConnectors > maxConnectorsLimit)
                                 || (pendingHeight > maxHeightLimit)
@@ -1545,6 +1698,30 @@ module ViewModePlanner =
                             match nodeToSegment.TryGetValue edge.TargetId with
                             | true, segId -> segId
                             | _ -> resolveModuleId dstNode tiers tiersSet
+                        let roleLabelInfo =
+                            match tryNodeMetadata srcNode "semantics.proc.role.primary",
+                                  tryNodeMetadata dstNode "semantics.proc.role.primary" with
+                            | Some srcRole, Some dstRole -> Some (srcRole, dstRole, sprintf "%s->%s" srcRole dstRole)
+                            | _ -> None
+                        let buildSemanticLabel (existing: string) (isExplicit: bool) =
+                            let trimmed =
+                                if String.IsNullOrWhiteSpace existing then None else Some(existing.Trim())
+                            match roleLabelInfo, trimmed with
+                            | Some (_, _, roleLabel), None -> roleLabel
+                            | Some (srcRole, dstRole, roleLabel), Some current when not isExplicit ->
+                                let contains (text: string) = current.IndexOf(text, StringComparison.OrdinalIgnoreCase) >= 0
+                                if contains roleLabel || (contains srcRole && contains dstRole) then current
+                                else sprintf "%s · %s" current roleLabel
+                            | Some (_, _, _), Some current when isExplicit -> current
+                            | None, Some current -> current
+                            | _ -> null
+                        let resolvedEdgeLabel =
+                            let hasExplicitLabel = not (String.IsNullOrWhiteSpace edge.Label)
+                            let baseLabel =
+                                if hasExplicitLabel then edge.Label.Trim()
+                                elif String.IsNullOrWhiteSpace edge.TargetId then null
+                                else edge.TargetId.Trim()
+                            buildSemanticLabel baseLabel hasExplicitLabel
                         let points, calloutRaw, channelRaw =
                             if srcModuleId.Equals(dstModuleId, StringComparison.OrdinalIgnoreCase) && moduleBounds.ContainsKey srcModuleId then
                                 let bounds = moduleBounds[srcModuleId]
@@ -1742,11 +1919,7 @@ module ViewModePlanner =
                                         | _ -> None
                                 match pageIndexOpt with
                                 | Some pageIndex ->
-                                    let labelRaw =
-                                        if String.IsNullOrWhiteSpace edge.Label then
-                                            if String.IsNullOrWhiteSpace edge.TargetId then null
-                                            else edge.TargetId.Trim()
-                                        else edge.Label.Trim()
+                                    let labelRaw = resolvedEdgeLabel
                                     if not (String.IsNullOrWhiteSpace labelRaw) then
                                         let bucket = ensureChannelLabelBucket pageIndex channelRecord calloutRecord
                                         if bucket.LabelSet.Add labelRaw then
@@ -1762,11 +1935,7 @@ module ViewModePlanner =
                                             let midPoint = point ((srcCenter.X + dstCenter.X) / 2.f) ((srcCenter.Y + dstCenter.Y) / 2.f)
                                             findPageByPoint midPoint)
                                         |> Option.defaultValue 0
-                                    let labelRaw =
-                                        if String.IsNullOrWhiteSpace edge.Label then
-                                            if String.IsNullOrWhiteSpace edge.TargetId then null
-                                            else edge.TargetId.Trim()
-                                        else edge.Label.Trim()
+                                    let labelRaw = resolvedEdgeLabel
                                     if not (String.IsNullOrWhiteSpace labelRaw) then
                                         let bucket = ensureChannelLabelBucket candidate channelRecord calloutRecord
                                         if bucket.LabelSet.Add labelRaw then
@@ -1828,9 +1997,9 @@ module ViewModePlanner =
                                             |> Option.defaultValue 0
                                     let labelText =
                                         if String.IsNullOrWhiteSpace edge.Label then
-                                            if String.IsNullOrWhiteSpace edge.TargetId then edge.Id
-                                            else edge.TargetId.Trim()
-                                        else edge.Label.Trim()
+                                            if String.IsNullOrWhiteSpace edge.TargetId then buildSemanticLabel edge.Id false
+                                            else buildSemanticLabel (edge.TargetId.Trim()) false
+                                        else buildSemanticLabel edge.Label true
                                     if not (String.IsNullOrWhiteSpace labelText) then
                                         let bucket = ensureChannelLabelBucket pageIndex extChannel calloutRecord
                                         if bucket.LabelSet.Add labelText then

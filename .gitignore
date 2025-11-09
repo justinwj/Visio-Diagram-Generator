@@ -33,8 +33,10 @@ coverage/
 diag_cli*.txt
 
 # Generated fixture outputs
+plan docs/fixtures_metadata.json
 tests/fixtures/render/
 tests/fixtures/vsdx/
+out/fixtures/
 
 # Local config
 *.env

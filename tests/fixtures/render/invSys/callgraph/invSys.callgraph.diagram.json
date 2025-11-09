@@ -1,5 +1,30 @@
 {
   "schemaVersion": "1.2",
+  "metadata": {
+    "properties": {
+      "semantics.taxonomy.path": "D:\\justinwj\\Solutions\\Visio Diagram Generator\\out\\fixtures\\invSys\\callgraph\\invSys.callgraph.taxonomy.json",
+      "semantics.taxonomy.schema": "1.0",
+      "semantics.taxonomy.generatedAt": "2025-11-08T23:22:20.1401827-08:00",
+      "semantics.flows.path": "D:\\justinwj\\Solutions\\Visio Diagram Generator\\out\\fixtures\\invSys\\callgraph\\invSys.callgraph.flows.json",
+      "semantics.flows.schema": "1.0",
+      "semantics.flows.generatedAt": "2025-11-08T23:22:20.1401827-08:00",
+      "layout.view.maxNodesPerLane": "60",
+      "layout.view.maxModulesPerLane": "6",
+      "layout.view.rowSpacingIn": "2.0",
+      "layout.view.tierSpacingIn": "3.5",
+      "layout.view.maxRowsPerColumn": "4",
+      "layout.view.maxColumns": "2",
+      "layout.page.heightIn": "11.0",
+      "layout.page.marginIn": "0.5",
+      "layout.page.plan.maxModulesPerPage": "1",
+      "layout.page.plan.laneSplitAllowed": "false",
+      "layout.page.plan.maxOccupancyPercent": "85",
+      "layout.page.plan.heightSlackPercent": "5",
+      "layout.diagnostics.laneCrowdWarnRatio": "0.9",
+      "layout.diagnostics.laneCrowdErrorRatio": "0.98",
+      "layout.diagnostics.pageCrowdWarnRatio": "0.95"
+    }
+  },
   "layout": {
     "outputMode": "view",
     "tiers": [
@@ -20,7 +45,7 @@
       "plan": {
         "laneSplitAllowed": true,
         "maxConnectors": 350,
-        "maxModulesPerPage": 1,
+        "maxModulesPerPage": 10,
         "heightSlackPercent": 0.2
       }
     },
@@ -48,7 +73,11 @@
         "code.source.line": "20",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "Domain.Inventory"
       }
     },
     {
@@ -69,7 +98,11 @@
         "code.source.line": "16",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -90,7 +123,11 @@
         "code.source.line": "19",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -111,7 +148,11 @@
         "code.source.line": "20",
         "code.metrics.lines": "53",
         "code.metrics.sloc": "44",
-        "code.metrics.cyclomatic": "7"
+        "code.metrics.cyclomatic": "7",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -132,7 +173,11 @@
         "code.source.line": "80",
         "code.metrics.lines": "28",
         "code.metrics.sloc": "21",
-        "code.metrics.cyclomatic": "5"
+        "code.metrics.cyclomatic": "5",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -153,7 +198,11 @@
         "code.source.line": "73",
         "code.metrics.lines": "7",
         "code.metrics.sloc": "4",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -174,7 +223,11 @@
         "code.source.line": "16",
         "code.metrics.lines": "4",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -195,7 +248,11 @@
         "code.source.line": "80",
         "code.metrics.lines": "7",
         "code.metrics.sloc": "4",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -216,7 +273,11 @@
         "code.source.line": "22",
         "code.metrics.lines": "58",
         "code.metrics.sloc": "47",
-        "code.metrics.cyclomatic": "15"
+        "code.metrics.cyclomatic": "15",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -237,7 +298,11 @@
         "code.source.line": "16",
         "code.metrics.lines": "6",
         "code.metrics.sloc": "3",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -258,7 +323,11 @@
         "code.source.line": "49",
         "code.metrics.lines": "22",
         "code.metrics.sloc": "16",
-        "code.metrics.cyclomatic": "7"
+        "code.metrics.cyclomatic": "7",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -279,7 +348,10 @@
         "code.source.line": "187",
         "code.metrics.lines": "78",
         "code.metrics.sloc": "62",
-        "code.metrics.cyclomatic": "14"
+        "code.metrics.cyclomatic": "14",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -300,7 +372,11 @@
         "code.source.line": "369",
         "code.metrics.lines": "32",
         "code.metrics.sloc": "25",
-        "code.metrics.cyclomatic": "11"
+        "code.metrics.cyclomatic": "11",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -321,7 +397,11 @@
         "code.source.line": "266",
         "code.metrics.lines": "69",
         "code.metrics.sloc": "61",
-        "code.metrics.cyclomatic": "31"
+        "code.metrics.cyclomatic": "31",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -342,7 +422,11 @@
         "code.source.line": "496",
         "code.metrics.lines": "16",
         "code.metrics.sloc": "14",
-        "code.metrics.cyclomatic": "6"
+        "code.metrics.cyclomatic": "6",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -363,7 +447,10 @@
         "code.source.line": "336",
         "code.metrics.lines": "32",
         "code.metrics.sloc": "26",
-        "code.metrics.cyclomatic": "8"
+        "code.metrics.cyclomatic": "8",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -384,7 +471,10 @@
         "code.source.line": "463",
         "code.metrics.lines": "32",
         "code.metrics.sloc": "26",
-        "code.metrics.cyclomatic": "8"
+        "code.metrics.cyclomatic": "8",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -405,7 +495,11 @@
         "code.source.line": "158",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -426,7 +520,11 @@
         "code.source.line": "153",
         "code.metrics.lines": "4",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -447,7 +545,10 @@
         "code.source.line": "183",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -468,7 +569,11 @@
         "code.source.line": "176",
         "code.metrics.lines": "6",
         "code.metrics.sloc": "5",
-        "code.metrics.cyclomatic": "3"
+        "code.metrics.cyclomatic": "3",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -489,7 +594,11 @@
         "code.source.line": "169",
         "code.metrics.lines": "6",
         "code.metrics.sloc": "5",
-        "code.metrics.cyclomatic": "3"
+        "code.metrics.cyclomatic": "3",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -510,7 +619,11 @@
         "code.source.line": "426",
         "code.metrics.lines": "36",
         "code.metrics.sloc": "28",
-        "code.metrics.cyclomatic": "8"
+        "code.metrics.cyclomatic": "8",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -531,7 +644,11 @@
         "code.source.line": "402",
         "code.metrics.lines": "23",
         "code.metrics.sloc": "19",
-        "code.metrics.cyclomatic": "7"
+        "code.metrics.cyclomatic": "7",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -552,7 +669,12 @@
         "code.source.line": "72",
         "code.metrics.lines": "80",
         "code.metrics.sloc": "58",
-        "code.metrics.cyclomatic": "23"
+        "code.metrics.cyclomatic": "23",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -573,7 +695,11 @@
         "code.source.line": "162",
         "code.metrics.lines": "6",
         "code.metrics.sloc": "5",
-        "code.metrics.cyclomatic": "3"
+        "code.metrics.cyclomatic": "3",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -594,7 +720,10 @@
         "code.source.line": "513",
         "code.metrics.lines": "16",
         "code.metrics.sloc": "9",
-        "code.metrics.cyclomatic": "5"
+        "code.metrics.cyclomatic": "5",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -615,7 +744,11 @@
         "code.source.line": "25",
         "code.metrics.lines": "6",
         "code.metrics.sloc": "4",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -636,7 +769,11 @@
         "code.source.line": "31",
         "code.metrics.lines": "17",
         "code.metrics.sloc": "12",
-        "code.metrics.cyclomatic": "3"
+        "code.metrics.cyclomatic": "3",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -657,7 +794,11 @@
         "code.source.line": "530",
         "code.metrics.lines": "13",
         "code.metrics.sloc": "9",
-        "code.metrics.cyclomatic": "5"
+        "code.metrics.cyclomatic": "5",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -678,7 +819,10 @@
         "code.source.line": "22",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -699,7 +843,11 @@
         "code.source.line": "60",
         "code.metrics.lines": "4",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -720,7 +868,11 @@
         "code.source.line": "16",
         "code.metrics.lines": "41",
         "code.metrics.sloc": "31",
-        "code.metrics.cyclomatic": "7"
+        "code.metrics.cyclomatic": "7",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "Auth.Login",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -741,7 +893,11 @@
         "code.source.line": "57",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -762,7 +918,11 @@
         "code.source.line": "68",
         "code.metrics.lines": "4",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -783,7 +943,11 @@
         "code.source.line": "64",
         "code.metrics.lines": "4",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -804,7 +968,11 @@
         "code.source.line": "19",
         "code.metrics.lines": "4",
         "code.metrics.sloc": "3",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -825,7 +993,11 @@
         "code.source.line": "110",
         "code.metrics.lines": "38",
         "code.metrics.sloc": "31",
-        "code.metrics.cyclomatic": "15"
+        "code.metrics.cyclomatic": "15",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -846,7 +1018,11 @@
         "code.source.line": "104",
         "code.metrics.lines": "5",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.capability": "Auth.Login",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -867,7 +1043,11 @@
         "code.source.line": "33",
         "code.metrics.lines": "69",
         "code.metrics.sloc": "58",
-        "code.metrics.cyclomatic": "11"
+        "code.metrics.cyclomatic": "11",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -888,7 +1068,11 @@
         "code.source.line": "24",
         "code.metrics.lines": "7",
         "code.metrics.sloc": "4",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -909,7 +1093,11 @@
         "code.source.line": "25",
         "code.metrics.lines": "5",
         "code.metrics.sloc": "3",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -930,7 +1118,11 @@
         "code.source.line": "118",
         "code.metrics.lines": "38",
         "code.metrics.sloc": "31",
-        "code.metrics.cyclomatic": "15"
+        "code.metrics.cyclomatic": "15",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -951,7 +1143,11 @@
         "code.source.line": "112",
         "code.metrics.lines": "5",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.capability": "Auth.Login",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -972,7 +1168,11 @@
         "code.source.line": "41",
         "code.metrics.lines": "69",
         "code.metrics.sloc": "58",
-        "code.metrics.cyclomatic": "11"
+        "code.metrics.cyclomatic": "11",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -993,7 +1193,11 @@
         "code.source.line": "31",
         "code.metrics.lines": "9",
         "code.metrics.sloc": "5",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -1014,7 +1218,12 @@
         "code.source.line": "11",
         "code.metrics.lines": "69",
         "code.metrics.sloc": "61",
-        "code.metrics.cyclomatic": "21"
+        "code.metrics.cyclomatic": "21",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "Domain.Inventory"
       }
     },
     {
@@ -1035,7 +1244,10 @@
         "code.source.line": "81",
         "code.metrics.lines": "7",
         "code.metrics.sloc": "5",
-        "code.metrics.cyclomatic": "3"
+        "code.metrics.cyclomatic": "3",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Domain.Inventory"
       }
     },
     {
@@ -1055,7 +1267,11 @@
         "code.source.line": "3",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -1075,7 +1291,10 @@
         "code.source.line": "6",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Initializer",
+        "semantics.proc.role.confidence": "0.72",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -1096,7 +1315,10 @@
         "code.source.line": "23",
         "code.metrics.lines": "5",
         "code.metrics.sloc": "4",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Coordinator",
+        "semantics.proc.role.confidence": "0.7",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -1117,7 +1339,10 @@
         "code.source.line": "41",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Coordinator",
+        "semantics.proc.role.confidence": "0.7",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -1138,7 +1363,10 @@
         "code.source.line": "61",
         "code.metrics.lines": "6",
         "code.metrics.sloc": "5",
-        "code.metrics.cyclomatic": "3"
+        "code.metrics.cyclomatic": "3",
+        "semantics.proc.role.primary": "Coordinator",
+        "semantics.proc.role.confidence": "0.7",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -1159,7 +1387,10 @@
         "code.source.line": "45",
         "code.metrics.lines": "15",
         "code.metrics.sloc": "10",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -1180,7 +1411,10 @@
         "code.source.line": "28",
         "code.metrics.lines": "13",
         "code.metrics.sloc": "12",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -1201,7 +1435,10 @@
         "code.source.line": "5",
         "code.metrics.lines": "18",
         "code.metrics.sloc": "16",
-        "code.metrics.cyclomatic": "7"
+        "code.metrics.cyclomatic": "7",
+        "semantics.proc.role.primary": "Validator",
+        "semantics.proc.role.confidence": "0.82",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -1222,7 +1459,12 @@
         "code.source.line": "398",
         "code.metrics.lines": "67",
         "code.metrics.sloc": "54",
-        "code.metrics.cyclomatic": "20"
+        "code.metrics.cyclomatic": "20",
+        "semantics.proc.role.primary": "Persistence",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.8",
+        "semantics.proc.capability": "Data.Exchange",
+        "semantics.proc.subsystem": "Data.ImportExport"
       }
     },
     {
@@ -1242,7 +1484,12 @@
         "code.source.line": "23",
         "code.metrics.lines": "50",
         "code.metrics.sloc": "36",
-        "code.metrics.cyclomatic": "13"
+        "code.metrics.cyclomatic": "13",
+        "semantics.proc.role.primary": "Persistence",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.8",
+        "semantics.proc.capability": "Data.Exchange",
+        "semantics.proc.subsystem": "Data.ImportExport"
       }
     },
     {
@@ -1262,7 +1509,12 @@
         "code.source.line": "296",
         "code.metrics.lines": "68",
         "code.metrics.sloc": "62",
-        "code.metrics.cyclomatic": "22"
+        "code.metrics.cyclomatic": "22",
+        "semantics.proc.role.primary": "Persistence",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.8",
+        "semantics.proc.capability": "Data.Exchange",
+        "semantics.proc.subsystem": "Data.ImportExport"
       }
     },
     {
@@ -1282,7 +1534,12 @@
         "code.source.line": "364",
         "code.metrics.lines": "30",
         "code.metrics.sloc": "24",
-        "code.metrics.cyclomatic": "6"
+        "code.metrics.cyclomatic": "6",
+        "semantics.proc.role.primary": "Persistence",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.8",
+        "semantics.proc.capability": "Data.Exchange",
+        "semantics.proc.subsystem": "Data.ImportExport"
       }
     },
     {
@@ -1302,7 +1559,11 @@
         "code.source.line": "466",
         "code.metrics.lines": "8",
         "code.metrics.sloc": "7",
-        "code.metrics.cyclomatic": "4"
+        "code.metrics.cyclomatic": "4",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Data.ImportExport"
       }
     },
     {
@@ -1323,7 +1584,10 @@
         "code.source.line": "74",
         "code.metrics.lines": "7",
         "code.metrics.sloc": "6",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Data.ImportExport"
       }
     },
     {
@@ -1344,7 +1608,11 @@
         "code.source.line": "115",
         "code.metrics.lines": "28",
         "code.metrics.sloc": "21",
-        "code.metrics.cyclomatic": "5"
+        "code.metrics.cyclomatic": "5",
+        "semantics.proc.role.primary": "DataLoader",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.75",
+        "semantics.proc.subsystem": "Data.ImportExport"
       }
     },
     {
@@ -1365,7 +1633,11 @@
         "code.source.line": "145",
         "code.metrics.lines": "55",
         "code.metrics.sloc": "47",
-        "code.metrics.cyclomatic": "14"
+        "code.metrics.cyclomatic": "14",
+        "semantics.proc.role.primary": "DataLoader",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.75",
+        "semantics.proc.subsystem": "Data.ImportExport"
       }
     },
     {
@@ -1386,7 +1658,11 @@
         "code.source.line": "202",
         "code.metrics.lines": "56",
         "code.metrics.sloc": "44",
-        "code.metrics.cyclomatic": "11"
+        "code.metrics.cyclomatic": "11",
+        "semantics.proc.role.primary": "DataLoader",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.75",
+        "semantics.proc.subsystem": "Data.ImportExport"
       }
     },
     {
@@ -1407,7 +1683,11 @@
         "code.source.line": "259",
         "code.metrics.lines": "36",
         "code.metrics.sloc": "29",
-        "code.metrics.cyclomatic": "10"
+        "code.metrics.cyclomatic": "10",
+        "semantics.proc.role.primary": "DataLoader",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.75",
+        "semantics.proc.subsystem": "Data.ImportExport"
       }
     },
     {
@@ -1428,7 +1708,11 @@
         "code.source.line": "82",
         "code.metrics.lines": "31",
         "code.metrics.sloc": "23",
-        "code.metrics.cyclomatic": "6"
+        "code.metrics.cyclomatic": "6",
+        "semantics.proc.role.primary": "DataLoader",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.75",
+        "semantics.proc.subsystem": "Data.ImportExport"
       }
     },
     {
@@ -1449,7 +1733,10 @@
         "code.source.line": "14",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Infrastructure.Core"
       }
     },
     {
@@ -1470,7 +1757,10 @@
         "code.source.line": "24",
         "code.metrics.lines": "47",
         "code.metrics.sloc": "39",
-        "code.metrics.cyclomatic": "16"
+        "code.metrics.cyclomatic": "16",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Infrastructure.Core"
       }
     },
     {
@@ -1491,7 +1781,10 @@
         "code.source.line": "18",
         "code.metrics.lines": "6",
         "code.metrics.sloc": "4",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Initializer",
+        "semantics.proc.role.confidence": "0.72",
+        "semantics.proc.subsystem": "Infrastructure.Core"
       }
     },
     {
@@ -1512,7 +1805,11 @@
         "code.source.line": "78",
         "code.metrics.lines": "12",
         "code.metrics.sloc": "11",
-        "code.metrics.cyclomatic": "5"
+        "code.metrics.cyclomatic": "5",
+        "semantics.proc.role.primary": "DataLoader",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.75",
+        "semantics.proc.subsystem": "Infrastructure.Core"
       }
     },
     {
@@ -1533,7 +1830,10 @@
         "code.source.line": "71",
         "code.metrics.lines": "6",
         "code.metrics.sloc": "3",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Initializer",
+        "semantics.proc.role.confidence": "0.72",
+        "semantics.proc.subsystem": "Infrastructure.Core"
       }
     },
     {
@@ -1554,7 +1854,12 @@
         "code.source.line": "397",
         "code.metrics.lines": "67",
         "code.metrics.sloc": "54",
-        "code.metrics.cyclomatic": "20"
+        "code.metrics.cyclomatic": "20",
+        "semantics.proc.role.primary": "Persistence",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.8",
+        "semantics.proc.capability": "Data.Exchange",
+        "semantics.proc.subsystem": "Data.ImportExport"
       }
     },
     {
@@ -1574,7 +1879,12 @@
         "code.source.line": "22",
         "code.metrics.lines": "50",
         "code.metrics.sloc": "36",
-        "code.metrics.cyclomatic": "13"
+        "code.metrics.cyclomatic": "13",
+        "semantics.proc.role.primary": "Persistence",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.8",
+        "semantics.proc.capability": "Data.Exchange",
+        "semantics.proc.subsystem": "Data.ImportExport"
       }
     },
     {
@@ -1594,7 +1904,12 @@
         "code.source.line": "295",
         "code.metrics.lines": "68",
         "code.metrics.sloc": "62",
-        "code.metrics.cyclomatic": "22"
+        "code.metrics.cyclomatic": "22",
+        "semantics.proc.role.primary": "Persistence",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.8",
+        "semantics.proc.capability": "Data.Exchange",
+        "semantics.proc.subsystem": "Data.ImportExport"
       }
     },
     {
@@ -1614,7 +1929,12 @@
         "code.source.line": "363",
         "code.metrics.lines": "30",
         "code.metrics.sloc": "24",
-        "code.metrics.cyclomatic": "6"
+        "code.metrics.cyclomatic": "6",
+        "semantics.proc.role.primary": "Persistence",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.8",
+        "semantics.proc.capability": "Data.Exchange",
+        "semantics.proc.subsystem": "Data.ImportExport"
       }
     },
     {
@@ -1634,7 +1954,11 @@
         "code.source.line": "465",
         "code.metrics.lines": "8",
         "code.metrics.sloc": "7",
-        "code.metrics.cyclomatic": "4"
+        "code.metrics.cyclomatic": "4",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Data.ImportExport"
       }
     },
     {
@@ -1655,7 +1979,10 @@
         "code.source.line": "73",
         "code.metrics.lines": "7",
         "code.metrics.sloc": "6",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Data.ImportExport"
       }
     },
     {
@@ -1676,7 +2003,11 @@
         "code.source.line": "114",
         "code.metrics.lines": "28",
         "code.metrics.sloc": "21",
-        "code.metrics.cyclomatic": "5"
+        "code.metrics.cyclomatic": "5",
+        "semantics.proc.role.primary": "DataLoader",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.75",
+        "semantics.proc.subsystem": "Data.ImportExport"
       }
     },
     {
@@ -1697,7 +2028,11 @@
         "code.source.line": "144",
         "code.metrics.lines": "55",
         "code.metrics.sloc": "47",
-        "code.metrics.cyclomatic": "14"
+        "code.metrics.cyclomatic": "14",
+        "semantics.proc.role.primary": "DataLoader",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.75",
+        "semantics.proc.subsystem": "Data.ImportExport"
       }
     },
     {
@@ -1718,7 +2053,11 @@
         "code.source.line": "201",
         "code.metrics.lines": "56",
         "code.metrics.sloc": "44",
-        "code.metrics.cyclomatic": "11"
+        "code.metrics.cyclomatic": "11",
+        "semantics.proc.role.primary": "DataLoader",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.75",
+        "semantics.proc.subsystem": "Data.ImportExport"
       }
     },
     {
@@ -1739,7 +2078,11 @@
         "code.source.line": "258",
         "code.metrics.lines": "36",
         "code.metrics.sloc": "29",
-        "code.metrics.cyclomatic": "10"
+        "code.metrics.cyclomatic": "10",
+        "semantics.proc.role.primary": "DataLoader",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.75",
+        "semantics.proc.subsystem": "Data.ImportExport"
       }
     },
     {
@@ -1760,7 +2103,11 @@
         "code.source.line": "81",
         "code.metrics.lines": "31",
         "code.metrics.sloc": "23",
-        "code.metrics.cyclomatic": "6"
+        "code.metrics.cyclomatic": "6",
+        "semantics.proc.role.primary": "DataLoader",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.75",
+        "semantics.proc.subsystem": "Data.ImportExport"
       }
     },
     {
@@ -1781,7 +2128,11 @@
         "code.source.line": "6",
         "code.metrics.lines": "29",
         "code.metrics.sloc": "27",
-        "code.metrics.cyclomatic": "2"
+        "code.metrics.cyclomatic": "2",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Observability.Logging"
       }
     },
     {
@@ -1802,7 +2153,11 @@
         "code.source.line": "56",
         "code.metrics.lines": "23",
         "code.metrics.sloc": "22",
-        "code.metrics.cyclomatic": "2"
+        "code.metrics.cyclomatic": "2",
+        "semantics.proc.role.primary": "DataLoader",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.75",
+        "semantics.proc.subsystem": "Observability.Logging"
       }
     },
     {
@@ -1823,7 +2178,11 @@
         "code.source.line": "37",
         "code.metrics.lines": "18",
         "code.metrics.sloc": "16",
-        "code.metrics.cyclomatic": "2"
+        "code.metrics.cyclomatic": "2",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Observability.Logging"
       }
     },
     {
@@ -1844,7 +2203,12 @@
         "code.source.line": "3",
         "code.metrics.lines": "70",
         "code.metrics.sloc": "61",
-        "code.metrics.cyclomatic": "10"
+        "code.metrics.cyclomatic": "10",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -1865,7 +2229,12 @@
         "code.source.line": "277",
         "code.metrics.lines": "68",
         "code.metrics.sloc": "60",
-        "code.metrics.cyclomatic": "10"
+        "code.metrics.cyclomatic": "10",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -1886,7 +2255,12 @@
         "code.source.line": "209",
         "code.metrics.lines": "68",
         "code.metrics.sloc": "60",
-        "code.metrics.cyclomatic": "10"
+        "code.metrics.cyclomatic": "10",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -1907,7 +2281,12 @@
         "code.source.line": "141",
         "code.metrics.lines": "68",
         "code.metrics.sloc": "60",
-        "code.metrics.cyclomatic": "10"
+        "code.metrics.cyclomatic": "10",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -1928,7 +2307,12 @@
         "code.source.line": "73",
         "code.metrics.lines": "68",
         "code.metrics.sloc": "60",
-        "code.metrics.cyclomatic": "10"
+        "code.metrics.cyclomatic": "10",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -1949,7 +2333,10 @@
         "code.source.line": "345",
         "code.metrics.lines": "16",
         "code.metrics.sloc": "12",
-        "code.metrics.cyclomatic": "3"
+        "code.metrics.cyclomatic": "3",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -1969,7 +2356,11 @@
         "code.source.line": "65",
         "code.metrics.lines": "39",
         "code.metrics.sloc": "36",
-        "code.metrics.cyclomatic": "6"
+        "code.metrics.cyclomatic": "6",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -1989,7 +2380,11 @@
         "code.source.line": "5",
         "code.metrics.lines": "59",
         "code.metrics.sloc": "53",
-        "code.metrics.cyclomatic": "12"
+        "code.metrics.cyclomatic": "12",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -2010,7 +2405,11 @@
         "code.source.line": "160",
         "code.metrics.lines": "35",
         "code.metrics.sloc": "32",
-        "code.metrics.cyclomatic": "5"
+        "code.metrics.cyclomatic": "5",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.capability": "Inventory.TransactionSets",
+        "semantics.proc.subsystem": "Domain.TransactionSets"
       }
     },
     {
@@ -2031,7 +2430,11 @@
         "code.source.line": "138",
         "code.metrics.lines": "22",
         "code.metrics.sloc": "19",
-        "code.metrics.cyclomatic": "13"
+        "code.metrics.cyclomatic": "13",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.capability": "Inventory.TransactionSets",
+        "semantics.proc.subsystem": "Domain.TransactionSets"
       }
     },
     {
@@ -2052,7 +2455,12 @@
         "code.source.line": "69",
         "code.metrics.lines": "40",
         "code.metrics.sloc": "34",
-        "code.metrics.cyclomatic": "10"
+        "code.metrics.cyclomatic": "10",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.capability": "Inventory.TransactionSets",
+        "semantics.proc.subsystem": "Domain.TransactionSets"
       }
     },
     {
@@ -2073,7 +2481,11 @@
         "code.source.line": "109",
         "code.metrics.lines": "28",
         "code.metrics.sloc": "19",
-        "code.metrics.cyclomatic": "8"
+        "code.metrics.cyclomatic": "8",
+        "semantics.proc.role.primary": "Initializer",
+        "semantics.proc.role.confidence": "0.72",
+        "semantics.proc.capability": "Inventory.TransactionSets",
+        "semantics.proc.subsystem": "Domain.TransactionSets"
       }
     },
     {
@@ -2094,7 +2506,12 @@
         "code.source.line": "7",
         "code.metrics.lines": "62",
         "code.metrics.sloc": "50",
-        "code.metrics.cyclomatic": "10"
+        "code.metrics.cyclomatic": "10",
+        "semantics.proc.role.primary": "DataLoader",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.75",
+        "semantics.proc.capability": "Inventory.TransactionSets",
+        "semantics.proc.subsystem": "Domain.TransactionSets"
       }
     },
     {
@@ -2115,7 +2532,11 @@
         "code.source.line": "195",
         "code.metrics.lines": "10",
         "code.metrics.sloc": "6",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Initializer",
+        "semantics.proc.role.confidence": "0.72",
+        "semantics.proc.capability": "Inventory.TransactionSets",
+        "semantics.proc.subsystem": "Domain.TransactionSets"
       }
     },
     {
@@ -2136,7 +2557,11 @@
         "code.source.line": "15",
         "code.metrics.lines": "5",
         "code.metrics.sloc": "4",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.capability": "Inventory.TransactionSets",
+        "semantics.proc.subsystem": "Domain.TransactionSets"
       }
     },
     {
@@ -2157,7 +2582,11 @@
         "code.source.line": "9",
         "code.metrics.lines": "5",
         "code.metrics.sloc": "4",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.capability": "Inventory.TransactionSets",
+        "semantics.proc.subsystem": "Domain.TransactionSets"
       }
     },
     {
@@ -2178,7 +2607,12 @@
         "code.source.line": "15",
         "code.metrics.lines": "56",
         "code.metrics.sloc": "50",
-        "code.metrics.cyclomatic": "24"
+        "code.metrics.cyclomatic": "24",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.capability": "Inventory.TransactionSets",
+        "semantics.proc.subsystem": "Domain.TransactionSets"
       }
     },
     {
@@ -2199,7 +2633,11 @@
         "code.source.line": "239",
         "code.metrics.lines": "26",
         "code.metrics.sloc": "20",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.capability": "Inventory.TransactionSets",
+        "semantics.proc.subsystem": "Domain.TransactionSets"
       }
     },
     {
@@ -2220,7 +2658,12 @@
         "code.source.line": "202",
         "code.metrics.lines": "35",
         "code.metrics.sloc": "27",
-        "code.metrics.cyclomatic": "4"
+        "code.metrics.cyclomatic": "4",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.capability": "Inventory.TransactionSets",
+        "semantics.proc.subsystem": "Domain.TransactionSets"
       }
     },
     {
@@ -2241,7 +2684,12 @@
         "code.source.line": "266",
         "code.metrics.lines": "42",
         "code.metrics.sloc": "33",
-        "code.metrics.cyclomatic": "14"
+        "code.metrics.cyclomatic": "14",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.capability": "Inventory.TransactionSets",
+        "semantics.proc.subsystem": "Domain.TransactionSets"
       }
     },
     {
@@ -2262,7 +2710,12 @@
         "code.source.line": "58",
         "code.metrics.lines": "73",
         "code.metrics.sloc": "57",
-        "code.metrics.cyclomatic": "10"
+        "code.metrics.cyclomatic": "10",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.capability": "Inventory.TransactionSets",
+        "semantics.proc.subsystem": "Domain.TransactionSets"
       }
     },
     {
@@ -2283,7 +2736,11 @@
         "code.source.line": "132",
         "code.metrics.lines": "68",
         "code.metrics.sloc": "55",
-        "code.metrics.cyclomatic": "4"
+        "code.metrics.cyclomatic": "4",
+        "semantics.proc.role.primary": "Coordinator",
+        "semantics.proc.role.confidence": "0.7",
+        "semantics.proc.capability": "Inventory.TransactionSets",
+        "semantics.proc.subsystem": "Domain.TransactionSets"
       }
     },
     {
@@ -2303,7 +2760,11 @@
         "code.source.line": "10",
         "code.metrics.lines": "47",
         "code.metrics.sloc": "38",
-        "code.metrics.cyclomatic": "7"
+        "code.metrics.cyclomatic": "7",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.capability": "Inventory.TransactionSets",
+        "semantics.proc.subsystem": "Domain.TransactionSets"
       }
     },
     {
@@ -2324,7 +2785,12 @@
         "code.source.line": "202",
         "code.metrics.lines": "42",
         "code.metrics.sloc": "33",
-        "code.metrics.cyclomatic": "14"
+        "code.metrics.cyclomatic": "14",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.capability": "Inventory.TransactionSets",
+        "semantics.proc.subsystem": "Domain.TransactionSets"
       }
     },
     {
@@ -2344,7 +2810,12 @@
         "code.source.line": "31",
         "code.metrics.lines": "111",
         "code.metrics.sloc": "93",
-        "code.metrics.cyclomatic": "28"
+        "code.metrics.cyclomatic": "28",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.capability": "Inventory.TransactionSets",
+        "semantics.proc.subsystem": "Domain.TransactionSets"
       }
     },
     {
@@ -2365,7 +2836,11 @@
         "code.source.line": "143",
         "code.metrics.lines": "58",
         "code.metrics.sloc": "46",
-        "code.metrics.cyclomatic": "4"
+        "code.metrics.cyclomatic": "4",
+        "semantics.proc.role.primary": "Coordinator",
+        "semantics.proc.role.confidence": "0.7",
+        "semantics.proc.capability": "Inventory.TransactionSets",
+        "semantics.proc.subsystem": "Domain.TransactionSets"
       }
     },
     {
@@ -2385,7 +2860,11 @@
         "code.source.line": "5",
         "code.metrics.lines": "25",
         "code.metrics.sloc": "20",
-        "code.metrics.cyclomatic": "5"
+        "code.metrics.cyclomatic": "5",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.capability": "Inventory.TransactionSets",
+        "semantics.proc.subsystem": "Domain.TransactionSets"
       }
     },
     {
@@ -2406,7 +2885,12 @@
         "code.source.line": "31",
         "code.metrics.lines": "10",
         "code.metrics.sloc": "9",
-        "code.metrics.cyclomatic": "4"
+        "code.metrics.cyclomatic": "4",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.capability": "Inventory.TransactionSets",
+        "semantics.proc.subsystem": "Domain.TransactionSets"
       }
     },
     {
@@ -2427,7 +2911,12 @@
         "code.source.line": "67",
         "code.metrics.lines": "18",
         "code.metrics.sloc": "16",
-        "code.metrics.cyclomatic": "7"
+        "code.metrics.cyclomatic": "7",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.capability": "Inventory.TransactionSets",
+        "semantics.proc.subsystem": "Domain.TransactionSets"
       }
     },
     {
@@ -2448,7 +2937,12 @@
         "code.source.line": "50",
         "code.metrics.lines": "15",
         "code.metrics.sloc": "14",
-        "code.metrics.cyclomatic": "4"
+        "code.metrics.cyclomatic": "4",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.capability": "Inventory.TransactionSets",
+        "semantics.proc.subsystem": "Domain.TransactionSets"
       }
     },
     {
@@ -2469,7 +2963,11 @@
         "code.source.line": "45",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.capability": "Inventory.TransactionSets",
+        "semantics.proc.subsystem": "Domain.TransactionSets"
       }
     },
     {
@@ -2490,7 +2988,12 @@
         "code.source.line": "86",
         "code.metrics.lines": "39",
         "code.metrics.sloc": "33",
-        "code.metrics.cyclomatic": "14"
+        "code.metrics.cyclomatic": "14",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.capability": "Inventory.TransactionSets",
+        "semantics.proc.subsystem": "Domain.TransactionSets"
       }
     },
     {
@@ -2511,7 +3014,11 @@
         "code.source.line": "26",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.capability": "Inventory.TransactionSets",
+        "semantics.proc.subsystem": "Domain.TransactionSets"
       }
     },
     {
@@ -2532,7 +3039,11 @@
         "code.source.line": "18",
         "code.metrics.lines": "6",
         "code.metrics.sloc": "5",
-        "code.metrics.cyclomatic": "3"
+        "code.metrics.cyclomatic": "3",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "Inventory.TransactionSets",
+        "semantics.proc.subsystem": "Domain.TransactionSets"
       }
     },
     {
@@ -2553,7 +3064,11 @@
         "code.source.line": "10",
         "code.metrics.lines": "6",
         "code.metrics.sloc": "4",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.capability": "Inventory.TransactionSets",
+        "semantics.proc.subsystem": "Domain.TransactionSets"
       }
     },
     {
@@ -2574,7 +3089,10 @@
         "code.source.line": "14",
         "code.metrics.lines": "4",
         "code.metrics.sloc": "3",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -2595,7 +3113,10 @@
         "code.source.line": "18",
         "code.metrics.lines": "4",
         "code.metrics.sloc": "3",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -2616,7 +3137,11 @@
         "code.source.line": "23",
         "code.metrics.lines": "4",
         "code.metrics.sloc": "3",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -2637,7 +3162,11 @@
         "code.source.line": "10",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "1",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -2658,7 +3187,11 @@
         "code.source.line": "10",
         "code.metrics.lines": "31",
         "code.metrics.sloc": "30",
-        "code.metrics.cyclomatic": "8"
+        "code.metrics.cyclomatic": "8",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Domain.Inventory"
       }
     },
     {
@@ -2679,7 +3212,11 @@
         "code.source.line": "82",
         "code.metrics.lines": "11",
         "code.metrics.sloc": "10",
-        "code.metrics.cyclomatic": "2"
+        "code.metrics.cyclomatic": "2",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Domain.Inventory"
       }
     },
     {
@@ -2700,7 +3237,10 @@
         "code.source.line": "74",
         "code.metrics.lines": "8",
         "code.metrics.sloc": "7",
-        "code.metrics.cyclomatic": "3"
+        "code.metrics.cyclomatic": "3",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Domain.Inventory"
       }
     },
     {
@@ -2721,7 +3261,11 @@
         "code.source.line": "93",
         "code.metrics.lines": "23",
         "code.metrics.sloc": "22",
-        "code.metrics.cyclomatic": "5"
+        "code.metrics.cyclomatic": "5",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Domain.Inventory"
       }
     },
     {
@@ -2742,7 +3286,10 @@
         "code.source.line": "6",
         "code.metrics.lines": "4",
         "code.metrics.sloc": "3",
-        "code.metrics.cyclomatic": "3"
+        "code.metrics.cyclomatic": "3",
+        "semantics.proc.role.primary": "Initializer",
+        "semantics.proc.role.confidence": "0.72",
+        "semantics.proc.subsystem": "Domain.Inventory"
       }
     },
     {
@@ -2763,7 +3310,10 @@
         "code.source.line": "41",
         "code.metrics.lines": "33",
         "code.metrics.sloc": "32",
-        "code.metrics.cyclomatic": "7"
+        "code.metrics.cyclomatic": "7",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Domain.Inventory"
       }
     },
     {
@@ -2784,7 +3334,10 @@
         "code.source.line": "34",
         "code.metrics.lines": "8",
         "code.metrics.sloc": "6",
-        "code.metrics.cyclomatic": "2"
+        "code.metrics.cyclomatic": "2",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -2805,7 +3358,11 @@
         "code.source.line": "42",
         "code.metrics.lines": "22",
         "code.metrics.sloc": "21",
-        "code.metrics.cyclomatic": "5"
+        "code.metrics.cyclomatic": "5",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -2826,7 +3383,10 @@
         "code.source.line": "69",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -2847,7 +3407,10 @@
         "code.source.line": "65",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -2868,7 +3431,10 @@
         "code.source.line": "76",
         "code.metrics.lines": "8",
         "code.metrics.sloc": "6",
-        "code.metrics.cyclomatic": "2"
+        "code.metrics.cyclomatic": "2",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -2889,7 +3455,10 @@
         "code.source.line": "73",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -2910,7 +3479,11 @@
         "code.source.line": "8",
         "code.metrics.lines": "26",
         "code.metrics.sloc": "25",
-        "code.metrics.cyclomatic": "7"
+        "code.metrics.cyclomatic": "7",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -2931,7 +3504,10 @@
         "code.source.line": "62",
         "code.metrics.lines": "5",
         "code.metrics.sloc": "4",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Domain.Inventory"
       }
     },
     {
@@ -2952,7 +3528,10 @@
         "code.source.line": "67",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Domain.Inventory"
       }
     },
     {
@@ -2973,7 +3552,10 @@
         "code.source.line": "70",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Domain.Inventory"
       }
     },
     {
@@ -2994,7 +3576,11 @@
         "code.source.line": "57",
         "code.metrics.lines": "5",
         "code.metrics.sloc": "4",
-        "code.metrics.cyclomatic": "3"
+        "code.metrics.cyclomatic": "3",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Domain.Inventory"
       }
     },
     {
@@ -3015,7 +3601,10 @@
         "code.source.line": "39",
         "code.metrics.lines": "18",
         "code.metrics.sloc": "17",
-        "code.metrics.cyclomatic": "6"
+        "code.metrics.cyclomatic": "6",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Domain.Inventory"
       }
     },
     {
@@ -3036,7 +3625,10 @@
         "code.source.line": "6",
         "code.metrics.lines": "14",
         "code.metrics.sloc": "13",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Domain.Inventory"
       }
     },
     {
@@ -3057,7 +3649,10 @@
         "code.source.line": "20",
         "code.metrics.lines": "19",
         "code.metrics.sloc": "17",
-        "code.metrics.cyclomatic": "6"
+        "code.metrics.cyclomatic": "6",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Domain.Inventory"
       }
     },
     {
@@ -3078,7 +3673,11 @@
         "code.source.line": "213",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "2"
+        "code.metrics.cyclomatic": "2",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3099,7 +3698,10 @@
         "code.source.line": "93",
         "code.metrics.lines": "9",
         "code.metrics.sloc": "8",
-        "code.metrics.cyclomatic": "2"
+        "code.metrics.cyclomatic": "2",
+        "semantics.proc.role.primary": "Initializer",
+        "semantics.proc.role.confidence": "0.72",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3120,7 +3722,10 @@
         "code.source.line": "103",
         "code.metrics.lines": "9",
         "code.metrics.sloc": "8",
-        "code.metrics.cyclomatic": "2"
+        "code.metrics.cyclomatic": "2",
+        "semantics.proc.role.primary": "Initializer",
+        "semantics.proc.role.confidence": "0.72",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3141,7 +3746,10 @@
         "code.source.line": "204",
         "code.metrics.lines": "6",
         "code.metrics.sloc": "5",
-        "code.metrics.cyclomatic": "2"
+        "code.metrics.cyclomatic": "2",
+        "semantics.proc.role.primary": "Coordinator",
+        "semantics.proc.role.confidence": "0.7",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3162,7 +3770,10 @@
         "code.source.line": "200",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3183,7 +3794,10 @@
         "code.source.line": "113",
         "code.metrics.lines": "21",
         "code.metrics.sloc": "20",
-        "code.metrics.cyclomatic": "15"
+        "code.metrics.cyclomatic": "15",
+        "semantics.proc.role.primary": "Initializer",
+        "semantics.proc.role.confidence": "0.72",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3204,7 +3818,10 @@
         "code.source.line": "135",
         "code.metrics.lines": "8",
         "code.metrics.sloc": "7",
-        "code.metrics.cyclomatic": "2"
+        "code.metrics.cyclomatic": "2",
+        "semantics.proc.role.primary": "Initializer",
+        "semantics.proc.role.confidence": "0.72",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3225,7 +3842,10 @@
         "code.source.line": "210",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "DataLoader",
+        "semantics.proc.role.confidence": "0.75",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3246,7 +3866,12 @@
         "code.source.line": "144",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.secondary": "Validator",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3267,7 +3892,11 @@
         "code.source.line": "147",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3288,7 +3917,11 @@
         "code.source.line": "150",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3309,7 +3942,11 @@
         "code.source.line": "153",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3330,7 +3967,10 @@
         "code.source.line": "192",
         "code.metrics.lines": "4",
         "code.metrics.sloc": "3",
-        "code.metrics.cyclomatic": "3"
+        "code.metrics.cyclomatic": "3",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3351,7 +3991,11 @@
         "code.source.line": "156",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3372,7 +4016,11 @@
         "code.source.line": "159",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3393,7 +4041,11 @@
         "code.source.line": "162",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3414,7 +4066,11 @@
         "code.source.line": "165",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3435,7 +4091,11 @@
         "code.source.line": "168",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3456,7 +4116,10 @@
         "code.source.line": "196",
         "code.metrics.lines": "4",
         "code.metrics.sloc": "3",
-        "code.metrics.cyclomatic": "3"
+        "code.metrics.cyclomatic": "3",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3477,7 +4140,11 @@
         "code.source.line": "171",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3498,7 +4165,11 @@
         "code.source.line": "174",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3519,7 +4190,11 @@
         "code.source.line": "177",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3540,7 +4215,11 @@
         "code.source.line": "180",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3561,7 +4240,11 @@
         "code.source.line": "183",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3582,7 +4265,10 @@
         "code.source.line": "188",
         "code.metrics.lines": "4",
         "code.metrics.sloc": "3",
-        "code.metrics.cyclomatic": "3"
+        "code.metrics.cyclomatic": "3",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3603,7 +4289,11 @@
         "code.source.line": "341",
         "code.metrics.lines": "31",
         "code.metrics.sloc": "24",
-        "code.metrics.cyclomatic": "7"
+        "code.metrics.cyclomatic": "7",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3624,7 +4314,10 @@
         "code.source.line": "439",
         "code.metrics.lines": "6",
         "code.metrics.sloc": "5",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3645,7 +4338,10 @@
         "code.source.line": "68",
         "code.metrics.lines": "202",
         "code.metrics.sloc": "148",
-        "code.metrics.cyclomatic": "13"
+        "code.metrics.cyclomatic": "13",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3666,7 +4362,10 @@
         "code.source.line": "66",
         "code.metrics.lines": "2",
         "code.metrics.sloc": "1",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3687,7 +4386,10 @@
         "code.source.line": "294",
         "code.metrics.lines": "8",
         "code.metrics.sloc": "7",
-        "code.metrics.cyclomatic": "3"
+        "code.metrics.cyclomatic": "3",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3708,7 +4410,10 @@
         "code.source.line": "1041",
         "code.metrics.lines": "26",
         "code.metrics.sloc": "25",
-        "code.metrics.cyclomatic": "13"
+        "code.metrics.cyclomatic": "13",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3729,7 +4434,10 @@
         "code.source.line": "1072",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Coordinator",
+        "semantics.proc.role.confidence": "0.7",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3750,7 +4458,11 @@
         "code.source.line": "881",
         "code.metrics.lines": "13",
         "code.metrics.sloc": "11",
-        "code.metrics.cyclomatic": "4"
+        "code.metrics.cyclomatic": "4",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3771,7 +4483,10 @@
         "code.source.line": "601",
         "code.metrics.lines": "19",
         "code.metrics.sloc": "18",
-        "code.metrics.cyclomatic": "9"
+        "code.metrics.cyclomatic": "9",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3792,7 +4507,10 @@
         "code.source.line": "639",
         "code.metrics.lines": "12",
         "code.metrics.sloc": "9",
-        "code.metrics.cyclomatic": "3"
+        "code.metrics.cyclomatic": "3",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3813,7 +4531,10 @@
         "code.source.line": "655",
         "code.metrics.lines": "6",
         "code.metrics.sloc": "4",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3834,7 +4555,10 @@
         "code.source.line": "625",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3855,7 +4579,10 @@
         "code.source.line": "592",
         "code.metrics.lines": "5",
         "code.metrics.sloc": "4",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3876,7 +4603,10 @@
         "code.source.line": "1095",
         "code.metrics.lines": "11",
         "code.metrics.sloc": "9",
-        "code.metrics.cyclomatic": "3"
+        "code.metrics.cyclomatic": "3",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3897,7 +4627,10 @@
         "code.source.line": "632",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3918,7 +4651,10 @@
         "code.source.line": "284",
         "code.metrics.lines": "10",
         "code.metrics.sloc": "7",
-        "code.metrics.cyclomatic": "3"
+        "code.metrics.cyclomatic": "3",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3939,7 +4675,10 @@
         "code.source.line": "1086",
         "code.metrics.lines": "5",
         "code.metrics.sloc": "3",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3960,7 +4699,10 @@
         "code.source.line": "1081",
         "code.metrics.lines": "5",
         "code.metrics.sloc": "3",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -3981,7 +4723,11 @@
         "code.source.line": "963",
         "code.metrics.lines": "21",
         "code.metrics.sloc": "16",
-        "code.metrics.cyclomatic": "4"
+        "code.metrics.cyclomatic": "4",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -4002,7 +4748,10 @@
         "code.source.line": "730",
         "code.metrics.lines": "41",
         "code.metrics.sloc": "34",
-        "code.metrics.cyclomatic": "16"
+        "code.metrics.cyclomatic": "16",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -4023,7 +4772,10 @@
         "code.source.line": "372",
         "code.metrics.lines": "5",
         "code.metrics.sloc": "4",
-        "code.metrics.cyclomatic": "2"
+        "code.metrics.cyclomatic": "2",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -4044,7 +4796,10 @@
         "code.source.line": "324",
         "code.metrics.lines": "11",
         "code.metrics.sloc": "9",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -4065,7 +4820,10 @@
         "code.source.line": "482",
         "code.metrics.lines": "106",
         "code.metrics.sloc": "79",
-        "code.metrics.cyclomatic": "35"
+        "code.metrics.cyclomatic": "35",
+        "semantics.proc.role.primary": "Coordinator",
+        "semantics.proc.role.confidence": "0.7",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -4086,7 +4844,10 @@
         "code.source.line": "426",
         "code.metrics.lines": "5",
         "code.metrics.sloc": "4",
-        "code.metrics.cyclomatic": "2"
+        "code.metrics.cyclomatic": "2",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -4107,7 +4868,11 @@
         "code.source.line": "394",
         "code.metrics.lines": "28",
         "code.metrics.sloc": "23",
-        "code.metrics.cyclomatic": "7"
+        "code.metrics.cyclomatic": "7",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -4128,7 +4893,10 @@
         "code.source.line": "381",
         "code.metrics.lines": "9",
         "code.metrics.sloc": "8",
-        "code.metrics.cyclomatic": "4"
+        "code.metrics.cyclomatic": "4",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -4149,7 +4917,10 @@
         "code.source.line": "274",
         "code.metrics.lines": "4",
         "code.metrics.sloc": "3",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -4170,7 +4941,10 @@
         "code.source.line": "900",
         "code.metrics.lines": "59",
         "code.metrics.sloc": "44",
-        "code.metrics.cyclomatic": "21"
+        "code.metrics.cyclomatic": "21",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -4191,7 +4965,10 @@
         "code.source.line": "665",
         "code.metrics.lines": "61",
         "code.metrics.sloc": "46",
-        "code.metrics.cyclomatic": "22"
+        "code.metrics.cyclomatic": "22",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -4212,7 +4989,10 @@
         "code.source.line": "449",
         "code.metrics.lines": "16",
         "code.metrics.sloc": "15",
-        "code.metrics.cyclomatic": "5"
+        "code.metrics.cyclomatic": "5",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -4233,7 +5013,11 @@
         "code.source.line": "775",
         "code.metrics.lines": "106",
         "code.metrics.sloc": "83",
-        "code.metrics.cyclomatic": "23"
+        "code.metrics.cyclomatic": "23",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -4254,7 +5038,10 @@
         "code.source.line": "306",
         "code.metrics.lines": "11",
         "code.metrics.sloc": "10",
-        "code.metrics.cyclomatic": "3"
+        "code.metrics.cyclomatic": "3",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -4275,7 +5062,10 @@
         "code.source.line": "470",
         "code.metrics.lines": "8",
         "code.metrics.sloc": "7",
-        "code.metrics.cyclomatic": "3"
+        "code.metrics.cyclomatic": "3",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -4296,7 +5086,10 @@
         "code.source.line": "988",
         "code.metrics.lines": "49",
         "code.metrics.sloc": "35",
-        "code.metrics.cyclomatic": "18"
+        "code.metrics.cyclomatic": "18",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -4317,7 +5110,10 @@
         "code.source.line": "15",
         "code.metrics.lines": "13",
         "code.metrics.sloc": "8",
-        "code.metrics.cyclomatic": "6"
+        "code.metrics.cyclomatic": "6",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "UI.Sheets"
       }
     },
     {
@@ -4338,7 +5134,10 @@
         "code.source.line": "16",
         "code.metrics.lines": "13",
         "code.metrics.sloc": "8",
-        "code.metrics.cyclomatic": "6"
+        "code.metrics.cyclomatic": "6",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "UI.Sheets"
       }
     },
     {
@@ -4358,7 +5157,11 @@
         "code.source.line": "11",
         "code.metrics.lines": "2",
         "code.metrics.sloc": "1",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Sheets"
       }
     },
     {
@@ -4378,7 +5181,11 @@
         "code.source.line": "25",
         "code.metrics.lines": "6",
         "code.metrics.sloc": "5",
-        "code.metrics.cyclomatic": "2"
+        "code.metrics.cyclomatic": "2",
+        "semantics.proc.role.primary": "Validator",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.82",
+        "semantics.proc.subsystem": "UI.Sheets"
       }
     },
     {
@@ -4399,7 +5206,11 @@
         "code.source.line": "11",
         "code.metrics.lines": "8",
         "code.metrics.sloc": "4",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Sheets"
       }
     },
     {
@@ -4420,7 +5231,10 @@
         "code.source.line": "19",
         "code.metrics.lines": "6",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "UI.Sheets"
       }
     }
   ],
@@ -24044,7 +24858,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "23",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.module.subsystem.primary": "Domain.Inventory",
+        "semantics.module.confidence": "0.7",
+        "semantics.module.tags": "inventory"
       }
     },
     {
@@ -24060,7 +24877,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "24",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "Domain.Inventory",
+        "semantics.module.confidence": "0.7",
+        "semantics.module.tags": "inventory"
       }
     },
     {
@@ -24076,7 +24896,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "10",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "UI.Sheets",
+        "semantics.module.confidence": "0.7",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -24092,7 +24915,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "10",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "UI.Sheets",
+        "semantics.module.confidence": "0.7",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -24108,7 +24934,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "10",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "UI.Sheets",
+        "semantics.module.confidence": "0.7",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -24124,7 +24953,11 @@
         "code.source.line": "1",
         "code.metrics.lines": "10",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "Observability.Logging",
+        "semantics.module.subsystem.secondary": "UI.Sheets",
+        "semantics.module.confidence": "0.7",
+        "semantics.module.tags": "telemetry"
       }
     },
     {
@@ -24140,7 +24973,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "21",
         "code.metrics.sloc": "4",
-        "code.metrics.cyclomatic": "2"
+        "code.metrics.cyclomatic": "2",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -24156,7 +24992,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "15",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -24172,7 +25011,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "108",
         "code.metrics.sloc": "71",
-        "code.metrics.cyclomatic": "14"
+        "code.metrics.cyclomatic": "14",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -24188,7 +25030,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "16",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -24204,7 +25049,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "16",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -24220,7 +25068,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "87",
         "code.metrics.sloc": "54",
-        "code.metrics.cyclomatic": "17"
+        "code.metrics.cyclomatic": "17",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -24236,7 +25087,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "16",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -24252,7 +25106,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "544",
         "code.metrics.sloc": "392",
-        "code.metrics.cyclomatic": "150"
+        "code.metrics.cyclomatic": "150",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -24268,7 +25125,11 @@
         "code.source.line": "1",
         "code.metrics.lines": "72",
         "code.metrics.sloc": "39",
-        "code.metrics.cyclomatic": "11"
+        "code.metrics.cyclomatic": "11",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.subsystem.secondary": "Observability.Logging,Security.Auth",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -24284,7 +25145,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "22",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -24300,7 +25164,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "150",
         "code.metrics.sloc": "98",
-        "code.metrics.cyclomatic": "29"
+        "code.metrics.cyclomatic": "29",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -24316,7 +25183,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "16",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -24332,7 +25202,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "156",
         "code.metrics.sloc": "99",
-        "code.metrics.cyclomatic": "29"
+        "code.metrics.cyclomatic": "29",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -24348,7 +25221,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "15",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -24364,7 +25240,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "16",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -24380,7 +25259,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "16",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -24396,7 +25278,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "10",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "UI.Sheets",
+        "semantics.module.confidence": "0.7",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -24412,7 +25297,11 @@
         "code.source.line": "1",
         "code.metrics.lines": "10",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "Domain.Inventory",
+        "semantics.module.subsystem.secondary": "Observability.Logging,UI.Sheets",
+        "semantics.module.confidence": "0.7",
+        "semantics.module.tags": "inventory"
       }
     },
     {
@@ -24428,7 +25317,11 @@
         "code.source.line": "1",
         "code.metrics.lines": "88",
         "code.metrics.sloc": "66",
-        "code.metrics.cyclomatic": "24"
+        "code.metrics.cyclomatic": "24",
+        "semantics.module.subsystem.primary": "Domain.Inventory",
+        "semantics.module.subsystem.secondary": "UI.Sheets",
+        "semantics.module.confidence": "0.7",
+        "semantics.module.tags": "inventory"
       }
     },
     {
@@ -24444,7 +25337,9 @@
         "code.source.line": "1",
         "code.metrics.lines": "22",
         "code.metrics.sloc": "4",
-        "code.metrics.cyclomatic": "2"
+        "code.metrics.cyclomatic": "2",
+        "semantics.module.subsystem.primary": "Core.Modules",
+        "semantics.module.confidence": "0.35"
       }
     },
     {
@@ -24460,7 +25355,9 @@
         "code.source.line": "1",
         "code.metrics.lines": "4",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "Core.Modules",
+        "semantics.module.confidence": "0.35"
       }
     },
     {
@@ -24476,7 +25373,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "2",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -24492,7 +25392,9 @@
         "code.source.line": "1",
         "code.metrics.lines": "73",
         "code.metrics.sloc": "49",
-        "code.metrics.cyclomatic": "14"
+        "code.metrics.cyclomatic": "14",
+        "semantics.module.subsystem.primary": "Core.Modules",
+        "semantics.module.confidence": "0.35"
       }
     },
     {
@@ -24508,7 +25410,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "474",
         "code.metrics.sloc": "353",
-        "code.metrics.cyclomatic": "112"
+        "code.metrics.cyclomatic": "112",
+        "semantics.module.subsystem.primary": "Data.ImportExport",
+        "semantics.module.confidence": "0.7",
+        "semantics.module.tags": "data"
       }
     },
     {
@@ -24524,7 +25429,9 @@
         "code.source.line": "1",
         "code.metrics.lines": "100",
         "code.metrics.sloc": "59",
-        "code.metrics.cyclomatic": "24"
+        "code.metrics.cyclomatic": "24",
+        "semantics.module.subsystem.primary": "Infrastructure.Core",
+        "semantics.module.confidence": "0.7"
       }
     },
     {
@@ -24540,7 +25447,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "475",
         "code.metrics.sloc": "353",
-        "code.metrics.cyclomatic": "112"
+        "code.metrics.cyclomatic": "112",
+        "semantics.module.subsystem.primary": "Data.ImportExport",
+        "semantics.module.confidence": "0.7",
+        "semantics.module.tags": "data"
       }
     },
     {
@@ -24556,7 +25466,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "89",
         "code.metrics.sloc": "65",
-        "code.metrics.cyclomatic": "6"
+        "code.metrics.cyclomatic": "6",
+        "semantics.module.subsystem.primary": "Observability.Logging",
+        "semantics.module.confidence": "0.7",
+        "semantics.module.tags": "telemetry"
       }
     },
     {
@@ -24572,7 +25485,9 @@
         "code.source.line": "1",
         "code.metrics.lines": "371",
         "code.metrics.sloc": "313",
-        "code.metrics.cyclomatic": "53"
+        "code.metrics.cyclomatic": "53",
+        "semantics.module.subsystem.primary": "Core.Modules",
+        "semantics.module.confidence": "0.35"
       }
     },
     {
@@ -24588,7 +25503,9 @@
         "code.source.line": "1",
         "code.metrics.lines": "110",
         "code.metrics.sloc": "89",
-        "code.metrics.cyclomatic": "18"
+        "code.metrics.cyclomatic": "18",
+        "semantics.module.subsystem.primary": "Core.Modules",
+        "semantics.module.confidence": "0.35"
       }
     },
     {
@@ -24604,7 +25521,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "215",
         "code.metrics.sloc": "160",
-        "code.metrics.cyclomatic": "47"
+        "code.metrics.cyclomatic": "47",
+        "semantics.module.subsystem.primary": "Domain.TransactionSets",
+        "semantics.module.confidence": "0.82",
+        "semantics.module.tags": "inventory"
       }
     },
     {
@@ -24620,7 +25540,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "19",
         "code.metrics.sloc": "8",
-        "code.metrics.cyclomatic": "2"
+        "code.metrics.cyclomatic": "2",
+        "semantics.module.subsystem.primary": "Domain.TransactionSets",
+        "semantics.module.confidence": "0.82",
+        "semantics.module.tags": "inventory"
       }
     },
     {
@@ -24636,7 +25559,11 @@
         "code.source.line": "1",
         "code.metrics.lines": "77",
         "code.metrics.sloc": "50",
-        "code.metrics.cyclomatic": "24"
+        "code.metrics.cyclomatic": "24",
+        "semantics.module.subsystem.primary": "Domain.TransactionSets",
+        "semantics.module.subsystem.secondary": "Observability.Logging",
+        "semantics.module.confidence": "0.82",
+        "semantics.module.tags": "inventory"
       }
     },
     {
@@ -24652,7 +25579,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "307",
         "code.metrics.sloc": "230",
-        "code.metrics.cyclomatic": "40"
+        "code.metrics.cyclomatic": "40",
+        "semantics.module.subsystem.primary": "Domain.TransactionSets",
+        "semantics.module.confidence": "0.82",
+        "semantics.module.tags": "inventory"
       }
     },
     {
@@ -24668,7 +25598,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "2",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "Domain.TransactionSets",
+        "semantics.module.confidence": "0.82",
+        "semantics.module.tags": "inventory"
       }
     },
     {
@@ -24684,7 +25617,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "243",
         "code.metrics.sloc": "192",
-        "code.metrics.cyclomatic": "51"
+        "code.metrics.cyclomatic": "51",
+        "semantics.module.subsystem.primary": "Domain.TransactionSets",
+        "semantics.module.confidence": "0.82",
+        "semantics.module.tags": "inventory"
       }
     },
     {
@@ -24700,7 +25636,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "131",
         "code.metrics.sloc": "85",
-        "code.metrics.cyclomatic": "35"
+        "code.metrics.cyclomatic": "35",
+        "semantics.module.subsystem.primary": "Domain.TransactionSets",
+        "semantics.module.confidence": "0.82",
+        "semantics.module.tags": "inventory"
       }
     },
     {
@@ -24716,7 +25655,9 @@
         "code.source.line": "1",
         "code.metrics.lines": "33",
         "code.metrics.sloc": "10",
-        "code.metrics.cyclomatic": "4"
+        "code.metrics.cyclomatic": "4",
+        "semantics.module.subsystem.primary": "Core.Modules",
+        "semantics.module.confidence": "0.35"
       }
     },
     {
@@ -24732,7 +25673,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "122",
         "code.metrics.sloc": "104",
-        "code.metrics.cyclomatic": "28"
+        "code.metrics.cyclomatic": "28",
+        "semantics.module.subsystem.primary": "Domain.Inventory",
+        "semantics.module.confidence": "0.7",
+        "semantics.module.tags": "inventory"
       }
     },
     {
@@ -24748,7 +25692,9 @@
         "code.source.line": "1",
         "code.metrics.lines": "94",
         "code.metrics.sloc": "64",
-        "code.metrics.cyclomatic": "19"
+        "code.metrics.cyclomatic": "19",
+        "semantics.module.subsystem.primary": "Core.Modules",
+        "semantics.module.confidence": "0.35"
       }
     },
     {
@@ -24764,7 +25710,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "83",
         "code.metrics.sloc": "59",
-        "code.metrics.cyclomatic": "19"
+        "code.metrics.cyclomatic": "19",
+        "semantics.module.subsystem.primary": "Domain.Inventory",
+        "semantics.module.confidence": "0.7",
+        "semantics.module.tags": "inventory"
       }
     },
     {
@@ -24780,7 +25729,9 @@
         "code.source.line": "1",
         "code.metrics.lines": "21",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "Core.Modules",
+        "semantics.module.confidence": "0.35"
       }
     },
     {
@@ -24796,7 +25747,9 @@
         "code.source.line": "1",
         "code.metrics.lines": "216",
         "code.metrics.sloc": "91",
-        "code.metrics.cyclomatic": "50"
+        "code.metrics.cyclomatic": "50",
+        "semantics.module.subsystem.primary": "Core.Modules",
+        "semantics.module.confidence": "0.35"
       }
     },
     {
@@ -24812,7 +25765,9 @@
         "code.source.line": "1",
         "code.metrics.lines": "1107",
         "code.metrics.sloc": "704",
-        "code.metrics.cyclomatic": "234"
+        "code.metrics.cyclomatic": "234",
+        "semantics.module.subsystem.primary": "Core.Modules",
+        "semantics.module.confidence": "0.35"
       }
     },
     {
@@ -24828,7 +25783,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "10",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "UI.Sheets",
+        "semantics.module.confidence": "0.7",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -24844,7 +25802,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "10",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "UI.Sheets",
+        "semantics.module.confidence": "0.7",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -24860,7 +25821,11 @@
         "code.source.line": "1",
         "code.metrics.lines": "10",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "Observability.Logging",
+        "semantics.module.subsystem.secondary": "UI.Sheets",
+        "semantics.module.confidence": "0.7",
+        "semantics.module.tags": "telemetry"
       }
     },
     {
@@ -24876,7 +25841,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "10",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "UI.Sheets",
+        "semantics.module.confidence": "0.7",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -24892,7 +25860,11 @@
         "code.source.line": "1",
         "code.metrics.lines": "10",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "Observability.Logging",
+        "semantics.module.subsystem.secondary": "UI.Sheets",
+        "semantics.module.confidence": "0.7",
+        "semantics.module.tags": "telemetry"
       }
     },
     {
@@ -24908,7 +25880,11 @@
         "code.source.line": "1",
         "code.metrics.lines": "10",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "Observability.Logging",
+        "semantics.module.subsystem.secondary": "UI.Sheets",
+        "semantics.module.confidence": "0.7",
+        "semantics.module.tags": "telemetry"
       }
     },
     {
@@ -24924,7 +25900,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "28",
         "code.metrics.sloc": "8",
-        "code.metrics.cyclomatic": "6"
+        "code.metrics.cyclomatic": "6",
+        "semantics.module.subsystem.primary": "UI.Sheets",
+        "semantics.module.confidence": "0.7",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -24940,7 +25919,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "10",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "UI.Sheets",
+        "semantics.module.confidence": "0.7",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -24956,7 +25938,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "10",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "UI.Sheets",
+        "semantics.module.confidence": "0.7",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -24972,7 +25957,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "9",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "UI.Sheets",
+        "semantics.module.confidence": "0.85",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -24988,7 +25976,11 @@
         "code.source.line": "1",
         "code.metrics.lines": "10",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "Observability.Logging",
+        "semantics.module.subsystem.secondary": "UI.Sheets",
+        "semantics.module.confidence": "0.7",
+        "semantics.module.tags": "telemetry"
       }
     },
     {
@@ -25004,7 +25996,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "29",
         "code.metrics.sloc": "8",
-        "code.metrics.cyclomatic": "6"
+        "code.metrics.cyclomatic": "6",
+        "semantics.module.subsystem.primary": "UI.Sheets",
+        "semantics.module.confidence": "0.7",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -25020,7 +26015,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "10",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "UI.Sheets",
+        "semantics.module.confidence": "0.7",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -25036,7 +26034,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "13",
         "code.metrics.sloc": "1",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.module.subsystem.primary": "UI.Sheets",
+        "semantics.module.confidence": "0.7",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -25052,7 +26053,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "30",
         "code.metrics.sloc": "11",
-        "code.metrics.cyclomatic": "4"
+        "code.metrics.cyclomatic": "4",
+        "semantics.module.subsystem.primary": "UI.Sheets",
+        "semantics.module.confidence": "0.85",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -25068,8 +26072,16 @@
         "code.source.line": "1",
         "code.metrics.lines": "22",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "UI.Sheets",
+        "semantics.module.confidence": "0.7",
+        "semantics.module.tags": "ui"
       }
     }
-  ]
+  ],
+  "options": {
+    "render": {
+      "skipRunner": false
+    }
+  }
 }

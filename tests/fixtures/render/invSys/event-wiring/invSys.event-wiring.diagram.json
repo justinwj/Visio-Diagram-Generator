@@ -1,5 +1,15 @@
 {
   "schemaVersion": "1.2",
+  "metadata": {
+    "properties": {
+      "semantics.taxonomy.path": "D:\\justinwj\\Solutions\\Visio Diagram Generator\\out\\fixtures\\invSys\\event-wiring\\invSys.event-wiring.taxonomy.json",
+      "semantics.taxonomy.schema": "1.0",
+      "semantics.taxonomy.generatedAt": "2025-11-09T07:23:03.8371777\u002B00:00",
+      "semantics.flows.path": "D:\\justinwj\\Solutions\\Visio Diagram Generator\\out\\fixtures\\invSys\\event-wiring\\invSys.event-wiring.flows.json",
+      "semantics.flows.schema": "1.0",
+      "semantics.flows.generatedAt": "2025-11-09T07:23:03.8371777\u002B00:00"
+    }
+  },
   "layout": {
     "outputMode": "view",
     "tiers": [
@@ -60,7 +70,11 @@
         "code.source.line": "16",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -93,7 +107,11 @@
         "code.source.line": "19",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -126,7 +144,11 @@
         "code.source.line": "20",
         "code.metrics.lines": "53",
         "code.metrics.sloc": "44",
-        "code.metrics.cyclomatic": "7"
+        "code.metrics.cyclomatic": "7",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -159,7 +181,11 @@
         "code.source.line": "80",
         "code.metrics.lines": "28",
         "code.metrics.sloc": "21",
-        "code.metrics.cyclomatic": "5"
+        "code.metrics.cyclomatic": "5",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -192,7 +218,11 @@
         "code.source.line": "73",
         "code.metrics.lines": "7",
         "code.metrics.sloc": "4",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -225,7 +255,11 @@
         "code.source.line": "16",
         "code.metrics.lines": "4",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -258,7 +292,11 @@
         "code.source.line": "80",
         "code.metrics.lines": "7",
         "code.metrics.sloc": "4",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -291,7 +329,11 @@
         "code.source.line": "22",
         "code.metrics.lines": "58",
         "code.metrics.sloc": "47",
-        "code.metrics.cyclomatic": "15"
+        "code.metrics.cyclomatic": "15",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -324,7 +366,11 @@
         "code.source.line": "16",
         "code.metrics.lines": "6",
         "code.metrics.sloc": "3",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -357,7 +403,11 @@
         "code.source.line": "158",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -378,7 +428,11 @@
         "code.source.line": "153",
         "code.metrics.lines": "4",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -399,7 +453,10 @@
         "code.source.line": "183",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -420,7 +477,11 @@
         "code.source.line": "176",
         "code.metrics.lines": "6",
         "code.metrics.sloc": "5",
-        "code.metrics.cyclomatic": "3"
+        "code.metrics.cyclomatic": "3",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -441,7 +502,11 @@
         "code.source.line": "169",
         "code.metrics.lines": "6",
         "code.metrics.sloc": "5",
-        "code.metrics.cyclomatic": "3"
+        "code.metrics.cyclomatic": "3",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -474,7 +539,12 @@
         "code.source.line": "72",
         "code.metrics.lines": "80",
         "code.metrics.sloc": "58",
-        "code.metrics.cyclomatic": "23"
+        "code.metrics.cyclomatic": "23",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.secondary": "Coordinator",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -495,7 +565,11 @@
         "code.source.line": "162",
         "code.metrics.lines": "6",
         "code.metrics.sloc": "5",
-        "code.metrics.cyclomatic": "3"
+        "code.metrics.cyclomatic": "3",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -528,7 +602,11 @@
         "code.source.line": "25",
         "code.metrics.lines": "6",
         "code.metrics.sloc": "4",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -549,7 +627,11 @@
         "code.source.line": "31",
         "code.metrics.lines": "17",
         "code.metrics.sloc": "12",
-        "code.metrics.cyclomatic": "3"
+        "code.metrics.cyclomatic": "3",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -570,7 +652,11 @@
         "code.source.line": "530",
         "code.metrics.lines": "13",
         "code.metrics.sloc": "9",
-        "code.metrics.cyclomatic": "5"
+        "code.metrics.cyclomatic": "5",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -591,7 +677,10 @@
         "code.source.line": "22",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -624,7 +713,11 @@
         "code.source.line": "60",
         "code.metrics.lines": "4",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -657,7 +750,11 @@
         "code.source.line": "16",
         "code.metrics.lines": "41",
         "code.metrics.sloc": "31",
-        "code.metrics.cyclomatic": "7"
+        "code.metrics.cyclomatic": "7",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "Auth.Login",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -690,7 +787,11 @@
         "code.source.line": "57",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -723,7 +824,11 @@
         "code.source.line": "68",
         "code.metrics.lines": "4",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -744,7 +849,11 @@
         "code.source.line": "64",
         "code.metrics.lines": "4",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -777,7 +886,11 @@
         "code.source.line": "19",
         "code.metrics.lines": "4",
         "code.metrics.sloc": "3",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -810,7 +923,11 @@
         "code.source.line": "24",
         "code.metrics.lines": "7",
         "code.metrics.sloc": "4",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -843,7 +960,11 @@
         "code.source.line": "25",
         "code.metrics.lines": "5",
         "code.metrics.sloc": "3",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     },
     {
@@ -876,7 +997,11 @@
         "code.source.line": "31",
         "code.metrics.lines": "9",
         "code.metrics.sloc": "5",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     }
   ],
@@ -1215,7 +1340,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "21",
         "code.metrics.sloc": "4",
-        "code.metrics.cyclomatic": "2"
+        "code.metrics.cyclomatic": "2",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -1231,7 +1359,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "15",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -1247,7 +1378,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "108",
         "code.metrics.sloc": "71",
-        "code.metrics.cyclomatic": "14"
+        "code.metrics.cyclomatic": "14",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -1263,7 +1397,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "16",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -1279,7 +1416,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "16",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -1295,7 +1435,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "87",
         "code.metrics.sloc": "54",
-        "code.metrics.cyclomatic": "17"
+        "code.metrics.cyclomatic": "17",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -1311,7 +1454,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "16",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -1327,7 +1473,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "544",
         "code.metrics.sloc": "392",
-        "code.metrics.cyclomatic": "150"
+        "code.metrics.cyclomatic": "150",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -1343,7 +1492,11 @@
         "code.source.line": "1",
         "code.metrics.lines": "72",
         "code.metrics.sloc": "39",
-        "code.metrics.cyclomatic": "11"
+        "code.metrics.cyclomatic": "11",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.subsystem.secondary": "Observability.Logging,Security.Auth",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -1359,7 +1512,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "22",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -1375,7 +1531,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "150",
         "code.metrics.sloc": "98",
-        "code.metrics.cyclomatic": "29"
+        "code.metrics.cyclomatic": "29",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -1391,7 +1550,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "16",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -1407,7 +1569,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "156",
         "code.metrics.sloc": "99",
-        "code.metrics.cyclomatic": "29"
+        "code.metrics.cyclomatic": "29",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -1423,7 +1588,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "15",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -1439,7 +1607,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "16",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     },
     {
@@ -1455,7 +1626,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "16",
         "code.metrics.sloc": "0",
-        "code.metrics.cyclomatic": "0"
+        "code.metrics.cyclomatic": "0",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     }
   ]

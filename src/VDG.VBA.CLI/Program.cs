@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using VDG.VBA.CLI.Semantics;
 
 namespace VDG.VBA.CLI;
 
@@ -431,6 +432,38 @@ internal static class Program
             throw new UsageException("IR contains no modules.");
         if (!incomingModules.Any(m => (m.Procedures?.Count ?? 0) > 0))
             throw new UsageException("IR contains no procedures.");
+        var semanticsBuilder = new SemanticArtifactsBuilder();
+        var semantics = semanticsBuilder.Build(incomingModules, root.Project?.Name, Path.GetFullPath(input!));
+
+        void ApplyModuleSemantics(Dictionary<string, string> metadata, string moduleId)
+        {
+            if (metadata == null || string.IsNullOrWhiteSpace(moduleId)) return;
+            if (!semantics.Modules.TryGetValue(moduleId, out var info)) return;
+
+            if (!string.IsNullOrWhiteSpace(info.PrimarySubsystem))
+                metadata["semantics.module.subsystem.primary"] = info.PrimarySubsystem!;
+            if (info.SecondarySubsystems.Count > 0)
+                metadata["semantics.module.subsystem.secondary"] = string.Join(",", info.SecondarySubsystems);
+            metadata["semantics.module.confidence"] = info.Confidence.ToString("0.##", CultureInfo.InvariantCulture);
+            if (info.Tags.Count > 0)
+                metadata["semantics.module.tags"] = string.Join(",", info.Tags);
+        }
+
+        void ApplyProcedureSemantics(Dictionary<string, string> metadata, string procedureId)
+        {
+            if (metadata == null || string.IsNullOrWhiteSpace(procedureId)) return;
+            if (!semantics.Procedures.TryGetValue(procedureId, out var info)) return;
+
+            if (!string.IsNullOrWhiteSpace(info.PrimaryRole))
+                metadata["semantics.proc.role.primary"] = info.PrimaryRole!;
+            if (info.SecondaryRoles.Count > 0)
+                metadata["semantics.proc.role.secondary"] = string.Join(",", info.SecondaryRoles);
+            metadata["semantics.proc.role.confidence"] = info.Confidence.ToString("0.##", CultureInfo.InvariantCulture);
+            if (!string.IsNullOrWhiteSpace(info.Capability))
+                metadata["semantics.proc.capability"] = info.Capability!;
+            if (!string.IsNullOrWhiteSpace(info.PrimarySubsystem))
+                metadata["semantics.proc.subsystem"] = info.PrimarySubsystem!;
+        }
         var sw = System.Diagnostics.Stopwatch.StartNew();
         void CheckTimeout()
         {
@@ -538,6 +571,7 @@ internal static class Program
             var tier = TierFor(m);
             var moduleLabel = string.IsNullOrWhiteSpace(m.Name) ? m.Id : m.Name;
             var moduleMetadata = BuildModuleMetadata(m);
+            ApplyModuleSemantics(moduleMetadata, m.Id);
             containers.Add(new { id = m.Id, label = moduleLabel, tier, metadata = moduleMetadata });
             var orderedProcedures = (m.Procedures ?? new())
                 .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
@@ -547,6 +581,7 @@ internal static class Program
             {
                 CheckTimeout();
                 var nodeMeta = BuildProcedureMetadata(m, p);
+                ApplyProcedureSemantics(nodeMeta, p.Id);
                 var label = mode.Equals("module-structure", StringComparison.OrdinalIgnoreCase) ? (p.Name ?? p.Id) : p.Id;
                 nodes.Add(new { id = p.Id, label, tier, containerId = m.Id, metadata = nodeMeta });
                 var procedureCalls = p.Calls ?? new List<CallIr>();
@@ -636,6 +671,7 @@ internal static class Program
             {
                 var tier = TierFor(m);
                 var moduleMeta = BuildModuleMetadata(m);
+                ApplyModuleSemantics(moduleMeta, m.Id);
                 containers.Add(new { id = m.Id, label = m.Name, tier, metadata = moduleMeta });
                 var orderedProcedures = (m.Procedures ?? new())
                     .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
@@ -665,6 +701,7 @@ internal static class Program
                     }
                     // Handler node
                     var handlerMeta = BuildProcedureMetadata(m, p);
+                    ApplyProcedureSemantics(handlerMeta, p.Id);
                     nodes.Add(new { id = p.Id, label = p.Id, tier, containerId = m.Id, metadata = handlerMeta });
                     var meta = new Dictionary<string, string> { ["code.edge"] = "event" };
                     meta["code.module"] = moduleDisplay;
@@ -696,6 +733,7 @@ internal static class Program
                 {
                     var contId = p.Id + "#proc";
                     var procMeta = BuildProcedureMetadata(m, p);
+                    ApplyProcedureSemantics(procMeta, p.Id);
                     containers.Add(new { id = contId, label = p.Id, tier, metadata = procMeta });
 
                     var startId = p.Id + "#start";
@@ -922,9 +960,36 @@ internal static class Program
             };
         }
 
+        string? taxonomyPath = null;
+        string? flowsPath = null;
+        if (!string.IsNullOrWhiteSpace(output))
+        {
+            var fullDiagramPath = Path.GetFullPath(output!);
+            taxonomyPath = DeriveArtifactPath(fullDiagramPath, "taxonomy");
+            flowsPath = DeriveArtifactPath(fullDiagramPath, "flows");
+            WriteJsonArtifact(taxonomyPath, semantics.Taxonomy);
+            WriteJsonArtifact(flowsPath, semantics.Flow);
+        }
+
+        var metadataProperties = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        if (!string.IsNullOrWhiteSpace(taxonomyPath))
+        {
+            metadataProperties["semantics.taxonomy.path"] = taxonomyPath!;
+            metadataProperties["semantics.taxonomy.schema"] = semantics.Taxonomy.SchemaVersion;
+            metadataProperties["semantics.taxonomy.generatedAt"] = semantics.Taxonomy.GeneratedAt.ToString("o", CultureInfo.InvariantCulture);
+        }
+        if (!string.IsNullOrWhiteSpace(flowsPath))
+        {
+            metadataProperties["semantics.flows.path"] = flowsPath!;
+            metadataProperties["semantics.flows.schema"] = semantics.Flow.SchemaVersion;
+            metadataProperties["semantics.flows.generatedAt"] = semantics.Flow.GeneratedAt.ToString("o", CultureInfo.InvariantCulture);
+        }
+        var metadataObject = metadataProperties.Count == 0 ? null : new { properties = metadataProperties };
+
         var diagram = new
         {
             schemaVersion = "1.2",
+            metadata = metadataObject,
             layout = new
             {
                 outputMode = normalizedOutputMode,
@@ -1044,6 +1109,38 @@ internal static class Program
     }
 
     private sealed record LinkSummaryEntry(string Name, string File, string Module, int StartLine, int EndLine, string Hyperlink);
+
+    private static string DeriveArtifactPath(string diagramPath, string suffix)
+    {
+        if (string.IsNullOrWhiteSpace(diagramPath)) throw new ArgumentException("diagramPath must be provided", nameof(diagramPath));
+        var directory = Path.GetDirectoryName(diagramPath);
+        var fileName = Path.GetFileName(diagramPath);
+        const string DiagramExtension = ".diagram.json";
+
+        string baseName;
+        if (fileName.EndsWith(DiagramExtension, StringComparison.OrdinalIgnoreCase))
+            baseName = fileName[..^DiagramExtension.Length];
+        else
+        {
+            var withoutExtension = Path.GetFileNameWithoutExtension(fileName);
+            baseName = string.IsNullOrWhiteSpace(withoutExtension) ? "diagram" : withoutExtension;
+        }
+
+        return Path.Combine(directory ?? ".", $"{baseName}.{suffix}.json");
+    }
+
+    private static void WriteJsonArtifact(string? path, object payload)
+    {
+        if (string.IsNullOrWhiteSpace(path) || payload is null) return;
+        var fullPath = Path.GetFullPath(path);
+        var dir = Path.GetDirectoryName(fullPath);
+        if (!string.IsNullOrWhiteSpace(dir))
+        {
+            Directory.CreateDirectory(dir);
+        }
+        var json = JsonSerializer.Serialize(payload, JsonOpts);
+        File.WriteAllText(fullPath, json);
+    }
 
     private static string KindFromExt(string? ext) => (ext ?? string.Empty).ToLowerInvariant() switch
     {

@@ -1,0 +1,67 @@
+{
+  "irSchemaVersion": "0.2",
+  "generator": { "name": "fixture", "version": "0.1.0" },
+  "project": {
+    "name": "SampleInventory",
+    "modules": [
+      {
+        "id": "frmLogin",
+        "name": "frmLogin",
+        "kind": "Form",
+        "file": "Forms/frmLogin.frm",
+        "source": { "file": "Forms/frmLogin.frm", "module": "frmLogin", "line": 1 },
+        "metrics": { "lines": 250, "cyclomatic": 5 },
+        "procedures": [
+          {
+            "id": "frmLogin.Submit_Click",
+            "name": "Submit_Click",
+            "kind": "Sub",
+            "access": "Public",
+            "locs": { "file": "Forms/frmLogin.frm", "startLine": 10, "endLine": 60 },
+            "source": { "file": "Forms/frmLogin.frm", "module": "frmLogin", "line": 10 },
+            "calls": [
+              { "target": "modAuth.ValidateUser", "isDynamic": false, "site": { "module": "frmLogin", "file": "Forms/frmLogin.frm", "line": 35 } }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "modAuth",
+        "name": "modAuth",
+        "kind": "Module",
+        "file": "Modules/modAuth.bas",
+        "metrics": { "lines": 180, "cyclomatic": 9 },
+        "procedures": [
+          {
+            "id": "modAuth.ValidateUser",
+            "name": "ValidateUser",
+            "kind": "Function",
+            "access": "Public",
+            "locs": { "file": "Modules/modAuth.bas", "startLine": 5, "endLine": 80 },
+            "source": { "file": "Modules/modAuth.bas", "module": "modAuth", "line": 5 }
+          }
+        ]
+      },
+      {
+        "id": "modInvLog",
+        "name": "modInvLog",
+        "kind": "Module",
+        "file": "Modules/modInvLog.bas",
+        "metrics": { "lines": 120, "cyclomatic": 4 },
+        "procedures": [
+          {
+            "id": "modInvLog.SaveRecord",
+            "name": "SaveRecord",
+            "kind": "Sub",
+            "access": "Public",
+            "locs": { "file": "Modules/modInvLog.bas", "startLine": 12, "endLine": 90 },
+            "source": { "file": "Modules/modInvLog.bas", "module": "modInvLog", "line": 12 },
+            "calls": [
+              { "target": "modAuth.ValidateUser", "isDynamic": false, "site": { "module": "modInvLog", "file": "Modules/modInvLog.bas", "line": 50 } }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

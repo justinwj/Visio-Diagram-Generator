@@ -5731,7 +5731,6 @@ namespace VDG.CLI
                     // Ignore drawing issues for aggregated channel labels
                 }
 
-                DrawChannelLabelsForPage(page, layoutPlan, pi, offsetX, offsetY, layerContext, pageInfo);
             }
         }
 
@@ -7242,6 +7241,8 @@ namespace VDG.CLI
                         pageManager.RegisterConnectorSkipped(edge.Id, sourceId, targetId, pi, reason!);
                     }
                 }
+
+                DrawChannelLabelsForPage(page, layoutPlan, pi, offsetX, offsetY, layerContext, pageInfo);
             }
         }
 
@@ -7661,9 +7662,6 @@ namespace VDG.CLI
                     Console.WriteLine($"warning: skipped modules {preview}{suffix}");
                 }
             }
-            }
-
-            DrawChannelLabelsForPage(visioPage, layoutPlan, pageIndex, 0.0, 0.0, layerContext, pageInfo);
         }
 }
 
@@ -7674,3 +7672,4 @@ namespace VDG.CLI
 
 
 
+}

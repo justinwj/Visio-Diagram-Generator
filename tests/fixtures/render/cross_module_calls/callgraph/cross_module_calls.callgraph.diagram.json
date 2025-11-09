@@ -1,5 +1,15 @@
 {
   "schemaVersion": "1.2",
+  "metadata": {
+    "properties": {
+      "semantics.taxonomy.path": "D:\\justinwj\\Solutions\\Visio Diagram Generator\\out\\fixtures\\cross_module_calls\\callgraph\\cross_module_calls.callgraph.taxonomy.json",
+      "semantics.taxonomy.schema": "1.0",
+      "semantics.taxonomy.generatedAt": "2025-11-09T02:30:00.0910510\u002B00:00",
+      "semantics.flows.path": "D:\\justinwj\\Solutions\\Visio Diagram Generator\\out\\fixtures\\cross_module_calls\\callgraph\\cross_module_calls.callgraph.flows.json",
+      "semantics.flows.schema": "1.0",
+      "semantics.flows.generatedAt": "2025-11-09T02:30:00.0910510\u002B00:00"
+    }
+  },
   "layout": {
     "outputMode": "view",
     "tiers": [
@@ -48,7 +58,10 @@
         "code.source.line": "4",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -69,7 +82,10 @@
         "code.source.line": "4",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "1",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     }
   ],
@@ -100,7 +116,9 @@
         "code.source.line": "1",
         "code.metrics.lines": "7",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.module.subsystem.primary": "Core.Modules",
+        "semantics.module.confidence": "0.35"
       }
     },
     {
@@ -116,7 +134,9 @@
         "code.source.line": "1",
         "code.metrics.lines": "7",
         "code.metrics.sloc": "1",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.module.subsystem.primary": "Core.Modules",
+        "semantics.module.confidence": "0.35"
       }
     }
   ]

@@ -1,5 +1,15 @@
 {
   "schemaVersion": "1.2",
+  "metadata": {
+    "properties": {
+      "semantics.taxonomy.path": "D:\\justinwj\\Solutions\\Visio Diagram Generator\\out\\fixtures\\events_and_forms\\callgraph\\events_and_forms.callgraph.taxonomy.json",
+      "semantics.taxonomy.schema": "1.0",
+      "semantics.taxonomy.generatedAt": "2025-11-09T02:30:04.1618393\u002B00:00",
+      "semantics.flows.path": "D:\\justinwj\\Solutions\\Visio Diagram Generator\\out\\fixtures\\events_and_forms\\callgraph\\events_and_forms.callgraph.flows.json",
+      "semantics.flows.schema": "1.0",
+      "semantics.flows.generatedAt": "2025-11-09T02:30:04.1618393\u002B00:00"
+    }
+  },
   "layout": {
     "outputMode": "view",
     "tiers": [
@@ -48,7 +58,11 @@
         "code.source.line": "8",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "EventHandler",
+        "semantics.proc.role.confidence": "0.9",
+        "semantics.proc.capability": "UI.EventRouting",
+        "semantics.proc.subsystem": "UI.Forms"
       }
     }
   ],
@@ -67,7 +81,10 @@
         "code.source.line": "1",
         "code.metrics.lines": "11",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.module.subsystem.primary": "UI.Forms",
+        "semantics.module.confidence": "0.9",
+        "semantics.module.tags": "ui"
       }
     }
   ]

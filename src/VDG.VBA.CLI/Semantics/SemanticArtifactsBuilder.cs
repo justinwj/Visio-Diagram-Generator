@@ -70,7 +70,13 @@ namespace VDG.VBA.CLI.Semantics
             ["Core.Modules"] = "Core"
         };
 
-        public SemanticArtifacts Build(IEnumerable<ModuleIr>? modules, string? projectName, string? sourceIrPath, DateTimeOffset? generatedAt = null)
+        public SemanticArtifacts Build(
+            IEnumerable<ModuleIr>? modules,
+            string? projectName,
+            string? sourceIrPath,
+            DateTimeOffset? generatedAt = null,
+            TaxonomySeedDocument? seed = null,
+            SeedMergeMode seedMode = SeedMergeMode.Merge)
         {
             var materializedModules = (modules ?? Array.Empty<ModuleIr>())
                 .Where(static m => m is not null)
@@ -78,6 +84,18 @@ namespace VDG.VBA.CLI.Semantics
                 .ThenBy(m => m.Id, StringComparer.OrdinalIgnoreCase)
                 .ToList();
             var timestamp = generatedAt ?? DateTimeOffset.UtcNow;
+            var subsystemDescriptions = new Dictionary<string, string>(SubsystemDescriptions, StringComparer.OrdinalIgnoreCase);
+            var subsystemTeams = new Dictionary<string, string>(SubsystemTeams, StringComparer.OrdinalIgnoreCase);
+            if (seed?.SubsystemDefaults is { Count: > 0 })
+            {
+                foreach (var kvp in seed.SubsystemDefaults)
+                {
+                    if (!string.IsNullOrWhiteSpace(kvp.Value.Description))
+                        subsystemDescriptions[kvp.Key] = kvp.Value.Description!;
+                    if (!string.IsNullOrWhiteSpace(kvp.Value.Owner))
+                        subsystemTeams[kvp.Key] = kvp.Value.Owner!;
+                }
+            }
 
             var moduleSemanticMap = new Dictionary<string, ModuleSemanticInfo>(StringComparer.OrdinalIgnoreCase);
             var procedureSemanticMap = new Dictionary<string, ProcedureSemanticInfo>(StringComparer.OrdinalIgnoreCase);
@@ -93,15 +111,69 @@ namespace VDG.VBA.CLI.Semantics
 
                 var tier = DetermineTier(module);
                 var subsystem = ClassifySubsystem(module);
-                var tags = InferModuleTags(subsystem.Primary);
+                var tags = InferModuleTags(subsystem.Primary).ToList();
+                var moduleSeed = seed != null && seed.TryGetModule(module.Id, module.Name, out var ms) ? ms : null;
+                var seededFields = new List<string>();
 
+                if (moduleSeed?.PrimarySubsystem is { Length: > 0 } overrideSubsystem)
+                {
+                    if (!string.Equals(subsystem.Primary, overrideSubsystem, StringComparison.OrdinalIgnoreCase))
+                    {
+                        var secondary = subsystem.Secondary
+                            .Where(s => !string.Equals(s, overrideSubsystem, StringComparison.OrdinalIgnoreCase))
+                            .ToList();
+                        if (!string.IsNullOrWhiteSpace(subsystem.Primary))
+                        {
+                            secondary.Insert(0, subsystem.Primary);
+                        }
+                        subsystem = new SubsystemClassification
+                        {
+                            Primary = overrideSubsystem,
+                            Secondary = secondary,
+                            Confidence = moduleSeed.Confidence ?? 0.99,
+                            Reasons = new List<string> { "seed.override: primarySubsystem" }
+                        };
+                    }
+                    else if (moduleSeed.Confidence.HasValue)
+                    {
+                        subsystem = subsystem with { Confidence = moduleSeed.Confidence.Value };
+                    }
+                    seededFields.Add("primarySubsystem");
+                }
+                else if (moduleSeed?.Confidence.HasValue ?? false)
+                {
+                    subsystem = subsystem with { Confidence = moduleSeed.Confidence.Value };
+                    seededFields.Add("confidence");
+                }
+
+                if (moduleSeed?.Tags is { Count: > 0 })
+                {
+                    tags = moduleSeed.Tags.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+                    seededFields.Add("tags");
+                }
+
+                var ownershipTeam = moduleSeed?.Owner
+                    ?? (subsystemTeams.TryGetValue(subsystem.Primary, out var defaultTeam) ? defaultTeam : "Core");
                 var ownership = new OwnershipInfo
                 {
-                    Team = SubsystemTeams.TryGetValue(subsystem.Primary, out var team) ? team : "Core",
+                    Team = ownershipTeam,
                     Reviewer = null
                 };
 
                 var evidence = BuildModuleEvidence(module);
+                var moduleMetadata = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                if (moduleSeed?.Metadata != null)
+                {
+                    foreach (var kvp in moduleSeed.Metadata)
+                    {
+                        moduleMetadata[kvp.Key] = kvp.Value;
+                    }
+                }
+                if (moduleSeed is not null)
+                {
+                    moduleMetadata["seeded"] = "true";
+                }
+
                 var moduleRecord = new TaxonomyModuleRecord
                 {
                     Id = module.Id,
@@ -111,10 +183,12 @@ namespace VDG.VBA.CLI.Semantics
                     Tier = tier,
                     Subsystem = subsystem,
                     Ownership = ownership,
-                    Tags = tags,
+                    Tags = new List<string>(tags),
                     Procedures = new List<TaxonomyProcedureRecord>(),
                     Roles = new List<string>(),
-                    Evidence = evidence
+                    Evidence = evidence,
+                    Notes = moduleSeed?.Notes,
+                    Metadata = moduleMetadata.Count == 0 ? null : moduleMetadata
                 };
 
                 taxonomyModules.Add(moduleRecord);
@@ -123,11 +197,18 @@ namespace VDG.VBA.CLI.Semantics
                     subsystem.Primary,
                     subsystem.Secondary.ToArray(),
                     subsystem.Confidence,
-                    tags.ToArray());
+                    tags.ToArray(),
+                    moduleSeed is not null);
 
-                legendSubsystems[subsystem.Primary] = DescribeSubsystem(subsystem.Primary);
+                if (moduleSeed is not null && seededFields.Count > 0)
+                {
+                    moduleRecord.Evidence["seed.fields"] = string.Join(",", seededFields);
+                    moduleRecord.Evidence["seed.schemaVersion"] = seed?.SeedSchemaVersion ?? "1.0";
+                }
+
+                legendSubsystems[subsystem.Primary] = DescribeSubsystem(subsystem.Primary, subsystemDescriptions);
                 foreach (var secondary in subsystem.Secondary)
-                    legendSubsystems[secondary] = DescribeSubsystem(secondary);
+                    legendSubsystems[secondary] = DescribeSubsystem(secondary, subsystemDescriptions);
 
                 var procedures = (module.Procedures ?? new List<ProcedureIr>())
                     .Where(static p => p is not null && !string.IsNullOrWhiteSpace(p.Id))
@@ -150,6 +231,51 @@ namespace VDG.VBA.CLI.Semantics
                 foreach (var procedure in procedures)
                 {
                     var procClassification = ClassifyProcedure(module, procedure);
+                    var procedureSeed = seed != null && seed.TryGetProcedure(module.Id, procedure.Id, out var ps) ? ps : null;
+                    var procedureSeeded = procedureSeed is not null;
+                    if (procedureSeed?.PrimaryRole is { Length: > 0 } overrideRole)
+                    {
+                        var updatedSecondary = procClassification.Role.Secondary
+                            .Where(r => !string.Equals(r, overrideRole, StringComparison.OrdinalIgnoreCase))
+                            .ToList();
+                        if (!string.IsNullOrWhiteSpace(procClassification.Role.Primary) &&
+                            !string.Equals(procClassification.Role.Primary, overrideRole, StringComparison.OrdinalIgnoreCase))
+                        {
+                            updatedSecondary.Insert(0, procClassification.Role.Primary);
+                        }
+                        procClassification = procClassification with
+                        {
+                            Role = procClassification.Role with
+                            {
+                                Primary = overrideRole,
+                                Secondary = updatedSecondary,
+                                Confidence = procedureSeed.Confidence ?? 0.99,
+                                Reasons = new List<string> { "seed.override: primaryRole" }
+                            }
+                        };
+                    }
+                    else if (procedureSeed?.Confidence is { } procConfidence)
+                    {
+                        procClassification = procClassification with
+                        {
+                            Role = procClassification.Role with { Confidence = procConfidence }
+                        };
+                    }
+
+                    var procedureMetadata = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                    if (procedureSeed?.Metadata != null)
+                    {
+                        foreach (var kvp in procedureSeed.Metadata)
+                        {
+                            procedureMetadata[kvp.Key] = kvp.Value;
+                        }
+                    }
+                    if (procedureSeeded)
+                    {
+                        procedureMetadata["seeded"] = "true";
+                    }
+
+                    var seededTags = procedureSeed?.Tags?.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
                     var record = new TaxonomyProcedureRecord
                     {
                         Id = procedure.Id,
@@ -157,7 +283,12 @@ namespace VDG.VBA.CLI.Semantics
                         Role = procClassification.Role,
                         Capabilities = procClassification.Capabilities,
                         Resources = procClassification.Resources,
-                        Notes = procClassification.Notes
+                        Notes = procedureSeed?.Notes ?? procClassification.Notes,
+                        Ownership = procedureSeed?.Owner is { Length: > 0 }
+                            ? new OwnershipInfo { Team = procedureSeed.Owner, Reviewer = null }
+                            : null,
+                        Tags = seededTags,
+                        Metadata = procedureMetadata.Count == 0 ? null : procedureMetadata
                     };
 
                     moduleRecord.Procedures.Add(record);
@@ -170,7 +301,8 @@ namespace VDG.VBA.CLI.Semantics
                         procClassification.Role.Secondary.ToArray(),
                         procClassification.Capabilities.FirstOrDefault(),
                         procClassification.Role.Confidence,
-                        subsystem.Primary);
+                        procedureSeed?.PrimarySubsystem ?? subsystem.Primary,
+                        procedureSeeded);
 
                     procedureSemanticMap[procedure.Id] = procedureSemantic;
 
@@ -192,6 +324,13 @@ namespace VDG.VBA.CLI.Semantics
                 var orderedRoles = moduleRoleSet
                     .OrderBy(r => r, StringComparer.OrdinalIgnoreCase)
                     .ToList();
+                if (!string.IsNullOrWhiteSpace(moduleSeed?.PrimaryRole))
+                {
+                    orderedRoles = orderedRoles
+                        .Where(r => !string.Equals(r, moduleSeed.PrimaryRole, StringComparison.OrdinalIgnoreCase))
+                        .Prepend(moduleSeed.PrimaryRole)
+                        .ToList();
+                }
                 moduleRecord.Roles.Clear();
                 foreach (var role in orderedRoles)
                     moduleRecord.Roles.Add(role);
@@ -302,10 +441,10 @@ namespace VDG.VBA.CLI.Semantics
                         {
                             var sourceModuleInfo = moduleSemantics.TryGetValue(module.Id, out var srcModule)
                                 ? srcModule
-                                : new ModuleSemanticInfo(module.Id, "Core.Modules", Array.Empty<string>(), 0.3, Array.Empty<string>());
+                                : new ModuleSemanticInfo(module.Id, "Core.Modules", Array.Empty<string>(), 0.3, Array.Empty<string>(), false);
                             var targetModuleInfo = moduleSemantics.TryGetValue(destination.Module.Id, out var dstModule)
                                 ? dstModule
-                                : new ModuleSemanticInfo(destination.Module.Id, "Core.Modules", Array.Empty<string>(), 0.3, Array.Empty<string>());
+                                : new ModuleSemanticInfo(destination.Module.Id, "Core.Modules", Array.Empty<string>(), 0.3, Array.Empty<string>(), false);
 
                             procedureSemantics.TryGetValue(procedure.Id, out var sourceProcInfo);
                             procedureSemantics.TryGetValue(destination.Procedure.Id, out var targetProcInfo);
@@ -814,8 +953,8 @@ namespace VDG.VBA.CLI.Semantics
             return evidence;
         }
 
-        private static string DescribeSubsystem(string id) =>
-            SubsystemDescriptions.TryGetValue(id, out var description)
+        private static string DescribeSubsystem(string id, IReadOnlyDictionary<string, string> descriptions) =>
+            descriptions.TryGetValue(id, out var description)
                 ? description
                 : "Subsystem classification";
 

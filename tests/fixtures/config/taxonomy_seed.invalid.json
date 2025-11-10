@@ -1,0 +1,7 @@
+{
+  "modules": {
+    "DoesNotExist": {
+      "primarySubsystem": "UI.Forms"
+    }
+  }
+}

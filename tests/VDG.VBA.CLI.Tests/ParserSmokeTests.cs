@@ -306,6 +306,74 @@ public class ParserSmokeTests
     }
 
     [Fact]
+    public void TaxonomySeedOverridesAreApplied()
+    {
+        var tempDiagram = Path.Combine(Path.GetTempPath(), $"vdg_seed_{Guid.NewGuid():N}.diagram.json");
+        var irPath = GenerateIrFile("cross_module_calls");
+        var seedPath = Path.Combine(RepoRoot, "tests", "fixtures", "config", "taxonomy_seed.cross_module_calls.json");
+        try
+        {
+            RunCli("ir2diagram",
+                "--in", irPath,
+                "--out", tempDiagram,
+                "--mode", "callgraph",
+                "--taxonomy-seed", seedPath);
+
+            var taxonomyPath = DeriveArtifactPathForTest(tempDiagram, "taxonomy");
+            Assert.True(File.Exists(taxonomyPath));
+
+            using var taxonomyDoc = JsonDocument.Parse(File.ReadAllText(taxonomyPath));
+            var modules = taxonomyDoc.RootElement.GetProperty("modules").EnumerateArray().ToList();
+            var module1 = modules.Single(m => m.GetProperty("id").GetString() == "Module1");
+            Assert.Equal("UI.Forms", module1.GetProperty("subsystem").GetProperty("primary").GetString());
+            Assert.Equal("Seed Team", module1.GetProperty("ownership").GetProperty("team").GetString());
+            Assert.Equal("true", module1.GetProperty("metadata").GetProperty("seeded").GetString());
+            var caller = module1.GetProperty("procedures").EnumerateArray().Single(p => p.GetProperty("id").GetString() == "Module1.Caller");
+            Assert.Equal("Validator", caller.GetProperty("role").GetProperty("primary").GetString());
+            Assert.Equal("Seeded role", caller.GetProperty("notes").GetString());
+        }
+        finally
+        {
+            if (File.Exists(tempDiagram)) File.Delete(tempDiagram);
+            if (File.Exists(irPath)) File.Delete(irPath);
+            var taxonomyPath = DeriveArtifactPathForTest(tempDiagram, "taxonomy");
+            if (File.Exists(taxonomyPath)) File.Delete(taxonomyPath);
+            var flowsPath = DeriveArtifactPathForTest(tempDiagram, "flows");
+            if (File.Exists(flowsPath)) File.Delete(flowsPath);
+            var reviewPath = DeriveReviewPathForTest(tempDiagram);
+            if (File.Exists(reviewPath)) File.Delete(reviewPath);
+        }
+    }
+
+    [Fact]
+    public void TaxonomySeedStrictModeFailsWhenEntriesMissing()
+    {
+        var tempDiagram = Path.Combine(Path.GetTempPath(), $"vdg_seed_{Guid.NewGuid():N}.diagram.json");
+        var irPath = GenerateIrFile("cross_module_calls");
+        try
+        {
+            var (code, _out, err) = RunCliProcess(
+                "ir2diagram",
+                "--in", irPath,
+                "--out", tempDiagram,
+                "--mode", "callgraph",
+                "--taxonomy-seed", Path.Combine("tests", "fixtures", "config", "taxonomy_seed.invalid.json"),
+                "--seed-mode", "strict");
+            Assert.NotEqual(0, code);
+            Assert.Contains("Seed file entries were not matched", err);
+        }
+        finally
+        {
+            if (File.Exists(tempDiagram)) File.Delete(tempDiagram);
+            if (File.Exists(irPath)) File.Delete(irPath);
+            var taxonomyPath = DeriveArtifactPathForTest(tempDiagram, "taxonomy");
+            if (File.Exists(taxonomyPath)) File.Delete(taxonomyPath);
+            var flowsPath = DeriveArtifactPathForTest(tempDiagram, "flows");
+            if (File.Exists(flowsPath)) File.Delete(flowsPath);
+        }
+    }
+
+    [Fact]
     public void HyperlinkSummaryListsProceduresAndHandlers()
     {
         var fixtures = new[]
@@ -1471,6 +1539,24 @@ public class ParserSmokeTests
             dir = dir.Parent;
         }
         throw new InvalidOperationException("Unable to locate repository root.");
+    }
+
+    private static string DeriveArtifactPathForTest(string diagramPath, string suffix)
+    {
+        var directory = Path.GetDirectoryName(diagramPath) ?? ".";
+        var fileName = Path.GetFileName(diagramPath);
+        const string DiagramExtension = ".diagram.json";
+        string baseName;
+        if (fileName.EndsWith(DiagramExtension, StringComparison.OrdinalIgnoreCase))
+        {
+            baseName = fileName[..^DiagramExtension.Length];
+        }
+        else
+        {
+            var withoutExtension = Path.GetFileNameWithoutExtension(fileName);
+            baseName = string.IsNullOrWhiteSpace(withoutExtension) ? "diagram" : withoutExtension;
+        }
+        return Path.Combine(directory, $"{baseName}.{suffix}.json");
     }
 
     private static string DeriveReviewPathForTest(string diagramPath)

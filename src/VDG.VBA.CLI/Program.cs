@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -107,6 +108,8 @@ internal static class Program
         Console.Error.WriteLine("    --strict-validate      Enforce strict IR invariants before conversion (fails fast on issues).");
         Console.Error.WriteLine("    --summary-log <csv>    Write hyperlink summary (Name/File/Module/Lines) to the specified CSV alongside console output.");
         Console.Error.WriteLine("    --semantics-generated-at <ISO8601>  Override semantic artifact timestamp (default: current UTC).");
+        Console.Error.WriteLine("    --taxonomy-seed <path> Apply semantic overrides from JSON seed (env: VDG_TAXONOMY_SEED).");
+        Console.Error.WriteLine("    --seed-mode <merge|strict>  Merge policy for seed entries (env: VDG_TAXONOMY_SEED_MODE, default merge).");
         Console.Error.WriteLine("    --review-severity-threshold <info|warning|error>");
         Console.Error.WriteLine("                             Minimum severity to surface in review summaries (env: VDG_REVIEW_SEVERITY_THRESHOLD).");
         Console.Error.WriteLine("    --role-confidence-cutoff <0.0-1.0>");
@@ -309,7 +312,7 @@ internal static class Program
 
     private static int RunIr2Diagram(string[] args)
     {
-        string? input = null; string? output = null; string mode = "callgraph"; bool includeUnknown = false; int? timeoutMs = null; bool strictValidate = false; string? summaryLogPath = null; string outputMode = "view"; string? semanticsTimestampArg = null; string? reviewSeverityArg = null; string? roleConfidenceArg = null; string? flowResidualArg = null;
+        string? input = null; string? output = null; string mode = "callgraph"; bool includeUnknown = false; int? timeoutMs = null; bool strictValidate = false; string? summaryLogPath = null; string outputMode = "view"; string? semanticsTimestampArg = null; string? reviewSeverityArg = null; string? roleConfidenceArg = null; string? flowResidualArg = null; string? taxonomySeedArg = null; string? seedModeArg = null;
         for (int i = 0; i < args.Length; i++)
         {
             var a = args[i];
@@ -337,6 +340,10 @@ internal static class Program
             { if (i + 1 >= args.Length) throw new UsageException("--role-confidence-cutoff requires a floating-point value between 0 and 1."); roleConfidenceArg = args[++i]; }
             else if (string.Equals(a, "--review-flow-residual-cutoff", StringComparison.OrdinalIgnoreCase))
             { if (i + 1 >= args.Length) throw new UsageException("--review-flow-residual-cutoff requires a non-negative integer."); flowResidualArg = args[++i]; }
+            else if (string.Equals(a, "--taxonomy-seed", StringComparison.OrdinalIgnoreCase))
+            { if (i + 1 >= args.Length) throw new UsageException("--taxonomy-seed requires a file path."); taxonomySeedArg = args[++i]; }
+            else if (string.Equals(a, "--seed-mode", StringComparison.OrdinalIgnoreCase))
+            { if (i + 1 >= args.Length) throw new UsageException("--seed-mode requires merge|strict."); seedModeArg = args[++i]; }
             else throw new UsageException($"Unknown option '{a}' for ir2diagram.");
         }
         if (string.IsNullOrWhiteSpace(input)) throw new UsageException("ir2diagram requires --in <ir.json>.");
@@ -352,6 +359,18 @@ internal static class Program
         var semanticsTimestamp = ResolveSemanticsTimestamp(semanticsTimestampArg)
                                  ?? ComputeDeterministicSemanticsTimestamp(Path.GetFullPath(input!));
         var reviewOptions = ResolveReviewOptions(reviewSeverityArg, roleConfidenceArg, flowResidualArg);
+        taxonomySeedArg ??= Environment.GetEnvironmentVariable("VDG_TAXONOMY_SEED");
+        seedModeArg ??= Environment.GetEnvironmentVariable("VDG_TAXONOMY_SEED_MODE");
+        var seedMode = ParseSeedMode(seedModeArg);
+        TaxonomySeedDocument? taxonomySeed = null;
+        string? taxonomySeedPath = null;
+        if (!string.IsNullOrWhiteSpace(taxonomySeedArg))
+        {
+            taxonomySeedPath = Path.GetFullPath(taxonomySeedArg);
+            if (!File.Exists(taxonomySeedPath))
+                throw new UsageException($"Seed file not found: {taxonomySeedPath}");
+            taxonomySeed = TaxonomySeedDocument.Load(taxonomySeedPath);
+        }
 
         IrRoot root;
         try
@@ -452,8 +471,24 @@ internal static class Program
         if (!incomingModules.Any(m => (m.Procedures?.Count ?? 0) > 0))
             throw new UsageException("IR contains no procedures.");
         var semanticsBuilder = new SemanticArtifactsBuilder();
-        var semantics = semanticsBuilder.Build(incomingModules, root.Project?.Name, Path.GetFullPath(input!), semanticsTimestamp);
+        var semantics = semanticsBuilder.Build(incomingModules, root.Project?.Name, Path.GetFullPath(input!), semanticsTimestamp, taxonomySeed, seedMode);
         var reviewSummary = SemanticReviewReporter.Build(semantics, reviewOptions);
+        if (taxonomySeed is not null)
+        {
+            var unmatchedModules = taxonomySeed.GetUnmatchedModules();
+            var unmatchedProcedures = taxonomySeed.GetUnmatchedProcedures();
+            if (seedMode == SeedMergeMode.Strict && (unmatchedModules.Count > 0 || unmatchedProcedures.Count > 0))
+            {
+                var moduleSnippet = unmatchedModules.Count > 0 ? $"modules: {SummarizeList(unmatchedModules)}" : string.Empty;
+                var procSnippet = unmatchedProcedures.Count > 0 ? $"procedures: {SummarizeList(unmatchedProcedures)}" : string.Empty;
+                var combined = string.Join(", ", new[] { moduleSnippet, procSnippet }.Where(s => !string.IsNullOrWhiteSpace(s)));
+                throw new UsageException($"Seed file entries were not matched ({combined}).");
+            }
+            if (unmatchedModules.Count > 0 || unmatchedProcedures.Count > 0)
+            {
+                Console.Error.WriteLine($"seed: {unmatchedModules.Count} module override(s) and {unmatchedProcedures.Count} procedure override(s) were not applied.");
+            }
+        }
         SemanticReviewReporter.EmitToConsole(reviewSummary);
         var reviewSummaryJson = SemanticReviewReporter.Serialize(reviewSummary);
 
@@ -1011,6 +1046,15 @@ internal static class Program
         {
             metadataProperties["review.summary.json"] = reviewSummaryJson!;
         }
+        if (!string.IsNullOrWhiteSpace(taxonomySeedPath))
+        {
+            metadataProperties["semantics.taxonomy.seed.path"] = taxonomySeedPath!;
+            metadataProperties["semantics.taxonomy.seed.mode"] = seedMode.ToString().ToLowerInvariant();
+            if (taxonomySeed is not null)
+            {
+                metadataProperties["semantics.taxonomy.seed.schema"] = taxonomySeed.SeedSchemaVersion;
+            }
+        }
         metadataProperties["review.settings.minimumSeverity"] = reviewOptions.MinimumSeverity.ToString().ToLowerInvariant();
         metadataProperties["review.settings.roleConfidenceCutoff"] = reviewOptions.RoleConfidenceCutoff.ToString("0.##", CultureInfo.InvariantCulture);
         metadataProperties["review.settings.flowResidualCutoff"] = reviewOptions.FlowResidualCutoff.ToString(CultureInfo.InvariantCulture);
@@ -1260,6 +1304,24 @@ internal static class Program
             return parsed;
         }
         throw new UsageException($"{optionName} must be an integer greater than or equal to {min}.");
+    }
+
+    private static SeedMergeMode ParseSeedMode(string? mode)
+    {
+        if (string.IsNullOrWhiteSpace(mode)) return SeedMergeMode.Merge;
+        return mode.Trim().ToLowerInvariant() switch
+        {
+            "merge" => SeedMergeMode.Merge,
+            "strict" => SeedMergeMode.Strict,
+            _ => throw new UsageException("--seed-mode must be 'merge' or 'strict'.")
+        };
+    }
+
+    private static string SummarizeList(IReadOnlyList<string> values, int limit = 5)
+    {
+        if (values == null || values.Count == 0) return string.Empty;
+        if (values.Count <= limit) return string.Join(", ", values);
+        return $"{string.Join(", ", values.Take(limit))}, +{values.Count - limit} more";
     }
 
     private static DateTimeOffset ComputeDeterministicSemanticsTimestamp(string irPath)

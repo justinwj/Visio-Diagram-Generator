@@ -15,7 +15,8 @@ namespace VDG.VBA.CLI.Semantics
         string? PrimarySubsystem,
         IReadOnlyList<string> SecondarySubsystems,
         double Confidence,
-        IReadOnlyList<string> Tags);
+        IReadOnlyList<string> Tags,
+        bool IsSeeded);
 
     internal sealed record ProcedureSemanticInfo(
         string ProcedureId,
@@ -23,7 +24,8 @@ namespace VDG.VBA.CLI.Semantics
         IReadOnlyList<string> SecondaryRoles,
         string? Capability,
         double Confidence,
-        string? PrimarySubsystem);
+        string? PrimarySubsystem,
+        bool IsSeeded);
 
     internal sealed record TaxonomyArtifact
     {
@@ -97,7 +99,7 @@ namespace VDG.VBA.CLI.Semantics
         public SubsystemClassification Subsystem { get; init; } = new();
 
         [JsonPropertyName("ownership")]
-        public OwnershipInfo Ownership { get; init; } = new();
+        public OwnershipInfo? Ownership { get; init; }
 
         [JsonPropertyName("tags")]
         public IList<string> Tags { get; init; } = new List<string>();
@@ -105,11 +107,17 @@ namespace VDG.VBA.CLI.Semantics
         [JsonPropertyName("roles")]
         public IList<string> Roles { get; init; } = new List<string>();
 
+        [JsonPropertyName("notes")]
+        public string? Notes { get; init; }
+
         [JsonPropertyName("procedures")]
         public IList<TaxonomyProcedureRecord> Procedures { get; init; } = new List<TaxonomyProcedureRecord>();
 
         [JsonPropertyName("evidence")]
         public IDictionary<string, string> Evidence { get; init; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        [JsonPropertyName("metadata")]
+        public IDictionary<string, string>? Metadata { get; init; }
     }
 
     internal sealed record SubsystemClassification
@@ -155,6 +163,15 @@ namespace VDG.VBA.CLI.Semantics
 
         [JsonPropertyName("notes")]
         public string? Notes { get; init; }
+
+        [JsonPropertyName("ownership")]
+        public OwnershipInfo Ownership { get; init; } = new();
+
+        [JsonPropertyName("tags")]
+        public IList<string>? Tags { get; init; }
+
+        [JsonPropertyName("metadata")]
+        public IDictionary<string, string>? Metadata { get; init; }
     }
 
     internal sealed record RoleClassification

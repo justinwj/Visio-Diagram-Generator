@@ -4,7 +4,8 @@ Param(
   [string]$Cli,
   [switch]$Update,
   [string]$Note = '',
-  [string]$SemanticsTimestamp = '2024-01-01T00:00:00Z'
+  [string]$SemanticsTimestamp = '2024-01-01T00:00:00Z',
+  [switch]$SummarizeReviews
 )
 
 Set-StrictMode -Version Latest
@@ -209,6 +210,26 @@ function Write-MetadataSnapshot {
 
   $json = $metadata | ConvertTo-Json -Depth 8
   Set-Content -Path $metadataPath -Value $json -Encoding UTF8
+}
+
+function Invoke-ReviewDashboard {
+  if (-not $SummarizeReviews) { return }
+  $summaryScript = Join-Path $repoRoot 'tools/summarize-reviews.ps1'
+  if (-not (Test-Path $summaryScript)) {
+    Write-Warning "summarize-reviews.ps1 not found; skipping review dashboard generation."
+    return
+  }
+  $scanRoots = @(
+    [System.IO.Path]::GetRelativePath($repoRoot, $outputRootFull),
+    'tests/fixtures/render',
+    'samples'
+  ) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+  try {
+    & $summaryScript -ScanPath $scanRoots -OutputPath 'plan docs/review_dashboard.md' | Out-Null
+  }
+  catch {
+    Write-Warning "Unable to generate review dashboard: $_"
+  }
 }
 
 $cliPath = Resolve-CliPath -Path $Cli
@@ -431,6 +452,7 @@ if ($Update) {
   }
   Write-Host "Ledger updated at plan docs/fixtures_log.md."
   Write-Host "Metadata snapshot written to plan docs/fixtures_metadata.json."
+  Invoke-ReviewDashboard
   return
 }
 
@@ -451,4 +473,5 @@ foreach ($result in $results) {
   Write-Host ("Verified fixture {0} ({1}) hashes -> IR {2}, Diagram {3}, Diagnostics {4}, VSDX {5}" -f `
     $result.Fixture, $result.Mode, $result.IR, $result.Diagram, $result.Diagnostics, $result.Vsdx)
 }
+Invoke-ReviewDashboard
 Write-Host "All fixtures stable."

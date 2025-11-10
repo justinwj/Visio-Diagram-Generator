@@ -25,6 +25,7 @@ Review Feedback Surface
 - When Visio automation runs with `--diag-json`, `VDG.CLI` copies the same payload into `ReviewSummary` inside the diagnostics JSON so CI/review portals can ingest the insights without opening the diagram.
 - Semantic artefacts now default to deterministic timestamps (hash-derived); pass `--semantics-generated-at <ISO8601>` or set `VDG_SEMANTICS_GENERATED_AT` when a real-world timestamp is required.
 - Review output sensitivity is adjustable: `--review-severity-threshold`, `--role-confidence-cutoff`, and `--review-flow-residual-cutoff` (or the `VDG_REVIEW_*` env vars) control which findings appear in the console, `.review.*`, and diagnostics, with suppression notes captured for traceability.
+- `tools/summarize-reviews.ps1` scans `out/fixtures`, `tests/fixtures/render`, and `samples` for review artifacts and writes `plan docs/review_dashboard.md`, giving reviewers a Markdown table of diagrams, thresholds, warning counts, and source links (usage: `pwsh ./tools/summarize-reviews.ps1 -ScanPath out/fixtures`).
 
 Docs & Schemas
 - IR spec: `docs/VBA_IR.md` (mapping rules, dynamic calls, FAQ)

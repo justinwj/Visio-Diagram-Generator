@@ -37,6 +37,7 @@ plan docs/fixtures_metadata.json
 tests/fixtures/render/
 tests/fixtures/vsdx/
 out/fixtures/
+*.review.txt
 
 # Local config
 *.env

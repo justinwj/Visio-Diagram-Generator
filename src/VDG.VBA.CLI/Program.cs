@@ -434,6 +434,9 @@ internal static class Program
             throw new UsageException("IR contains no procedures.");
         var semanticsBuilder = new SemanticArtifactsBuilder();
         var semantics = semanticsBuilder.Build(incomingModules, root.Project?.Name, Path.GetFullPath(input!));
+        var reviewSummary = SemanticReviewReporter.Build(semantics);
+        SemanticReviewReporter.EmitToConsole(reviewSummary);
+        var reviewSummaryJson = SemanticReviewReporter.Serialize(reviewSummary);
 
         void ApplyModuleSemantics(Dictionary<string, string> metadata, string moduleId)
         {
@@ -962,11 +965,14 @@ internal static class Program
 
         string? taxonomyPath = null;
         string? flowsPath = null;
+        string? diagramReviewPath = null;
+        string? fullDiagramPath = null;
         if (!string.IsNullOrWhiteSpace(output))
         {
-            var fullDiagramPath = Path.GetFullPath(output!);
+            fullDiagramPath = Path.GetFullPath(output!);
             taxonomyPath = DeriveArtifactPath(fullDiagramPath, "taxonomy");
             flowsPath = DeriveArtifactPath(fullDiagramPath, "flows");
+            diagramReviewPath = DeriveReviewPath(fullDiagramPath, "review");
             WriteJsonArtifact(taxonomyPath, semantics.Taxonomy);
             WriteJsonArtifact(flowsPath, semantics.Flow);
         }
@@ -977,10 +983,16 @@ internal static class Program
             metadataProperties["semantics.taxonomy.path"] = taxonomyPath!;
             metadataProperties["semantics.taxonomy.schema"] = semantics.Taxonomy.SchemaVersion;
         }
+        metadataProperties["semantics.taxonomy.generatedAt"] = semantics.Taxonomy.GeneratedAt.ToString("o", CultureInfo.InvariantCulture);
         if (!string.IsNullOrWhiteSpace(flowsPath))
         {
             metadataProperties["semantics.flows.path"] = flowsPath!;
             metadataProperties["semantics.flows.schema"] = semantics.Flow.SchemaVersion;
+        }
+        metadataProperties["semantics.flows.generatedAt"] = semantics.Flow.GeneratedAt.ToString("o", CultureInfo.InvariantCulture);
+        if (!string.IsNullOrWhiteSpace(reviewSummaryJson))
+        {
+            metadataProperties["review.summary.json"] = reviewSummaryJson!;
         }
         var metadataObject = metadataProperties.Count == 0 ? null : new { properties = metadataProperties };
 
@@ -1002,11 +1014,19 @@ internal static class Program
         };
 
         var json = JsonSerializer.Serialize(diagram, JsonOpts);
-        if (string.IsNullOrWhiteSpace(output)) Console.WriteLine(json);
+        if (string.IsNullOrWhiteSpace(output))
+        {
+            Console.WriteLine(json);
+        }
         else
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(output!)) ?? ".");
-            File.WriteAllText(output!, json);
+            var targetPath = fullDiagramPath ?? Path.GetFullPath(output!);
+            Directory.CreateDirectory(Path.GetDirectoryName(targetPath) ?? ".");
+            File.WriteAllText(targetPath, json);
+            if (!string.IsNullOrWhiteSpace(diagramReviewPath))
+            {
+                WriteReviewReport(diagramReviewPath!, reviewSummary);
+            }
         }
 
         EmitHyperlinkSummary(orderedModules, mode, summaryLogPath);
@@ -1127,6 +1147,22 @@ internal static class Program
         return Path.Combine(directory ?? ".", $"{baseName}.{suffix}.json");
     }
 
+    private static string DeriveReviewPath(string diagramPath, string suffix)
+    {
+        var directory = Path.GetDirectoryName(diagramPath);
+        var fileName = Path.GetFileNameWithoutExtension(diagramPath);
+        const string DiagramSuffix = ".diagram";
+        if (fileName.EndsWith(DiagramSuffix, StringComparison.OrdinalIgnoreCase))
+        {
+            fileName = fileName[..^DiagramSuffix.Length];
+        }
+        if (string.IsNullOrWhiteSpace(fileName))
+        {
+            fileName = "diagram";
+        }
+        return Path.Combine(directory ?? ".", $"{fileName}.{suffix}.txt");
+    }
+
     private static void WriteJsonArtifact(string? path, object payload)
     {
         if (string.IsNullOrWhiteSpace(path) || payload is null) return;
@@ -1138,6 +1174,27 @@ internal static class Program
         }
         var json = JsonSerializer.Serialize(payload, JsonOpts);
         File.WriteAllText(fullPath, json);
+    }
+
+    private static void WriteReviewReport(string? reviewPath, SemanticReviewSummary summary)
+    {
+        if (string.IsNullOrWhiteSpace(reviewPath) || summary is null) return;
+        try
+        {
+            var fullPath = Path.GetFullPath(reviewPath);
+            var dir = Path.GetDirectoryName(fullPath);
+            if (!string.IsNullOrWhiteSpace(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+            var lines = SemanticReviewReporter.BuildTextReport(summary);
+            File.WriteAllLines(fullPath, lines);
+            Console.WriteLine($"review: summary written to {fullPath}");
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"warning: unable to write review summary: {ex.Message}");
+        }
     }
 
     private static string KindFromExt(string? ext) => (ext ?? string.Empty).ToLowerInvariant() switch

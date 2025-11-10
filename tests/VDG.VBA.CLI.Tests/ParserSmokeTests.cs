@@ -1347,6 +1347,52 @@ public class ParserSmokeTests
         return doc;
     }
 
+    [Fact]
+    public void SemanticReviewSummaryPrintedAndStored()
+    {
+        var tempDiagram = Path.Combine(Path.GetTempPath(), $"vdg_review_{Guid.NewGuid():N}.diagram.json");
+        var irPath = GenerateIrFile("cross_module_calls");
+        try
+        {
+            var stdout = RunCli("ir2diagram",
+                "--in", irPath,
+                "--out", tempDiagram);
+            Assert.Contains("review:", stdout);
+            Assert.True(File.Exists(tempDiagram));
+
+            using (var doc = JsonDocument.Parse(File.ReadAllText(tempDiagram)))
+            {
+                var root = doc.RootElement;
+                Assert.True(root.TryGetProperty("metadata", out var metadata));
+                Assert.True(metadata.TryGetProperty("properties", out var properties));
+                Assert.True(properties.TryGetProperty("review.summary.json", out var reviewProp));
+                var reviewJson = reviewProp.GetString();
+                Assert.False(string.IsNullOrWhiteSpace(reviewJson));
+                using var summaryDoc = JsonDocument.Parse(reviewJson!);
+                Assert.True(summaryDoc.RootElement.TryGetProperty("subsystems", out var subsystemProp));
+                Assert.True(subsystemProp.GetArrayLength() > 0);
+            }
+
+            var reviewPath = DeriveReviewPathForTest(tempDiagram);
+            Assert.True(File.Exists(reviewPath));
+        }
+        finally
+        {
+            if (File.Exists(tempDiagram)) File.Delete(tempDiagram);
+            if (File.Exists(irPath)) File.Delete(irPath);
+            var reviewPath = DeriveReviewPathForTest(tempDiagram);
+            if (File.Exists(reviewPath)) File.Delete(reviewPath);
+        }
+    }
+
+    private static string GenerateIrFile(string fixtureName)
+    {
+        var irPath = Path.Combine(Path.GetTempPath(), $"vdg_ir_{Guid.NewGuid():N}.json");
+        var fixtureDir = Path.Combine("tests", "fixtures", "vba", fixtureName);
+        RunCli("vba2json", "--in", fixtureDir, "--out", irPath, "--infer-metrics");
+        return irPath;
+    }
+
     private static JsonDocument GenerateIrDocument(string fixtureName, params string[] extraArgs) =>
         JsonDocument.Parse(GenerateIrJson(fixtureName, extraArgs));
 
@@ -1377,6 +1423,22 @@ public class ParserSmokeTests
             dir = dir.Parent;
         }
         throw new InvalidOperationException("Unable to locate repository root.");
+    }
+
+    private static string DeriveReviewPathForTest(string diagramPath)
+    {
+        var directory = Path.GetDirectoryName(diagramPath) ?? ".";
+        var fileName = Path.GetFileNameWithoutExtension(diagramPath);
+        const string DiagramSuffix = ".diagram";
+        if (fileName.EndsWith(DiagramSuffix, StringComparison.OrdinalIgnoreCase))
+        {
+            fileName = fileName[..^DiagramSuffix.Length];
+        }
+        if (string.IsNullOrWhiteSpace(fileName))
+        {
+            fileName = "diagram";
+        }
+        return Path.Combine(directory, $"{fileName}.review.txt");
     }
 }
 

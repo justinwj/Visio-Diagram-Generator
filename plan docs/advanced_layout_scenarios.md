@@ -14,6 +14,27 @@
 
 ## Proposed Enhancements
 
+### Illustrative Examples
+- **Sub-lane overflow (text sketch)**  
+  ```
+  | Tier: Services |
+  | Lane A (UI Forms)            | Lane B (overflow)          |
+  | ─ Module: UI.Checkout        | ─ Module: UI.Inventory     |
+  | ─ Module: UI.Promo (heavy)   | ─ Module: UI.Reporting     |
+  ```
+  Soft-limit breach keeps both lanes on the same page, labeling Lane B as “Services (overflow)”.
+- **Cycle collapse glyph**  
+  ```
+  [Cycle Cluster ⟳]
+    - Module ProcA
+    - Module ProcB
+    (Collapsed: see review summary for 6 members)
+  ```
+- **Flow bundle badge**  
+  `Validator ➜ Persistence  (x7 calls, roles: Audit, Save, Archive)` drawn as a single connector with `x7` badge and tooltip list.
+- **Seed-driven ownership pod**  
+  Modules tagged with `metadata.grouping = "Finance.Ops"` stay co-located even when overflow occurs; the review summary flags: “Ownership pod Finance.Ops pinned to Lane A (seed)”.
+
 ### 1. Hierarchical Lane Splitting & Adaptive Buckets
 - **Soft vs. hard capacity**: add per-tier thresholds (e.g., soft limit 8, hard limit 12). Soft overflow triggers *sub-lane* creation before we open a new page.
 - **Semantic-aware clustering**: keep ownership pods (from seed `metadata.grouping = "cohesive"`) together during first split; less-related modules can be moved to new sub-lanes.
@@ -79,10 +100,12 @@
 ## Documentation & Review Surfacing
 - Create `docs/AdvancedLayouts.md` with before/after diagrams + reviewer guidance.
 - Update CLI help to mention new options (`--layout-advanced-mode`, `--layout-soft-limit`, etc.).
-- Mirror overflow/cycle data into `.review.txt` and diagnostics JSON for dashboards.
+- Mirror overflow/cycle data into `.review.txt` and diagnostics JSON for dashboards (include active thresholds + seed grouping info).
+- Add note in `.review.txt` when warnings are suppressed due to reviewer-tuned limits (e.g., `Suppressed by --layout-soft-limit=10`).
 
 ## Open Questions / Next Review Checkpoints
 - Exact soft/hard limit defaults per tier (start with 6/10? calibrate via fixtures).
 - Whether to allow user-provided bundling rules (seed metadata `groupFlowsBy`).
 - Visual affordances for collapse glyphs in Visio vs. CLI-only output – may need designer sign-off.
 - Timeline for enabling by default vs. opt-in preview flag.
+- Beta-feedback loop: flag dense fixtures for early reviewer testing to calibrate cohesive pod handling and overflow heuristics.

@@ -262,6 +262,50 @@ public class ParserSmokeTests
     }
 
     [Fact]
+    public void SemanticReviewThresholdsCanBeOverridden()
+    {
+        var tempDiagram = Path.Combine(Path.GetTempPath(), $"vdg_review_{Guid.NewGuid():N}.diagram.json");
+        var irPath = GenerateIrFile("cross_module_calls");
+        try
+        {
+            RunCli("ir2diagram",
+                "--in", irPath,
+                "--out", tempDiagram,
+                "--review-severity-threshold", "error",
+                "--role-confidence-cutoff", "0.9",
+                "--review-flow-residual-cutoff", "9999");
+
+            using (var doc = JsonDocument.Parse(File.ReadAllText(tempDiagram)))
+            {
+                var properties = doc.RootElement
+                    .GetProperty("metadata")
+                    .GetProperty("properties");
+                var reviewJson = properties.GetProperty("review.summary.json").GetString();
+                Assert.False(string.IsNullOrWhiteSpace(reviewJson));
+                using var summaryDoc = JsonDocument.Parse(reviewJson!);
+                var settings = summaryDoc.RootElement.GetProperty("settings");
+                Assert.Equal("error", settings.GetProperty("minimumSeverity").GetString());
+                Assert.Equal(0.9, settings.GetProperty("roleConfidenceCutoff").GetDouble(), 3);
+                Assert.Equal(9999, settings.GetProperty("flowResidualCutoff").GetInt32());
+                Assert.Equal(0, summaryDoc.RootElement.GetProperty("warnings").GetArrayLength());
+            }
+
+            var reviewPath = DeriveReviewPathForTest(tempDiagram);
+            Assert.True(File.Exists(reviewPath));
+            var reviewText = File.ReadAllText(reviewPath);
+            Assert.Contains("Severity threshold  : error", reviewText, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("suppressed", reviewText, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            if (File.Exists(tempDiagram)) File.Delete(tempDiagram);
+            if (File.Exists(irPath)) File.Delete(irPath);
+            var reviewPath = DeriveReviewPathForTest(tempDiagram);
+            if (File.Exists(reviewPath)) File.Delete(reviewPath);
+        }
+    }
+
+    [Fact]
     public void HyperlinkSummaryListsProceduresAndHandlers()
     {
         var fixtures = new[]
@@ -1371,6 +1415,10 @@ public class ParserSmokeTests
                 using var summaryDoc = JsonDocument.Parse(reviewJson!);
                 Assert.True(summaryDoc.RootElement.TryGetProperty("subsystems", out var subsystemProp));
                 Assert.True(subsystemProp.GetArrayLength() > 0);
+                Assert.True(summaryDoc.RootElement.TryGetProperty("settings", out var settingsProp));
+                Assert.Equal("warning", settingsProp.GetProperty("minimumSeverity").GetString());
+                Assert.True(summaryDoc.RootElement.TryGetProperty("notes", out var notesProp));
+                Assert.Equal(JsonValueKind.Array, notesProp.ValueKind);
             }
 
             var reviewPath = DeriveReviewPathForTest(tempDiagram);

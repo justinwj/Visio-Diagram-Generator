@@ -107,6 +107,12 @@ internal static class Program
         Console.Error.WriteLine("    --strict-validate      Enforce strict IR invariants before conversion (fails fast on issues).");
         Console.Error.WriteLine("    --summary-log <csv>    Write hyperlink summary (Name/File/Module/Lines) to the specified CSV alongside console output.");
         Console.Error.WriteLine("    --semantics-generated-at <ISO8601>  Override semantic artifact timestamp (default: current UTC).");
+        Console.Error.WriteLine("    --review-severity-threshold <info|warning|error>");
+        Console.Error.WriteLine("                             Minimum severity to surface in review summaries (env: VDG_REVIEW_SEVERITY_THRESHOLD).");
+        Console.Error.WriteLine("    --role-confidence-cutoff <0.0-1.0>");
+        Console.Error.WriteLine("                             Override the confidence floor for classification warnings (env: VDG_ROLE_CONFIDENCE_CUTOFF).");
+        Console.Error.WriteLine("    --review-flow-residual-cutoff <int>");
+        Console.Error.WriteLine("                             Unresolved flow count that triggers review warnings (env: VDG_REVIEW_FLOW_RESIDUAL_CUTOFF).");
         Console.Error.WriteLine("    Example: dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in out/project.ir.json --out out/project.callgraph.json");
         Console.Error.WriteLine();
         Console.Error.WriteLine("  render --in <folder> --out <diagram.vsdx> [--mode <callgraph|module-structure|module-callmap>] [--cli <VDG.CLI.exe>] [--diagram-json <path>] [--diag-json <path>] [--summary-log <csv>]");
@@ -303,7 +309,7 @@ internal static class Program
 
     private static int RunIr2Diagram(string[] args)
     {
-        string? input = null; string? output = null; string mode = "callgraph"; bool includeUnknown = false; int? timeoutMs = null; bool strictValidate = false; string? summaryLogPath = null; string outputMode = "view"; string? semanticsTimestampArg = null;
+        string? input = null; string? output = null; string mode = "callgraph"; bool includeUnknown = false; int? timeoutMs = null; bool strictValidate = false; string? summaryLogPath = null; string outputMode = "view"; string? semanticsTimestampArg = null; string? reviewSeverityArg = null; string? roleConfidenceArg = null; string? flowResidualArg = null;
         for (int i = 0; i < args.Length; i++)
         {
             var a = args[i];
@@ -325,6 +331,12 @@ internal static class Program
             { if (i + 1 >= args.Length) throw new UsageException("--output-mode requires view|print."); outputMode = args[++i]; }
             else if (string.Equals(a, "--semantics-generated-at", StringComparison.OrdinalIgnoreCase))
             { if (i + 1 >= args.Length) throw new UsageException("--semantics-generated-at requires an ISO 8601 timestamp."); semanticsTimestampArg = args[++i]; }
+            else if (string.Equals(a, "--review-severity-threshold", StringComparison.OrdinalIgnoreCase))
+            { if (i + 1 >= args.Length) throw new UsageException("--review-severity-threshold requires info|warning|error."); reviewSeverityArg = args[++i]; }
+            else if (string.Equals(a, "--role-confidence-cutoff", StringComparison.OrdinalIgnoreCase))
+            { if (i + 1 >= args.Length) throw new UsageException("--role-confidence-cutoff requires a floating-point value between 0 and 1."); roleConfidenceArg = args[++i]; }
+            else if (string.Equals(a, "--review-flow-residual-cutoff", StringComparison.OrdinalIgnoreCase))
+            { if (i + 1 >= args.Length) throw new UsageException("--review-flow-residual-cutoff requires a non-negative integer."); flowResidualArg = args[++i]; }
             else throw new UsageException($"Unknown option '{a}' for ir2diagram.");
         }
         if (string.IsNullOrWhiteSpace(input)) throw new UsageException("ir2diagram requires --in <ir.json>.");
@@ -339,6 +351,7 @@ internal static class Program
         var normalizedOutputMode = outputMode.Equals("print", StringComparison.OrdinalIgnoreCase) ? "print" : "view";
         var semanticsTimestamp = ResolveSemanticsTimestamp(semanticsTimestampArg)
                                  ?? ComputeDeterministicSemanticsTimestamp(Path.GetFullPath(input!));
+        var reviewOptions = ResolveReviewOptions(reviewSeverityArg, roleConfidenceArg, flowResidualArg);
 
         IrRoot root;
         try
@@ -440,7 +453,7 @@ internal static class Program
             throw new UsageException("IR contains no procedures.");
         var semanticsBuilder = new SemanticArtifactsBuilder();
         var semantics = semanticsBuilder.Build(incomingModules, root.Project?.Name, Path.GetFullPath(input!), semanticsTimestamp);
-        var reviewSummary = SemanticReviewReporter.Build(semantics);
+        var reviewSummary = SemanticReviewReporter.Build(semantics, reviewOptions);
         SemanticReviewReporter.EmitToConsole(reviewSummary);
         var reviewSummaryJson = SemanticReviewReporter.Serialize(reviewSummary);
 
@@ -998,6 +1011,9 @@ internal static class Program
         {
             metadataProperties["review.summary.json"] = reviewSummaryJson!;
         }
+        metadataProperties["review.settings.minimumSeverity"] = reviewOptions.MinimumSeverity.ToString().ToLowerInvariant();
+        metadataProperties["review.settings.roleConfidenceCutoff"] = reviewOptions.RoleConfidenceCutoff.ToString("0.##", CultureInfo.InvariantCulture);
+        metadataProperties["review.settings.flowResidualCutoff"] = reviewOptions.FlowResidualCutoff.ToString(CultureInfo.InvariantCulture);
         var metadataObject = metadataProperties.Count == 0 ? null : new { properties = metadataProperties };
 
         var diagram = new
@@ -1196,6 +1212,54 @@ internal static class Program
             return parsed;
         }
         throw new UsageException("Invalid semantics timestamp; use ISO 8601 format (e.g., 2024-01-01T00:00:00Z).");
+    }
+
+    private static SemanticReviewOptions ResolveReviewOptions(string? severityArg, string? roleConfidenceArg, string? flowResidualArg)
+    {
+        var severity = ParseSeverity(severityArg ?? Environment.GetEnvironmentVariable("VDG_REVIEW_SEVERITY_THRESHOLD"));
+        var confidence = ParseDoubleOption(roleConfidenceArg ?? Environment.GetEnvironmentVariable("VDG_ROLE_CONFIDENCE_CUTOFF"),
+            fallback: 0.55,
+            min: 0.0,
+            max: 1.0,
+            optionName: "--role-confidence-cutoff");
+        var flowResidual = ParseIntOption(flowResidualArg ?? Environment.GetEnvironmentVariable("VDG_REVIEW_FLOW_RESIDUAL_CUTOFF"),
+            fallback: 1600,
+            min: 0,
+            optionName: "--review-flow-residual-cutoff");
+        return new SemanticReviewOptions(severity, confidence, flowResidual);
+    }
+
+    private static ReviewSeverity ParseSeverity(string? severityText)
+    {
+        if (string.IsNullOrWhiteSpace(severityText))
+            return ReviewSeverity.Warning;
+        if (Enum.TryParse<ReviewSeverity>(severityText, true, out var parsed))
+            return parsed;
+        throw new UsageException("--review-severity-threshold must be 'info', 'warning', or 'error'.");
+    }
+
+    private static double ParseDoubleOption(string? rawValue, double fallback, double min, double max, string optionName)
+    {
+        if (string.IsNullOrWhiteSpace(rawValue))
+            return fallback;
+        if (double.TryParse(rawValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed) &&
+            parsed >= min && parsed <= max)
+        {
+            return parsed;
+        }
+        throw new UsageException($"{optionName} must be a numeric value between {min} and {max} (inclusive).");
+    }
+
+    private static int ParseIntOption(string? rawValue, int fallback, int min, string optionName)
+    {
+        if (string.IsNullOrWhiteSpace(rawValue))
+            return fallback;
+        if (int.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed) &&
+            parsed >= min)
+        {
+            return parsed;
+        }
+        throw new UsageException($"{optionName} must be an integer greater than or equal to {min}.");
     }
 
     private static DateTimeOffset ComputeDeterministicSemanticsTimestamp(string irPath)

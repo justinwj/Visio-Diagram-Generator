@@ -442,6 +442,8 @@ public class ParserSmokeTests
             Assert.Equal(mode.HashDiagram, FixtureSnapshotVerifier.ComputeSha256(mode.GoldenDiagramPath));
             Assert.Equal(mode.HashDiagnostics, FixtureSnapshotVerifier.ComputeSha256(mode.GoldenDiagnosticsPath));
             Assert.Equal(mode.HashVsdx, FixtureSnapshotVerifier.ComputeSha256(mode.GoldenVsdxPath));
+            Assert.Equal(mode.HashReviewJson, FixtureSnapshotVerifier.ComputeSha256(mode.GoldenReviewJsonPath));
+            Assert.Equal(mode.HashReviewTxt, FixtureSnapshotVerifier.ComputeSha256(mode.GoldenReviewTxtPath));
         }
     }
 

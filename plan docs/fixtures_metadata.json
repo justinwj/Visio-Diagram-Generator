@@ -1,7 +1,7 @@
 {
-  "generatedAtUtc": "2025-11-10T02:52:44.7057229Z",
-  "commit": "d236e3a5e23c6ef2b32a181bf45d4c353983d021",
-  "note": "final diagnostics review embedding",
+  "generatedAtUtc": "2025-11-10T07:20:45.6698673Z",
+  "commit": "6912853bb0000a1d65355f8045615ce72f459548",
+  "note": "advanced layout review goldens",
   "fixtures": [
     {
       "name": "cross_module_calls",
@@ -11,22 +11,28 @@
           "mode": "callgraph",
           "hashes": {
             "ir": "d175407140dd193125c3755b3d636444128d8371a725ed2cf2d65980ab7493df",
-            "diagram": "1ffc3efe2b4d0e4001162e6aa9d35b3ee23bbf165975468dd5e439ef9a48499c",
-            "diagnostics": "5fc7731bce7bc9f3a2b471b92d1b8bf362654f72e463244c9247f1cd34fda733",
-            "vsdx": "44028c5b9a418abec5d0d9d79bb3c42aa4e6b434b781fa48f5b5945b582eea79"
+            "diagram": "81404225ddbfb1d22e234f4632d979c94e65ab9df3ffa60a5eeb9abad53c5987",
+            "diagnostics": "98959888b12f9e56967806819b4ba63ea9bc14e05e66472274d0f5ccf02590c5",
+            "vsdx": "44028c5b9a418abec5d0d9d79bb3c42aa4e6b434b781fa48f5b5945b582eea79",
+            "reviewJson": "aef8cc17762efd18533bb338f35b7ea7705ec639d005b09b0b58ccbf33cb8206",
+            "reviewTxt": "5a7e43fa276a89e058cb602577f55d1ae0caf3ce52d41ece0aded6714de6576b"
           },
           "paths": {
             "temp": {
               "ir": "out\\fixtures\\cross_module_calls\\callgraph\\cross_module_calls.callgraph.ir.json",
               "diagram": "out\\fixtures\\cross_module_calls\\callgraph\\cross_module_calls.callgraph.diagram.json",
               "diagnostics": "out\\fixtures\\cross_module_calls\\callgraph\\cross_module_calls.callgraph.diagnostics.json",
-              "vsdx": "out\\fixtures\\cross_module_calls\\callgraph\\cross_module_calls.callgraph.vsdx"
+              "vsdx": "out\\fixtures\\cross_module_calls\\callgraph\\cross_module_calls.callgraph.vsdx",
+              "reviewJson": "out\\fixtures\\cross_module_calls\\callgraph\\cross_module_calls.callgraph.review.json",
+              "reviewTxt": "out\\fixtures\\cross_module_calls\\callgraph\\cross_module_calls.callgraph.review.txt"
             },
             "golden": {
               "ir": "tests\\fixtures\\render\\cross_module_calls\\callgraph\\cross_module_calls.callgraph.ir.json",
               "diagram": "tests\\fixtures\\render\\cross_module_calls\\callgraph\\cross_module_calls.callgraph.diagram.json",
               "diagnostics": "tests\\fixtures\\render\\cross_module_calls\\callgraph\\cross_module_calls.callgraph.diagnostics.json",
-              "vsdx": "tests\\fixtures\\render\\cross_module_calls\\callgraph\\cross_module_calls.callgraph.vsdx"
+              "vsdx": "tests\\fixtures\\render\\cross_module_calls\\callgraph\\cross_module_calls.callgraph.vsdx",
+              "reviewJson": "tests\\fixtures\\render\\cross_module_calls\\callgraph\\cross_module_calls.callgraph.review.json",
+              "reviewTxt": "tests\\fixtures\\render\\cross_module_calls\\callgraph\\cross_module_calls.callgraph.review.txt"
             }
           },
           "commands": [
@@ -51,22 +57,28 @@
           "mode": "module-structure",
           "hashes": {
             "ir": "d175407140dd193125c3755b3d636444128d8371a725ed2cf2d65980ab7493df",
-            "diagram": "82c4ae8a59ca4cda50de439c7f12e22644f1da712a69e6807a753ddfbda81d60",
-            "diagnostics": "2bde6a61a4d30653671d8bdad58c578a0e1aa4e3082d7706d9361f43fd1622da",
-            "vsdx": "44028c5b9a418abec5d0d9d79bb3c42aa4e6b434b781fa48f5b5945b582eea79"
+            "diagram": "410bbbd31b7033a61f055f8360fd66839f3f7db216d08b1a4d89534bcb968894",
+            "diagnostics": "2d09895f07d2a423e74b0a702da9d0a787894db48f204f19493f9595a694e31f",
+            "vsdx": "44028c5b9a418abec5d0d9d79bb3c42aa4e6b434b781fa48f5b5945b582eea79",
+            "reviewJson": "aef8cc17762efd18533bb338f35b7ea7705ec639d005b09b0b58ccbf33cb8206",
+            "reviewTxt": "5a7e43fa276a89e058cb602577f55d1ae0caf3ce52d41ece0aded6714de6576b"
           },
           "paths": {
             "temp": {
               "ir": "out\\fixtures\\cross_module_calls\\module-structure\\cross_module_calls.module-structure.ir.json",
               "diagram": "out\\fixtures\\cross_module_calls\\module-structure\\cross_module_calls.module-structure.diagram.json",
               "diagnostics": "out\\fixtures\\cross_module_calls\\module-structure\\cross_module_calls.module-structure.diagnostics.json",
-              "vsdx": "out\\fixtures\\cross_module_calls\\module-structure\\cross_module_calls.module-structure.vsdx"
+              "vsdx": "out\\fixtures\\cross_module_calls\\module-structure\\cross_module_calls.module-structure.vsdx",
+              "reviewJson": "out\\fixtures\\cross_module_calls\\module-structure\\cross_module_calls.module-structure.review.json",
+              "reviewTxt": "out\\fixtures\\cross_module_calls\\module-structure\\cross_module_calls.module-structure.review.txt"
             },
             "golden": {
               "ir": "tests\\fixtures\\render\\cross_module_calls\\module-structure\\cross_module_calls.module-structure.ir.json",
               "diagram": "tests\\fixtures\\render\\cross_module_calls\\module-structure\\cross_module_calls.module-structure.diagram.json",
               "diagnostics": "tests\\fixtures\\render\\cross_module_calls\\module-structure\\cross_module_calls.module-structure.diagnostics.json",
-              "vsdx": "tests\\fixtures\\render\\cross_module_calls\\module-structure\\cross_module_calls.module-structure.vsdx"
+              "vsdx": "tests\\fixtures\\render\\cross_module_calls\\module-structure\\cross_module_calls.module-structure.vsdx",
+              "reviewJson": "tests\\fixtures\\render\\cross_module_calls\\module-structure\\cross_module_calls.module-structure.review.json",
+              "reviewTxt": "tests\\fixtures\\render\\cross_module_calls\\module-structure\\cross_module_calls.module-structure.review.txt"
             }
           },
           "commands": [
@@ -97,22 +109,28 @@
           "mode": "callgraph",
           "hashes": {
             "ir": "ea8159ef069309a41178351355ec3b13f6c3669eb53d4d309bc48bb718c5dbc7",
-            "diagram": "feee7a487102a40d423e2faea64ec9e77b0f85ca0444110d476cc01f87813015",
-            "diagnostics": "6177f2ea725cef9586843330c330618c92293bb7c6796fa7cf2ce740b2094f24",
-            "vsdx": "44028c5b9a418abec5d0d9d79bb3c42aa4e6b434b781fa48f5b5945b582eea79"
+            "diagram": "7d9acbe01714fdcbe37113d04e8bbc05475daac6c7aee7df2493afa77639bf61",
+            "diagnostics": "691feb2d128bafd1d1187c2eddc01b24f0703c95574482bf9ca5d65990e9c9f3",
+            "vsdx": "44028c5b9a418abec5d0d9d79bb3c42aa4e6b434b781fa48f5b5945b582eea79",
+            "reviewJson": "f0b5490cc7636014224c9123abedfa063d5f9a445111fc9505ff21183f0d49f7",
+            "reviewTxt": "c9c2ba449dd2cf2d445b20d1e40d4695995075796f3dd1bf4ca5c74a7cc8ce6f"
           },
           "paths": {
             "temp": {
               "ir": "out\\fixtures\\events_and_forms\\callgraph\\events_and_forms.callgraph.ir.json",
               "diagram": "out\\fixtures\\events_and_forms\\callgraph\\events_and_forms.callgraph.diagram.json",
               "diagnostics": "out\\fixtures\\events_and_forms\\callgraph\\events_and_forms.callgraph.diagnostics.json",
-              "vsdx": "out\\fixtures\\events_and_forms\\callgraph\\events_and_forms.callgraph.vsdx"
+              "vsdx": "out\\fixtures\\events_and_forms\\callgraph\\events_and_forms.callgraph.vsdx",
+              "reviewJson": "out\\fixtures\\events_and_forms\\callgraph\\events_and_forms.callgraph.review.json",
+              "reviewTxt": "out\\fixtures\\events_and_forms\\callgraph\\events_and_forms.callgraph.review.txt"
             },
             "golden": {
               "ir": "tests\\fixtures\\render\\events_and_forms\\callgraph\\events_and_forms.callgraph.ir.json",
               "diagram": "tests\\fixtures\\render\\events_and_forms\\callgraph\\events_and_forms.callgraph.diagram.json",
               "diagnostics": "tests\\fixtures\\render\\events_and_forms\\callgraph\\events_and_forms.callgraph.diagnostics.json",
-              "vsdx": "tests\\fixtures\\render\\events_and_forms\\callgraph\\events_and_forms.callgraph.vsdx"
+              "vsdx": "tests\\fixtures\\render\\events_and_forms\\callgraph\\events_and_forms.callgraph.vsdx",
+              "reviewJson": "tests\\fixtures\\render\\events_and_forms\\callgraph\\events_and_forms.callgraph.review.json",
+              "reviewTxt": "tests\\fixtures\\render\\events_and_forms\\callgraph\\events_and_forms.callgraph.review.txt"
             }
           },
           "commands": [
@@ -143,22 +161,28 @@
           "mode": "callgraph",
           "hashes": {
             "ir": "29d3fc8c54ec63960f58cf9958fa20aee860d3dfd284f5d9f7c29d03710ba754",
-            "diagram": "29852741c763d8b7f21385e8e43ad7c0c4032f90955ba4934e973a8daeb02417",
-            "diagnostics": "3105c673ddb5216b21c406259b314897eead051f8c970b9a93a6700d0fc5fe97",
-            "vsdx": "44028c5b9a418abec5d0d9d79bb3c42aa4e6b434b781fa48f5b5945b582eea79"
+            "diagram": "573d7acf812e48b948634a4c9bc08f25f3db20bf55d9040e91282c51c167bac2",
+            "diagnostics": "1f068e9ddf8dbe6fc3c2792a31ffb7e4147d6b4507ed97c93b83a84ff97dac8e",
+            "vsdx": "44028c5b9a418abec5d0d9d79bb3c42aa4e6b434b781fa48f5b5945b582eea79",
+            "reviewJson": "044cb0efd8a150e68c7608ad3f6d42d9add9ceed45c36ac8738e3c7d3c293a6b",
+            "reviewTxt": "3a80c9b673f618f9cb499f5aff9633d75bb146116aea3f0d1393e38770aa2bb6"
           },
           "paths": {
             "temp": {
               "ir": "out\\fixtures\\hello_world\\callgraph\\hello_world.callgraph.ir.json",
               "diagram": "out\\fixtures\\hello_world\\callgraph\\hello_world.callgraph.diagram.json",
               "diagnostics": "out\\fixtures\\hello_world\\callgraph\\hello_world.callgraph.diagnostics.json",
-              "vsdx": "out\\fixtures\\hello_world\\callgraph\\hello_world.callgraph.vsdx"
+              "vsdx": "out\\fixtures\\hello_world\\callgraph\\hello_world.callgraph.vsdx",
+              "reviewJson": "out\\fixtures\\hello_world\\callgraph\\hello_world.callgraph.review.json",
+              "reviewTxt": "out\\fixtures\\hello_world\\callgraph\\hello_world.callgraph.review.txt"
             },
             "golden": {
               "ir": "tests\\fixtures\\render\\hello_world\\callgraph\\hello_world.callgraph.ir.json",
               "diagram": "tests\\fixtures\\render\\hello_world\\callgraph\\hello_world.callgraph.diagram.json",
               "diagnostics": "tests\\fixtures\\render\\hello_world\\callgraph\\hello_world.callgraph.diagnostics.json",
-              "vsdx": "tests\\fixtures\\render\\hello_world\\callgraph\\hello_world.callgraph.vsdx"
+              "vsdx": "tests\\fixtures\\render\\hello_world\\callgraph\\hello_world.callgraph.vsdx",
+              "reviewJson": "tests\\fixtures\\render\\hello_world\\callgraph\\hello_world.callgraph.review.json",
+              "reviewTxt": "tests\\fixtures\\render\\hello_world\\callgraph\\hello_world.callgraph.review.txt"
             }
           },
           "commands": [
@@ -188,23 +212,29 @@
         {
           "mode": "callgraph",
           "hashes": {
-            "ir": "9f2e6eae9c4aa87340a44d88352a0ebe927c4c56e7abb1c5629fb736f57a1dbb",
-            "diagram": "f0ab0d27fe18ccbf29ae715025cff4bd2aea77103d0784c12e84c2551b410c02",
-            "diagnostics": "2d4561715c37eff02985ba543013ea37883df0bef26fe7f8c535264959821241",
-            "vsdx": "89ee6ec2af969cc35c38813dd80cdc2982f4201f93a8b22c3884391c392d0f96"
+            "ir": "b8a6ed1a35633dff88062f484e0ea304356a4e915d21443a2f544fb1abbe3c00",
+            "diagram": "79b781a523482fa08155b49f86639f23aaed4cfeb9aa0a95d08e341f9f6eb281",
+            "diagnostics": "9fa7b6e3ac6dcbe14f2cd441d10922ee974e1d74cbf0c6ed73243302feba5d96",
+            "vsdx": "7d1aee16e456e088b18192d2084ae304000d3c593dbaff6b1e3503e3607e52e1",
+            "reviewJson": "c8b338b7fb5d897ed66e709508d572262830d9630a108c396e411b497d4edf78",
+            "reviewTxt": "541e8772efaa81ed6c2e252fab786a530fabfb34530180f67edd7c0f717dae9a"
           },
           "paths": {
             "temp": {
               "ir": "out\\fixtures\\invSys\\callgraph\\invSys.callgraph.ir.json",
               "diagram": "out\\fixtures\\invSys\\callgraph\\invSys.callgraph.diagram.json",
               "diagnostics": "out\\fixtures\\invSys\\callgraph\\invSys.callgraph.diagnostics.json",
-              "vsdx": "out\\fixtures\\invSys\\callgraph\\invSys.callgraph.vsdx"
+              "vsdx": "out\\fixtures\\invSys\\callgraph\\invSys.callgraph.vsdx",
+              "reviewJson": "out\\fixtures\\invSys\\callgraph\\invSys.callgraph.review.json",
+              "reviewTxt": "out\\fixtures\\invSys\\callgraph\\invSys.callgraph.review.txt"
             },
             "golden": {
               "ir": "tests\\fixtures\\render\\invSys\\callgraph\\invSys.callgraph.ir.json",
               "diagram": "tests\\fixtures\\render\\invSys\\callgraph\\invSys.callgraph.diagram.json",
               "diagnostics": "tests\\fixtures\\render\\invSys\\callgraph\\invSys.callgraph.diagnostics.json",
-              "vsdx": "tests\\fixtures\\render\\invSys\\callgraph\\invSys.callgraph.vsdx"
+              "vsdx": "tests\\fixtures\\render\\invSys\\callgraph\\invSys.callgraph.vsdx",
+              "reviewJson": "tests\\fixtures\\render\\invSys\\callgraph\\invSys.callgraph.review.json",
+              "reviewTxt": "tests\\fixtures\\render\\invSys\\callgraph\\invSys.callgraph.review.txt"
             }
           },
           "commands": [
@@ -228,23 +258,29 @@
         {
           "mode": "event-wiring",
           "hashes": {
-            "ir": "55b836f134c0ad37a21f2b862b033a9b2b8d454d618980de8b1dbd45f6df5653",
-            "diagram": "4b0f93d91f1c77d57c530024079b30bb3a2ede22604f6804486e5c6f35ce6932",
-            "diagnostics": "5f8342342e57370003a88abfca994890b4f47f0b38a1f27fd7e92400be9ed25c",
-            "vsdx": "44028c5b9a418abec5d0d9d79bb3c42aa4e6b434b781fa48f5b5945b582eea79"
+            "ir": "9a85499cbbad835bdffe60660265a06c7b42d095127fdd833eab06f1678d59ca",
+            "diagram": "b7fcb0fc5da28800b11bf2bc32b6b88043f948948f4c57d953f0d9e53ec41d75",
+            "diagnostics": "059e8beddc69c7151760340a8606037d48f2aae8ecf25ad0c44d05e35578b77c",
+            "vsdx": "44028c5b9a418abec5d0d9d79bb3c42aa4e6b434b781fa48f5b5945b582eea79",
+            "reviewJson": "c8b338b7fb5d897ed66e709508d572262830d9630a108c396e411b497d4edf78",
+            "reviewTxt": "541e8772efaa81ed6c2e252fab786a530fabfb34530180f67edd7c0f717dae9a"
           },
           "paths": {
             "temp": {
               "ir": "out\\fixtures\\invSys\\event-wiring\\invSys.event-wiring.ir.json",
               "diagram": "out\\fixtures\\invSys\\event-wiring\\invSys.event-wiring.diagram.json",
               "diagnostics": "out\\fixtures\\invSys\\event-wiring\\invSys.event-wiring.diagnostics.json",
-              "vsdx": "out\\fixtures\\invSys\\event-wiring\\invSys.event-wiring.vsdx"
+              "vsdx": "out\\fixtures\\invSys\\event-wiring\\invSys.event-wiring.vsdx",
+              "reviewJson": "out\\fixtures\\invSys\\event-wiring\\invSys.event-wiring.review.json",
+              "reviewTxt": "out\\fixtures\\invSys\\event-wiring\\invSys.event-wiring.review.txt"
             },
             "golden": {
               "ir": "tests\\fixtures\\render\\invSys\\event-wiring\\invSys.event-wiring.ir.json",
               "diagram": "tests\\fixtures\\render\\invSys\\event-wiring\\invSys.event-wiring.diagram.json",
               "diagnostics": "tests\\fixtures\\render\\invSys\\event-wiring\\invSys.event-wiring.diagnostics.json",
-              "vsdx": "tests\\fixtures\\render\\invSys\\event-wiring\\invSys.event-wiring.vsdx"
+              "vsdx": "tests\\fixtures\\render\\invSys\\event-wiring\\invSys.event-wiring.vsdx",
+              "reviewJson": "tests\\fixtures\\render\\invSys\\event-wiring\\invSys.event-wiring.review.json",
+              "reviewTxt": "tests\\fixtures\\render\\invSys\\event-wiring\\invSys.event-wiring.review.txt"
             }
           },
           "commands": [
@@ -268,23 +304,29 @@
         {
           "mode": "module-structure",
           "hashes": {
-            "ir": "55b836f134c0ad37a21f2b862b033a9b2b8d454d618980de8b1dbd45f6df5653",
-            "diagram": "fcfca4155411ba9ca3c5a7ad8bf228db326273a4f9d8cbe43bb2fe3af475329f",
-            "diagnostics": "070ff3006e5d2d33ba3aa93a3c11fe1d0eb1dc349dda23146cfe0a4e384f084b",
-            "vsdx": "44028c5b9a418abec5d0d9d79bb3c42aa4e6b434b781fa48f5b5945b582eea79"
+            "ir": "9a85499cbbad835bdffe60660265a06c7b42d095127fdd833eab06f1678d59ca",
+            "diagram": "12285e0ad2942f3745e2bd7a8f1b9d5de239cfe2f98b83c92dc1779b7943177f",
+            "diagnostics": "faf8536a7f4c1fd79ada6eada930e08f42c5d2edb5331726c8c608f2d3f95f13",
+            "vsdx": "44028c5b9a418abec5d0d9d79bb3c42aa4e6b434b781fa48f5b5945b582eea79",
+            "reviewJson": "c8b338b7fb5d897ed66e709508d572262830d9630a108c396e411b497d4edf78",
+            "reviewTxt": "541e8772efaa81ed6c2e252fab786a530fabfb34530180f67edd7c0f717dae9a"
           },
           "paths": {
             "temp": {
               "ir": "out\\fixtures\\invSys\\module-structure\\invSys.module-structure.ir.json",
               "diagram": "out\\fixtures\\invSys\\module-structure\\invSys.module-structure.diagram.json",
               "diagnostics": "out\\fixtures\\invSys\\module-structure\\invSys.module-structure.diagnostics.json",
-              "vsdx": "out\\fixtures\\invSys\\module-structure\\invSys.module-structure.vsdx"
+              "vsdx": "out\\fixtures\\invSys\\module-structure\\invSys.module-structure.vsdx",
+              "reviewJson": "out\\fixtures\\invSys\\module-structure\\invSys.module-structure.review.json",
+              "reviewTxt": "out\\fixtures\\invSys\\module-structure\\invSys.module-structure.review.txt"
             },
             "golden": {
               "ir": "tests\\fixtures\\render\\invSys\\module-structure\\invSys.module-structure.ir.json",
               "diagram": "tests\\fixtures\\render\\invSys\\module-structure\\invSys.module-structure.diagram.json",
               "diagnostics": "tests\\fixtures\\render\\invSys\\module-structure\\invSys.module-structure.diagnostics.json",
-              "vsdx": "tests\\fixtures\\render\\invSys\\module-structure\\invSys.module-structure.vsdx"
+              "vsdx": "tests\\fixtures\\render\\invSys\\module-structure\\invSys.module-structure.vsdx",
+              "reviewJson": "tests\\fixtures\\render\\invSys\\module-structure\\invSys.module-structure.review.json",
+              "reviewTxt": "tests\\fixtures\\render\\invSys\\module-structure\\invSys.module-structure.review.txt"
             }
           },
           "commands": [
@@ -308,23 +350,29 @@
         {
           "mode": "proc-cfg",
           "hashes": {
-            "ir": "55b836f134c0ad37a21f2b862b033a9b2b8d454d618980de8b1dbd45f6df5653",
-            "diagram": "08007aff9655159ef6d51c07062153ccb6c51156bc2da23d2bd8387c35ab1e4d",
-            "diagnostics": "19ec90a91af76390c589ecf4722c1f162d92edb944131f132863f69ef464f6c7",
-            "vsdx": "44028c5b9a418abec5d0d9d79bb3c42aa4e6b434b781fa48f5b5945b582eea79"
+            "ir": "9a85499cbbad835bdffe60660265a06c7b42d095127fdd833eab06f1678d59ca",
+            "diagram": "c77035e9c9b8a51a0256d43b1d3b4d73b72b13e5d2f4f45128cf1f49e3549921",
+            "diagnostics": "b0fb1cc254aee5fda8b2374e1756c7757422bb20cbd252fa2a75959e76c882b5",
+            "vsdx": "44028c5b9a418abec5d0d9d79bb3c42aa4e6b434b781fa48f5b5945b582eea79",
+            "reviewJson": "c8b338b7fb5d897ed66e709508d572262830d9630a108c396e411b497d4edf78",
+            "reviewTxt": "541e8772efaa81ed6c2e252fab786a530fabfb34530180f67edd7c0f717dae9a"
           },
           "paths": {
             "temp": {
               "ir": "out\\fixtures\\invSys\\proc-cfg\\invSys.proc-cfg.ir.json",
               "diagram": "out\\fixtures\\invSys\\proc-cfg\\invSys.proc-cfg.diagram.json",
               "diagnostics": "out\\fixtures\\invSys\\proc-cfg\\invSys.proc-cfg.diagnostics.json",
-              "vsdx": "out\\fixtures\\invSys\\proc-cfg\\invSys.proc-cfg.vsdx"
+              "vsdx": "out\\fixtures\\invSys\\proc-cfg\\invSys.proc-cfg.vsdx",
+              "reviewJson": "out\\fixtures\\invSys\\proc-cfg\\invSys.proc-cfg.review.json",
+              "reviewTxt": "out\\fixtures\\invSys\\proc-cfg\\invSys.proc-cfg.review.txt"
             },
             "golden": {
               "ir": "tests\\fixtures\\render\\invSys\\proc-cfg\\invSys.proc-cfg.ir.json",
               "diagram": "tests\\fixtures\\render\\invSys\\proc-cfg\\invSys.proc-cfg.diagram.json",
               "diagnostics": "tests\\fixtures\\render\\invSys\\proc-cfg\\invSys.proc-cfg.diagnostics.json",
-              "vsdx": "tests\\fixtures\\render\\invSys\\proc-cfg\\invSys.proc-cfg.vsdx"
+              "vsdx": "tests\\fixtures\\render\\invSys\\proc-cfg\\invSys.proc-cfg.vsdx",
+              "reviewJson": "tests\\fixtures\\render\\invSys\\proc-cfg\\invSys.proc-cfg.review.json",
+              "reviewTxt": "tests\\fixtures\\render\\invSys\\proc-cfg\\invSys.proc-cfg.review.txt"
             }
           },
           "commands": [

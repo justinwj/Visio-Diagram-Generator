@@ -102,6 +102,18 @@ namespace VDG.CLI
             public string Severity { get; set; } = "warning";
         }
 
+        private sealed class AdvancedPageCue
+        {
+            public AdvancedPageCue(string text, string severity)
+            {
+                Text = text;
+                Severity = string.IsNullOrWhiteSpace(severity) ? "info" : severity;
+            }
+
+            public string Text { get; }
+            public string Severity { get; }
+        }
+
         internal sealed class LayerDiagnosticsDetail
         {
             public int LayerNumber { get; set; }
@@ -4716,8 +4728,8 @@ namespace VDG.CLI
                 else
                 {
                     ComputePlacements(model, layout, layoutPlan, placements, firstPageInfo, layerContext);
-                    DrawLaneContainers(model, layout, firstPageInfo.Page);
-                    DrawConnectors(model, placements, firstPageInfo, pageManager, layout, layerContext, null);
+                    DrawLaneContainers(model, layout, layoutPlan, firstPageInfo.Page);
+                    DrawConnectors(model, placements, firstPageInfo, pageManager, layout, layerContext, layoutPlan);
                 }
 
                 EmitPageSummary(pageManager);
@@ -5317,7 +5329,7 @@ namespace VDG.CLI
             }
         }
 
-        private static void DrawLaneContainers(DiagramModel model, LayoutResult layout, dynamic page)
+        private static void DrawLaneContainers(DiagramModel model, LayoutResult layout, LayoutPlan? layoutPlan, dynamic page)
         {
             dynamic visioPage = page ?? throw new COMException("Visio page was not created.");
             var nodeMap = BuildNodeMap(model);
@@ -5378,6 +5390,18 @@ namespace VDG.CLI
                     ReleaseCom(lane);
                 }
                 catch { }
+
+                if (layoutPlan?.LaneSegments != null)
+                {
+                    var laneSegments =
+                        layoutPlan.LaneSegments
+                            .Where(seg => seg != null && seg.PageIndex == 0 && seg.Tier != null && seg.Tier.Equals(tier, StringComparison.OrdinalIgnoreCase))
+                            .ToArray();
+                    if (laneSegments.Length > 0)
+                    {
+                        DrawLaneHeatBands(visioPage, laneSegments, left, bottom, right, top);
+                    }
+                }
             }
 
             // Draw explicit sub-containers (single-page)
@@ -5706,6 +5730,8 @@ namespace VDG.CLI
                     pageManager?.RegisterConnectorSkipped(edge.Id, edge.SourceId, edge.TargetId, pageIndex, "connector routing failed");
                 }
             }
+
+            DrawAdvancedLegend(model, layoutPlan, visioPage, pageIndex, GetPageMargin(model) ?? Margin, GetTitleHeight(model));
         }
 
         private static void DeleteErrorLog(string outputPath)
@@ -6127,6 +6153,243 @@ namespace VDG.CLI
                 TrySetFormula(shape, "FillForegnd", "RGB(245,248,250)");
                 TrySetFormula(shape, "LinePattern", "2");
                 TrySetFormula(shape, "LineColor", "RGB(200,200,200)");
+            }
+        }
+
+        private static void DrawLaneHeatBands(dynamic visioPage, IEnumerable<LaneSegmentPlan> laneSegments, double laneLeft, double laneBottom, double laneRight, double laneTop)
+        {
+            if (visioPage == null) return;
+            var ordered = laneSegments?
+                .Where(seg => seg != null)
+                .OrderBy(seg => seg!.SegmentIndex)
+                .ToArray();
+            if (ordered == null || ordered.Length == 0) return;
+
+            var laneHeight = laneTop - laneBottom;
+            if (laneHeight <= 0) return;
+
+            var totalWeight = ordered.Sum(seg => Math.Max(1, seg!.NodeCount));
+            if (totalWeight <= 0) totalWeight = ordered.Length;
+
+            var bandWidth = Math.Min(Math.Max((laneRight - laneLeft) * 0.06, 0.05), 0.4);
+            var gutter = Math.Max(0.02, bandWidth / 4.0);
+            var anchorRight = laneLeft - gutter;
+            var currentTop = laneTop;
+
+            foreach (var seg in ordered)
+            {
+                var weight = Math.Max(1, seg!.NodeCount);
+                var segmentHeight = laneHeight * (weight / (double)totalWeight);
+                if (segmentHeight < 0.08) segmentHeight = 0.08;
+                var segBottom = currentTop - segmentHeight;
+                try
+                {
+                    dynamic band = visioPage.DrawRectangle(anchorRight - bandWidth, segBottom, anchorRight, currentTop);
+                    var color = HeatColorFromPercent(seg.HeatPercent);
+                    TrySetFormula(band, "LinePattern", "0");
+                    TrySetFormula(band, "FillPattern", "1");
+                    TrySetFormula(band, "FillForegnd", color);
+                    TrySetFormula(band, "FillBkgnd", color);
+                    ReleaseCom(band);
+                }
+                catch { }
+
+                if (!string.IsNullOrWhiteSpace(seg.OverflowReason) &&
+                    !string.Equals(seg.OverflowReason, "balanced", StringComparison.OrdinalIgnoreCase))
+                {
+                    try
+                    {
+                        var badgeHeight = Math.Min(0.35, segmentHeight);
+                        var badgeWidth = Math.Min(Math.Max((laneRight - laneLeft) * 0.18, 0.6), 1.1);
+                        var badgeBottom = segBottom;
+                        dynamic badge = visioPage.DrawRectangle(laneRight - badgeWidth, badgeBottom, laneRight, badgeBottom + badgeHeight);
+                        badge.Text = seg.OverflowReason!;
+                        ApplySeverityCueStyle(badge, "warning");
+                        ReleaseCom(badge);
+                    }
+                    catch { }
+                }
+
+                currentTop = segBottom;
+                if (currentTop <= laneBottom + 0.02) break;
+            }
+        }
+
+        private static string HeatColorFromPercent(double percent)
+        {
+            if (percent >= 120) return "RGB(189,34,34)";
+            if (percent >= 105) return "RGB(226,106,35)";
+            if (percent >= 95) return "RGB(232,176,36)";
+            if (percent >= 85) return "RGB(205,217,64)";
+            return "RGB(178,209,140)";
+        }
+
+        private static void DrawAdvancedLegend(DiagramModel model, LayoutPlan? layoutPlan, dynamic visioPage, int pageIndex, double margin, double titleHeight)
+        {
+            if (layoutPlan == null || visioPage == null) return;
+            var cues = CollectAdvancedPageCues(layoutPlan, pageIndex);
+            if (cues.Count == 0) return;
+
+            var pageWidth = GetPageDimension(visioPage, "PageWidth");
+            var pageHeight = GetPageDimension(visioPage, "PageHeight");
+            if (pageWidth <= 0 || pageHeight <= 0) return;
+
+            var legendWidth = 2.6;
+            var legendLeft = pageWidth - margin - legendWidth;
+            var legendTop = pageHeight - margin - titleHeight - 0.35;
+            var legendBottomLimit = margin + 0.4;
+            var boxHeight = 0.35;
+            var spacing = 0.05;
+
+            foreach (var cue in cues.Take(8))
+            {
+                var bottom = legendTop - boxHeight;
+                if (bottom <= legendBottomLimit) break;
+
+                try
+                {
+                    dynamic badge = visioPage.DrawRectangle(legendLeft, bottom, legendLeft + legendWidth, legendTop);
+                    badge.Text = cue.Text;
+                    ApplySeverityCueStyle(badge, cue.Severity);
+                    ReleaseCom(badge);
+                }
+                catch { }
+
+                legendTop = bottom - spacing;
+            }
+        }
+
+        private static List<AdvancedPageCue> CollectAdvancedPageCues(LayoutPlan? layoutPlan, int pageIndex)
+        {
+            var cues = new List<AdvancedPageCue>();
+            if (layoutPlan == null) return cues;
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            if (layoutPlan.LaneSegments != null)
+            {
+                foreach (var seg in layoutPlan.LaneSegments)
+                {
+                    if (seg == null || seg.PageIndex != pageIndex) continue;
+                    var tierName = string.IsNullOrWhiteSpace(seg.Tier) ? "Lane" : seg.Tier!;
+                    if (!string.IsNullOrWhiteSpace(seg.OverflowReason) &&
+                        !string.Equals(seg.OverflowReason, "balanced", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var text = $"Lane {tierName}: {seg.OverflowReason}";
+                        if (seen.Add(text))
+                        {
+                            cues.Add(new AdvancedPageCue(text, "warning"));
+                        }
+                    }
+                    else if (seg.HeatPercent >= 105)
+                    {
+                        var text = $"Lane {tierName}: heat {seg.HeatPercent:F0}%";
+                        if (seen.Add(text))
+                        {
+                            cues.Add(new AdvancedPageCue(text, "info"));
+                        }
+                    }
+                }
+            }
+
+            if (layoutPlan.FlowBundles != null)
+            {
+                foreach (var flow in layoutPlan.FlowBundles
+                             .Where(f => f != null && f.PageIndex == pageIndex)
+                             .OrderByDescending(f => f!.ConnectorCount)
+                             .Take(4))
+                {
+                    var source = string.IsNullOrWhiteSpace(flow!.SourceTier) ? "?" : flow.SourceTier!;
+                    var target = string.IsNullOrWhiteSpace(flow.TargetTier) ? "?" : flow.TargetTier!;
+                    var preview = (flow.LabelPreview != null && flow.LabelPreview.Length > 0)
+                        ? $" ({flow.LabelPreview[0]})"
+                        : string.Empty;
+                    var text = $"Flow {source}→{target} x{flow.ConnectorCount}{preview}";
+                    if (seen.Add(text))
+                    {
+                        cues.Add(new AdvancedPageCue(text, "info"));
+                    }
+                }
+            }
+
+            if (layoutPlan.CycleClusters != null && layoutPlan.Pages != null)
+            {
+                var modulesOnPage = GetModulesOnPage(layoutPlan, pageIndex);
+                if (modulesOnPage.Count > 0)
+                {
+                    foreach (var cluster in layoutPlan.CycleClusters)
+                    {
+                        if (cluster == null || cluster.ModuleIds == null || cluster.ModuleIds.Length == 0) continue;
+                        if (!cluster.ModuleIds.Any(m => modulesOnPage.Contains(m))) continue;
+                        var preview = string.Join(", ", cluster.ModuleIds.Take(3));
+                        if (cluster.ModuleIds.Length > 3) preview += "…";
+                        var severity = string.IsNullOrWhiteSpace(cluster.Severity) ? "warning" : cluster.Severity!;
+                        var text = $"Cycle {severity}: {preview}";
+                        if (seen.Add(text))
+                        {
+                            cues.Add(new AdvancedPageCue(text, severity));
+                        }
+                    }
+                }
+            }
+
+            return cues;
+        }
+
+        private static HashSet<string> GetModulesOnPage(LayoutPlan layoutPlan, int pageIndex)
+        {
+            var result = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (layoutPlan?.Pages == null) return result;
+            foreach (var page in layoutPlan.Pages)
+            {
+                if (page == null || page.Modules == null) continue;
+                if (page.PageIndex != pageIndex) continue;
+                foreach (var module in page.Modules)
+                {
+                    if (string.IsNullOrWhiteSpace(module)) continue;
+                    result.Add(module.Trim());
+                }
+            }
+            return result;
+        }
+
+        private static void ApplySeverityCueStyle(dynamic shape, string severity)
+        {
+            if (shape == null) return;
+            string fill;
+            string line;
+            switch (severity?.ToLowerInvariant())
+            {
+                case "error":
+                    fill = "RGB(247,210,210)";
+                    line = "RGB(207,63,78)";
+                    break;
+                case "warning":
+                    fill = "RGB(250,235,204)";
+                    line = "RGB(217,160,71)";
+                    break;
+                default:
+                    fill = "RGB(229,239,249)";
+                    line = "RGB(134,170,201)";
+                    break;
+            }
+
+            TrySetFormula(shape, "FillForegnd", fill);
+            TrySetFormula(shape, "FillBkgnd", fill);
+            TrySetFormula(shape, "LineColor", line);
+            TrySetFormula(shape, "LinePattern", "2");
+            TrySetFormula(shape, "Char.Size", "6 pt");
+        }
+
+        private static double GetPageDimension(dynamic visioPage, string cellName)
+        {
+            if (visioPage == null) return 0.0;
+            try
+            {
+                return (double)visioPage.PageSheet.CellsU[cellName].ResultIU;
+            }
+            catch
+            {
+                return 0.0;
             }
         }
 
@@ -6657,7 +6920,7 @@ namespace VDG.CLI
 
                 var placements = new Dictionary<string, NodePlacement>(StringComparer.OrdinalIgnoreCase);
                 ComputePlacementsForPage(model, layout, layoutPlan, placements, pageInfo, pi, minLeft, minBottom, usable, margin, title, nodePage, layerContext, pageLayout, rowLayoutsByPage);
-                DrawLaneContainersForPage(model, layout, page, pi, pageCount, minLeft, minBottom, usable, margin, title, nodePage, pageLayout);
+                DrawLaneContainersForPage(model, layout, layoutPlan, page, pi, pageCount, minLeft, minBottom, usable, margin, title, nodePage, pageLayout);
                 placementsPerPage[pi] = placements;
             }
 
@@ -6765,7 +7028,7 @@ namespace VDG.CLI
             DrawLayerBridgeStubsForPage(layoutPlan, layout, pageInfo, visioPage, pageIndex, baseOriginX, baseOriginY, effectiveUsable, margin, title, nodePageAssignments, layerContext, pageLayout);
         }
 
-        private static void DrawLaneContainersForPage(DiagramModel model, LayoutResult layout, dynamic page, int pageIndex, int pageCount, double minLeft, double minBottom, double usableHeight, double margin, double title, IReadOnlyDictionary<string, int> nodePageAssignments, PageLayoutInfo? pageLayout)
+        private static void DrawLaneContainersForPage(DiagramModel model, LayoutResult layout, LayoutPlan? layoutPlan, dynamic page, int pageIndex, int pageCount, double minLeft, double minBottom, double usableHeight, double margin, double title, IReadOnlyDictionary<string, int> nodePageAssignments, PageLayoutInfo? pageLayout)
         {
             dynamic visioPage = page ?? throw new COMException("Visio page was not created.");
             var nodeMap = BuildNodeMap(model);
@@ -6841,6 +7104,18 @@ namespace VDG.CLI
                     ReleaseCom(lane);
                 }
                 catch { }
+
+                if (layoutPlan?.LaneSegments != null)
+                {
+                    var laneSegments =
+                        layoutPlan.LaneSegments
+                            .Where(seg => seg != null && seg.PageIndex == pageIndex && seg.Tier != null && seg.Tier.Equals(tier, StringComparison.OrdinalIgnoreCase))
+                            .ToArray();
+                    if (laneSegments.Length > 0)
+                    {
+                        DrawLaneHeatBands(visioPage, laneSegments, left, bottom, right, top);
+                    }
+                }
             }
             // Draw title banner on every page with page numbers
             double ph2;
@@ -7393,6 +7668,7 @@ namespace VDG.CLI
                 }
 
                 DrawChannelLabelsForPage(page, layoutPlan, pi, offsetX, offsetY, layerContext, pageInfo);
+                DrawAdvancedLegend(model, layoutPlan, page, pi, margin, title);
             }
         }
 

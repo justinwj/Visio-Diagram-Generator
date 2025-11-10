@@ -34,11 +34,12 @@ diag_cli*.txt
 
 # Generated fixture outputs
 plan docs/fixtures_metadata.json
-tests/fixtures/render/
 tests/fixtures/vsdx/
 out/fixtures/
 *.review.txt
 *.review.json
+!tests/fixtures/render/**/*.review.txt
+!tests/fixtures/render/**/*.review.json
 
 # Local config
 *.env

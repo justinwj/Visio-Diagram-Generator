@@ -1,0 +1,13 @@
+Semantic & Planner Review Summary
+=================================
+Severity threshold  : warning
+Role confidence min : 0.55
+Flow residual cutoff: 1600
+
+Modules analysed : 1
+Procedures analysed : 1
+Subsystems        : UI.Forms=1
+Roles             : EventHandler=1
+
+Notes:
+  - 4 info-level item(s) suppressed by severity threshold 'warning'.

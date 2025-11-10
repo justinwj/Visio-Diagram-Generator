@@ -188,10 +188,12 @@ function Write-MetadataSnapshot {
       $modeMeta = [ordered]@{
         mode    = $item.Mode
         hashes  = [ordered]@{
-          ir          = $item.IR
-          diagram     = $item.Diagram
-          diagnostics = $item.Diagnostics
-          vsdx        = $item.Vsdx
+          ir           = $item.IR
+          diagram      = $item.Diagram
+          diagnostics  = $item.Diagnostics
+          vsdx         = $item.Vsdx
+          reviewJson   = $item.ReviewJson
+          reviewTxt    = $item.ReviewTxt
         }
       }
       if ($item.Paths) { $modeMeta.paths = $item.Paths }
@@ -256,6 +258,8 @@ foreach ($fixtureEntry in $fixtureMatrix) {
     $diagramPath = Join-Path $workDir "$baseName.diagram.json"
     $diagnosticsPath = Join-Path $workDir "$baseName.diagnostics.json"
     $vsdxPath = Join-Path $workDir "$baseName.vsdx"
+    $reviewJsonPath = Join-Path $workDir "$baseName.review.json"
+    $reviewTextPath = Join-Path $workDir "$baseName.review.txt"
 
     $sourceRel = Get-RelativePath $sourcePath
     $irRel = Get-RelativePath $irPath
@@ -271,6 +275,8 @@ foreach ($fixtureEntry in $fixtureMatrix) {
       Diagram = Join-Path $goldenDir "$baseName.diagram.json"
       Diagnostics = Join-Path $goldenDir "$baseName.diagnostics.json"
       Vsdx = Join-Path $goldenDir "$baseName.vsdx"
+      ReviewJson = Join-Path $goldenDir "$baseName.review.json"
+      ReviewTxt  = Join-Path $goldenDir "$baseName.review.txt"
     }
 
     $goldenRel = [ordered]@{
@@ -278,6 +284,8 @@ foreach ($fixtureEntry in $fixtureMatrix) {
       Diagram = Get-RelativePath $goldenFiles.Diagram
       Diagnostics = Get-RelativePath $goldenFiles.Diagnostics
       Vsdx = Get-RelativePath $goldenFiles.Vsdx
+      ReviewJson = Get-RelativePath $goldenFiles.ReviewJson
+      ReviewTxt = Get-RelativePath $goldenFiles.ReviewTxt
     }
 
     $semanticsCommandSuffix = ''
@@ -301,7 +309,7 @@ foreach ($fixtureEntry in $fixtureMatrix) {
       }
     )
 
-    foreach ($file in @($irPath, $diagramPath, $diagnosticsPath, $vsdxPath)) {
+    foreach ($file in @($irPath, $diagramPath, $diagnosticsPath, $vsdxPath, $reviewJsonPath, $reviewTextPath)) {
       if (Test-Path $file) {
         Remove-Item -Path $file -Force
       }
@@ -372,10 +380,19 @@ foreach ($fixtureEntry in $fixtureMatrix) {
       [System.Environment]::SetEnvironmentVariable('VDG_SKIP_RUNNER', $previousSkip, [System.EnvironmentVariableTarget]::Process)
     }
 
+    if (-not (Test-Path $reviewJsonPath)) {
+      throw "Review JSON missing for $($fixtureEntry.Name) ($mode). Expected at $reviewJsonPath."
+    }
+    if (-not (Test-Path $reviewTextPath)) {
+      throw "Review text missing for $($fixtureEntry.Name) ($mode). Expected at $reviewTextPath."
+    }
+
     $irHash = Get-FileSha256 -Path $irPath
     $diagramHash = Get-FileSha256 -Path $diagramPath
     $diagnosticsHash = Get-FileSha256 -Path $diagnosticsPath
     $vsdxHash = Get-FileSha256 -Path $vsdxPath
+    $reviewJsonHash = Get-FileSha256 -Path $reviewJsonPath
+    $reviewTextHash = Get-FileSha256 -Path $reviewTextPath
 
     $paths = [ordered]@{
       temp = [ordered]@{
@@ -383,12 +400,16 @@ foreach ($fixtureEntry in $fixtureMatrix) {
         diagram     = $diagramRel
         diagnostics = $diagnosticsRel
         vsdx        = $vsdxRel
+        reviewJson  = Get-RelativePath $reviewJsonPath
+        reviewTxt   = Get-RelativePath $reviewTextPath
       }
       golden = [ordered]@{
         ir          = $goldenRel.IR
         diagram     = $goldenRel.Diagram
         diagnostics = $goldenRel.Diagnostics
         vsdx        = $goldenRel.Vsdx
+        reviewJson  = $goldenRel.ReviewJson
+        reviewTxt   = $goldenRel.ReviewTxt
       }
     }
 
@@ -399,6 +420,8 @@ foreach ($fixtureEntry in $fixtureMatrix) {
       Diagram      = $diagramHash
       Diagnostics  = $diagnosticsHash
       Vsdx         = $vsdxHash
+      ReviewJson   = $reviewJsonHash
+      ReviewTxt    = $reviewTextHash
       WorkDir      = $workDir
       Paths        = $paths
       Commands     = $commands
@@ -409,6 +432,8 @@ foreach ($fixtureEntry in $fixtureMatrix) {
       Copy-Item -Path $diagramPath -Destination $goldenFiles.Diagram -Force
       Copy-Item -Path $diagnosticsPath -Destination $goldenFiles.Diagnostics -Force
       Copy-Item -Path $vsdxPath -Destination $goldenFiles.Vsdx -Force
+      Copy-Item -Path $reviewJsonPath -Destination $goldenFiles.ReviewJson -Force
+      Copy-Item -Path $reviewTextPath -Destination $goldenFiles.ReviewTxt -Force
       continue
     }
 
@@ -416,7 +441,9 @@ foreach ($fixtureEntry in $fixtureMatrix) {
         @{ Kind = 'IR';           Generated = $irPath;          Golden = $goldenFiles.IR;          Hash = $irHash },
         @{ Kind = 'Diagram';      Generated = $diagramPath;     Golden = $goldenFiles.Diagram;     Hash = $diagramHash },
         @{ Kind = 'Diagnostics';  Generated = $diagnosticsPath; Golden = $goldenFiles.Diagnostics; Hash = $diagnosticsHash },
-        @{ Kind = 'VSDX';         Generated = $vsdxPath;        Golden = $goldenFiles.Vsdx;        Hash = $vsdxHash }
+        @{ Kind = 'VSDX';         Generated = $vsdxPath;        Golden = $goldenFiles.Vsdx;        Hash = $vsdxHash },
+        @{ Kind = 'ReviewJson';   Generated = $reviewJsonPath;  Golden = $goldenFiles.ReviewJson;  Hash = $reviewJsonHash },
+        @{ Kind = 'ReviewTxt';    Generated = $reviewTextPath;  Golden = $goldenFiles.ReviewTxt;   Hash = $reviewTextHash }
       )) {
       $goldenPath = $entry.Golden
       if (-not (Test-Path $goldenPath)) {
@@ -447,8 +474,8 @@ if ($Update) {
   Write-LedgerEntries -Entries $results -Note $sanitizedNote
   Write-MetadataSnapshot -Entries $results -FixtureMatrix $fixtureMatrix -Note $sanitizedNote
   foreach ($result in $results) {
-    Write-Host ("Updated fixture {0} ({1}) -> IR {2} | Diagram {3} | Diagnostics {4} | VSDX {5}" -f `
-      $result.Fixture, $result.Mode, $result.IR, $result.Diagram, $result.Diagnostics, $result.Vsdx)
+    Write-Host ("Updated fixture {0} ({1}) -> IR {2} | Diagram {3} | Diagnostics {4} | VSDX {5} | ReviewJson {6} | ReviewTxt {7}" -f `
+      $result.Fixture, $result.Mode, $result.IR, $result.Diagram, $result.Diagnostics, $result.Vsdx, $result.ReviewJson, $result.ReviewTxt)
   }
   Write-Host "Ledger updated at plan docs/fixtures_log.md."
   Write-Host "Metadata snapshot written to plan docs/fixtures_metadata.json."

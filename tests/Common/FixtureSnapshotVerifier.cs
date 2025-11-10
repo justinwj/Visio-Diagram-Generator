@@ -21,10 +21,14 @@ namespace Tests.Common
             string GoldenDiagramPath,
             string GoldenDiagnosticsPath,
             string GoldenVsdxPath,
+            string GoldenReviewJsonPath,
+            string GoldenReviewTxtPath,
             string HashIr,
             string HashDiagram,
             string HashDiagnostics,
-            string HashVsdx
+            string HashVsdx,
+            string HashReviewJson,
+            string HashReviewTxt
         );
 
         public static IReadOnlyList<FixtureMode> LoadSnapshot(string repoRoot)
@@ -52,10 +56,14 @@ namespace Tests.Common
                         ResolveRepoPath(repoRoot, golden.GetProperty("diagram").GetString()),
                         ResolveRepoPath(repoRoot, golden.GetProperty("diagnostics").GetString()),
                         ResolveRepoPath(repoRoot, golden.GetProperty("vsdx").GetString()),
+                        ResolveRepoPath(repoRoot, golden.GetProperty("reviewJson").GetString()),
+                        ResolveRepoPath(repoRoot, golden.GetProperty("reviewTxt").GetString()),
                         hashes.GetProperty("ir").GetString() ?? string.Empty,
                         hashes.GetProperty("diagram").GetString() ?? string.Empty,
                         hashes.GetProperty("diagnostics").GetString() ?? string.Empty,
-                        hashes.GetProperty("vsdx").GetString() ?? string.Empty
+                        hashes.GetProperty("vsdx").GetString() ?? string.Empty,
+                        hashes.GetProperty("reviewJson").GetString() ?? string.Empty,
+                        hashes.GetProperty("reviewTxt").GetString() ?? string.Empty
                     ));
                 }
             }

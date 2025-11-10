@@ -116,12 +116,15 @@
     ],
     "warnings": [],
     "suggestions": [],
-    "info": [
-      "Modules analysed: 1",
-      "Procedures analysed: 1",
-      "Subsystem distribution: UI.Forms=1",
-      "Primary roles detected: EventHandler=1"
+    "info": [],
+    "residualFlows": 0,
+    "notes": [
+      "4 info-level item(s) suppressed by severity threshold \u0027warning\u0027."
     ],
-    "residualFlows": 0
+    "settings": {
+      "minimumSeverity": "warning",
+      "roleConfidenceCutoff": 0.55,
+      "flowResidualCutoff": 1600
+    }
   }
 }

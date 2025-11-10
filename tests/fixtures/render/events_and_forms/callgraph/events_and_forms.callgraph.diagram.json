@@ -6,7 +6,10 @@
       "semantics.taxonomy.generatedAt": "2024-01-01T00:00:00.0000000\u002B00:00",
       "semantics.flows.schema": "1.0",
       "semantics.flows.generatedAt": "2024-01-01T00:00:00.0000000\u002B00:00",
-      "review.summary.json": "{\u0022modules\u0022:1,\u0022procedures\u0022:1,\u0022subsystems\u0022:[{\u0022key\u0022:\u0022UI.Forms\u0022,\u0022value\u0022:1}],\u0022roles\u0022:[{\u0022key\u0022:\u0022EventHandler\u0022,\u0022value\u0022:1}],\u0022warnings\u0022:[],\u0022suggestions\u0022:[],\u0022info\u0022:[\u0022Modules analysed: 1\u0022,\u0022Procedures analysed: 1\u0022,\u0022Subsystem distribution: UI.Forms=1\u0022,\u0022Primary roles detected: EventHandler=1\u0022],\u0022residualFlows\u0022:0}"
+      "review.summary.json": "{\u0022modules\u0022:1,\u0022procedures\u0022:1,\u0022subsystems\u0022:[{\u0022key\u0022:\u0022UI.Forms\u0022,\u0022value\u0022:1}],\u0022roles\u0022:[{\u0022key\u0022:\u0022EventHandler\u0022,\u0022value\u0022:1}],\u0022warnings\u0022:[],\u0022suggestions\u0022:[],\u0022info\u0022:[],\u0022residualFlows\u0022:0,\u0022notes\u0022:[\u00224 info-level item(s) suppressed by severity threshold \\u0027warning\\u0027.\u0022],\u0022settings\u0022:{\u0022minimumSeverity\u0022:\u0022warning\u0022,\u0022roleConfidenceCutoff\u0022:0.55,\u0022flowResidualCutoff\u0022:1600}}",
+      "review.settings.minimumSeverity": "warning",
+      "review.settings.roleConfidenceCutoff": "0.55",
+      "review.settings.flowResidualCutoff": "1600"
     }
   },
   "layout": {

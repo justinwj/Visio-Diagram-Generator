@@ -133,12 +133,15 @@
       "2 module classification(s) below confidence threshold."
     ],
     "suggestions": [],
-    "info": [
-      "Modules analysed: 2",
-      "Procedures analysed: 2",
-      "Subsystem distribution: Core.Modules=2",
-      "Primary roles detected: Utility=2"
+    "info": [],
+    "residualFlows": 0,
+    "notes": [
+      "4 info-level item(s) suppressed by severity threshold \u0027warning\u0027."
     ],
-    "residualFlows": 0
+    "settings": {
+      "minimumSeverity": "warning",
+      "roleConfidenceCutoff": 0.55,
+      "flowResidualCutoff": 1600
+    }
   }
 }

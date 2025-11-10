@@ -2,8 +2,9 @@
 
 This ledger records intentional updates to the VBA fixture outputs that back the end-to-end render tests. Each entry is appended automatically by `tools/render-fixture.ps1 -Update`, capturing the hashes that CI uses to guard against accidental drift.
 
-| Date UTC | Fixture | Mode | IR SHA256 | Diagram SHA256 | Diagnostics SHA256 | VSDX SHA256 | Notes |
-|---|---|---|---|---|---|---|---|
+| Date UTC | Fixture | Mode | IR SHA256 | Diagram SHA256 | Diagnostics SHA256 | VSDX SHA256 | ReviewJson SHA256 | ReviewTxt SHA256 | Notes |
+|---|---|---|---|---|---|---|---|---|---|
+> Entries recorded before 2025-11-10 predate the review hash columns; those fields are blank for historical rows.
 | 2025-10-19T21:58:34.8039521Z | hello_world | callgraph | 22f04e25b5fbf30cd48fbf499e53caeb4d103502c9007b1861a944b0407544ac | 58762adf446c301be9ebfa309085f6a057a0ac8db18b05b50f4ad0c68b9ace2b | 71e337f0ade82c5caa3c00d4f66a36492b474a0b31cf778531a50dd849c48323 | 44028c5b9a418abec5d0d9d79bb3c42aa4e6b434b781fa48f5b5945b582eea79 | initial fixture capture |
 | 2025-10-19T21:58:34.8039521Z | cross_module_calls | callgraph | b7633bc924610847f7ce72febf32af169180b932862d4658af48c37893a47b88 | 77ab94e4b2315dee4a9eae6d882dca32f9531e04da4be335600da846994c518d | 8d9acae98a2bcd5d8090eb743befb719079e8f0e9cd4f0988c5233140b882e94 | 44028c5b9a418abec5d0d9d79bb3c42aa4e6b434b781fa48f5b5945b582eea79 | initial fixture capture |
 | 2025-10-19T21:58:34.8039521Z | cross_module_calls | module-structure | b7633bc924610847f7ce72febf32af169180b932862d4658af48c37893a47b88 | 7ca55c7d67693737ba269254f366403a7472fb04613ef09ce17ccf93c50181e7 | d1355f4e1873199bce70d5ae75e815cf8f2b27a1800616e5228500bbe25098aa | 44028c5b9a418abec5d0d9d79bb3c42aa4e6b434b781fa48f5b5945b582eea79 | initial fixture capture |

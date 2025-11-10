@@ -27,6 +27,13 @@ Review Feedback Surface
 - Review output sensitivity is adjustable: `--review-severity-threshold`, `--role-confidence-cutoff`, and `--review-flow-residual-cutoff` (or the `VDG_REVIEW_*` env vars) control which findings appear in the console, `.review.*`, and diagnostics, with suppression notes captured for traceability.
 - `tools/summarize-reviews.ps1` scans `out/fixtures`, `tests/fixtures/render`, and `samples` for review artifacts and writes `plan docs/review_dashboard.md`, giving reviewers a Markdown table of diagrams, thresholds, warning counts, and source links (usage: `pwsh ./tools/summarize-reviews.ps1 -ScanPath out/fixtures`).
 
+Advanced Layout Review Mode
+- See `docs/AdvancedLayouts.md` for the full workflow. Enable advanced planner cues via `--layout-advanced-mode` (or `VDG_LAYOUT_ADVANCED_MODE=true`) plus optional `--layout-lane-soft-limit`, `--layout-lane-hard-limit`, and `--layout-flow-bundle-threshold` to tune lane pressure and bundling heuristics.
+- The Visio renderer now consumes advanced metadata to draw **lane heat bands**, **overflow badges**, **flow bundle counts**, and a per-page legend that mirrors `.review.*` summaries, so reviewers immediately see pagination and cycle context.
+- Long-running fixtures (`invSys` in all modes) opt-in to advanced layout by default via diagram overrides; other fixtures can be toggled per run.
+- Fixture regeneration logs (`plan docs/fixtures_log.md`) now record review hashes (`*.review.json` / `*.review.txt`) alongside IR/diagram diagnostics to keep `.review.*` artefacts auditable. The metadata snapshot (`plan docs/fixtures_metadata.json`) and `ParserSmokeTests.FixtureHashesMatchMetadataSnapshot` verify those hashes in CI.
+- When onboarding reviewers, point them at `.review.txt` for narrative explanations, the legend inside the diagram for at-a-glance cues, and `plan docs/review_dashboard.md` for cross-fixture health.
+
 Docs & Schemas
 - IR spec: `docs/VBA_IR.md` (mapping rules, dynamic calls, FAQ)
 - Diagram schema: `shared/Config/diagramConfig.schema.json`

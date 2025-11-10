@@ -6,7 +6,8 @@ The CLI now emits semantic/planner summaries at the console, persists a `.review
 	2. Seed/Override File Integration **(Done – 2025-11-10)**:
 Seed schema documented (`plan docs/taxonomy_seed_schema.md`), CLI flags (`--taxonomy-seed`, `--seed-mode`, plus env mirrors) implemented, and `SemanticArtifactsBuilder` layers overrides before planner consumption. Outputs now capture `seeded=true` evidence and seed provenance in metadata/review files so reviewers can audit what was overridden versus inferred. Follow-ups: polish onboarding docs and optional dashboard surfacing of seeded fields.
 
-	3. Advanced Layout and Flow Scenarios **(In Progress – design draft 2025-11-10)**:
-Design outline captured in `plan docs/advanced_layout_scenarios.md`, covering hierarchical lane splitting, flow bundling, adaptive pagination, and fallback cues. Next steps: prototype planner changes + add dense-layout fixtures to lock behavior in.
-	4. Documentation and Reviewer Guidance:
-Generate up-to-date vision-centric documentation (possibly automate extraction from golden artifacts/metadata) so future contributors and reviewers understand the classification pipeline, seed workflow, and semantic concepts with minimal onboarding friction.
+	3. Advanced Layout and Flow Scenarios **(In Progress – advanced render wiring 2025-11-10)**:
+Planner emits lane segments, flow bundles, and cycle clusters; Visio runner now renders heat bands, overflow badges, and per-page legends. Fixtures regenerated with advanced mode enabled (invSys by default) and review hashes tracked in the ledger to keep `.review.*` goldens deterministic. Follow-ups: continue refining planner heuristics and add additional dense fixtures if stakeholders request more coverage.
+
+	4. Documentation and Reviewer Guidance **(Updated 2025-11-10)**:
+`docs/AdvancedLayouts.md` and `docs/Design.md` document advanced switches, cue interpretations, and ledger expectations. Keep onboarding material fresh (review dashboard, `.review.*` semantics) as more reviewers adopt the new workflow.

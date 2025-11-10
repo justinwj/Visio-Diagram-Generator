@@ -98,7 +98,7 @@
    - Backcompat toggles (env `VDG_LAYOUT_ADVANCED=0`) keep old behavior for CI bisecting.
 
 ## Documentation & Review Surfacing
-- Create `docs/AdvancedLayouts.md` with before/after diagrams + reviewer guidance.
+- `docs/AdvancedLayouts.md` captures CLI switches, reviewer glyphs, ledger guidance, and onboarding steps for the new workflow.
 - Update CLI help to mention new options (`--layout-advanced-mode`, `--layout-soft-limit`, etc.).
 - Mirror overflow/cycle data into `.review.txt` and diagnostics JSON for dashboards (include active thresholds + seed grouping info).
 - Add note in `.review.txt` when warnings are suppressed due to reviewer-tuned limits (e.g., `Suppressed by --layout-soft-limit=10`).

@@ -15,6 +15,28 @@
 4. **Lossless Pagination** – If connectors cross pages, emit bridge metadata (entry/exit anchors, labels) instead of dropping edges. Diagnostics should confirm zero skipped connectors for baseline datasets.
 5. **Runner Simplicity** – Keep C# focused on painting shapes and honoring metadata. All layout intelligence lives in F# so we can unit test it.
 
+## Current Algorithms in Use (2025‑11‑10)
+The following pieces are live in `ViewModePlanner` / `VDG.CLI` and are covered by fixtures/tests:
+
+### Capacity-Driven Placement & Lane Segments
+- `layout.view.maxModulesPerLane`, `layout.view.laneSoftLimit`, `layout.view.laneHardLimit`, `layout.view.maxNodesPerLane`, and `layout.view.maxConnectorsPerLane` are enforced during planning. Overflow triggers **lane segments** (recorded in `LayoutPlan.LaneSegments`) before spilling to a new page.
+- Each `LaneSegmentPlan` records `HeatPercent` and `OverflowReason`. The Visio runner draws **heat bands** and badges based on these values to highlight hot lanes.
+
+### Flow Bundling
+- Repeated cross-tier connectors are aggregated into `FlowBundlePlan` entries keyed by source tier, target tier, and role transition. The runner renders bundle badges (`xN`) and the legend surfaces the top bundles per page.
+- Channel metadata still lives in `EdgeRoute.Channel`, so connectors remain deterministic even when bundles are off.
+
+### Cycle Clusters
+- Strongly connected components (plus self loops) are detected in F# and emitted as `CycleClusterPlan`. The Visio legend mirrors these entries so reviewers see recursion hot spots without opening `.review.*`.
+
+### Advanced Legend & Review Sync
+- `VDG.CLI` consumes `LaneSegments`, `FlowBundles`, and `CycleClusters` to draw a **per-page legend**. The same information is serialized into `.review.json/.review.txt` and embedded in `review.summary.json` metadata.
+- Fixture ledger + metadata snapshot now record hashes for `.review.*`, so any drift in reviewer cues is caught by `ParserSmokeTests.FixtureHashesMatchMetadataSnapshot`.
+
+### Overrides & Flags
+- Advanced mode can be toggled via CLI flags (`--layout-advanced-mode`, `--layout-lane-soft-limit`, `--layout-lane-hard-limit`, `--layout-flow-bundle-threshold`) or `VDG_LAYOUT_*` env vars. InvSys fixtures enable it by default via per-mode override JSON.
+- Seed overrides (`--taxonomy-seed` / `VDG_TAXONOMY_SEED`) still layer ownership/role hints before planning, and seeded fields are marked in review outputs.
+
 ## Planner Work Breakdown
 ### 1. Capacity-Driven Placement
 - Introduce per-tier and per-row limits (modules, nodes, connectors). When over capacity, split into additional rows or new pages _before_ slotting begins.

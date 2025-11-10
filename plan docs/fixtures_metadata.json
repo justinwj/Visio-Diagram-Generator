@@ -1,7 +1,7 @@
 {
-  "generatedAtUtc": "2025-11-10T07:20:45.6698673Z",
-  "commit": "6912853bb0000a1d65355f8045615ce72f459548",
-  "note": "advanced layout review goldens",
+  "generatedAtUtc": "2025-11-10T08:28:12.4908216Z",
+  "commit": "77b18488d0662a56cff3a98d6e3a10acd7ed70d2",
+  "note": "advanced review cues",
   "fixtures": [
     {
       "name": "cross_module_calls",
@@ -215,7 +215,7 @@
             "ir": "b8a6ed1a35633dff88062f484e0ea304356a4e915d21443a2f544fb1abbe3c00",
             "diagram": "79b781a523482fa08155b49f86639f23aaed4cfeb9aa0a95d08e341f9f6eb281",
             "diagnostics": "9fa7b6e3ac6dcbe14f2cd441d10922ee974e1d74cbf0c6ed73243302feba5d96",
-            "vsdx": "7d1aee16e456e088b18192d2084ae304000d3c593dbaff6b1e3503e3607e52e1",
+            "vsdx": "359c14ed100ba2717ec4a159bd3a101cbd0aa1249c2088e46cebc0926a3e7b71",
             "reviewJson": "c8b338b7fb5d897ed66e709508d572262830d9630a108c396e411b497d4edf78",
             "reviewTxt": "541e8772efaa81ed6c2e252fab786a530fabfb34530180f67edd7c0f717dae9a"
           },

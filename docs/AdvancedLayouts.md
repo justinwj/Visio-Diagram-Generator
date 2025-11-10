@@ -70,3 +70,8 @@ When auditing advanced layouts or fixtures:
 4. **Audit fixtures** by diffing `tests/fixtures/render/**` and confirming that review files show the expected cues; the summary dashboard in `plan docs/review_dashboard.md` spotlights any warnings/errors across fixtures.
 
 For quick reference, the CLI help (`vdg.cli --help`) lists the new layout switches, while this document explains how to interpret the resulting glyphs and ledger entries.
+
+### Review Summary Format
+- `.review.txt` now appends an **Advanced layout cues** section. Each page lists legend entries, lane heat/overflow summaries, bundled flow counts, and cycle clusters in plain text (`Page 2: [warning] Lane Services: module-soft-limit`, etc.).
+- `.review.json` gains an `advanced` block with machine-readable data: `pages[].lanes[]` (tier, heat, overflow), `pages[].flows[]` (source/target, connector count, sample label), `pages[].cycles[]`, and `pages[].legend[]`. Dashboards and CI scripts can parse this block directly.
+- Diagnostics JSON mirrors the same data (`advancedPages`), so portals can surface cues without touching `.review.*`.

@@ -114,6 +114,45 @@ namespace VDG.CLI
             public string Severity { get; }
         }
 
+        internal sealed class AdvancedLegendCue
+        {
+            public string Text { get; set; } = string.Empty;
+            public string Severity { get; set; } = "info";
+        }
+
+        internal sealed class LaneSegmentCue
+        {
+            public string Tier { get; set; } = string.Empty;
+            public double HeatPercent { get; set; }
+            public string? OverflowReason { get; set; }
+            public int NodeCount { get; set; }
+            public int ConnectorCount { get; set; }
+        }
+
+        internal sealed class FlowBundleCue
+        {
+            public string SourceTier { get; set; } = string.Empty;
+            public string TargetTier { get; set; } = string.Empty;
+            public int ConnectorCount { get; set; }
+            public string? LabelPreview { get; set; }
+        }
+
+        internal sealed class CycleClusterCue
+        {
+            public string ClusterId { get; set; } = string.Empty;
+            public string Severity { get; set; } = "warning";
+            public List<string> ModuleIds { get; set; } = new List<string>();
+        }
+
+        internal sealed class AdvancedPageSummary
+        {
+            public int Page { get; set; }
+            public List<LaneSegmentCue> Lanes { get; } = new List<LaneSegmentCue>();
+            public List<FlowBundleCue> Flows { get; } = new List<FlowBundleCue>();
+            public List<CycleClusterCue> Cycles { get; } = new List<CycleClusterCue>();
+            public List<AdvancedLegendCue> Legend { get; } = new List<AdvancedLegendCue>();
+        }
+
         internal sealed class LayerDiagnosticsDetail
         {
             public int LayerNumber { get; set; }
@@ -198,6 +237,7 @@ namespace VDG.CLI
             public Metrics Metrics { get; set; } = new Metrics();
             public List<DiagIssue> Issues { get; set; } = new List<DiagIssue>();
             public JsonNode? ReviewSummary { get; set; }
+            public List<AdvancedPageSummary> AdvancedPages { get; set; } = new List<AdvancedPageSummary>();
         }
 
         private static bool ParseBooleanOption(string value, string flagName)
@@ -958,6 +998,7 @@ namespace VDG.CLI
             }
             var plannerStats = BuildPlannerSummaryStats(pagePlans);
                 var diagnosticsSummary = EmitDiagnostics(model, layout, diagHeightOverride, diagLaneMaxOverride, pagePlans, pagingOptions, null, plannerStats, null, modulesFilteredOut, layoutPlan);
+                AugmentReviewArtifacts(inputPath, diagnosticsSummary);
                 try
                 {
                     PrintPlannerSummary(plannerStats, null, diagnosticsSummary);
@@ -1502,6 +1543,12 @@ namespace VDG.CLI
                     summary.LayoutModuleCount = layoutPlan.Stats.ModuleCount;
                     summary.LayoutContainerCount = layoutPlan.Stats.ContainerCount;
                 }
+                summary.AdvancedPages.Clear();
+                summary.AdvancedPages.AddRange(BuildAdvancedPageSummaries(layoutPlan));
+            }
+            else
+            {
+                summary.AdvancedPages.Clear();
             }
 
             PageDiagnosticsDetail GetPageDetail(int pageIndex)
@@ -2910,6 +2957,11 @@ namespace VDG.CLI
                     }
 
                     // Attach gated issues collected during diagnostics
+                    if (summary.AdvancedPages.Count > 0)
+                    {
+                        payload.AdvancedPages = summary.AdvancedPages;
+                    }
+
                     if (gatedIssues.Count > 0)
                     {
                         payload.Issues.AddRange(gatedIssues);
@@ -2927,6 +2979,126 @@ namespace VDG.CLI
 
             summary.Rank = highestRank;
             return summary;
+        }
+
+        private static string DeriveReviewTextPath(string diagramPath)
+        {
+            var directory = Path.GetDirectoryName(diagramPath);
+            var fileName = Path.GetFileNameWithoutExtension(diagramPath);
+            const string DiagramSuffix = ".diagram";
+            if (!string.IsNullOrWhiteSpace(fileName) &&
+                fileName.EndsWith(DiagramSuffix, StringComparison.OrdinalIgnoreCase))
+            {
+                fileName = fileName.Substring(0, fileName.Length - DiagramSuffix.Length);
+            }
+            if (string.IsNullOrWhiteSpace(fileName))
+            {
+                fileName = "diagram";
+            }
+            return Path.Combine(directory ?? ".", $"{fileName}.review.txt");
+        }
+
+        private static void UpdateReviewJson(string reviewJsonPath, IReadOnlyList<AdvancedPageSummary> advancedPages)
+        {
+            JsonObject root;
+            if (File.Exists(reviewJsonPath))
+            {
+                try
+                {
+                    root = JsonNode.Parse(File.ReadAllText(reviewJsonPath)) as JsonObject ?? new JsonObject();
+                }
+                catch
+                {
+                    root = new JsonObject();
+                }
+            }
+            else
+            {
+                root = new JsonObject();
+            }
+
+            var options = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = true
+            };
+            var advancedNode = JsonSerializer.SerializeToNode(advancedPages, options);
+            root["advanced"] = advancedNode;
+
+            var dir = Path.GetDirectoryName(reviewJsonPath);
+            if (!string.IsNullOrWhiteSpace(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+            File.WriteAllText(reviewJsonPath, root.ToJsonString(options));
+        }
+
+        private static void UpdateReviewText(string reviewTextPath, IReadOnlyList<AdvancedPageSummary> advancedPages)
+        {
+            var lines = File.Exists(reviewTextPath)
+                ? File.ReadAllLines(reviewTextPath).ToList()
+                : new List<string>();
+
+            var headerIndex = lines.FindIndex(l => l.Trim().StartsWith("Advanced layout cues", StringComparison.OrdinalIgnoreCase));
+            if (headerIndex >= 0)
+            {
+                lines = lines.Take(headerIndex).ToList();
+            }
+
+            while (lines.Count > 0 && string.IsNullOrWhiteSpace(lines[lines.Count - 1]))
+            {
+                lines.RemoveAt(lines.Count - 1);
+            }
+
+            if (lines.Count > 0)
+            {
+                lines.Add(string.Empty);
+            }
+
+            lines.Add("Advanced layout cues:");
+            foreach (var page in advancedPages)
+            {
+                lines.Add($"Page {page.Page}:");
+                foreach (var cue in page.Legend)
+                {
+                    lines.Add($"  [{cue.Severity}] {cue.Text}");
+                }
+                foreach (var lane in page.Lanes)
+                {
+                    var reason = string.IsNullOrWhiteSpace(lane.OverflowReason) ? "balanced" : lane.OverflowReason;
+                    lines.Add($"  Lane {lane.Tier}: heat={lane.HeatPercent:F0}% nodes={lane.NodeCount} connectors={lane.ConnectorCount} reason={reason}");
+                }
+                foreach (var flow in page.Flows)
+                {
+                    var preview = string.IsNullOrWhiteSpace(flow.LabelPreview) ? string.Empty : $" ({flow.LabelPreview})";
+                    lines.Add($"  Flow {flow.SourceTier}->{flow.TargetTier} x{flow.ConnectorCount}{preview}");
+                }
+                foreach (var cycle in page.Cycles)
+                {
+                    var modules = (cycle.ModuleIds != null && cycle.ModuleIds.Count > 0)
+                        ? string.Join(", ", cycle.ModuleIds)
+                        : "modules unavailable";
+                    lines.Add($"  Cycle [{cycle.Severity}] {modules}");
+                }
+            }
+
+            File.WriteAllLines(reviewTextPath, lines);
+        }
+
+        private static void AugmentReviewArtifacts(string diagramPath, DiagnosticsSummary diagnosticsSummary)
+        {
+            if (diagnosticsSummary == null || diagnosticsSummary.AdvancedPages.Count == 0) return;
+            try
+            {
+                var reviewTextPath = DeriveReviewTextPath(diagramPath);
+                var reviewJsonPath = Path.ChangeExtension(reviewTextPath, ".json");
+                UpdateReviewJson(reviewJsonPath, diagnosticsSummary.AdvancedPages);
+                UpdateReviewText(reviewTextPath, diagnosticsSummary.AdvancedPages);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"warning: unable to augment review artifacts: {ex.Message}");
+            }
         }
 
         private static double Orientation(double ax, double ay, double bx, double by, double cx, double cy)
@@ -3174,6 +3346,7 @@ namespace VDG.CLI
             public List<PageDiagnosticsDetail> Pages { get; } = new List<PageDiagnosticsDetail>();
             public List<LayerDiagnosticsDetail> Layers { get; } = new List<LayerDiagnosticsDetail>();
             public List<string> SkippedModules { get; } = new List<string>();
+            public List<AdvancedPageSummary> AdvancedPages { get; } = new List<AdvancedPageSummary>();
             public bool HasOverflow =>
                 PageOverflowCount > 0 ||
                 LaneOverflowCount > 0 ||
@@ -6222,6 +6395,119 @@ namespace VDG.CLI
             if (percent >= 95) return "RGB(232,176,36)";
             if (percent >= 85) return "RGB(205,217,64)";
             return "RGB(178,209,140)";
+        }
+
+        private static List<AdvancedPageSummary> BuildAdvancedPageSummaries(LayoutPlan? layoutPlan)
+        {
+            var summaries = new List<AdvancedPageSummary>();
+            if (layoutPlan == null) return summaries;
+
+            var pageIndexSet = new HashSet<int>();
+            if (layoutPlan.Pages != null)
+            {
+                foreach (var page in layoutPlan.Pages)
+                {
+                    if (page == null) continue;
+                    pageIndexSet.Add(page.PageIndex);
+                }
+            }
+            if (layoutPlan.LaneSegments != null)
+            {
+                foreach (var seg in layoutPlan.LaneSegments)
+                {
+                    if (seg == null) continue;
+                    pageIndexSet.Add(seg.PageIndex);
+                }
+            }
+            if (layoutPlan.FlowBundles != null)
+            {
+                foreach (var flow in layoutPlan.FlowBundles)
+                {
+                    if (flow == null) continue;
+                    pageIndexSet.Add(flow.PageIndex);
+                }
+            }
+            if (layoutPlan.CycleClusters != null)
+            {
+                foreach (var cluster in layoutPlan.CycleClusters)
+                {
+                    if (cluster == null || cluster.ModuleIds == null) continue;
+                    // cycle clusters do not have explicit page index; derive from modules per page later
+                }
+            }
+
+            if (pageIndexSet.Count == 0 && layoutPlan.Pages != null && layoutPlan.Pages.Length == 0)
+            {
+                pageIndexSet.Add(0);
+            }
+
+            foreach (var pageIndex in pageIndexSet.OrderBy(v => v))
+            {
+                var summary = new AdvancedPageSummary { Page = pageIndex + 1 };
+
+                if (layoutPlan.LaneSegments != null)
+                {
+                    foreach (var seg in layoutPlan.LaneSegments.Where(seg => seg != null && seg.PageIndex == pageIndex))
+                    {
+                        summary.Lanes.Add(new LaneSegmentCue
+                        {
+                            Tier = string.IsNullOrWhiteSpace(seg!.Tier) ? "Lane" : seg.Tier!,
+                            HeatPercent = seg.HeatPercent,
+                            OverflowReason = seg.OverflowReason,
+                            NodeCount = seg.NodeCount,
+                            ConnectorCount = seg.ConnectorCount
+                        });
+                    }
+                }
+
+                if (layoutPlan.FlowBundles != null)
+                {
+                    foreach (var flow in layoutPlan.FlowBundles.Where(flow => flow != null && flow.PageIndex == pageIndex))
+                    {
+                        summary.Flows.Add(new FlowBundleCue
+                        {
+                            SourceTier = string.IsNullOrWhiteSpace(flow!.SourceTier) ? "?" : flow.SourceTier!,
+                            TargetTier = string.IsNullOrWhiteSpace(flow.TargetTier) ? "?" : flow.TargetTier!,
+                            ConnectorCount = flow.ConnectorCount,
+                            LabelPreview = (flow.LabelPreview != null && flow.LabelPreview.Length > 0) ? flow.LabelPreview[0] : null
+                        });
+                    }
+                }
+
+                if (layoutPlan.CycleClusters != null && layoutPlan.Pages != null)
+                {
+                    var modulesOnPage = GetModulesOnPage(layoutPlan, pageIndex);
+                    if (modulesOnPage.Count > 0)
+                    {
+                        foreach (var cluster in layoutPlan.CycleClusters)
+                        {
+                            if (cluster == null || cluster.ModuleIds == null || cluster.ModuleIds.Length == 0) continue;
+                            if (!cluster.ModuleIds.Any(mod => modulesOnPage.Contains(mod))) continue;
+                            summary.Cycles.Add(new CycleClusterCue
+                            {
+                                ClusterId = string.IsNullOrWhiteSpace(cluster.ClusterId) ? $"cycle:{summary.Cycles.Count + 1}" : cluster.ClusterId!,
+                                Severity = string.IsNullOrWhiteSpace(cluster.Severity) ? "warning" : cluster.Severity!,
+                                ModuleIds = cluster.ModuleIds.ToList()
+                            });
+                        }
+                    }
+                }
+
+                var legend = CollectAdvancedPageCues(layoutPlan, pageIndex);
+                foreach (var cue in legend)
+                {
+                    summary.Legend.Add(new AdvancedLegendCue { Text = cue.Text, Severity = cue.Severity });
+                }
+
+                if (summary.Lanes.Count == 0 && summary.Flows.Count == 0 && summary.Cycles.Count == 0 && summary.Legend.Count == 0)
+                {
+                    continue;
+                }
+
+                summaries.Add(summary);
+            }
+
+            return summaries;
         }
 
         private static void DrawAdvancedLegend(DiagramModel model, LayoutPlan? layoutPlan, dynamic visioPage, int pageIndex, double margin, double titleHeight)

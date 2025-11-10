@@ -370,6 +370,7 @@ foreach ($fixtureEntry in $fixtureMatrix) {
       $psi.ArgumentList.Add($vsdxPath)
       $psi.WorkingDirectory = $repoRoot
       $psi.UseShellExecute = $false
+      $psi.EnvironmentVariables["VDG_LAYOUT_ADVANCED_MODE"] = "true"
       $process = [System.Diagnostics.Process]::Start($psi)
       $process.WaitForExit()
       if ($process.ExitCode -ne 0) {

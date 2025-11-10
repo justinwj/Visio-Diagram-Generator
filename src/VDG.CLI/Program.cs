@@ -188,6 +188,58 @@ namespace VDG.CLI
             public JsonNode? ReviewSummary { get; set; }
         }
 
+        private static bool ParseBooleanOption(string value, string flagName)
+        {
+            if (string.Equals(value, "true", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(value, "on", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(value, "1", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            if (string.Equals(value, "false", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(value, "off", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(value, "0", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            throw new UsageException($"{flagName} expects true/false or on/off.");
+        }
+
+        private static bool? ReadBooleanEnvironment(string variableName)
+        {
+            var raw = Environment.GetEnvironmentVariable(variableName);
+            if (string.IsNullOrWhiteSpace(raw)) return null;
+            if (string.Equals(raw, "true", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(raw, "on", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(raw, "1", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            if (string.Equals(raw, "false", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(raw, "off", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(raw, "0", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            return null;
+        }
+
+        private static int? ReadPositiveIntEnvironment(string variableName)
+        {
+            var raw = Environment.GetEnvironmentVariable(variableName);
+            if (string.IsNullOrWhiteSpace(raw)) return null;
+            if (int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed) && parsed > 0)
+            {
+                return parsed;
+            }
+
+            return null;
+        }
+
         private sealed class Metrics
         {
             public string? LayoutOutputMode { get; set; }
@@ -300,6 +352,10 @@ namespace VDG.CLI
                 var layerIncludeFilters = new List<int>();
                 var layerExcludeFilters = new List<int>();
                 bool layerFilterSpecified = false;
+                bool? layoutAdvancedModeOverride = null;
+                int? layoutLaneSoftLimitOverride = null;
+                int? layoutLaneHardLimitOverride = null;
+                int? layoutFlowBundleThresholdOverride = null;
 
                 int index = 0;
                 bool diagJsonEnable = false; string? diagJsonPath = null; string? diagLevelOverride = null;
@@ -437,6 +493,39 @@ namespace VDG.CLI
                         if (!double.TryParse(args[index + 1], NumberStyles.Float, CultureInfo.InvariantCulture, out var v))
                         { throw new UsageException("--page-margin must be a number (inches)."); }
                         pageMarginOverride = v; index += 2; continue;
+                    }
+                    else if (string.Equals(flag, "--layout-advanced-mode", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (index + 1 >= args.Length) { throw new UsageException("--layout-advanced-mode requires true/false."); }
+                        layoutAdvancedModeOverride = ParseBooleanOption(args[index + 1], "--layout-advanced-mode");
+                        index += 2; continue;
+                    }
+                    else if (string.Equals(flag, "--layout-lane-soft-limit", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (index + 1 >= args.Length) { throw new UsageException("--layout-lane-soft-limit requires integer value."); }
+                        if (!int.TryParse(args[index + 1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed) || parsed <= 0)
+                        {
+                            throw new UsageException("--layout-lane-soft-limit must be a positive integer.");
+                        }
+                        layoutLaneSoftLimitOverride = parsed; index += 2; continue;
+                    }
+                    else if (string.Equals(flag, "--layout-lane-hard-limit", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (index + 1 >= args.Length) { throw new UsageException("--layout-lane-hard-limit requires integer value."); }
+                        if (!int.TryParse(args[index + 1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed) || parsed <= 0)
+                        {
+                            throw new UsageException("--layout-lane-hard-limit must be a positive integer.");
+                        }
+                        layoutLaneHardLimitOverride = parsed; index += 2; continue;
+                    }
+                    else if (string.Equals(flag, "--layout-flow-bundle-threshold", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (index + 1 >= args.Length) { throw new UsageException("--layout-flow-bundle-threshold requires integer value."); }
+                        if (!int.TryParse(args[index + 1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed) || parsed < 2)
+                        {
+                            throw new UsageException("--layout-flow-bundle-threshold must be an integer >= 2.");
+                        }
+                        layoutFlowBundleThresholdOverride = parsed; index += 2; continue;
                     }
                     else if (string.Equals(flag, "--paginate", StringComparison.OrdinalIgnoreCase))
                     {
@@ -706,6 +795,30 @@ namespace VDG.CLI
                         ? (outputPath + ".diagnostics.json")
                         : Path.Combine("out", "diagnostics.json");
                     model.Metadata["layout.diagnostics.jsonPath"] = defaultJson;
+                }
+
+                var advancedModeResolved = layoutAdvancedModeOverride ?? ReadBooleanEnvironment("VDG_LAYOUT_ADVANCED_MODE");
+                if (advancedModeResolved.HasValue)
+                {
+                    model.Metadata["layout.view.advanced.enabled"] = advancedModeResolved.Value.ToString();
+                }
+
+                var laneSoftResolved = layoutLaneSoftLimitOverride ?? ReadPositiveIntEnvironment("VDG_LAYOUT_LANE_SOFT_LIMIT");
+                if (laneSoftResolved.HasValue)
+                {
+                    model.Metadata["layout.view.laneSoftLimit"] = laneSoftResolved.Value.ToString(CultureInfo.InvariantCulture);
+                }
+
+                var laneHardResolved = layoutLaneHardLimitOverride ?? ReadPositiveIntEnvironment("VDG_LAYOUT_LANE_HARD_LIMIT");
+                if (laneHardResolved.HasValue)
+                {
+                    model.Metadata["layout.view.laneHardLimit"] = laneHardResolved.Value.ToString(CultureInfo.InvariantCulture);
+                }
+
+                var flowBundleResolved = layoutFlowBundleThresholdOverride ?? ReadPositiveIntEnvironment("VDG_LAYOUT_FLOW_BUNDLE_THRESHOLD");
+                if (flowBundleResolved.HasValue && flowBundleResolved.Value >= 2)
+                {
+                    model.Metadata["layout.view.flowBundleThreshold"] = flowBundleResolved.Value.ToString(CultureInfo.InvariantCulture);
                 }
                 if (moduleIncludeFilters.Count > 0)
                 {
@@ -3319,6 +3432,33 @@ namespace VDG.CLI
             else
             {
                 model.Metadata.Remove("layout.view.pageLayouts.json");
+            }
+
+            if (plan?.LaneSegments != null && plan.LaneSegments.Length > 0)
+            {
+                model.Metadata["layout.view.laneSegments.json"] = JsonSerializer.Serialize(plan.LaneSegments, JsonOptions);
+            }
+            else
+            {
+                model.Metadata.Remove("layout.view.laneSegments.json");
+            }
+
+            if (plan?.FlowBundles != null && plan.FlowBundles.Length > 0)
+            {
+                model.Metadata["layout.view.flowBundles.json"] = JsonSerializer.Serialize(plan.FlowBundles, JsonOptions);
+            }
+            else
+            {
+                model.Metadata.Remove("layout.view.flowBundles.json");
+            }
+
+            if (plan?.CycleClusters != null && plan.CycleClusters.Length > 0)
+            {
+                model.Metadata["layout.view.cycleClusters.json"] = JsonSerializer.Serialize(plan.CycleClusters, JsonOptions);
+            }
+            else
+            {
+                model.Metadata.Remove("layout.view.cycleClusters.json");
             }
         }
 

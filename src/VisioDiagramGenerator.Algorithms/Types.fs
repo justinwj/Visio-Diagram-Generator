@@ -96,6 +96,36 @@ type RowLayout =
       Bottom: float32
       Height: float32 }
 
+[<CLIMutable>]
+type LaneSegmentPlan =
+    { PageIndex: int
+      Tier: string
+      SegmentIndex: int
+      Modules: string array
+      NodeCount: int
+      ConnectorCount: int
+      HeatPercent: float
+      OverflowReason: string }
+
+[<CLIMutable>]
+type FlowBundlePlan =
+    { PageIndex: int
+      ChannelKey: string
+      Orientation: string
+      SourceTier: string
+      TargetTier: string
+      ConnectorCount: int
+      LabelPreview: string array
+      SampleEdges: string array }
+
+[<CLIMutable>]
+type CycleClusterPlan =
+    { ClusterId: string
+      ModuleIds: string array
+      Size: int
+      Severity: string
+      Notes: string }
+
 /// Aggregated overflow metadata for nodes trimmed from a container/module.
 [<CLIMutable>]
 type LayoutOverflow =
@@ -168,10 +198,13 @@ type LayoutPlan =
       PageLayouts: PageLayoutInfo array
       Containers: ContainerLayout array
       RowLayouts: RowLayout array
+      LaneSegments: LaneSegmentPlan array
       Edges: EdgeRoute array
+      FlowBundles: FlowBundlePlan array
       Pages: PagePlan array
       Layers: LayerPlan array
       ChannelLabels: ChannelLabel array
+      CycleClusters: CycleClusterPlan array
       Bridges: LayerBridge array
       PageBridges: PageBridge array
       Stats: LayoutStats }

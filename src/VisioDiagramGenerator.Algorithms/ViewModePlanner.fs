@@ -361,6 +361,8 @@ module ViewModePlanner =
         let moduleSemantics = Dictionary<string, ModuleSemanticSummary>(StringComparer.OrdinalIgnoreCase)
         let moduleWeights = Dictionary<string, float>(StringComparer.OrdinalIgnoreCase)
         let tierSubsystemSets = Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase)
+        let moduleGraph = Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase)
+        let selfLoopModules = HashSet<string>(StringComparer.OrdinalIgnoreCase)
 
         let baseModules = Dictionary<string, ViewModule>(StringComparer.OrdinalIgnoreCase)
         let moduleOrder = ResizeArray<string>()
@@ -379,6 +381,8 @@ module ViewModePlanner =
                         let created = { Id = moduleId; Tier = tier; Nodes = ResizeArray() }
                         baseModules[moduleId] <- created
                         moduleOrder.Add moduleId
+                        if not (moduleGraph.ContainsKey moduleId) then
+                            moduleGraph[moduleId] <- HashSet<string>(StringComparer.OrdinalIgnoreCase)
                         created
                 let summary =
                     match moduleSemantics.TryGetValue moduleId with
@@ -419,10 +423,13 @@ module ViewModePlanner =
               PageLayouts = Array.empty
               Containers = Array.empty
               RowLayouts = Array.empty
+              LaneSegments = Array.empty
               Edges = Array.empty
+              FlowBundles = Array.empty
               Pages = Array.empty
               Layers = Array.empty
               ChannelLabels = Array.empty
+              CycleClusters = Array.empty
               Bridges = Array.empty
               PageBridges = Array.empty
               Stats =
@@ -456,6 +463,33 @@ module ViewModePlanner =
                 getMetadataSingle model "layout.view.rowSpacingIn"
                 |> Option.filter (fun v -> v > 0.f)
                 |> Option.defaultValue 3.0f
+            let advancedEnabled =
+                getMetadataBool model "layout.view.advanced.enabled"
+                |> Option.defaultValue false
+            let laneSoftLimitOverride =
+                getMetadataInt model "layout.view.laneSoftLimit"
+                |> Option.filter (fun v -> v >= 1)
+            let laneHardLimitOverride =
+                getMetadataInt model "layout.view.laneHardLimit"
+                |> Option.filter (fun v -> v >= 1)
+            if advancedEnabled then
+                match laneHardLimitOverride with
+                | Some hardCap when hardCap > 0 -> maxModulesPerLane <- Math.Max(1, hardCap)
+                | _ -> ()
+            let laneSoftLimit =
+                if advancedEnabled then
+                    laneSoftLimitOverride
+                    |> Option.defaultValue (Math.Max(1, Math.Min(maxModulesPerLane, Math.Max(slotsPerRow, maxModulesPerLane - 2))))
+                else
+                    maxModulesPerLane
+            let baseFlowBundleThreshold =
+                getMetadataInt model "layout.view.flowBundleThreshold"
+                |> Option.filter (fun v -> v >= 2)
+                |> Option.defaultValue 3
+            let flowBundleThreshold =
+                if advancedEnabled then baseFlowBundleThreshold else Int32.MaxValue
+            if advancedEnabled && slotsPerTier > maxModulesPerLane then
+                slotsPerTier <- Math.Max(slotsPerRow, Math.Min(baseSlotsPerTier, maxModulesPerLane))
             let mutable cardSpacingX =
                 getMetadataSingle model "layout.view.cardSpacingXIn"
                 |> Option.filter (fun v -> v >= 0.f)
@@ -615,7 +649,10 @@ module ViewModePlanner =
                 let laneLimit =
                     if laneCapacity.MaxModulesPerLane > 0 then laneCapacity.MaxModulesPerLane
                     else Int32.MaxValue
-                let limit = Math.Min(slotsPerRow, laneLimit)
+                let softLimit =
+                    if advancedEnabled then Math.Min(laneLimit, laneSoftLimit)
+                    else laneLimit
+                let limit = Math.Min(slotsPerRow, softLimit)
                 if limit <= 0 then 1 else limit
             let rowNodeLimit =
                 if laneCapacity.MaxNodesPerLane > 0 then laneCapacity.MaxNodesPerLane
@@ -773,6 +810,15 @@ module ViewModePlanner =
 
                         if not (String.IsNullOrWhiteSpace srcModuleId)
                            && not (String.IsNullOrWhiteSpace dstModuleId) then
+                            if not (moduleGraph.ContainsKey srcModuleId) then
+                                moduleGraph[srcModuleId] <- HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                            if not (moduleGraph.ContainsKey dstModuleId) then
+                                moduleGraph[dstModuleId] <- HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                            if srcModuleId.Equals(dstModuleId, StringComparison.OrdinalIgnoreCase) then
+                                selfLoopModules.Add(srcModuleId) |> ignore
+                            let neighbors = moduleGraph[srcModuleId]
+                            if not (neighbors.Contains dstModuleId) then
+                                neighbors.Add dstModuleId |> ignore
                             let isCross = not (srcModuleId.Equals(dstModuleId, StringComparison.OrdinalIgnoreCase))
                             let recordEdgeStats moduleId =
                                 if not (String.IsNullOrWhiteSpace moduleId) then
@@ -1088,8 +1134,10 @@ module ViewModePlanner =
             let truncated = Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
             let pageExtents = Dictionary<int, float32[]>(HashIdentity.Structural)
             let rowLayouts = ResizeArray<RowLayout>()
+            let laneSegments = ResizeArray<LaneSegmentPlan>()
+            let laneSegmentIndex = Dictionary<int * string, int>(HashIdentity.Structural)
 
-            let partitionTierRows (tierModules: string array) =
+            let partitionTierRows pageIndex tier (tierModules: string array) =
                 if isNull (box tierModules) || tierModules.Length = 0 then
                     Array.empty
                 else
@@ -1098,9 +1146,40 @@ module ViewModePlanner =
                     let mutable rowModules = 0
                     let mutable rowNodes = 0
                     let mutable rowConnectors = 0
-
-                    let flushRow () =
+                    let determineReason pendingModules pendingNodes pendingConnectors =
+                        if rowModuleLimit <> Int32.MaxValue && pendingModules >= rowModuleLimit then "module-soft-limit"
+                        elif rowNodeLimit <> Int32.MaxValue && pendingNodes >= rowNodeLimit then "node-soft-limit"
+                        elif rowConnectorLimit <> Int32.MaxValue && pendingConnectors >= rowConnectorLimit then "connector-soft-limit"
+                        else "balanced"
+                    let recordLaneSegment reason =
+                        if advancedEnabled && currentRow.Count > 0 then
+                            let snapshot = currentRow.ToArray()
+                            let heatPercent =
+                                if laneNodeCap <= 0 || laneNodeCap = Int32.MaxValue then 0.0
+                                else
+                                    (float rowNodes / float laneNodeCap) * 100.0
+                                    |> fun v -> Math.Min(150.0, Math.Max(0.0, v))
+                            let key = (pageIndex, tier)
+                            let segmentIndex =
+                                match laneSegmentIndex.TryGetValue key with
+                                | true, existing ->
+                                    laneSegmentIndex[key] <- existing + 1
+                                    existing
+                                | _ ->
+                                    laneSegmentIndex[key] <- 1
+                                    0
+                            laneSegments.Add(
+                                { PageIndex = pageIndex
+                                  Tier = tier
+                                  SegmentIndex = segmentIndex
+                                  Modules = snapshot
+                                  NodeCount = rowNodes
+                                  ConnectorCount = rowConnectors
+                                  HeatPercent = heatPercent
+                                  OverflowReason = reason })
+                    let flushRow reason =
                         if currentRow.Count > 0 then
+                            recordLaneSegment reason
                             rows.Add(currentRow.ToArray())
                             currentRow <- ResizeArray<string>()
                             rowModules <- 0
@@ -1124,7 +1203,8 @@ module ViewModePlanner =
                                 || (rowModules > 0 && rowConnectorLimit <> Int32.MaxValue && rowConnectors + moduleConnectors > rowConnectorLimit)
 
                             if overflowBeforeAdd then
-                                flushRow()
+                                let reason = determineReason (rowModules + 1) (rowNodes + moduleNodes) (rowConnectors + moduleConnectors)
+                                flushRow reason
 
                             currentRow.Add segmentId
                             rowModules <- rowModules + 1
@@ -1137,9 +1217,10 @@ module ViewModePlanner =
                                 || (rowConnectorLimit <> Int32.MaxValue && rowConnectors >= rowConnectorLimit)
 
                             if rowReachedCapacity then
-                                flushRow()
+                                let reason = determineReason rowModules rowNodes rowConnectors
+                                flushRow reason
 
-                    flushRow()
+                    flushRow "tier-complete"
                     let result = rows.ToArray()
                     result
 
@@ -1266,7 +1347,7 @@ module ViewModePlanner =
                     if modulesInTier.Length = 0 then
                         cursorY <- cursorY - tierSpacing
                     else
-                        let rows = partitionTierRows modulesInTier
+                        let rows = partitionTierRows pageIndex tier modulesInTier
                         let mutable accumulatedHeight = 0.f
 
                         for rowIdx = 0 to rows.Length - 1 do
@@ -2032,6 +2113,11 @@ module ViewModePlanner =
             let nodesArray = nodeLayouts.ToArray()
             let containersArray = containerLayouts.ToArray()
             let edgesArray = edgeRoutes.ToArray()
+            let getModuleTierName moduleId =
+                match modules.TryGetValue moduleId with
+                | true, vm when not (String.IsNullOrWhiteSpace vm.Tier) -> vm.Tier
+                | _ -> "Modules"
+
             let channelLabels =
                 channelLabelBuckets
                 |> Seq.map (fun kvp ->
@@ -2054,6 +2140,32 @@ module ViewModePlanner =
                       LabelCenter = bucket.LabelCenter
                       Lines = lines })
                 |> Seq.toArray
+
+            let flowBundlesArray =
+                if advancedEnabled then
+                    channelLabelBuckets
+                    |> Seq.choose (fun kvp ->
+                        let bucket = kvp.Value
+                        if bucket.SampleCount < flowBundleThreshold then
+                            None
+                        else
+                            let labelPreview =
+                                bucket.Labels
+                                |> Seq.truncate 3
+                                |> Seq.toArray
+                            let sampleLabels = bucket.Labels |> Seq.toArray
+                            Some
+                                { PageIndex = bucket.PageIndex
+                                  ChannelKey = bucket.Channel.Key
+                                  Orientation = bucket.Channel.Orientation
+                                  SourceTier = getModuleTierName bucket.Channel.SourceModuleId
+                                  TargetTier = getModuleTierName bucket.Channel.TargetModuleId
+                                  ConnectorCount = bucket.SampleCount
+                                  LabelPreview = labelPreview
+                                  SampleEdges = sampleLabels })
+                    |> Seq.toArray
+                else
+                    Array.empty
 
             let nodeModules =
                 let assignments = ResizeArray<NodeModuleAssignment>(nodeLookup.Count)
@@ -2108,6 +2220,66 @@ module ViewModePlanner =
                               CrossModuleConnectors = edgeStats.CrossModuleCount })
 
             let dataset = { Modules = moduleStats }
+            let cycleClustersArray =
+                if advancedEnabled then
+                    let indexCounter = ref 0
+                    let indices = Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+                    let lowlinks = Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+                    let stack = Stack<string>()
+                    let onStack = HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                    let clusters = ResizeArray<CycleClusterPlan>()
+                    let rec strongConnect moduleId =
+                        let idx = !indexCounter
+                        indexCounter := idx + 1
+                        indices[moduleId] <- idx
+                        lowlinks[moduleId] <- idx
+                        stack.Push(moduleId)
+                        onStack.Add(moduleId) |> ignore
+                        let neighbors =
+                            match moduleGraph.TryGetValue moduleId with
+                            | true, targets when targets.Count > 0 -> targets |> Seq.toArray
+                            | _ -> Array.empty
+                        for neighbor in neighbors do
+                            if not (indices.ContainsKey neighbor) then
+                                strongConnect neighbor
+                                let neighborLow = lowlinks[neighbor]
+                                if neighborLow < lowlinks[moduleId] then
+                                    lowlinks[moduleId] <- neighborLow
+                            elif onStack.Contains neighbor then
+                                let neighborIdx = indices[neighbor]
+                                if neighborIdx < lowlinks[moduleId] then
+                                    lowlinks[moduleId] <- neighborIdx
+                        if lowlinks[moduleId] = indices[moduleId] then
+                            let buffer = ResizeArray<string>()
+                            let mutable continuePop = true
+                            while continuePop && stack.Count > 0 do
+                                let popped = stack.Pop()
+                                onStack.Remove popped |> ignore
+                                buffer.Add popped
+                                if popped.Equals(moduleId, StringComparison.OrdinalIgnoreCase) then
+                                    continuePop <- false
+                            let sorted = buffer |> Seq.sort |> Seq.toArray
+                            if buffer.Count >= 2 then
+                                let severity = if buffer.Count >= 5 then "error" else "warning"
+                                clusters.Add(
+                                    { ClusterId = $"cycle:{sorted[0]}"
+                                      ModuleIds = sorted
+                                      Size = buffer.Count
+                                      Severity = severity
+                                      Notes = sprintf "cycle contains %d modules" buffer.Count })
+                            elif selfLoopModules.Contains moduleId then
+                                clusters.Add(
+                                    { ClusterId = $"cycle:{moduleId}"
+                                      ModuleIds = [| moduleId |]
+                                      Size = 1
+                                      Severity = "info"
+                                      Notes = "self-loop detected" })
+                    for KeyValue(moduleId, _) in moduleGraph do
+                        if not (indices.ContainsKey moduleId) then
+                            strongConnect moduleId
+                    clusters.ToArray()
+                else
+                    Array.empty
 
             let pagePlans =
                 if moduleStats.Length = 0 then
@@ -2384,10 +2556,13 @@ module ViewModePlanner =
               PageLayouts = pageLayouts
               Containers = containersArray
               RowLayouts = rowLayouts.ToArray()
+              LaneSegments = laneSegments.ToArray()
               Edges = edgesArray
+              FlowBundles = flowBundlesArray
               Pages = pagePlans
               Layers = updatedLayerPlans
               ChannelLabels = channelLabels
+              CycleClusters = cycleClustersArray
               Bridges = bridgeArray
               PageBridges = pageBridges.ToArray()
               Stats = stats }

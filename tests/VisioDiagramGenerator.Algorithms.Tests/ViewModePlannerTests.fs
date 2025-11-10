@@ -239,3 +239,53 @@ let ``edge routes emit channel metadata`` () =
     Assert.Equal("ModuleA", crossChannel.SourceModuleId)
     Assert.Equal("ModuleB", crossChannel.TargetModuleId)
     Assert.False(String.IsNullOrWhiteSpace crossChannel.Key)
+
+[<Fact>]
+let ``advanced mode emits lane segments metadata`` () =
+    let nodes =
+        [| mkNode "ModuleA" "Services" 1
+           mkNode "ModuleB" "Services" 2
+           mkNode "ModuleC" "Services" 3
+           mkNode "ModuleD" "Services" 4 |]
+    let model = DiagramModel(nodes, Array.empty)
+    model.Metadata["layout.view.advanced.enabled"] <- "true"
+    model.Metadata["layout.view.laneSoftLimit"] <- "1"
+
+    let plan = ViewModePlanner.computeViewLayout model
+    Assert.NotEmpty(plan.LaneSegments)
+    Assert.Contains(plan.LaneSegments, fun seg -> seg.OverflowReason.StartsWith("module", StringComparison.OrdinalIgnoreCase))
+
+[<Fact>]
+let ``flow bundles summarize dense channels`` () =
+    let nodes =
+        [| mkNode "Source" "Validator" 1
+           mkNode "Source" "Validator" 2
+           mkNode "Target" "Persistence" 3 |]
+    let edges =
+        [| Edge("e1", nodeId 1, nodeId 3)
+           Edge("e2", nodeId 2, nodeId 3)
+           Edge("e3", nodeId 1, nodeId 3) |]
+    let model = DiagramModel(nodes, edges)
+    model.Metadata["layout.view.advanced.enabled"] <- "true"
+    model.Metadata["layout.view.flowBundleThreshold"] <- "2"
+
+    let plan = ViewModePlanner.computeViewLayout model
+    Assert.NotEmpty(plan.FlowBundles)
+    Assert.Contains(plan.FlowBundles, fun bundle -> bundle.ConnectorCount >= 2)
+
+[<Fact>]
+let ``cycle clusters surface strongly connected modules`` () =
+    let nodes =
+        [| mkNode "Alpha" "Services" 1
+           mkNode "Beta" "Services" 2
+           mkNode "Gamma" "Services" 3 |]
+    let edges =
+        [| Edge("e1", nodeId 1, nodeId 2)
+           Edge("e2", nodeId 2, nodeId 3)
+           Edge("e3", nodeId 3, nodeId 1) |]
+    let model = DiagramModel(nodes, edges)
+    model.Metadata["layout.view.advanced.enabled"] <- "true"
+
+    let plan = ViewModePlanner.computeViewLayout model
+    Assert.NotEmpty(plan.CycleClusters)
+    Assert.Contains(plan.CycleClusters, fun cluster -> cluster.ModuleIds |> Array.contains "Alpha")

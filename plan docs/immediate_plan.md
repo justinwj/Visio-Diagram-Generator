@@ -1,8 +1,8 @@
 # Immediate Plan (delete below lists when done, this MD should not get long)
 
 Based on the approved vision and the current project maturity (with stable semantics, planner integration, and golden validation now in place), the next highest-impact areas for Codex to tackle are:
-	1. Stakeholder-Rich Review Feedback:
-Implement enhanced CLI and report outputs that surface planner/semantic warnings and actionable summaries. This makes the new semantic foundation visible to users and reviewers, helping stakeholders quickly interpret subsystem splits, role bottlenecks, or pagination limits.
+	1. Stakeholder-Rich Review Feedback **(Done – 2025-11-09)**:
+The CLI now emits semantic/planner summaries at the console, persists a `.review.txt/.review.json` pair beside each diagram, injects the JSON into diagram metadata, and mirrors the same block into `*.diagnostics.json` so reviewers (or CI) can see subsystem splits, lane pressure, missing roles, and suggestions without opening Visio. Remaining follow-ups: expose severity thresholds as CLI options and wire the summary into reviewer dashboards once they exist.
 	2. Seed/Override File Integration:
 Enable partial or full seed/override ingestion (e.g., for known team ownership, special module roles, or custom subsystems) so advanced users or stakeholders can tune classifications without retraining or changing heuristics. This further aligns the pipeline with the project’s "reviewable, deterministic, and extensible" vision.
 	3. Advanced Layout and Flow Scenarios:

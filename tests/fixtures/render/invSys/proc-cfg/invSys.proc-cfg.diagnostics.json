@@ -6848,5 +6848,87 @@
       "Lane": "Classes",
       "Page": 1
     }
-  ]
+  ],
+  "ReviewSummary": {
+    "modules": 65,
+    "procedures": 210,
+    "subsystems": [
+      {
+        "key": "UI.Forms",
+        "value": 17
+      },
+      {
+        "key": "UI.Sheets",
+        "value": 16
+      },
+      {
+        "key": "Core.Modules",
+        "value": 10
+      },
+      {
+        "key": "Domain.TransactionSets",
+        "value": 7
+      },
+      {
+        "key": "Domain.Inventory",
+        "value": 6
+      },
+      {
+        "key": "Observability.Logging",
+        "value": 6
+      },
+      {
+        "key": "Data.ImportExport",
+        "value": 2
+      },
+      {
+        "key": "Infrastructure.Core",
+        "value": 1
+      }
+    ],
+    "roles": [
+      {
+        "key": "Utility",
+        "value": 113
+      },
+      {
+        "key": "EventHandler",
+        "value": 55
+      },
+      {
+        "key": "DataLoader",
+        "value": 14
+      },
+      {
+        "key": "Initializer",
+        "value": 10
+      },
+      {
+        "key": "Coordinator",
+        "value": 8
+      },
+      {
+        "key": "Persistence",
+        "value": 8
+      },
+      {
+        "key": "Validator",
+        "value": 2
+      }
+    ],
+    "warnings": [
+      "10 module classification(s) below confidence threshold.",
+      "1600 unresolved flow(s) detected. See flows.json residuals."
+    ],
+    "suggestions": [
+      "High volume of EventHandler procedures detected (55). Verify UI lanes have headroom."
+    ],
+    "info": [
+      "Modules analysed: 65",
+      "Procedures analysed: 210",
+      "Subsystem distribution: UI.Forms=17, UI.Sheets=16, Core.Modules=10, Domain.TransactionSets=7, Domain.Inventory=6, Observability.Logging=6, Data.ImportExport=2, Infrastructure.Core=1",
+      "Primary roles detected: Utility=113, EventHandler=55, DataLoader=14, Initializer=10, Coordinator=8, Persistence=8, Validator=2"
+    ],
+    "residualFlows": 1600
+  }
 }

@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+using System.Globalization;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -105,6 +106,7 @@ internal static class Program
         Console.Error.WriteLine("    --timeout <ms>         Abort conversion if processing exceeds the provided timeout in milliseconds.");
         Console.Error.WriteLine("    --strict-validate      Enforce strict IR invariants before conversion (fails fast on issues).");
         Console.Error.WriteLine("    --summary-log <csv>    Write hyperlink summary (Name/File/Module/Lines) to the specified CSV alongside console output.");
+        Console.Error.WriteLine("    --semantics-generated-at <ISO8601>  Override semantic artifact timestamp (default: current UTC).");
         Console.Error.WriteLine("    Example: dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in out/project.ir.json --out out/project.callgraph.json");
         Console.Error.WriteLine();
         Console.Error.WriteLine("  render --in <folder> --out <diagram.vsdx> [--mode <callgraph|module-structure|module-callmap>] [--cli <VDG.CLI.exe>] [--diagram-json <path>] [--diag-json <path>] [--summary-log <csv>]");
@@ -301,7 +303,7 @@ internal static class Program
 
     private static int RunIr2Diagram(string[] args)
     {
-        string? input = null; string? output = null; string mode = "callgraph"; bool includeUnknown = false; int? timeoutMs = null; bool strictValidate = false; string? summaryLogPath = null; string outputMode = "view";
+        string? input = null; string? output = null; string mode = "callgraph"; bool includeUnknown = false; int? timeoutMs = null; bool strictValidate = false; string? summaryLogPath = null; string outputMode = "view"; string? semanticsTimestampArg = null;
         for (int i = 0; i < args.Length; i++)
         {
             var a = args[i];
@@ -321,6 +323,8 @@ internal static class Program
             { if (i + 1 >= args.Length) throw new UsageException("--summary-log requires a file path."); summaryLogPath = args[++i]; }
             else if (string.Equals(a, "--output-mode", StringComparison.OrdinalIgnoreCase))
             { if (i + 1 >= args.Length) throw new UsageException("--output-mode requires view|print."); outputMode = args[++i]; }
+            else if (string.Equals(a, "--semantics-generated-at", StringComparison.OrdinalIgnoreCase))
+            { if (i + 1 >= args.Length) throw new UsageException("--semantics-generated-at requires an ISO 8601 timestamp."); semanticsTimestampArg = args[++i]; }
             else throw new UsageException($"Unknown option '{a}' for ir2diagram.");
         }
         if (string.IsNullOrWhiteSpace(input)) throw new UsageException("ir2diagram requires --in <ir.json>.");
@@ -333,6 +337,8 @@ internal static class Program
             throw new UsageException("--output-mode must be 'view' or 'print'.");
         }
         var normalizedOutputMode = outputMode.Equals("print", StringComparison.OrdinalIgnoreCase) ? "print" : "view";
+        var semanticsTimestamp = ResolveSemanticsTimestamp(semanticsTimestampArg)
+                                 ?? ComputeDeterministicSemanticsTimestamp(Path.GetFullPath(input!));
 
         IrRoot root;
         try
@@ -433,7 +439,7 @@ internal static class Program
         if (!incomingModules.Any(m => (m.Procedures?.Count ?? 0) > 0))
             throw new UsageException("IR contains no procedures.");
         var semanticsBuilder = new SemanticArtifactsBuilder();
-        var semantics = semanticsBuilder.Build(incomingModules, root.Project?.Name, Path.GetFullPath(input!));
+        var semantics = semanticsBuilder.Build(incomingModules, root.Project?.Name, Path.GetFullPath(input!), semanticsTimestamp);
         var reviewSummary = SemanticReviewReporter.Build(semantics);
         SemanticReviewReporter.EmitToConsole(reviewSummary);
         var reviewSummaryJson = SemanticReviewReporter.Serialize(reviewSummary);
@@ -980,13 +986,11 @@ internal static class Program
         var metadataProperties = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         if (!string.IsNullOrWhiteSpace(taxonomyPath))
         {
-            metadataProperties["semantics.taxonomy.path"] = taxonomyPath!;
             metadataProperties["semantics.taxonomy.schema"] = semantics.Taxonomy.SchemaVersion;
         }
         metadataProperties["semantics.taxonomy.generatedAt"] = semantics.Taxonomy.GeneratedAt.ToString("o", CultureInfo.InvariantCulture);
         if (!string.IsNullOrWhiteSpace(flowsPath))
         {
-            metadataProperties["semantics.flows.path"] = flowsPath!;
             metadataProperties["semantics.flows.schema"] = semantics.Flow.SchemaVersion;
         }
         metadataProperties["semantics.flows.generatedAt"] = semantics.Flow.GeneratedAt.ToString("o", CultureInfo.InvariantCulture);
@@ -1176,6 +1180,42 @@ internal static class Program
         File.WriteAllText(fullPath, json);
     }
 
+    private static DateTimeOffset? ResolveSemanticsTimestamp(string? explicitValue)
+    {
+        var candidate = explicitValue;
+        if (string.IsNullOrWhiteSpace(candidate))
+        {
+            candidate = Environment.GetEnvironmentVariable("VDG_SEMANTICS_GENERATED_AT");
+        }
+        if (string.IsNullOrWhiteSpace(candidate))
+        {
+            return null;
+        }
+        if (DateTimeOffset.TryParse(candidate, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var parsed))
+        {
+            return parsed;
+        }
+        throw new UsageException("Invalid semantics timestamp; use ISO 8601 format (e.g., 2024-01-01T00:00:00Z).");
+    }
+
+    private static DateTimeOffset ComputeDeterministicSemanticsTimestamp(string irPath)
+    {
+        try
+        {
+            using var sha = SHA256.Create();
+            using var stream = File.OpenRead(irPath);
+            var hash = sha.ComputeHash(stream);
+            var secondsWindow = 10 * 365 * 24 * 60 * 60; // ~10 years window
+            var seconds = BitConverter.ToUInt32(hash, 0) % secondsWindow;
+            var baseline = new DateTimeOffset(2020, 1, 1, 0, 0, 0, TimeSpan.Zero);
+            return baseline.AddSeconds(seconds);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            throw new UsageException($"Unable to read IR for deterministic timestamp ({irPath}): {ex.Message}");
+        }
+    }
+
     private static void WriteReviewReport(string? reviewPath, SemanticReviewSummary summary)
     {
         if (string.IsNullOrWhiteSpace(reviewPath) || summary is null) return;
@@ -1189,6 +1229,9 @@ internal static class Program
             }
             var lines = SemanticReviewReporter.BuildTextReport(summary);
             File.WriteAllLines(fullPath, lines);
+            var summaryJson = SemanticReviewReporter.Serialize(summary);
+            var jsonPath = Path.ChangeExtension(fullPath, ".json");
+            File.WriteAllText(jsonPath, summaryJson);
             Console.WriteLine($"review: summary written to {fullPath}");
         }
         catch (Exception ex)
@@ -1738,4 +1781,6 @@ internal sealed class CallIr { public string Target { get; set; } = ""; public b
 internal sealed class SiteIr { public string Module { get; set; } = ""; public string File { get; set; } = ""; public int Line { get; set; } }
 internal sealed class SourceIr { public string File { get; set; } = ""; public string? Module { get; set; } public int? Line { get; set; } }
 internal sealed class MetricsIr { public int? Cyclomatic { get; set; } public int? Lines { get; set; } public int? Sloc { get; set; } }
+
+
 

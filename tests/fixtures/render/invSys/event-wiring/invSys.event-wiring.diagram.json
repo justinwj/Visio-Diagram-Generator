@@ -2,12 +2,11 @@
   "schemaVersion": "1.2",
   "metadata": {
     "properties": {
-      "semantics.taxonomy.path": "D:\\justinwj\\Solutions\\Visio Diagram Generator\\out\\fixtures\\invSys\\event-wiring\\invSys.event-wiring.taxonomy.json",
       "semantics.taxonomy.schema": "1.0",
-      "semantics.taxonomy.generatedAt": "2025-11-09T07:23:03.8371777\u002B00:00",
-      "semantics.flows.path": "D:\\justinwj\\Solutions\\Visio Diagram Generator\\out\\fixtures\\invSys\\event-wiring\\invSys.event-wiring.flows.json",
+      "semantics.taxonomy.generatedAt": "2024-01-01T00:00:00.0000000\u002B00:00",
       "semantics.flows.schema": "1.0",
-      "semantics.flows.generatedAt": "2025-11-09T07:23:03.8371777\u002B00:00"
+      "semantics.flows.generatedAt": "2024-01-01T00:00:00.0000000\u002B00:00",
+      "review.summary.json": "{\u0022modules\u0022:65,\u0022procedures\u0022:210,\u0022subsystems\u0022:[{\u0022key\u0022:\u0022UI.Forms\u0022,\u0022value\u0022:17},{\u0022key\u0022:\u0022UI.Sheets\u0022,\u0022value\u0022:16},{\u0022key\u0022:\u0022Core.Modules\u0022,\u0022value\u0022:10},{\u0022key\u0022:\u0022Domain.TransactionSets\u0022,\u0022value\u0022:7},{\u0022key\u0022:\u0022Domain.Inventory\u0022,\u0022value\u0022:6},{\u0022key\u0022:\u0022Observability.Logging\u0022,\u0022value\u0022:6},{\u0022key\u0022:\u0022Data.ImportExport\u0022,\u0022value\u0022:2},{\u0022key\u0022:\u0022Infrastructure.Core\u0022,\u0022value\u0022:1}],\u0022roles\u0022:[{\u0022key\u0022:\u0022Utility\u0022,\u0022value\u0022:113},{\u0022key\u0022:\u0022EventHandler\u0022,\u0022value\u0022:55},{\u0022key\u0022:\u0022DataLoader\u0022,\u0022value\u0022:14},{\u0022key\u0022:\u0022Initializer\u0022,\u0022value\u0022:10},{\u0022key\u0022:\u0022Coordinator\u0022,\u0022value\u0022:8},{\u0022key\u0022:\u0022Persistence\u0022,\u0022value\u0022:8},{\u0022key\u0022:\u0022Validator\u0022,\u0022value\u0022:2}],\u0022warnings\u0022:[\u002210 module classification(s) below confidence threshold.\u0022,\u00221600 unresolved flow(s) detected. See flows.json residuals.\u0022],\u0022suggestions\u0022:[\u0022High volume of EventHandler procedures detected (55). Verify UI lanes have headroom.\u0022],\u0022info\u0022:[\u0022Modules analysed: 65\u0022,\u0022Procedures analysed: 210\u0022,\u0022Subsystem distribution: UI.Forms=17, UI.Sheets=16, Core.Modules=10, Domain.TransactionSets=7, Domain.Inventory=6, Observability.Logging=6, Data.ImportExport=2, Infrastructure.Core=1\u0022,\u0022Primary roles detected: Utility=113, EventHandler=55, DataLoader=14, Initializer=10, Coordinator=8, Persistence=8, Validator=2\u0022],\u0022residualFlows\u0022:1600}"
     }
   },
   "layout": {

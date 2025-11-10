@@ -11,3 +11,9 @@
 - Strengthened runner fallbacks to honour planner geometry; plain polylines detour around module bounds and reuse stubbed callouts instead of glueing to Visio connectors.
 - Captured a `view_mode_algorithm_strategy.md` plan doc outlining the next wave of F# work (capacity rules, corridor metadata, cross-page bridges, testing focus).
 - Regenerated `invSys` artefacts and reran `dotnet test` to confirm the refactor stays green and produces reproducible diagnostics bundles.
+
+## 2025-11-09
+- Landed the semantic review reporter in `VDG.VBA.CLI`: `ir2diagram` now classifies modules/roles, surfaces summaries in the console, injects the JSON payload into diagram metadata, and emits `.review.txt/.review.json` beside every diagram export for reviewer hand-off.
+- Added deterministic semantics timestamps (hash-derived unless an explicit `--semantics-generated-at`/`VDG_SEMANTICS_GENERATED_AT` override is provided) so fixture refreshes stay reproducible; `tools/render-fixture.ps1` pins the override during golden regeneration.
+- Updated `VDG.CLI` diagnostics to carry the `ReviewSummary` block straight from diagram metadata, ensuring downstream tooling/CI can read semantic warnings directly from `*.diagnostics.json`.
+- Refreshed all fixtures (`hello_world`, `cross_module_calls`, `events_and_forms`, `invSys`) plus the sample callgraph diagram/taxonomy/flows so the new metadata, review reports, and deterministic hashes are captured in-source; both CLI and algorithms test suites are green with the new goldens.

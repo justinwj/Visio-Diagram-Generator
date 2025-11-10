@@ -2,12 +2,11 @@
   "schemaVersion": "1.2",
   "metadata": {
     "properties": {
-      "semantics.taxonomy.path": "D:\\justinwj\\Solutions\\Visio Diagram Generator\\out\\fixtures\\events_and_forms\\callgraph\\events_and_forms.callgraph.taxonomy.json",
       "semantics.taxonomy.schema": "1.0",
-      "semantics.taxonomy.generatedAt": "2025-11-09T02:30:04.1618393\u002B00:00",
-      "semantics.flows.path": "D:\\justinwj\\Solutions\\Visio Diagram Generator\\out\\fixtures\\events_and_forms\\callgraph\\events_and_forms.callgraph.flows.json",
+      "semantics.taxonomy.generatedAt": "2024-01-01T00:00:00.0000000\u002B00:00",
       "semantics.flows.schema": "1.0",
-      "semantics.flows.generatedAt": "2025-11-09T02:30:04.1618393\u002B00:00"
+      "semantics.flows.generatedAt": "2024-01-01T00:00:00.0000000\u002B00:00",
+      "review.summary.json": "{\u0022modules\u0022:1,\u0022procedures\u0022:1,\u0022subsystems\u0022:[{\u0022key\u0022:\u0022UI.Forms\u0022,\u0022value\u0022:1}],\u0022roles\u0022:[{\u0022key\u0022:\u0022EventHandler\u0022,\u0022value\u0022:1}],\u0022warnings\u0022:[],\u0022suggestions\u0022:[],\u0022info\u0022:[\u0022Modules analysed: 1\u0022,\u0022Procedures analysed: 1\u0022,\u0022Subsystem distribution: UI.Forms=1\u0022,\u0022Primary roles detected: EventHandler=1\u0022],\u0022residualFlows\u0022:0}"
     }
   },
   "layout": {

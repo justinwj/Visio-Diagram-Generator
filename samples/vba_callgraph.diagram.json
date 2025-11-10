@@ -1,5 +1,14 @@
 {
   "schemaVersion": "1.2",
+  "metadata": {
+    "properties": {
+      "semantics.taxonomy.schema": "1.0",
+      "semantics.taxonomy.generatedAt": "2020-04-01T07:37:53.0000000\u002B00:00",
+      "semantics.flows.schema": "1.0",
+      "semantics.flows.generatedAt": "2020-04-01T07:37:53.0000000\u002B00:00",
+      "review.summary.json": "{\u0022modules\u0022:2,\u0022procedures\u0022:2,\u0022subsystems\u0022:[{\u0022key\u0022:\u0022Core.Modules\u0022,\u0022value\u0022:2}],\u0022roles\u0022:[{\u0022key\u0022:\u0022Utility\u0022,\u0022value\u0022:2}],\u0022warnings\u0022:[\u00222 module classification(s) below confidence threshold.\u0022],\u0022suggestions\u0022:[],\u0022info\u0022:[\u0022Modules analysed: 2\u0022,\u0022Procedures analysed: 2\u0022,\u0022Subsystem distribution: Core.Modules=2\u0022,\u0022Primary roles detected: Utility=2\u0022],\u0022residualFlows\u0022:0}"
+    }
+  },
   "layout": {
     "outputMode": "view",
     "tiers": [
@@ -48,7 +57,10 @@
         "code.source.line": "4",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     },
     {
@@ -69,7 +81,10 @@
         "code.source.line": "4",
         "code.metrics.lines": "3",
         "code.metrics.sloc": "1",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
       }
     }
   ],
@@ -100,7 +115,9 @@
         "code.source.line": "1",
         "code.metrics.lines": "7",
         "code.metrics.sloc": "2",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.module.subsystem.primary": "Core.Modules",
+        "semantics.module.confidence": "0.35"
       }
     },
     {
@@ -116,7 +133,9 @@
         "code.source.line": "1",
         "code.metrics.lines": "7",
         "code.metrics.sloc": "1",
-        "code.metrics.cyclomatic": "1"
+        "code.metrics.cyclomatic": "1",
+        "semantics.module.subsystem.primary": "Core.Modules",
+        "semantics.module.confidence": "0.35"
       }
     }
   ]

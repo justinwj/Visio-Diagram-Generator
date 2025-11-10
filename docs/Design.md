@@ -19,6 +19,12 @@ Design Notes
 - Diagnostics: layout crowding, crossings/utilization, container occupancy — tunable via CLI and JSON.
 - CI: schema validation for IR/Diagram; render smoke with `VDG_SKIP_RUNNER=1`.
 
+Review Feedback Surface
+- `ir2diagram` prints a semantic/planner summary immediately after classification (subsystem counts, role tallies, confidence gaps, pagination warnings, suggestions).
+- Each diagram export emits a sibling `.review.txt` (human-readable) and `.review.json` (machine-readable) plus embeds the JSON into `metadata.properties["review.summary.json"]`.
+- When Visio automation runs with `--diag-json`, `VDG.CLI` copies the same payload into `ReviewSummary` inside the diagnostics JSON so CI/review portals can ingest the insights without opening the diagram.
+- Semantic artefacts now default to deterministic timestamps (hash-derived); pass `--semantics-generated-at <ISO8601>` or set `VDG_SEMANTICS_GENERATED_AT` when a real-world timestamp is required.
+
 Docs & Schemas
 - IR spec: `docs/VBA_IR.md` (mapping rules, dynamic calls, FAQ)
 - Diagram schema: `shared/Config/diagramConfig.schema.json`

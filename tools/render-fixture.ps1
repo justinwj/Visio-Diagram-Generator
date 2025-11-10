@@ -3,7 +3,8 @@ Param(
   [string]$OutputRoot = 'out/fixtures',
   [string]$Cli,
   [switch]$Update,
-  [string]$Note = ''
+  [string]$Note = '',
+  [string]$SemanticsTimestamp = '2024-01-01T00:00:00Z'
 )
 
 Set-StrictMode -Version Latest
@@ -258,14 +259,19 @@ foreach ($fixtureEntry in $fixtureMatrix) {
       Vsdx = Get-RelativePath $goldenFiles.Vsdx
     }
 
+    $semanticsCommandSuffix = ''
+    if (-not [string]::IsNullOrWhiteSpace($SemanticsTimestamp)) {
+      $semanticsCommandSuffix = " --semantics-generated-at $SemanticsTimestamp"
+    }
+
     $commands = @(
       [pscustomobject]@{
         name    = 'vba2json'
-        command = "dotnet run --project src/VDG.VBA.CLI -- vba2json --in $sourceRel --out $irRel"
+        command = "dotnet run --project src/VDG.VBA.CLI -- vba2json --in $sourceRel --out $irRel --infer-metrics"
       },
       [pscustomobject]@{
         name    = 'ir2diagram'
-        command = "dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in $irRel --out $diagramRel --mode $mode"
+        command = "dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in $irRel --out $diagramRel --mode $mode$semanticsCommandSuffix"
       },
       [pscustomobject]@{
         name        = 'render'
@@ -300,7 +306,11 @@ foreach ($fixtureEntry in $fixtureMatrix) {
       }
     }
 
-    Invoke-Dotnet -Arguments @('run', '--project', 'src/VDG.VBA.CLI', '--', 'ir2diagram', '--in', $irPath, '--out', $diagramPath, '--mode', $mode)
+    $ir2DiagramArgs = @('run', '--project', 'src/VDG.VBA.CLI', '--', 'ir2diagram', '--in', $irPath, '--out', $diagramPath, '--mode', $mode)
+    if (-not [string]::IsNullOrWhiteSpace($SemanticsTimestamp)) {
+      $ir2DiagramArgs += @('--semantics-generated-at', $SemanticsTimestamp)
+    }
+    Invoke-Dotnet -Arguments $ir2DiagramArgs
     if ($overrideJson -ne $null) {
       $diagramJson = Get-Content $diagramPath -Raw | ConvertFrom-Json -Depth 100
       Merge-JsonObject -Target $diagramJson -Overrides $overrideJson

@@ -1,0 +1,119 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2020-04-01T07:37:53+00:00",
+  "project": {
+    "name": "cross_module_calls",
+    "sourceIr": "D:\\justinwj\\Solutions\\Visio Diagram Generator\\out\\tmp\\sample_callgraph.ir.json",
+    "generator": "VDG.VBA.CLI/ir2diagram"
+  },
+  "legend": {
+    "subsystems": [
+      {
+        "id": "Core.Modules",
+        "description": "Modules without a tighter subsystem classification."
+      }
+    ],
+    "roles": [
+      {
+        "id": "Utility",
+        "description": "General-purpose helper or calculation."
+      }
+    ]
+  },
+  "modules": [
+    {
+      "id": "Module1",
+      "name": "Module1",
+      "kind": "Module",
+      "file": "Module1.bas",
+      "tier": "Modules",
+      "subsystem": {
+        "primary": "Core.Modules",
+        "secondary": [],
+        "confidence": 0.35,
+        "reasons": [
+          "default classification"
+        ]
+      },
+      "ownership": {
+        "team": "Core"
+      },
+      "tags": [],
+      "roles": [
+        "Utility"
+      ],
+      "procedures": [
+        {
+          "id": "Module1.Caller",
+          "name": "Caller",
+          "role": {
+            "primary": "Utility",
+            "secondary": [],
+            "confidence": 0.45,
+            "reasons": []
+          },
+          "capabilities": [],
+          "resources": []
+        }
+      ],
+      "evidence": {
+        "path": "Module1.bas",
+        "metrics.lines": "7",
+        "metrics.cyclomatic": "1"
+      }
+    },
+    {
+      "id": "Module2",
+      "name": "Module2",
+      "kind": "Module",
+      "file": "Module2.bas",
+      "tier": "Modules",
+      "subsystem": {
+        "primary": "Core.Modules",
+        "secondary": [],
+        "confidence": 0.35,
+        "reasons": [
+          "default classification"
+        ]
+      },
+      "ownership": {
+        "team": "Core"
+      },
+      "tags": [],
+      "roles": [
+        "Utility"
+      ],
+      "procedures": [
+        {
+          "id": "Module2.Work",
+          "name": "Work",
+          "role": {
+            "primary": "Utility",
+            "secondary": [],
+            "confidence": 0.45,
+            "reasons": []
+          },
+          "capabilities": [],
+          "resources": []
+        }
+      ],
+      "evidence": {
+        "path": "Module2.bas",
+        "metrics.lines": "7",
+        "metrics.cyclomatic": "1"
+      }
+    }
+  ],
+  "unresolved": [
+    {
+      "target": "Module1.Caller",
+      "reason": "Procedure classified as generic utility",
+      "suggestedAction": "Review role heuristics or add overrides"
+    },
+    {
+      "target": "Module2.Work",
+      "reason": "Procedure classified as generic utility",
+      "suggestedAction": "Review role heuristics or add overrides"
+    }
+  ]
+}

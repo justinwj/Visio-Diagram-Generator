@@ -38,6 +38,7 @@ tests/fixtures/render/
 tests/fixtures/vsdx/
 out/fixtures/
 *.review.txt
+*.review.json
 
 # Local config
 *.env

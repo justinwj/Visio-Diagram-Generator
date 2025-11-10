@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Globalization;
 using Microsoft.CSharp.RuntimeBinder;
@@ -184,6 +185,7 @@ namespace VDG.CLI
             public string Version { get; set; } = "1.0";
             public Metrics Metrics { get; set; } = new Metrics();
             public List<DiagIssue> Issues { get; set; } = new List<DiagIssue>();
+            public JsonNode? ReviewSummary { get; set; }
         }
 
         private sealed class Metrics
@@ -2547,6 +2549,14 @@ namespace VDG.CLI
                 if (emitJson)
                 {
                     var payload = new DiagnosticsJson();
+                    var reviewSummaryRaw = model.Metadata
+                        .FirstOrDefault(kvp => string.Equals(kvp.Key, "review.summary.json", StringComparison.OrdinalIgnoreCase))
+                        .Value;
+                    if (!string.IsNullOrWhiteSpace(reviewSummaryRaw))
+                    {
+                        try { payload.ReviewSummary = JsonNode.Parse(reviewSummaryRaw); }
+                        catch { /* ignore parse errors */ }
+                    }
                     payload.Metrics.LayoutOutputMode = summary.OutputMode;
                     if (layoutPlan != null)
                     {

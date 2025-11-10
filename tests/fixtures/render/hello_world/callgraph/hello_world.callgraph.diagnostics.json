@@ -98,5 +98,32 @@
       "Lane": "Modules",
       "Page": 1
     }
-  ]
+  ],
+  "ReviewSummary": {
+    "modules": 1,
+    "procedures": 1,
+    "subsystems": [
+      {
+        "key": "Core.Modules",
+        "value": 1
+      }
+    ],
+    "roles": [
+      {
+        "key": "Utility",
+        "value": 1
+      }
+    ],
+    "warnings": [
+      "1 module classification(s) below confidence threshold."
+    ],
+    "suggestions": [],
+    "info": [
+      "Modules analysed: 1",
+      "Procedures analysed: 1",
+      "Subsystem distribution: Core.Modules=1",
+      "Primary roles detected: Utility=1"
+    ],
+    "residualFlows": 0
+  }
 }

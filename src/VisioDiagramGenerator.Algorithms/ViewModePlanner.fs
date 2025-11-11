@@ -278,11 +278,22 @@ module ViewModePlanner =
         | Some raw -> raw
         | None -> defaultValue
 
+    let private isViewMode (model: DiagramModel) =
+        match model.Metadata.TryGetValue("layout.outputMode") with
+        | true, value when not (String.IsNullOrWhiteSpace value) ->
+            not (value.Trim().Equals("print", StringComparison.OrdinalIgnoreCase))
+        | _ -> true
+
     let private buildLayerSplitOptions (model: DiagramModel) =
         let maxShapes = getMetadataInt model "layout.layers.maxShapes" |> clampLayerBudget 1000
         let maxConnectors = getMetadataInt model "layout.layers.maxConnectors" |> clampLayerBudget 1000
-        { MaxShapes = maxShapes
-          MaxConnectors = maxConnectors }
+        let options =
+            { MaxShapes = maxShapes
+              MaxConnectors = maxConnectors }
+        if isViewMode model then
+            { options with MaxConnectors = Int32.MaxValue }
+        else
+            options
 
     let private getModuleEdgeStats (stats: Dictionary<string, ModuleEdgeStats>) (moduleId: string) =
         match stats.TryGetValue moduleId with

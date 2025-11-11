@@ -283,7 +283,10 @@ let ``page contexts capture overflow splits`` () =
     model.Metadata["layout.view.advanced.enabled"] <- "true"
     model.Metadata["layout.view.laneSoftLimit"] <- "1"
     model.Metadata["layout.view.maxModulesPerLane"] <- "1"
-    model.Metadata["layout.page.plan.maxModulesPerPage"] <- "1"
+    model.Metadata["layout.page.plan.maxModulesPerPage"] <- "999"
+    model.Metadata["layout.page.plan.maxConnectors"] <- "999999"
+
+    model.Metadata["layout.page.pageSplitEnabled"] <- "false"
 
     let plan = ViewModePlanner.computeViewLayout model
     Assert.NotEmpty(plan.PageContexts)

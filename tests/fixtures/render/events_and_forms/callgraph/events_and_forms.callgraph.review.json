@@ -1,1 +1,0 @@
-{"modules":1,"procedures":1,"subsystems":[{"key":"UI.Forms","value":1}],"roles":[{"key":"EventHandler","value":1}],"warnings":[],"suggestions":[],"info":[],"residualFlows":0,"notes":["4 info-level item(s) suppressed by severity threshold \u0027warning\u0027."],"settings":{"minimumSeverity":"warning","roleConfidenceCutoff":0.55,"flowResidualCutoff":1600}}

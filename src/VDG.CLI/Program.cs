@@ -1110,8 +1110,8 @@ namespace VDG.CLI
             Console.Error.WriteLine("  --page-height <in>      Page height (inches)");
             Console.Error.WriteLine("  --page-margin <in>      Page margin (inches)");
             Console.Error.WriteLine("  --paginate <bool>       Enable pagination (future use)");
-            Console.Error.WriteLine("  --layer-max-shapes <1-1000>     Override layer shape soft cap (default 900)");
-            Console.Error.WriteLine("  --layer-max-connectors <1-1000> Override layer connector soft cap (default 900)");
+            Console.Error.WriteLine("  --layer-max-shapes <1-1000>     Override layer shape soft cap (default 1000)");
+            Console.Error.WriteLine("  --layer-max-connectors <1-1000> Override layer connector soft cap (default 1000)");
             Console.Error.WriteLine("  --layers [include|exclude] <list> Render specific layers (e.g., --layers include 1,3)");
             // M3 routing options
             Console.Error.WriteLine("  --route-mode <orthogonal|straight>  Preferred connector style (M3)");
@@ -1699,10 +1699,10 @@ namespace VDG.CLI
 
                 var softShapeLimit = ClampLayerBudget(
                     model.Metadata.TryGetValue("layout.layers.maxShapes", out var lms) ? lms : null,
-                    900);
+                    1000);
                 var softConnectorLimit = ClampLayerBudget(
                     model.Metadata.TryGetValue("layout.layers.maxConnectors", out var lmc) ? lmc : null,
-                    900);
+                    1000);
                 const int hardShapeLimit = 1000;
                 const int hardConnectorLimit = 1000;
 
@@ -3341,7 +3341,7 @@ namespace VDG.CLI
 
         internal sealed class DiagnosticsSummary
         {
-            public string OutputMode { get; set; } = "print";
+            public string OutputMode { get; set; } = "view";
             public int Rank { get; set; }
             public int PageOverflowCount { get; set; }
             public int PageCrowdingCount { get; set; }
@@ -6199,7 +6199,7 @@ namespace VDG.CLI
                 if (string.Equals(normalized, "view", StringComparison.OrdinalIgnoreCase)) return "view";
                 if (string.Equals(normalized, "print", StringComparison.OrdinalIgnoreCase)) return "print";
             }
-            return "print";
+            return "view";
         }
 
         private static double? GetPageHeight(DiagramModel model)

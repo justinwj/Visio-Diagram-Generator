@@ -279,8 +279,8 @@ module ViewModePlanner =
         | None -> defaultValue
 
     let private buildLayerSplitOptions (model: DiagramModel) =
-        let maxShapes = getMetadataInt model "layout.layers.maxShapes" |> clampLayerBudget 900
-        let maxConnectors = getMetadataInt model "layout.layers.maxConnectors" |> clampLayerBudget 900
+        let maxShapes = getMetadataInt model "layout.layers.maxShapes" |> clampLayerBudget 1000
+        let maxConnectors = getMetadataInt model "layout.layers.maxConnectors" |> clampLayerBudget 1000
         { MaxShapes = maxShapes
           MaxConnectors = maxConnectors }
 

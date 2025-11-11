@@ -64,7 +64,7 @@ Per-page annotations (`warning: page 12 ...`) are emitted when a page crosses co
 
 Large diagrams now carry an explicit layer plan in addition to the page plan:
 
-- Soft layer budgets default to 900 shapes/connectors; hard limits are clamped at 1 000. Set `layout.layers.maxShapes` / `layout.layers.maxConnectors` in diagram metadata to tune the limits (values are automatically clamped to 1–1 000).
+- Soft layer budgets default to 1 000 shapes/connectors; values are automatically clamped to the 1–1 000 range. Set `layout.layers.maxShapes` / `layout.layers.maxConnectors` in diagram metadata to tune the limits when you truly need tighter pages.
 - The planner emits `layoutPlan.Layers[]` (layer index, module list, initial share estimates) and `layoutPlan.Bridges[]` (cross-layer connector records with entry/exit anchors).
 - Diagnostics JSON mirrors the plan with `metrics.layerCount`, `metrics.layerCrowdingCount`, `metrics.layerOverflowCount`, `metrics.bridgeCount`, and a `metrics.layers[]` collection summarising module assignments, shape/connector totals, and bridge counts per layer.
 - `VDG.CLI` consumes the layer plan when rendering: modules and connectors are dropped onto Visio layers named `Layer <n>` (or user-provided names from `layout.layers.names`). Exceeding a soft budget generates a warning; exceeding the hard limit yields a `LayerOverflow` issue and keeps `partialRender=yes` set.

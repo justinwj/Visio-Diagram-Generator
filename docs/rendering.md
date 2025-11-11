@@ -57,12 +57,12 @@ Some fixtures rely on small JSON overrides (e.g., forcing pagination). Drop them
 ### Layer Segmentation & Bridges
 
 - The planner now emits per-layer budgets alongside page plans. `VDG.CLI` honours the plan by creating Visio layers named `Layer <n>` (or the friendly names from `layout.layers.names`) and assigning every shape and connector accordingly.
-- Layer caps default to a soft budget of 900 shapes/connectors and a hard stop at 1 000. Override via diagram metadata (`layout.layers.maxShapes`, `layout.layers.maxConnectors`) or the new CLI switches (`--layer-max-shapes`, `--layer-max-connectors`). Soft breaches emit warnings; hard breaches log `LayerOverflow` issues.
+- Layer caps default to a soft budget of 1 000 shapes/connectors. Override via diagram metadata (`layout.layers.maxShapes`, `layout.layers.maxConnectors`) or the CLI switches (`--layer-max-shapes`, `--layer-max-connectors`) only when you need tighter layer splits. Soft breaches emit warnings; hard breaches log `LayerOverflow` issues.
 - Cross-layer connectors produce `layoutPlan.Bridges[]` entries that retain the original edge metadata plus entry/exit anchors. Diagnostics expose a `BridgeCount` summary and include each bridge in `metrics.layers[].bridgesIn/bridgesOut`, making it easy to audit cross-layer traffic.
 - Pagination now exports matching `layoutPlan.PageBridges[]` records. `VDG.CLI` draws a solid stub and connector on the source page (pointing to the destination page number) and a dashed inbound stub on the target page so cross-page edges stay discoverable without double-counting connectors.
 - Use `--layers include ...` or `--layers exclude ...` to render a subset of layers during Visio output. When a filter hides one side of a bridge, the visible layer receives a small stub marker so cross-layer connectors remain discoverable.
 - New diagnostics metrics mirror the layer plan: `LayerCount`, `LayerCrowdingCount`, `LayerOverflowCount`, and a sorted `Layers[]` array describing module membership and overflow hints. Fixture baselines have been refreshed to assert on these numbers.
-- When tuning a large fixture, start by lowering the soft budgets (e.g., `layout.layers.maxShapes=600`), re-run the render, and inspect `metrics.layers[]` to verify the split before adjusting page spacing.
+- When tuning a large fixture, start by lowering the soft budgets (e.g., `layout.layers.maxShapes=750`) only if needed, re-run the render, and inspect `metrics.layers[]` to verify the split before adjusting page spacing.
 
 ## Render Smoke Script
 

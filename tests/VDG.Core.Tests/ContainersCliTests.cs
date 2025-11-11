@@ -47,6 +47,13 @@ public class ContainersCliTests
     {
         var json = "{\n" +
                    "  \"schemaVersion\": \"1.2\",\n" +
+                   "  \"metadata\": {\n" +
+                   "    \"properties\": {\n" +
+                   "      \"layout.outputMode\": \"print\",\n" +
+                   "      \"layout.containers.paddingIn\": \"0.4\",\n" +
+      "      \"layout.containers.cornerIn\": \"0.2\"\n" +
+                   "    }\n" +
+                   "  },\n" +
                    "  \"layout\": {\n" +
                    "    \"tiers\": [\"External\", \"Services\"],\n" +
                    "    \"containers\": { \"paddingIn\": 0.4, \"cornerIn\": 0.2 }\n" +

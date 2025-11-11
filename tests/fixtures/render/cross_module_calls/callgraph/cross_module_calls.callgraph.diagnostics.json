@@ -2,8 +2,8 @@
   "Version": "1.0",
   "Metrics": {
     "LayoutOutputMode": "view",
-    "LayoutCanvasWidth": 11.8500004,
-    "LayoutCanvasHeight": 2.25,
+    "LayoutCanvasWidth": 8.10000038,
+    "LayoutCanvasHeight": 2.1500001,
     "LayoutNodeCount": 2,
     "LayoutModuleCount": 2,
     "LayoutContainerCount": 2,
@@ -23,7 +23,7 @@
     "PlannerPageCount": 1,
     "PlannerAverageModulesPerPage": 2,
     "PlannerAverageConnectorsPerPage": 2,
-    "PlannerMaxOccupancyPercent": 16.666666666666664,
+    "PlannerMaxOccupancyPercent": 0,
     "PlannerMaxConnectorsPerPage": 2,
     "PageOverflowCount": 0,
     "PageCrowdingCount": 0,
@@ -113,35 +113,5 @@
       "Lane": "Modules",
       "Page": 1
     }
-  ],
-  "ReviewSummary": {
-    "modules": 2,
-    "procedures": 2,
-    "subsystems": [
-      {
-        "key": "Core.Modules",
-        "value": 2
-      }
-    ],
-    "roles": [
-      {
-        "key": "Utility",
-        "value": 2
-      }
-    ],
-    "warnings": [
-      "2 module classification(s) below confidence threshold."
-    ],
-    "suggestions": [],
-    "info": [],
-    "residualFlows": 0,
-    "notes": [
-      "4 info-level item(s) suppressed by severity threshold \u0027warning\u0027."
-    ],
-    "settings": {
-      "minimumSeverity": "warning",
-      "roleConfidenceCutoff": 0.55,
-      "flowResidualCutoff": 1600
-    }
-  }
+  ]
 }

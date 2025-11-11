@@ -4,6 +4,7 @@
 - Deliver diagrams that satisfy the vision statement: actionable, readable, and purpose-driven views of every module, form, procedure, and edge.
 - Treat information design as the primary objective; spatial layout only proceeds once the semantic model is correct and validated.
 - Guarantee that every emitted page explains *why* structures exist (roles, flows, responsibilities), not merely *how* they connect.
+- Prioritize dense, “view-mode” diagrams for developer diagnostics first; defer paginated “print-mode” polish to later roadmap milestones once fidelity and cues are stable.
 
 ## Gate 0: Semantic Modeling & Domain Abstraction
 ### Objectives

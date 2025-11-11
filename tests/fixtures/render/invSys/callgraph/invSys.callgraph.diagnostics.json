@@ -2,8 +2,8 @@
   "Version": "1.0",
   "Metrics": {
     "LayoutOutputMode": "view",
-    "LayoutCanvasWidth": 9.95000076,
-    "LayoutCanvasHeight": 14.8500004,
+    "LayoutCanvasWidth": 9.70000076,
+    "LayoutCanvasHeight": 14.4499998,
     "LayoutNodeCount": 210,
     "LayoutModuleCount": 44,
     "LayoutContainerCount": 44,
@@ -12,7 +12,7 @@
     "LayerOverflowCount": 0,
     "BridgeCount": 0,
     "ConnectorCount": 1684,
-    "StraightLineCrossings": 1287479,
+    "StraightLineCrossings": 1285702,
     "PageHeight": 8.5,
     "UsableHeight": 7.5,
     "ModuleCount": 0,
@@ -29,7 +29,7 @@
     "PageCrowdingCount": 0,
     "LaneOverflowCount": 0,
     "LaneCrowdingCount": 3,
-    "ContainerOverflowCount": 34,
+    "ContainerOverflowCount": 35,
     "PartialRender": true,
     "ConnectorOverLimitPageCount": 0,
     "PagesWithPartialRender": 2,
@@ -868,8 +868,14 @@
       {
         "Tier": "Sheets",
         "Page": 2,
-        "OccupancyRatio": 0.3279999947547913,
-        "Nodes": 3
+        "OccupancyRatio": 0.19199999650319419,
+        "Nodes": 2
+      },
+      {
+        "Tier": "Sheets",
+        "Page": 1,
+        "OccupancyRatio": 0.055999998251597086,
+        "Nodes": 1
       }
     ],
     "Containers": [
@@ -1066,8 +1072,15 @@
         "Id": "ThisWorkbook",
         "Tier": "Sheets",
         "Page": 2,
-        "OccupancyRatio": 0.3279999947547913,
-        "Nodes": 3
+        "OccupancyRatio": 0.19199999650319419,
+        "Nodes": 2
+      },
+      {
+        "Id": "ThisWorkbook",
+        "Tier": "Sheets",
+        "Page": 1,
+        "OccupancyRatio": 0.055999998251597086,
+        "Nodes": 1
       }
     ]
   },
@@ -1075,7 +1088,7 @@
     {
       "Code": "LayoutHeightThreshold",
       "Level": "warning",
-      "Message": "layout height 15.0in exceeds threshold 11.0in; consider pagination, reducing spacing, or vertical orientation.",
+      "Message": "layout height 14.7in exceeds threshold 11.0in; consider pagination, reducing spacing, or vertical orientation.",
       "Lane": null,
       "Page": null
     },
@@ -1124,21 +1137,21 @@
     {
       "Code": "PageOverflow",
       "Level": "error",
-      "Message": "page overflow: page=1 occupancy=1774% (usable 7.50in); top: [clsBulkSnapshot.class_initialize(0.42in), MouseOverControl.FormHandle(0.42in), MouseOverControl.GetControl(0.42in)]",
+      "Message": "page overflow: page=1 occupancy=1774% (usable 7.50in); top: [clsBulkSnapshot.class_initialize(0.42in), MouseOverControl.GetControl(0.42in), MouseOverControl.InitFromControl(0.42in)]",
       "Lane": null,
       "Page": 1
     },
     {
       "Code": "PageOverflow",
       "Level": "error",
-      "Message": "page overflow: page=2 occupancy=604% (usable 7.50in); top: [frmAdminControls.btnCreateDeleteUser_Click(0.42in), frmItemSearch.UserForm_Activate(0.42in), frmItemSearch.UserForm_Initialize(0.42in)]",
+      "Message": "page overflow: page=2 occupancy=604% (usable 7.50in); top: [frmAdminControls.btnCreateDeleteUser_Click(0.42in), frmItemSearch.UpdateDescription(0.42in), frmItemSearch.UserForm_Activate(0.42in)]",
       "Lane": null,
       "Page": 2
     },
     {
       "Code": "CrossingDensity",
       "Level": "error",
-      "Message": "crossing density high: planned crossings=1392 (\u003E= 400)",
+      "Message": "crossing density high: planned crossings=1373 (\u003E= 400)",
       "Lane": null,
       "Page": null
     },
@@ -1386,89 +1399,13 @@
       "Message": "sub-container \u0027TestSummary\u0027 overflows lane \u0027Classes\u0027.",
       "Lane": "Classes",
       "Page": 1
+    },
+    {
+      "Code": "ContainerOverflow",
+      "Level": "warning",
+      "Message": "sub-container \u0027ThisWorkbook\u0027 overflows lane \u0027Sheets\u0027.",
+      "Lane": "Sheets",
+      "Page": 1
     }
-  ],
-  "ReviewSummary": {
-    "modules": 65,
-    "procedures": 210,
-    "subsystems": [
-      {
-        "key": "UI.Forms",
-        "value": 17
-      },
-      {
-        "key": "UI.Sheets",
-        "value": 16
-      },
-      {
-        "key": "Core.Modules",
-        "value": 10
-      },
-      {
-        "key": "Domain.TransactionSets",
-        "value": 7
-      },
-      {
-        "key": "Domain.Inventory",
-        "value": 6
-      },
-      {
-        "key": "Observability.Logging",
-        "value": 6
-      },
-      {
-        "key": "Data.ImportExport",
-        "value": 2
-      },
-      {
-        "key": "Infrastructure.Core",
-        "value": 1
-      }
-    ],
-    "roles": [
-      {
-        "key": "Utility",
-        "value": 113
-      },
-      {
-        "key": "EventHandler",
-        "value": 55
-      },
-      {
-        "key": "DataLoader",
-        "value": 14
-      },
-      {
-        "key": "Initializer",
-        "value": 10
-      },
-      {
-        "key": "Coordinator",
-        "value": 8
-      },
-      {
-        "key": "Persistence",
-        "value": 8
-      },
-      {
-        "key": "Validator",
-        "value": 2
-      }
-    ],
-    "warnings": [
-      "10 module classification(s) below confidence threshold.",
-      "1600 unresolved flow(s) detected. See flows.json residuals."
-    ],
-    "suggestions": [],
-    "info": [],
-    "residualFlows": 1600,
-    "notes": [
-      "5 info-level item(s) suppressed by severity threshold \u0027warning\u0027."
-    ],
-    "settings": {
-      "minimumSeverity": "warning",
-      "roleConfidenceCutoff": 0.55,
-      "flowResidualCutoff": 1600
-    }
-  }
+  ]
 }

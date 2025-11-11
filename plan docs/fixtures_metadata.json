@@ -1,7 +1,7 @@
 {
-  "generatedAtUtc": "2025-11-10T08:28:12.4908216Z",
-  "commit": "77b18488d0662a56cff3a98d6e3a10acd7ed70d2",
-  "note": "advanced review cues",
+  "generatedAtUtc": "2025-11-11T16:50:56.0567598Z",
+  "commit": "c6133d2388942a4d59db70e6b5fbee64f2bf2e81",
+  "note": "page contexts",
   "fixtures": [
     {
       "name": "cross_module_calls",
@@ -12,7 +12,7 @@
           "hashes": {
             "ir": "d175407140dd193125c3755b3d636444128d8371a725ed2cf2d65980ab7493df",
             "diagram": "81404225ddbfb1d22e234f4632d979c94e65ab9df3ffa60a5eeb9abad53c5987",
-            "diagnostics": "98959888b12f9e56967806819b4ba63ea9bc14e05e66472274d0f5ccf02590c5",
+            "diagnostics": "a46970e619051f60299ba7656f33ca2b0445368d806ad3b2663447cae25e367b",
             "vsdx": "44028c5b9a418abec5d0d9d79bb3c42aa4e6b434b781fa48f5b5945b582eea79",
             "reviewJson": "aef8cc17762efd18533bb338f35b7ea7705ec639d005b09b0b58ccbf33cb8206",
             "reviewTxt": "5a7e43fa276a89e058cb602577f55d1ae0caf3ce52d41ece0aded6714de6576b"
@@ -58,7 +58,7 @@
           "hashes": {
             "ir": "d175407140dd193125c3755b3d636444128d8371a725ed2cf2d65980ab7493df",
             "diagram": "410bbbd31b7033a61f055f8360fd66839f3f7db216d08b1a4d89534bcb968894",
-            "diagnostics": "2d09895f07d2a423e74b0a702da9d0a787894db48f204f19493f9595a694e31f",
+            "diagnostics": "60ee820b5040b34840ee709b091eca7607de8377f1d738bdeb8853f1f8528ab6",
             "vsdx": "44028c5b9a418abec5d0d9d79bb3c42aa4e6b434b781fa48f5b5945b582eea79",
             "reviewJson": "aef8cc17762efd18533bb338f35b7ea7705ec639d005b09b0b58ccbf33cb8206",
             "reviewTxt": "5a7e43fa276a89e058cb602577f55d1ae0caf3ce52d41ece0aded6714de6576b"
@@ -110,7 +110,7 @@
           "hashes": {
             "ir": "ea8159ef069309a41178351355ec3b13f6c3669eb53d4d309bc48bb718c5dbc7",
             "diagram": "7d9acbe01714fdcbe37113d04e8bbc05475daac6c7aee7df2493afa77639bf61",
-            "diagnostics": "691feb2d128bafd1d1187c2eddc01b24f0703c95574482bf9ca5d65990e9c9f3",
+            "diagnostics": "ae1092b807889789d65dea5278f506f28e618d9e2983b5d439089806add8e5b0",
             "vsdx": "44028c5b9a418abec5d0d9d79bb3c42aa4e6b434b781fa48f5b5945b582eea79",
             "reviewJson": "f0b5490cc7636014224c9123abedfa063d5f9a445111fc9505ff21183f0d49f7",
             "reviewTxt": "c9c2ba449dd2cf2d445b20d1e40d4695995075796f3dd1bf4ca5c74a7cc8ce6f"
@@ -162,7 +162,7 @@
           "hashes": {
             "ir": "29d3fc8c54ec63960f58cf9958fa20aee860d3dfd284f5d9f7c29d03710ba754",
             "diagram": "573d7acf812e48b948634a4c9bc08f25f3db20bf55d9040e91282c51c167bac2",
-            "diagnostics": "1f068e9ddf8dbe6fc3c2792a31ffb7e4147d6b4507ed97c93b83a84ff97dac8e",
+            "diagnostics": "81f69eb47c48cbbf501d55106c4dbde8d2dd662cc26d3e018d47001430b2c417",
             "vsdx": "44028c5b9a418abec5d0d9d79bb3c42aa4e6b434b781fa48f5b5945b582eea79",
             "reviewJson": "044cb0efd8a150e68c7608ad3f6d42d9add9ceed45c36ac8738e3c7d3c293a6b",
             "reviewTxt": "3a80c9b673f618f9cb499f5aff9633d75bb146116aea3f0d1393e38770aa2bb6"
@@ -214,8 +214,8 @@
           "hashes": {
             "ir": "b8a6ed1a35633dff88062f484e0ea304356a4e915d21443a2f544fb1abbe3c00",
             "diagram": "79b781a523482fa08155b49f86639f23aaed4cfeb9aa0a95d08e341f9f6eb281",
-            "diagnostics": "9fa7b6e3ac6dcbe14f2cd441d10922ee974e1d74cbf0c6ed73243302feba5d96",
-            "vsdx": "359c14ed100ba2717ec4a159bd3a101cbd0aa1249c2088e46cebc0926a3e7b71",
+            "diagnostics": "79809ee7e3f873ec0f535c009aac90d5c0cf1b99976dc61cd2fd588ab48bf8d6",
+            "vsdx": "8646dc61943e11154d652351973715f17712b2f7705eb02e5d59e6396cf06944",
             "reviewJson": "c8b338b7fb5d897ed66e709508d572262830d9630a108c396e411b497d4edf78",
             "reviewTxt": "541e8772efaa81ed6c2e252fab786a530fabfb34530180f67edd7c0f717dae9a"
           },
@@ -260,7 +260,7 @@
           "hashes": {
             "ir": "9a85499cbbad835bdffe60660265a06c7b42d095127fdd833eab06f1678d59ca",
             "diagram": "b7fcb0fc5da28800b11bf2bc32b6b88043f948948f4c57d953f0d9e53ec41d75",
-            "diagnostics": "059e8beddc69c7151760340a8606037d48f2aae8ecf25ad0c44d05e35578b77c",
+            "diagnostics": "da4cc14e6e5789fc769d83987d96a98f484fe8511e22c466ebc126f6c70fed51",
             "vsdx": "44028c5b9a418abec5d0d9d79bb3c42aa4e6b434b781fa48f5b5945b582eea79",
             "reviewJson": "c8b338b7fb5d897ed66e709508d572262830d9630a108c396e411b497d4edf78",
             "reviewTxt": "541e8772efaa81ed6c2e252fab786a530fabfb34530180f67edd7c0f717dae9a"
@@ -306,7 +306,7 @@
           "hashes": {
             "ir": "9a85499cbbad835bdffe60660265a06c7b42d095127fdd833eab06f1678d59ca",
             "diagram": "12285e0ad2942f3745e2bd7a8f1b9d5de239cfe2f98b83c92dc1779b7943177f",
-            "diagnostics": "faf8536a7f4c1fd79ada6eada930e08f42c5d2edb5331726c8c608f2d3f95f13",
+            "diagnostics": "f166455976424e28704bae4571f1e86cc3e023bd247b2b19bd0ee72380693c08",
             "vsdx": "44028c5b9a418abec5d0d9d79bb3c42aa4e6b434b781fa48f5b5945b582eea79",
             "reviewJson": "c8b338b7fb5d897ed66e709508d572262830d9630a108c396e411b497d4edf78",
             "reviewTxt": "541e8772efaa81ed6c2e252fab786a530fabfb34530180f67edd7c0f717dae9a"
@@ -352,7 +352,7 @@
           "hashes": {
             "ir": "9a85499cbbad835bdffe60660265a06c7b42d095127fdd833eab06f1678d59ca",
             "diagram": "c77035e9c9b8a51a0256d43b1d3b4d73b72b13e5d2f4f45128cf1f49e3549921",
-            "diagnostics": "b0fb1cc254aee5fda8b2374e1756c7757422bb20cbd252fa2a75959e76c882b5",
+            "diagnostics": "718d9b884f4dc48cd87c0cca0ac16a7352d6b1666766890759f5b5d9ec6b6b21",
             "vsdx": "44028c5b9a418abec5d0d9d79bb3c42aa4e6b434b781fa48f5b5945b582eea79",
             "reviewJson": "c8b338b7fb5d897ed66e709508d572262830d9630a108c396e411b497d4edf78",
             "reviewTxt": "541e8772efaa81ed6c2e252fab786a530fabfb34530180f67edd7c0f717dae9a"

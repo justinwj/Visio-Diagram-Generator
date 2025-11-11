@@ -3,16 +3,19 @@
 Generated: 2025-11-10  
 Last milestone completed: Seed overrides and advanced layout metadata integration (semantic review surfaces, planner cues, fixture hashes) finished 2025-11-09. This plan reflects the post-71f5afc status before any new development starts.
 
-## 1. Advanced Layout Wiring & Fixture Determinism
-- **Purpose**: Finish the planner/runner wiring described in `plan docs/advanced_layout_scenarios.md` so lane segments, heat bands, overflow badges, flow bundles, and cycle legends materialize deterministically in both `.vsdx` and `.review.*`, aligning with the remaining Gate 0 goals in `plan docs/Vision_statement.md`.
+## 1. Advanced Layout Wiring & Fixture Determinism (**fixtures refreshed – awaiting Visio validation**)
+- **Purpose**: Finish the planner/runner wiring described in `plan docs/advanced_layout_scenarios.md` so lane segments, heat bands, overflow badges, flow bundles, cycle legends, and page-context cues materialize deterministically in both `.vsdx` and `.review.*`, aligning with the remaining Gate 0 goals in `plan docs/Vision_statement.md`.
+- **Current Status (2025-11-11)**:
+  - Planner/CLI now emit `pageContexts`, `laneSegments`, `flowBundles`, and deterministic advanced cues.
+  - All canonical fixtures (hello_world, cross_module_calls, events_and_forms, invSys modes) regenerated with advanced mode; ledger/metadata hashes updated.
+  - Diagnostics and review artifacts reflect the new cues; CI goldens match.
 - **Next Steps**:
-  - Finalize `LaneCluster` → `LaneSegment` heuristics and ensure CLI metadata writes `pageContexts`, `laneSegments`, and `flowBundles`.
-  - Regenerate `invSys` plus new dense fixtures with advanced mode toggled, capturing hashes in `plan docs/fixtures_log.md` / `plan docs/fixtures_metadata.json`.
-  - Verify Visio runner glyphs (heat bands, bundle badges) stay faithful when automation runs on the Windows desktop/Zenbook hosts.
-- **Proposed Owners**: Planner/CLI wiring – Codex (paired with Justin for Visio validation); Fixture refresh – automation script owners (tools team).
-- **Done When**: All advanced cues appear in diagrams, diagnostics, and `.review.*`; ledger entries updated with new hashes; deterministic re-runs on both hosts show zero drift.
-- **References**: `plan docs/advanced_layout_scenarios.md`, `docs/AdvancedLayouts.md`, `plan docs/fixtures_log.md`.
-- **Constraints**: Visio automation requires Windows with desktop MSBuild and Office VISLIB; planner/tests can run in WSL but must mirror options (`VDG_LAYOUT_*`, `VDG_SKIP_RUNNER`).
+  - Run Visio automation on both desktop tower and Zenbook Duo to confirm heat bands, badges, and context notes render identically outside `VDG_SKIP_RUNNER`.
+  - Capture validation notes/screenshots into `inspect_output.ps1` (or dedicated log) and confirm no connector/shape drift.
+- **Proposed Owners**: Planner/CLI wiring – Codex (done); Fixture refresh – tools automation (done); Visio validation – Justin + Codex.
+- **Done When**: Both Windows hosts render the refreshed fixtures with matching cues and no drift; validation is logged for the milestone review.
+- **References**: `plan docs/advanced_layout_scenarios.md`, `docs/AdvancedLayouts.md`, `plan docs/fixtures_log.md`, `inspect_output.ps1`.
+- **Constraints**: Visio automation requires Windows with desktop MSBuild and Office VISLIB; headless validation may use `VDG_SKIP_RUNNER`, but final sign-off must include real Visio runs.
 
 ## 2. Reviewer Dashboard & Reporting Expansion
 - **Purpose**: Extend the reviewer dashboard so advanced layout cues, severity thresholds, and review hashes surface centrally, keeping stakeholders aligned without opening Visio (see `plan docs/review_dashboard.md`, `plan docs/review_threshold_switches.md`).

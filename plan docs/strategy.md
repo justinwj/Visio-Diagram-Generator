@@ -89,18 +89,18 @@
   - Keep payload schemas versioned; add compatibility shims when breaking changes occur.
   - Use Shape Data / User cells to embed semantic tags so diagrams remain informative when exported.
 
-### Cross-Platform Environment Split
-- **WSL Focus (Cross-Platform Components)**
-  - Run planners, semantic analyzers, F# tests, and CLI utilities that do not require Visio inside WSL for faster tooling, reproducible builds, and CI parity.
-  - Store shared artifacts (taxonomy/flow JSON, fixtures, diagnostics) in paths accessible from both environments.
-- **Windows 11 Focus (Visio Automation & Packaging)**
-  - Keep Visio-dependent runners, COM interop, and installer/packaging scripts on Windows.
-  - Validate final `.vsdx` outputs, ShapeSheet annotations, and packaging automation using native Visio.
-- **Coordination Practices**
-  - Provide scripts that sync build outputs between environments (e.g., `./tools/sync-wsl.ps1` future work).
-  - Document environment prerequisites so contributors understand which tasks live in WSL vs Windows.
-  - Align CI: run semantic/layout tests in Linux containers; schedule Windows runners for Visio smoke tests.
-  - Packaging remains unified: gather cross-platform artifacts and Windows binaries into a single release bundle (ZIP/MSIX) with clear documentation.
+~~### Cross-Platform Environment Split~~
+- ~~**WSL Focus (Cross-Platform Components)**~~
+  - ~~Run planners, semantic analyzers, F# tests, and CLI utilities that do not require Visio inside WSL for faster tooling, reproducible builds, and CI parity.~~
+  - ~~Store shared artifacts (taxonomy/flow JSON, fixtures, diagnostics) in paths accessible from both environments.~~
+- ~~**Windows 11 Focus (Visio Automation & Packaging)**~~
+  - ~~Keep Visio-dependent runners, COM interop, and installer/packaging scripts on Windows.~~
+  - ~~Validate final `.vsdx` outputs, ShapeSheet annotations, and packaging automation using native Visio.~~
+- ~~**Coordination Practices**~~
+  - ~~Provide scripts that sync build outputs between environments (e.g., `./tools/sync-wsl.ps1` future work).~~
+  - ~~Document environment prerequisites so contributors understand which tasks live in WSL vs Windows.~~
+  - ~~Align CI: run semantic/layout tests in Linux containers; schedule Windows runners for Visio smoke tests.~~
+  - ~~Packaging remains unified: gather cross-platform artifacts and Windows binaries into a single release bundle (ZIP/MSIX) with clear documentation.~~
 
 ## Implementation Playbooks
 ### Implementing High-Density, Algorithmic Layouts

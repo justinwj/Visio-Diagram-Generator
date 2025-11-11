@@ -36,7 +36,7 @@ When advanced mode is active, the Visio renderer consumes the planner metadata a
 * **Lane heat bands** – narrow coloured bars to the left of each tier show relative occupancy (green = healthy, yellow/orange = nearing capacity, red = over limit). Overflow reason badges (e.g., `module-soft-limit`) appear on the right edge when a sub-lane exceeded soft limits.
 * **Flow bundle badges** – when many connectors share the same role transition, they are bundled into a single connector labelled `xN`. Hovering the badge in Visio shows the first few labels.
 * **Cycle cluster callouts** – legends highlight strongly connected components; look for entries such as `Cycle warning: ModuleA, ModuleB…`.
-* **Page legend** – every page now includes a “Reviewer cues” table near the top-right margin summarising lane pressure, bundled flows, and cycle clusters for that page along with cue severity.
+* **Page legend** – every page now includes a “Reviewer cues” table near the top-right margin summarising lane pressure, bundled flows, cycle clusters, and **page context notes** (e.g., `page-connector-cap`, `lane-overflow`) along with cue severity. Raw context entries live in `layout.view.pageContexts.json`.
 
 ### Reviewer Mapping
 
@@ -73,5 +73,5 @@ For quick reference, the CLI help (`vdg.cli --help`) lists the new layout switch
 
 ### Review Summary Format
 - `.review.txt` now appends an **Advanced layout cues** section. Each page lists legend entries, lane heat/overflow summaries, bundled flow counts, and cycle clusters in plain text (`Page 2: [warning] Lane Services: module-soft-limit`, etc.).
-- `.review.json` gains an `advanced` block with machine-readable data: `pages[].lanes[]` (tier, heat, overflow), `pages[].flows[]` (source/target, connector count, sample label), `pages[].cycles[]`, and `pages[].legend[]`. Dashboards and CI scripts can parse this block directly.
+- `.review.json` gains an `advanced` block with machine-readable data: `pages[].lanes[]` (tier, heat, overflow), `pages[].flows[]` (source/target, connector count, sample label), `pages[].cycles[]`, `pages[].contexts[]` (reason, trigger, tiers, affected modules), and `pages[].legend[]`. Dashboards and CI scripts can parse this block directly.
 - Diagnostics JSON mirrors the same data (`advancedPages`), so portals can surface cues without touching `.review.*`.

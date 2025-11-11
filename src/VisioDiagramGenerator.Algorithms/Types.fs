@@ -119,6 +119,15 @@ type FlowBundlePlan =
       SampleEdges: string array }
 
 [<CLIMutable>]
+type PageContextPlan =
+    { PageIndex: int
+      Reason: string
+      TriggerModuleId: string
+      TriggerTier: string
+      Note: string
+      Modules: string array }
+
+[<CLIMutable>]
 type CycleClusterPlan =
     { ClusterId: string
       ModuleIds: string array
@@ -201,6 +210,7 @@ type LayoutPlan =
       LaneSegments: LaneSegmentPlan array
       Edges: EdgeRoute array
       FlowBundles: FlowBundlePlan array
+      PageContexts: PageContextPlan array
       Pages: PagePlan array
       Layers: LayerPlan array
       ChannelLabels: ChannelLabel array

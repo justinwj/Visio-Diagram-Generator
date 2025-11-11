@@ -210,6 +210,7 @@ module PrintPlanner =
           LaneSegments = Array.empty
           Edges = edges
           FlowBundles = Array.empty
+          PageContexts = Array.empty
           Pages = computePagePlans model layout
           Layers = Array.empty
           ChannelLabels = Array.empty

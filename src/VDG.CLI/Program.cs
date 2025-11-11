@@ -144,6 +144,15 @@ namespace VDG.CLI
             public List<string> ModuleIds { get; set; } = new List<string>();
         }
 
+        internal sealed class PageContextCue
+        {
+            public string Reason { get; set; } = string.Empty;
+            public string? Trigger { get; set; }
+            public string? Tier { get; set; }
+            public string? Note { get; set; }
+            public List<string> Modules { get; } = new List<string>();
+        }
+
         internal sealed class AdvancedPageSummary
         {
             public int Page { get; set; }
@@ -151,6 +160,7 @@ namespace VDG.CLI
             public List<FlowBundleCue> Flows { get; } = new List<FlowBundleCue>();
             public List<CycleClusterCue> Cycles { get; } = new List<CycleClusterCue>();
             public List<AdvancedLegendCue> Legend { get; } = new List<AdvancedLegendCue>();
+            public List<PageContextCue> Contexts { get; } = new List<PageContextCue>();
         }
 
         internal sealed class LayerDiagnosticsDetail
@@ -3073,6 +3083,14 @@ namespace VDG.CLI
                     var preview = string.IsNullOrWhiteSpace(flow.LabelPreview) ? string.Empty : $" ({flow.LabelPreview})";
                     lines.Add($"  Flow {flow.SourceTier}->{flow.TargetTier} x{flow.ConnectorCount}{preview}");
                 }
+                foreach (var context in page.Contexts)
+                {
+                    var modules = (context.Modules != null && context.Modules.Count > 0)
+                        ? string.Join(", ", context.Modules)
+                        : "n/a";
+                    var note = string.IsNullOrWhiteSpace(context.Note) ? string.Empty : $" ({context.Note})";
+                    lines.Add($"  Context [{context.Reason}] trigger={context.Trigger} tier={context.Tier} modules={modules}{note}");
+                }
                 foreach (var cycle in page.Cycles)
                 {
                     var modules = (cycle.ModuleIds != null && cycle.ModuleIds.Count > 0)
@@ -3635,6 +3653,15 @@ namespace VDG.CLI
             else
             {
                 model.Metadata.Remove("layout.view.flowBundles.json");
+            }
+
+            if (plan?.PageContexts != null && plan.PageContexts.Length > 0)
+            {
+                model.Metadata["layout.view.pageContexts.json"] = JsonSerializer.Serialize(plan.PageContexts, JsonOptions);
+            }
+            else
+            {
+                model.Metadata.Remove("layout.view.pageContexts.json");
             }
 
             if (plan?.CycleClusters != null && plan.CycleClusters.Length > 0)
@@ -6493,6 +6520,25 @@ namespace VDG.CLI
                     }
                 }
 
+                if (layoutPlan.PageContexts != null)
+                {
+                    foreach (var context in layoutPlan.PageContexts.Where(ctx => ctx != null && ctx.PageIndex == pageIndex))
+                    {
+                        var cue = new PageContextCue
+                        {
+                            Reason = string.IsNullOrWhiteSpace(context!.Reason) ? "page-plan" : context.Reason!,
+                            Trigger = context.TriggerModuleId,
+                            Tier = context.TriggerTier,
+                            Note = context.Note
+                        };
+                        if (context.Modules != null)
+                        {
+                            cue.Modules.AddRange(context.Modules.Where(m => !string.IsNullOrWhiteSpace(m)).Select(m => m!));
+                        }
+                        summary.Contexts.Add(cue);
+                    }
+                }
+
                 var legend = CollectAdvancedPageCues(layoutPlan, pageIndex);
                 foreach (var cue in legend)
                 {
@@ -6614,6 +6660,23 @@ namespace VDG.CLI
                         {
                             cues.Add(new AdvancedPageCue(text, severity));
                         }
+                    }
+                }
+            }
+
+            if (layoutPlan.PageContexts != null)
+            {
+                foreach (var context in layoutPlan.PageContexts.Where(ctx => ctx != null && ctx.PageIndex == pageIndex))
+                {
+                    var note = string.IsNullOrWhiteSpace(context!.Note)
+                        ? $"Page context ({context.Reason})"
+                        : context.Note!;
+                    var severity = (context.Reason ?? string.Empty).IndexOf("overflow", StringComparison.OrdinalIgnoreCase) >= 0
+                        ? "warning"
+                        : "info";
+                    if (seen.Add(note))
+                    {
+                        cues.Add(new AdvancedPageCue(note, severity));
                     }
                 }
             }

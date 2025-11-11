@@ -56,6 +56,7 @@ namespace VDG.CLI.Tests
                 Nodes = layout.Nodes,
                 Edges = layout.Edges,
                 Containers = Array.Empty<ContainerLayout>(),
+                PageContexts = Array.Empty<PageContextPlan>(),
                 Pages = Array.Empty<PagePlan>(),
                 Stats = new LayoutStats
                 {

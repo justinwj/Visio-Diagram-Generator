@@ -426,6 +426,7 @@ module ViewModePlanner =
               LaneSegments = Array.empty
               Edges = Array.empty
               FlowBundles = Array.empty
+              PageContexts = Array.empty
               Pages = Array.empty
               Layers = Array.empty
               ChannelLabels = Array.empty
@@ -712,6 +713,8 @@ module ViewModePlanner =
             let orderedSegments = ResizeArray<string>()
             let moduleToPage = Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
             let moduleTierIndex = Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+            let moduleBasePageIndex = Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+            let pageContexts = ResizeArray<PageContextPlan>()
 
             let nodeLookup = Dictionary<string, Node>(StringComparer.OrdinalIgnoreCase)
             for node in model.Nodes do
@@ -1083,6 +1086,14 @@ module ViewModePlanner =
                 else
                     initialPagePlans
 
+            for plan in basePagePlans do
+                if not (isNull (box plan)) && not (isNull plan.Modules) then
+                    for moduleId in plan.Modules do
+                        if not (String.IsNullOrWhiteSpace moduleId) then
+                            let trimmed = moduleId.Trim()
+                            if not (moduleBasePageIndex.ContainsKey trimmed) then
+                                moduleBasePageIndex[trimmed] <- plan.PageIndex
+
             let enforcedPagePlans = enforceLaneCapacity basePagePlans
 
             let plannedPagePlans =
@@ -1322,6 +1333,108 @@ module ViewModePlanner =
                          Occupancy = 0.0 } |]
                 else
                     plannedPagePlans |> Array.sortBy (fun plan -> plan.PageIndex)
+
+            let connectorCap =
+                if pageOptionsPre.MaxConnectors <= 0 then Int32.MaxValue
+                else pageOptionsPre.MaxConnectors
+            let moduleCap =
+                if pageOptionsPre.MaxModulesPerPage <= 0 then Int32.MaxValue
+                else pageOptionsPre.MaxModulesPerPage
+            let occupancyCap =
+                if Double.IsNaN pageOptionsPre.MaxOccupancyPercent
+                   || pageOptionsPre.MaxOccupancyPercent <= 0.0
+                   || pageOptionsPre.LaneSplitAllowed then
+                    Double.PositiveInfinity
+                else
+                    pageOptionsPre.MaxOccupancyPercent
+
+            let basePlanLookup =
+                basePagePlans
+                |> Array.filter (fun plan -> not (isNull (box plan)))
+                |> Seq.map (fun plan -> plan.PageIndex, plan)
+                |> dict
+
+            let getModuleTier moduleId =
+                match modules.TryGetValue moduleId with
+                | true, vm when not (String.IsNullOrWhiteSpace vm.Tier) -> vm.Tier
+                | _ -> String.Empty
+
+            let determineBasePageReason baseIndex =
+                match basePlanLookup.TryGetValue baseIndex with
+                | true, basePlan ->
+                    let modulesForBase =
+                        if isNull basePlan.Modules then Array.empty
+                        else basePlan.Modules |> Array.filter (fun m -> not (String.IsNullOrWhiteSpace m))
+                    let moduleCount = modulesForBase.Length
+                    let connectors = basePlan.Connectors
+                    let occupancy = basePlan.Occupancy
+                    if moduleCap <> Int32.MaxValue && moduleCount >= moduleCap then
+                        "page-module-cap",
+                        sprintf "Paging split after %d module(s); limit=%d." moduleCount moduleCap
+                    elif connectorCap <> Int32.MaxValue && connectors >= connectorCap then
+                        "page-connector-cap",
+                        sprintf "Paging split after %d connector(s); limit=%d." connectors connectorCap
+                    elif not (Double.IsInfinity occupancyCap) && occupancy >= occupancyCap then
+                        "page-occupancy-cap",
+                        sprintf "Paging split at %.1f%% occupancy; limit=%.1f%%." occupancy occupancyCap
+                    else
+                        "page-plan",
+                        sprintf "Paging planner opened page %d for focus modules." (baseIndex + 1)
+                | _ ->
+                    "page-plan",
+                    sprintf "Paging planner opened page %d." (baseIndex + 1)
+
+            let basePageChunkIndex = Dictionary<int, int>(HashIdentity.Structural)
+
+            for plan in orderedPagePlans do
+                if not (isNull (box plan)) && not (isNull plan.Modules) then
+                    let trimmedModules =
+                        plan.Modules
+                        |> Array.choose (fun moduleId ->
+                            if String.IsNullOrWhiteSpace moduleId then None
+                            else Some(moduleId.Trim()))
+                    if trimmedModules.Length > 0 then
+                        let baseIndices =
+                            trimmedModules
+                            |> Array.choose (fun moduleId ->
+                                match moduleBasePageIndex.TryGetValue moduleId with
+                                | true, idx -> Some idx
+                                | _ -> None)
+                            |> Array.distinct
+                            |> Array.sort
+                        if baseIndices.Length > 0 then
+                            let baseIndex = baseIndices[0]
+                            let chunkNumber =
+                                match basePageChunkIndex.TryGetValue baseIndex with
+                                | true, count ->
+                                    let next = count + 1
+                                    basePageChunkIndex[baseIndex] <- next
+                                    next
+                                | _ ->
+                                    basePageChunkIndex[baseIndex] <- 1
+                                    1
+                            let trigger = trimmedModules[0]
+                            let tier = getModuleTier trigger
+                            if chunkNumber = 1 then
+                                if baseIndex > 0 then
+                                    let reason, note = determineBasePageReason baseIndex
+                                    pageContexts.Add(
+                                        { PageIndex = plan.PageIndex
+                                          Reason = reason
+                                          TriggerModuleId = trigger
+                                          TriggerTier = tier
+                                          Note = note
+                                          Modules = trimmedModules })
+                            else
+                                let note =
+                                    sprintf "Overflow from base page %d: %d module(s) routed to this page due to lane capacity." (baseIndex + 1) trimmedModules.Length
+                                pageContexts.Add(
+                                    { PageIndex = plan.PageIndex
+                                      Reason = "lane-overflow"
+                                      TriggerModuleId = trigger
+                                      TriggerTier = tier
+                                      Note = note
+                                      Modules = trimmedModules })
 
             for plan in orderedPagePlans do
                 let pageIndex = plan.PageIndex
@@ -2559,6 +2672,7 @@ module ViewModePlanner =
               LaneSegments = laneSegments.ToArray()
               Edges = edgesArray
               FlowBundles = flowBundlesArray
+              PageContexts = pageContexts.ToArray()
               Pages = pagePlans
               Layers = updatedLayerPlans
               ChannelLabels = channelLabels

@@ -274,6 +274,22 @@ let ``flow bundles summarize dense channels`` () =
     Assert.Contains(plan.FlowBundles, fun bundle -> bundle.ConnectorCount >= 2)
 
 [<Fact>]
+let ``page contexts capture overflow splits`` () =
+    let nodes =
+        [| mkNode "ModuleA" "Services" 1
+           mkNode "ModuleB" "Services" 2
+           mkNode "ModuleC" "Services" 3 |]
+    let model = DiagramModel(nodes, Array.empty)
+    model.Metadata["layout.view.advanced.enabled"] <- "true"
+    model.Metadata["layout.view.laneSoftLimit"] <- "1"
+    model.Metadata["layout.view.maxModulesPerLane"] <- "1"
+    model.Metadata["layout.page.plan.maxModulesPerPage"] <- "1"
+
+    let plan = ViewModePlanner.computeViewLayout model
+    Assert.NotEmpty(plan.PageContexts)
+    Assert.Contains(plan.PageContexts, fun ctx -> ctx.Reason.Equals("lane-overflow", StringComparison.OrdinalIgnoreCase))
+
+[<Fact>]
 let ``cycle clusters surface strongly connected modules`` () =
     let nodes =
         [| mkNode "Alpha" "Services" 1

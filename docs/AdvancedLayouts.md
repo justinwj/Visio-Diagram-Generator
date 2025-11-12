@@ -36,7 +36,7 @@ When advanced mode is active, the Visio renderer consumes the planner metadata a
 * **Lane heat bands** – narrow coloured bars to the left of each tier show relative occupancy (green = healthy, yellow/orange = nearing capacity, red = over limit). Overflow reason badges (e.g., `module-soft-limit`) appear on the right edge when a sub-lane exceeded soft limits.
 * **Flow bundle badges** – when many connectors share the same role transition, they are bundled into a single connector labelled `xN`. Hovering the badge in Visio shows the first few labels.
 * **Cycle cluster callouts** – legends highlight strongly connected components; look for entries such as `Cycle warning: ModuleA, ModuleB…`.
-* **Page legend** – every page now includes a “Reviewer cues” table near the top-right margin summarising lane pressure, bundled flows, cycle clusters, and **page context notes** (e.g., `page-connector-cap`, `lane-overflow`) along with cue severity. Raw context entries live in `layout.view.pageContexts.json`.
+* **Page legend** – every page now includes a “Reviewer cues” table near the top-right margin summarising lane pressure, bundled flows, cycle clusters, the total shape count rendered on that page, and **page context notes** (e.g., `page-connector-cap`, `lane-overflow`) along with cue severity. Raw context entries live in `layout.view.pageContexts.json`.
 
 ### Reviewer Mapping
 

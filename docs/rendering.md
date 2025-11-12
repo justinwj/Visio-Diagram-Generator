@@ -47,6 +47,7 @@ Some fixtures rely on small JSON overrides (e.g., forcing pagination). Drop them
 
 ## Diagnostics Policy Snapshot
 
+- **View vs. print defaults** – `layout.outputMode=view` (default) keeps pagination disabled and ignores page-height/margin constraints unless you explicitly set `layout.page.paginate=true`. Use `outputMode=print` (or the pagination metadata) only when you truly need fixed-size, printer-oriented output.
 - Lane crowding warning threshold: occupancy >= 0.85; overcrowded error threshold: >= 0.95.
 - Page crowding warning threshold: occupancy >= 0.90; > 1.0 triggers overflow errors.
 - Crossing and utilization thresholds default to warnings only; override with `VDG_DIAG_CROSS_WARN`, `VDG_DIAG_CROSS_ERR`, and `VDG_DIAG_UTIL_WARN`.

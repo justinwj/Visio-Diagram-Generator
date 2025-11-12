@@ -156,6 +156,7 @@ namespace VDG.CLI
         internal sealed class AdvancedPageSummary
         {
             public int Page { get; set; }
+            public int? ShapeCount { get; set; }
             public List<LaneSegmentCue> Lanes { get; } = new List<LaneSegmentCue>();
             public List<FlowBundleCue> Flows { get; } = new List<FlowBundleCue>();
             public List<CycleClusterCue> Cycles { get; } = new List<CycleClusterCue>();
@@ -226,6 +227,7 @@ namespace VDG.CLI
         internal sealed class PageDiagnosticsDetail
         {
             public int PageNumber { get; set; }
+            public int ShapeCount { get; set; }
             public int? ConnectorLimit { get; set; }
             public int ConnectorOverLimit { get; set; }
             public int? PlannedConnectors { get; set; }
@@ -1007,7 +1009,7 @@ namespace VDG.CLI
                 nodePageAssignments = BuildNodePageAssignments(model, pagePlans, null);
             }
             var plannerStats = BuildPlannerSummaryStats(pagePlans);
-                var diagnosticsSummary = EmitDiagnostics(model, layout, diagHeightOverride, diagLaneMaxOverride, pagePlans, pagingOptions, null, plannerStats, null, modulesFilteredOut, layoutPlan);
+                var diagnosticsSummary = EmitDiagnostics(model, layout, diagHeightOverride, diagLaneMaxOverride, pagePlans, pagingOptions, null, plannerStats, null, modulesFilteredOut, layoutPlan, nodePageAssignments);
                 AugmentReviewArtifacts(inputPath, diagnosticsSummary);
                 try
                 {
@@ -1535,7 +1537,8 @@ namespace VDG.CLI
             PlannerSummaryStats? plannerSummary = null,
             DiagramDataset? plannerDataset = null,
             IEnumerable<string>? filteredModules = null,
-            LayoutPlan? layoutPlan = null)
+            LayoutPlan? layoutPlan = null,
+            IReadOnlyDictionary<string, int>? nodePageAssignments = null)
         {
             var summary = new DiagnosticsSummary();
             int highestRank = 0;
@@ -2662,6 +2665,21 @@ namespace VDG.CLI
                 }
             }
 
+            if (nodePageAssignments != null && layout?.Nodes != null && layout.Nodes.Length > 0)
+            {
+                foreach (var nodeLayout in layout.Nodes)
+                {
+                    if (nodeLayout == null || string.IsNullOrWhiteSpace(nodeLayout.Id)) continue;
+                    var nodeId = nodeLayout.Id.Trim();
+                    if (!nodePageAssignments.TryGetValue(nodeId, out var pageIndex))
+                    {
+                        pageIndex = 0;
+                    }
+                    var detail = GetPageDetail(pageIndex);
+                    detail.ShapeCount++;
+                }
+            }
+
             if (pageDetails.Count > 0)
             {
                 summary.Pages.AddRange(pageDetails.Values.OrderBy(p => p.PageNumber));
@@ -2696,6 +2714,20 @@ namespace VDG.CLI
                         });
                     }
                 }
+
+                if (summary.AdvancedPages.Count > 0)
+                {
+                    foreach (var advanced in summary.AdvancedPages)
+                    {
+                        if (advanced == null) continue;
+                        var match = summary.Pages.FirstOrDefault(p => p.PageNumber == advanced.Page);
+                        if (match != null)
+                        {
+                            advanced.ShapeCount = match.ShapeCount;
+                        }
+                    }
+                }
+
                 if (summary.PagesWithPartialRender > 0)
                 {
                     summary.PartialRender = true;
@@ -3069,6 +3101,10 @@ namespace VDG.CLI
             foreach (var page in advancedPages)
             {
                 lines.Add($"Page {page.Page}:");
+                if (page.ShapeCount.HasValue)
+                {
+                    lines.Add($"  Shapes: {page.ShapeCount.Value}");
+                }
                 foreach (var cue in page.Legend)
                 {
                     lines.Add($"  [{cue.Severity}] {cue.Text}");
@@ -5931,7 +5967,7 @@ namespace VDG.CLI
                 }
             }
 
-            DrawAdvancedLegend(model, layoutPlan, visioPage, pageIndex, GetPageMargin(model) ?? Margin, GetTitleHeight(model));
+            DrawAdvancedLegend(model, layoutPlan, visioPage, pageIndex, GetPageMargin(model) ?? Margin, GetTitleHeight(model), pageInfo.NodeCount);
         }
 
         private static void DeleteErrorLog(string outputPath)
@@ -6556,7 +6592,7 @@ namespace VDG.CLI
             return summaries;
         }
 
-        private static void DrawAdvancedLegend(DiagramModel model, LayoutPlan? layoutPlan, dynamic visioPage, int pageIndex, double margin, double titleHeight)
+        private static void DrawAdvancedLegend(DiagramModel model, LayoutPlan? layoutPlan, dynamic visioPage, int pageIndex, double margin, double titleHeight, int? renderedShapeCount = null)
         {
             if (layoutPlan == null || visioPage == null) return;
             var cues = CollectAdvancedPageCues(layoutPlan, pageIndex);
@@ -6588,6 +6624,20 @@ namespace VDG.CLI
                 catch { }
 
                 legendTop = bottom - spacing;
+            }
+
+            if (renderedShapeCount.HasValue)
+            {
+                var bottom = legendTop - boxHeight;
+                if (bottom <= legendBottomLimit) bottom = legendBottomLimit + 0.05;
+                try
+                {
+                    dynamic badge = visioPage.DrawRectangle(legendLeft, bottom, legendLeft + legendWidth, legendTop);
+                    badge.Text = $"Shapes: {renderedShapeCount.Value}";
+                    ApplySeverityCueStyle(badge, "info");
+                    ReleaseCom(badge);
+                }
+                catch { }
             }
         }
 
@@ -7142,7 +7192,9 @@ namespace VDG.CLI
             var margin = GetPageMargin(model) ?? Margin;
             var title = GetTitleHeight(model);
             var pageHeight = GetPageHeight(model);
-            bool paginate = true;
+            var outputMode = GetOutputMode(model);
+            var paginateDefault = !string.Equals(outputMode, "view", StringComparison.OrdinalIgnoreCase);
+            bool paginate = paginateDefault;
             if (model.Metadata.TryGetValue("layout.page.paginate", out var p) && bool.TryParse(p, out var pb)) paginate = pb;
             if (!pageHeight.HasValue) return false; // without a fixed page height, keep single page for now
             var usable = pageHeight.Value - (2 * margin) - title;
@@ -8017,7 +8069,7 @@ namespace VDG.CLI
                 }
 
                 DrawChannelLabelsForPage(page, layoutPlan, pi, offsetX, offsetY, layerContext, pageInfo);
-                DrawAdvancedLegend(model, layoutPlan, page, pi, margin, title);
+                DrawAdvancedLegend(model, layoutPlan, page, pi, margin, title, pageInfo.NodeCount);
             }
         }
 
@@ -8347,6 +8399,10 @@ namespace VDG.CLI
                     if (page.ModuleCount.HasValue)
                     {
                         parts.Add($"modules={page.ModuleCount.Value}");
+                    }
+                    if (page.ShapeCount > 0)
+                    {
+                        parts.Add($"shapes={page.ShapeCount}");
                     }
                     if (page.TruncatedNodeCount > 0)
                     {

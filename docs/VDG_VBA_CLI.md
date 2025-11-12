@@ -17,7 +17,7 @@ Commands
   - Inputs: IR JSON conforming to `shared/Config/vbaIr.schema.json`
   - Outputs: Diagram JSON to stdout if `--out` omitted; writes to file when provided
   - Exit codes: 0 success; 65 invalid input; 70 internal error
-  - `--output-mode view` (default) captures full procedure-level content for on-screen exploration. `--output-mode print` retains the previous page-oriented behaviour (fixed page height + pagination metadata).
+  - `--output-mode view` (default) captures full procedure-level content for on-screen exploration, keeps pagination disabled unless you explicitly set `layout.page.paginate=true`, and allows diagrams to sprawl as wide/tall as needed. `--output-mode print` retains the page-oriented behaviour (fixed page height + pagination metadata) for physical output.
 
 - render: Pipeline helper that runs `vba2json`, `ir2diagram`, and `VDG.CLI`
   - Usage:

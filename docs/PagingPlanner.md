@@ -65,6 +65,7 @@ Per-page annotations (`warning: page 12 ...`) are emitted when a page crosses co
 Large diagrams now carry an explicit layer plan in addition to the page plan:
 
 - Soft layer budgets default to 1 000 shapes/connectors; values are automatically clamped to the 1–1 000 range. Set `layout.layers.maxShapes` / `layout.layers.maxConnectors` in diagram metadata to tune the limits when you truly need tighter pages. In view mode the connector cap is effectively unlimited, so sprawling diagrams aren’t force-split unless you opt-in to a smaller limit.
+- View-mode diagrams do **not** paginate unless you explicitly opt-in with `layout.page.paginate=true`. Print mode (or explicit pagination metadata) is the only way to re-enable fixed page heights for physical output.
 - The planner emits `layoutPlan.Layers[]` (layer index, module list, initial share estimates) and `layoutPlan.Bridges[]` (cross-layer connector records with entry/exit anchors).
 - Diagnostics JSON mirrors the plan with `metrics.layerCount`, `metrics.layerCrowdingCount`, `metrics.layerOverflowCount`, `metrics.bridgeCount`, and a `metrics.layers[]` collection summarising module assignments, shape/connector totals, and bridge counts per layer.
 - `VDG.CLI` consumes the layer plan when rendering: modules and connectors are dropped onto Visio layers named `Layer <n>` (or user-provided names from `layout.layers.names`). Exceeding a soft budget generates a warning; exceeding the hard limit yields a `LayerOverflow` issue and keeps `partialRender=yes` set.

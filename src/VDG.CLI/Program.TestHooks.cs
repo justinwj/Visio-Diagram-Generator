@@ -73,7 +73,7 @@ namespace VDG.CLI
                 Console.SetError(suppressedErr);
                 try
                 {
-                    diagnostics = EmitDiagnostics(model, layout, null, null, pagePlans, options, metrics, stats, dataset, filteredModules, layoutPlan);
+                    diagnostics = EmitDiagnostics(model, layout, null, null, pagePlans, options, metrics, stats, dataset, filteredModules, layoutPlan, null);
                 }
                 finally
                 {

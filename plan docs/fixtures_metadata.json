@@ -192,6 +192,48 @@
           ]
         }
       ]
+    },
+    {
+      "name": "invSys.AddGoodsReceived",
+      "source": "samples/invSys",
+      "note": "Manual slice focused on modInvMan.AddGoodsReceived_Click to keep Visio renders manageable while iterating on edge channels.",
+      "modes": [
+        {
+          "mode": "callgraph-slice",
+          "hashes": {
+            "ir": null,
+            "diagram": "8be6a4fac7fd4f7983b3cf0212a581f9696cfaebe82bfd6f84e4129eda096f45",
+            "diagnostics": null,
+            "vsdx": null,
+            "reviewJson": null,
+            "reviewTxt": null
+          },
+          "paths": {
+            "temp": {
+              "ir": null,
+              "diagram": "out\\fixtures\\invSys\\add-goods-received\\minimal_invSys_AddGoodsReceived.diagram.json",
+              "diagnostics": null,
+              "vsdx": null,
+              "reviewJson": null,
+              "reviewTxt": null
+            },
+            "golden": {
+              "ir": null,
+              "diagram": "fixtures\\minimal_invSys_AddGoodsReceived.diagram.json",
+              "diagnostics": null,
+              "vsdx": null,
+              "reviewJson": null,
+              "reviewTxt": null
+            }
+          },
+          "commands": [
+            {
+              "name": "slice-diagram",
+              "command": "python3 tools/slice_diagram_fixture.py --source out\\fixtures\\invSys\\callgraph\\invSys.callgraph.diagram.json --target-id modInvMan.AddGoodsReceived_Click --output out\\fixtures\\invSys\\add-goods-received\\minimal_invSys_AddGoodsReceived.diagram.json --final fixtures\\minimal_invSys_AddGoodsReceived.diagram.json --slice-name invSys.AddGoodsReceived_Click"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

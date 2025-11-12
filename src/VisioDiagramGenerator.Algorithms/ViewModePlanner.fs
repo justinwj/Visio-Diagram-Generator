@@ -1934,8 +1934,9 @@ module ViewModePlanner =
                             | _ -> ()
                         | _ -> ()
 
-            let moduleSideSlotMap =
-                let map = Dictionary<struct (string * string * string), float32>(HashIdentity.Structural)
+            let moduleSideSlotMap, moduleSideLoad =
+                let slotMap = Dictionary<struct (string * string * string), float32>(HashIdentity.Structural)
+                let loadMap = Dictionary<struct (string * string), int>(HashIdentity.Structural)
                 for KeyValue(moduleId, sideMap) in moduleSideChannelBuckets do
                     for KeyValue(side, entries) in sideMap do
                         let grouped =
@@ -1957,8 +1958,9 @@ module ViewModePlanner =
                             for idx = 0 to count - 1 do
                                 let key, _ = sorted[idx]
                                 let normalized = float32 (idx + 1) / float32 (count + 1)
-                                map[struct(moduleId, side, key)] <- normalized
-                map
+                                slotMap[struct(moduleId, side, key)] <- normalized
+                            loadMap[struct(moduleId, side)] <- count
+                slotMap, loadMap
 
             let tryGetSlotNormalized moduleId side key =
                 let structKey = struct(moduleId, side, key)
@@ -1966,16 +1968,47 @@ module ViewModePlanner =
                 | true, value -> value
                 | _ -> 0.5f
 
+            let getSideLoad moduleId side =
+                let structKey = struct(moduleId, side)
+                match moduleSideLoad.TryGetValue structKey with
+                | true, count when count > 0 -> count
+                | _ -> 1
+
             let adjustPointAlongSide moduleId side channelKey (bounds: RectangleF) (pt: PointF) =
+                let clamp01 value =
+                    if Single.IsNaN value || Single.IsInfinity value then 0.5f
+                    elif value < 0.f then 0.f
+                    elif value > 1.f then 1.f
+                    else value
+
                 let slot = tryGetSlotNormalized moduleId side channelKey
+                let pointNormalized =
+                    match side.ToLowerInvariant() with
+                    | "left"
+                    | "right" when bounds.Height > 0.f ->
+                        clamp01 ((pt.Y - bounds.Bottom) / bounds.Height)
+                    | "top"
+                    | "bottom" when bounds.Width > 0.f ->
+                        clamp01 ((pt.X - bounds.Left) / bounds.Width)
+                    | _ -> 0.5f
+
+                let load = getSideLoad moduleId side
+                let slotInfluence =
+                    if load <= 1 then 0.2f
+                    elif load <= 3 then 0.35f
+                    elif load <= 6 then 0.5f
+                    elif load <= 10 then 0.65f
+                    else 0.8f
+
+                let blended = (slot * slotInfluence) + (pointNormalized * (1.f - slotInfluence))
                 match side.ToLowerInvariant() with
                 | "left"
                 | "right" ->
-                    let newY = bounds.Bottom + bounds.Height * slot
+                    let newY = bounds.Bottom + bounds.Height * blended
                     point pt.X newY
                 | "top"
                 | "bottom" ->
-                    let newX = bounds.Left + bounds.Width * slot
+                    let newX = bounds.Left + bounds.Width * blended
                     point newX pt.Y
                 | _ -> pt
 
@@ -2166,15 +2199,33 @@ module ViewModePlanner =
                                         sprintf "down:%d:%d:%s->%s" srcTier dstTier srcModuleId dstModuleId
                                     else
                                         sprintf "up:%d:%d:%s->%s" dstTier srcTier dstModuleId srcModuleId
-                                let anchorPoint (rect: RectangleF) side =
-                                    match side with
-                                    | "left" -> point rect.Left (rect.Bottom + rect.Height / 2.f)
-                                    | "right" -> point (rect.Left + rect.Width) (rect.Bottom + rect.Height / 2.f)
-                                    | "top" -> point (rect.Left + rect.Width / 2.f) (rect.Bottom + rect.Height)
-                                    | "bottom" -> point (rect.Left + rect.Width / 2.f) rect.Bottom
-                                    | _ -> point (rect.Left + rect.Width / 2.f) (rect.Bottom + rect.Height / 2.f)
-                                let exitPt = anchorPoint srcBounds srcSide |> adjustPointAlongSide srcModuleId srcSide corridorKey srcBounds
-                                let entryPt = anchorPoint dstBounds dstSide |> adjustPointAlongSide dstModuleId dstSide corridorKey dstBounds
+                                let anchorPoint (rect: RectangleF) side (center: PointF) =
+                                    let clamp rangeStart rangeEnd value =
+                                        if value < rangeStart then rangeStart
+                                        elif value > rangeEnd then rangeEnd
+                                        else value
+                                    let clampY y =
+                                        if rect.Height <= 0.f then rect.Bottom + rect.Height / 2.f
+                                        else
+                                            let minY = rect.Bottom + 0.05f
+                                            let maxY = rect.Bottom + rect.Height - 0.05f
+                                            clamp minY maxY y
+                                    let clampX x =
+                                        if rect.Width <= 0.f then rect.Left + rect.Width / 2.f
+                                        else
+                                            let minX = rect.Left + 0.05f
+                                            let maxX = rect.Left + rect.Width - 0.05f
+                                            clamp minX maxX x
+                                    match side.ToLowerInvariant() with
+                                    | "left" -> point rect.Left (clampY center.Y)
+                                    | "right" -> point (rect.Left + rect.Width) (clampY center.Y)
+                                    | "top" -> point (clampX center.X) (rect.Bottom + rect.Height)
+                                    | "bottom" -> point (clampX center.X) rect.Bottom
+                                    | _ -> point (clampX center.X) (clampY center.Y)
+                                let exitBase = anchorPoint srcBounds srcSide srcCenter
+                                let entryBase = anchorPoint dstBounds dstSide dstCenter
+                                let exitPt = exitBase |> adjustPointAlongSide srcModuleId srcSide corridorKey srcBounds
+                                let entryPt = entryBase |> adjustPointAlongSide dstModuleId dstSide corridorKey dstBounds
                                 let offset, bundleIndex = nextCorridor corridorKey
                                 if srcTier = dstTier then
                                     let corridorY = exitPt.Y + offset

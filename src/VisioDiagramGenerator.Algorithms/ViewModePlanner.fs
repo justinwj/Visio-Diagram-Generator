@@ -67,6 +67,54 @@ module ViewModePlanner =
           mutable ConnectorCount: int
           mutable Height: float }
 
+    type private SpacingProfile =
+        { Horizontal: float32
+          Vertical: float32
+          Corridor: float32
+          Bundle: float32 }
+
+    let private neutralSpacingProfile =
+        { Horizontal = 1.f
+          Vertical = 1.f
+          Corridor = 1.f
+          Bundle = 1.f }
+
+    let private computeSpacingProfile totalNodes totalConnectorTouches maxSegmentConnector =
+        let totalNodes = Math.Max(0, totalNodes)
+        if totalNodes = 0 || totalConnectorTouches <= 0 then
+            neutralSpacingProfile
+        else
+            let nodes = float32 totalNodes
+            let connectorPerNode = float32 totalConnectorTouches / nodes
+            let nodeScale =
+                if totalNodes < 250 then 1.05f
+                elif totalNodes < 500 then 1.15f
+                elif totalNodes < 850 then 1.25f
+                elif totalNodes < 1200 then 1.35f
+                else 1.45f
+            let connectorScale =
+                if connectorPerNode < 1.2f then 1.f
+                elif connectorPerNode < 2.f then 1.1f
+                elif connectorPerNode < 3.f then 1.2f
+                elif connectorPerNode < 4.5f then 1.35f
+                else 1.5f
+            let hotspotScale =
+                if maxSegmentConnector >= 900 then 1.7f
+                elif maxSegmentConnector >= 600 then 1.55f
+                elif maxSegmentConnector >= 350 then 1.35f
+                elif maxSegmentConnector >= 200 then 1.2f
+                else 1.f
+
+            let horizontal = max 1.f (max nodeScale (max connectorScale (hotspotScale - 0.1f)))
+            let vertical = max 1.f (max nodeScale (max connectorScale hotspotScale))
+            let corridor = max 1.f ((connectorScale + hotspotScale) / 2.f)
+            let bundle = max 1.f (corridor + 0.15f)
+
+            { Horizontal = horizontal
+              Vertical = vertical
+              Corridor = corridor
+              Bundle = bundle }
+
     let private createModuleSemanticSummary () =
         { PrimarySubsystem = None
           SecondarySubsystems = HashSet<string>(StringComparer.OrdinalIgnoreCase)
@@ -229,11 +277,31 @@ module ViewModePlanner =
                 String.Equals(value.Trim(), "view", StringComparison.OrdinalIgnoreCase)
             | _ -> false
 
-        if isViewMode then
-            options <- { options with
-                            MaxOccupancyPercent = 95.0
-                            MaxModulesPerPage = 6
-                            HeightSlackPercent = 12.5 }
+        let paginatePreference =
+            match getMetadataBool model "layout.page.paginate" with
+            | Some flag -> Some flag
+            | None -> getMetadataBool model "layout.view.limitByPage"
+
+        let paginationActive =
+            match paginatePreference with
+            | Some flag -> flag
+            | None -> not isViewMode
+
+        if isViewMode && not paginationActive then
+            options <-
+                { options with
+                    MaxConnectors = Int32.MaxValue
+                    MaxOccupancyPercent = Double.PositiveInfinity
+                    LaneSplitAllowed = true
+                    MaxPageHeightIn = 0.0
+                    MaxModulesPerPage = Int32.MaxValue
+                    HeightSlackPercent = 0.0 }
+        elif isViewMode then
+            options <-
+                { options with
+                    MaxOccupancyPercent = 95.0
+                    MaxModulesPerPage = 6
+                    HeightSlackPercent = 12.5 }
 
         match getMetadataInt model "layout.page.plan.maxConnectors" with
         | Some value when value > 0 ->
@@ -365,6 +433,15 @@ module ViewModePlanner =
     let computeViewLayout (model: DiagramModel) : LayoutPlan =
         if isNull model then nullArg "model"
 
+        let isViewModeOutput = isViewMode model
+        let totalNodeCount =
+            if isNull (box model.Nodes) then
+                0
+            else
+                model.Nodes
+                |> Seq.filter (fun n -> not (isNull n))
+                |> Seq.length
+
         let tiers = getOrderedTiers model
         let tiersSet = HashSet<string>(tiers, StringComparer.OrdinalIgnoreCase)
         let containerTierMap = tryGetContainerTierMap model
@@ -456,25 +533,29 @@ module ViewModePlanner =
                 getMetadataInt model "layout.view.slotsPerRow"
                 |> Option.filter (fun v -> v >= 1)
                 |> Option.defaultValue 2
+            let baseSlotsPerTierDefault =
+                if viewModeSprawl then Math.Max(slotsPerRow * 6, 48)
+                else Math.Max(slotsPerRow * 3, 6)
             let baseSlotsPerTier =
                 getMetadataInt model "layout.view.slotsPerTier"
                 |> Option.filter (fun v -> v >= slotsPerRow)
-                |> Option.defaultValue (Math.Max(slotsPerRow * 3, 6))
+                |> Option.defaultValue baseSlotsPerTierDefault
             let explicitMaxModulesPerLane =
                 getMetadataInt model "layout.view.maxModulesPerLane"
                 |> Option.filter (fun v -> v >= 1)
             let mutable maxModulesPerLane =
-                explicitMaxModulesPerLane |> Option.defaultValue (Math.Max(slotsPerRow * 3, 12))
+                explicitMaxModulesPerLane
+                |> Option.defaultValue (if viewModeSprawl then 1000 else Math.Max(slotsPerRow * 3, 12))
             let mutable slotsPerTier =
                 Math.Max(slotsPerRow, Math.Min(baseSlotsPerTier, maxModulesPerLane))
             let mutable tierSpacing =
                 getMetadataSingle model "layout.view.tierSpacingIn"
                 |> Option.filter (fun v -> v > 0.f)
-                |> Option.defaultValue 4.5f
+                |> Option.defaultValue (if viewModeSprawl then 6.0f else 4.5f)
             let mutable rowSpacing =
                 getMetadataSingle model "layout.view.rowSpacingIn"
                 |> Option.filter (fun v -> v > 0.f)
-                |> Option.defaultValue 3.0f
+                |> Option.defaultValue (if viewModeSprawl then 3.75f else 3.0f)
             let advancedEnabled =
                 getMetadataBool model "layout.view.advanced.enabled"
                 |> Option.defaultValue false
@@ -505,11 +586,11 @@ module ViewModePlanner =
             let mutable cardSpacingX =
                 getMetadataSingle model "layout.view.cardSpacingXIn"
                 |> Option.filter (fun v -> v >= 0.f)
-                |> Option.defaultValue 6.0f
+                |> Option.defaultValue (if viewModeSprawl then 7.5f else 6.0f)
             let mutable cardSpacingY =
                 getMetadataSingle model "layout.view.cardSpacingYIn"
                 |> Option.filter (fun v -> v >= 0.f)
-                |> Option.defaultValue 4.0f
+                |> Option.defaultValue (if viewModeSprawl then 4.8f else 4.0f)
             let cardPadding =
                 getMetadataSingle model "layout.view.cardPaddingIn"
                 |> Option.filter (fun v -> v >= 0.f)
@@ -535,18 +616,29 @@ module ViewModePlanner =
                 |> Option.filter (fun v -> v >= 0.f)
                 |> Option.defaultValue 0.28f
             let headerHeight = 0.55f
+            let maxRowsPerColumnDefault =
+                if viewModeSprawl then
+                    if totalNodeCount >= 1200 then 160
+                    elif totalNodeCount >= 900 then 128
+                    elif totalNodeCount >= 600 then 96
+                    elif totalNodeCount >= 350 then 64
+                    else 32
+                else
+                    5
             let maxRowsPerColumn =
                 getMetadataInt model "layout.view.maxRowsPerColumn"
                 |> Option.filter (fun v -> v >= 1)
-                |> Option.defaultValue 5
+                |> Option.defaultValue maxRowsPerColumnDefault
             let maxColumns =
                 getMetadataInt model "layout.view.maxColumns"
                 |> Option.filter (fun v -> v >= 1)
-                |> Option.defaultValue 3
+                |> Option.defaultValue (if viewModeSprawl then 8 else 3)
+            let minCardHeight =
+                nodeHeight + rowGap + headerHeight + (cardPadding * 2.f)
             let maxCardHeight =
                 getMetadataSingle model "layout.view.maxCardHeightIn"
-                |> Option.filter (fun v -> v >= nodeHeight + rowGap + headerHeight + (cardPadding * 2.f))
-                |> Option.defaultValue 5.5f
+                |> Option.filter (fun v -> v >= minCardHeight)
+                |> Option.defaultValue (if viewModeSprawl then Single.PositiveInfinity else 5.5f)
 
             let computeLongestLabelStats (nodes: seq<Node>) =
                 let mutable longestLabel = 0
@@ -590,9 +682,14 @@ module ViewModePlanner =
                     baseNodeWidth + float32 (candidateChars - minNodeChars) * charWidth
                 width |> max baseNodeWidth |> min maxNodeWidth
 
+            let paginateOverride = getMetadataBool model "layout.page.paginate"
             let limitByPage =
-                getMetadataBool model "layout.view.limitByPage"
-                |> Option.defaultValue false
+                match paginateOverride with
+                | Some flag -> flag
+                | None ->
+                    getMetadataBool model "layout.view.limitByPage"
+                    |> Option.defaultValue (not isViewModeOutput)
+            let viewModeSprawl = isViewModeOutput && not limitByPage
 
             let preLayoutUsableHeight =
                 if limitByPage then computeUsableHeight model 0.f
@@ -611,15 +708,21 @@ module ViewModePlanner =
 
             if explicitMaxModulesPerLane.IsNone then
                 let preferred = Math.Max(maxModulesPerLane, slotsPerRow * maxRowsByHeight)
-                if preferred <> maxModulesPerLane then
-                    maxModulesPerLane <- preferred
+                let resolved =
+                    if viewModeSprawl then Math.Min(1000, preferred) else preferred
+                if resolved <> maxModulesPerLane then
+                    maxModulesPerLane <- resolved
                     slotsPerTier <- Math.Max(slotsPerRow, Math.Min(baseSlotsPerTier, maxModulesPerLane))
 
-            let segmentCapacity = Math.Max(1, maxRowsByHeight * Math.Max(1, maxColumns))
+            let baseSegmentCapacity = Math.Max(1, maxRowsByHeight * Math.Max(1, maxColumns))
+            let segmentCapacity =
+                if viewModeSprawl then Math.Min(1000, baseSegmentCapacity) else baseSegmentCapacity
 
             let laneNodeCapDefault =
-                let baseline = slotsPerRow * maxRowsByHeight
-                Math.Max(baseline, 12)
+                if viewModeSprawl then 1000
+                else
+                    let baseline = slotsPerRow * maxRowsByHeight
+                    Math.Max(baseline, 12)
 
             let explicitLaneNodeCap =
                 getMetadataInt model "layout.view.maxNodesPerLane"
@@ -631,7 +734,8 @@ module ViewModePlanner =
                 getMetadataInt model "layout.view.maxConnectorsPerLane"
                 |> Option.filter (fun v -> v > 0)
             let laneConnectorCap =
-                explicitLaneConnectorCap |> Option.defaultValue 400
+                explicitLaneConnectorCap
+                |> Option.defaultValue (if viewModeSprawl then Int32.MaxValue else 400)
 
             let laneHeightLimit =
                 getMetadataDouble model "layout.view.maxLaneHeightIn"
@@ -658,19 +762,23 @@ module ViewModePlanner =
                 dict
 
             let rowModuleLimit =
-                let laneLimit =
-                    if laneCapacity.MaxModulesPerLane > 0 then laneCapacity.MaxModulesPerLane
-                    else Int32.MaxValue
-                let softLimit =
-                    if advancedEnabled then Math.Min(laneLimit, laneSoftLimit)
-                    else laneLimit
-                let limit = Math.Min(slotsPerRow, softLimit)
-                if limit <= 0 then 1 else limit
+                if viewModeSprawl then Int32.MaxValue
+                else
+                    let laneLimit =
+                        if laneCapacity.MaxModulesPerLane > 0 then laneCapacity.MaxModulesPerLane
+                        else Int32.MaxValue
+                    let softLimit =
+                        if advancedEnabled then Math.Min(laneLimit, laneSoftLimit)
+                        else laneLimit
+                    let limit = Math.Min(slotsPerRow, softLimit)
+                    if limit <= 0 then 1 else limit
             let rowNodeLimit =
-                if laneCapacity.MaxNodesPerLane > 0 then laneCapacity.MaxNodesPerLane
+                if viewModeSprawl then Int32.MaxValue
+                elif laneCapacity.MaxNodesPerLane > 0 then laneCapacity.MaxNodesPerLane
                 else Int32.MaxValue
             let rowConnectorLimit =
-                if laneCapacity.MaxConnectorsPerLane > 0 then laneCapacity.MaxConnectorsPerLane
+                if viewModeSprawl then Int32.MaxValue
+                elif laneCapacity.MaxConnectorsPerLane > 0 then laneCapacity.MaxConnectorsPerLane
                 else Int32.MaxValue
 
             let computeSegmentMetrics totalNodes =
@@ -841,6 +949,16 @@ module ViewModePlanner =
                                     if isCross then stats.CrossModuleCount <- stats.CrossModuleCount + 1
                             recordEdgeStats srcModuleId
                             recordEdgeStats dstModuleId
+
+            let spacingProfile =
+                if viewModeSprawl && segmentEdgeStats.Count > 0 then
+                    let totalConnectorTouches =
+                        segmentEdgeStats.Values |> Seq.sumBy (fun stats -> stats.ConnectorCount)
+                    let maxSegmentConnector =
+                        segmentEdgeStats.Values |> Seq.fold (fun acc stats -> Math.Max(acc, stats.ConnectorCount)) 0
+                    computeSpacingProfile totalNodeCount totalConnectorTouches maxSegmentConnector
+                else
+                    neutralSpacingProfile
 
             let channelLabelBuckets = Dictionary<(int * string * string), ChannelLabelBucket>(HashIdentity.Structural)
             let maxChannelLabelLines = 12
@@ -1105,7 +1223,8 @@ module ViewModePlanner =
                             if not (moduleBasePageIndex.ContainsKey trimmed) then
                                 moduleBasePageIndex[trimmed] <- plan.PageIndex
 
-            let enforcedPagePlans = enforceLaneCapacity basePagePlans
+            let enforcedPagePlans =
+                if viewModeSprawl then basePagePlans else enforceLaneCapacity basePagePlans
 
             let plannedPagePlans =
                 if enforcedPagePlans.Length = 0 then basePagePlans else enforcedPagePlans
@@ -1288,19 +1407,35 @@ module ViewModePlanner =
                     let bump = (avgModulesPerPage - 6.f) / 4.f
                     let limited = if bump > 1.6f then 1.6f else bump
                     1.f + limited
-            if densityScale > 1.f then
-                tierSpacing <- tierSpacing * densityScale
-                let rowFactor = if densityScale < 1.25f then densityScale else 1.25f
+            let baseDensityScale = if densityScale > 1.f then densityScale else 1.f
+            let horizontalScale =
+                if viewModeSprawl then max spacingProfile.Horizontal baseDensityScale else baseDensityScale
+            let verticalScale =
+                if viewModeSprawl then max spacingProfile.Vertical baseDensityScale else baseDensityScale
+            let pageScale =
+                if viewModeSprawl then verticalScale else baseDensityScale
+            if horizontalScale > 1.f || verticalScale > 1.f then
+                let tierFactor = if verticalScale < 1.6f then verticalScale else 1.6f
+                tierSpacing <- tierSpacing * tierFactor
+                let rowFactor =
+                    let candidate = if viewModeSprawl then verticalScale else densityScale
+                    if candidate < 1.35f then candidate else 1.35f
                 rowSpacing <- rowSpacing * rowFactor
-                cardSpacingX <- cardSpacingX * densityScale
-                let yFactor = if densityScale < 1.35f then densityScale else 1.35f
+                let horizontalFactor = if horizontalScale < 1.75f then horizontalScale else 1.75f
+                cardSpacingX <- cardSpacingX * horizontalFactor
+                let yFactor =
+                    let candidate = if viewModeSprawl then verticalScale else densityScale
+                    if candidate < 1.4f then candidate else 1.4f
                 cardSpacingY <- cardSpacingY * yFactor
-                let pageFactor = if densityScale < 1.4f then densityScale else 1.4f
+                let pageFactor =
+                    let candidate = if viewModeSprawl then pageScale else densityScale
+                    if candidate < 1.5f then candidate else 1.5f
                 pageSpacing <- pageSpacing * pageFactor
-                let tightened =
-                    Math.Ceiling(float slotsPerTier / float densityScale)
-                    |> int
-                slotsPerTier <- Math.Max(slotsPerRow, Math.Max(1, tightened))
+                if not viewModeSprawl then
+                    let tightened =
+                        Math.Ceiling(float slotsPerTier / float baseDensityScale)
+                        |> int
+                    slotsPerTier <- Math.Max(slotsPerRow, Math.Max(1, tightened))
 
             let defaultPageMargin = 1.0
             let margin =
@@ -1596,7 +1731,12 @@ module ViewModePlanner =
                                                 | true, stats ->
                                                     let baseVisible = Math.Max(1, metrics.VisibleCount)
                                                     let density = float stats.ConnectorCount / float baseVisible
-                                                    let scaled = 1.0 + Math.Min(density / 8.0, 3.0)
+                                                    let overflowCount = Math.Max(0, orderedNodes.Length - metrics.VisibleCount)
+                                                    let overflowRatio = float overflowCount / float baseVisible
+                                                    let scaled =
+                                                        1.0
+                                                        + Math.Min(density / 6.0, 3.0)
+                                                        + Math.Min(overflowRatio / 2.5, 1.5)
                                                     float32 scaled
                                                 | _ -> 1.f
 
@@ -1843,6 +1983,8 @@ module ViewModePlanner =
                 getMetadataSingle model "layout.view.corridorSpacingIn"
                 |> Option.filter (fun v -> v >= 0.f)
                 |> Option.defaultValue (max 3.0f (cardSpacingY * 0.9f))
+                |> fun value ->
+                    if viewModeSprawl then value * spacingProfile.Corridor else value
             let labelLeader =
                 getMetadataSingle model "layout.view.labelLeaderIn"
                 |> Option.filter (fun v -> v > 0.f)
@@ -1855,10 +1997,14 @@ module ViewModePlanner =
                 getMetadataSingle model "layout.view.calloutNormalIn"
                 |> Option.filter (fun v -> v > 0.f)
                 |> Option.defaultValue (max 1.2f (cardSpacingY + 0.6f))
+                |> fun value ->
+                    if viewModeSprawl then value * spacingProfile.Vertical else value
             let calloutTangentialOffset =
                 getMetadataSingle model "layout.view.calloutTangentialIn"
                 |> Option.filter (fun v -> v >= 0.f)
                 |> Option.defaultValue (max 0.4f (cardSpacingX * 0.35f))
+                |> fun value ->
+                    if viewModeSprawl then value * spacingProfile.Horizontal else value
 
             let nextCorridor (key: string) =
                 let idx =
@@ -1866,7 +2012,8 @@ module ViewModePlanner =
                     | true, value -> value
                     | _ -> 0
                 corridorSequence[key] <- idx + 1
-                let magnitude = float32 ((idx / 2) + 1) * corridorSpacing
+                let bundleSpacing = if viewModeSprawl then spacingProfile.Bundle else 1.f
+                let magnitude = float32 ((idx / 2) + 1) * corridorSpacing * bundleSpacing
                 let offset = if idx % 2 = 0 then magnitude else -magnitude
                 offset, idx
 

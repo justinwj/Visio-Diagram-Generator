@@ -15,4 +15,10 @@
   <ItemGroup>
     <PackageReference Include="System.Text.Json" Version="6.0.10" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\data\stencils\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>data\stencils\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Content>
+  </ItemGroup>
 </Project>

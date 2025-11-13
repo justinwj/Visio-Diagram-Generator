@@ -20,6 +20,13 @@ namespace VDG.VisioRuntime.Services
     {
         private Visio.Application _app;
         private bool _ownsApp;
+        private bool _plannerModeApplied;
+        private short? _originalGlueSettings;
+        private short? _originalSnapSettings;
+        private short? _originalLayoutStyle;
+        private short? _originalEventsEnabled;
+        private short? _originalUndoEnabled;
+        private bool? _originalDeferRecalc;
 
         // Cache opened stencils (case-insensitive)
         private readonly Dictionary<string, Visio.Document> _stencilCache =
@@ -41,6 +48,164 @@ namespace VDG.VisioRuntime.Services
             }
 
             _app.Visible = visible;
+        }
+
+        private void ApplyPlannerModeSafeguards()
+        {
+            if (_plannerModeApplied)
+            {
+                return;
+            }
+
+            var app = _app;
+            if (app == null)
+            {
+                return;
+            }
+
+            Visio.Window window = null;
+            Visio.Page page = null;
+
+            try
+            {
+                try
+                {
+                    _originalEventsEnabled ??= app.EventsEnabled;
+                    app.EventsEnabled = unchecked((short)0);
+                }
+                catch { /* ignore */ }
+
+                try
+                {
+                    _originalUndoEnabled ??= app.UndoEnabled;
+                    app.UndoEnabled = unchecked((short)0);
+                }
+                catch { /* ignore */ }
+
+                try
+                {
+                    _originalDeferRecalc ??= app.DeferRecalc;
+                    app.DeferRecalc = true;
+                }
+                catch { /* ignore */ }
+
+                window = app.ActiveWindow;
+                if (window != null)
+                {
+                    try
+                    {
+                        _originalGlueSettings ??= window.GlueSettings;
+                        window.GlueSettings = 0;
+                    }
+                    catch { /* ignore */ }
+
+                    try
+                    {
+                        _originalSnapSettings ??= window.SnapSettings;
+                        window.SnapSettings = 0;
+                    }
+                    catch { /* ignore */ }
+                }
+
+                page = app.ActivePage;
+                if (page != null)
+                {
+                    try
+                    {
+                        _originalLayoutStyle ??= page.LayoutStyle;
+                        page.LayoutStyle = (short)Visio.VisLayoutStyles.visLayoutNone;
+                    }
+                    catch { /* ignore */ }
+                }
+
+                _plannerModeApplied = true;
+            }
+            finally
+            {
+                Com.Release(ref page);
+                Com.Release(ref window);
+            }
+        }
+
+        private void RestorePlannerMode()
+        {
+            if (!_plannerModeApplied || _app == null)
+            {
+                _plannerModeApplied = false;
+                return;
+            }
+
+            var app = _app;
+            Visio.Window window = null;
+            Visio.Page page = null;
+
+            try
+            {
+                window = app.ActiveWindow;
+                if (window != null)
+                {
+                    try
+                    {
+                        if (_originalGlueSettings.HasValue)
+                        {
+                            window.GlueSettings = _originalGlueSettings.Value;
+                        }
+                    }
+                    catch { /* ignore */ }
+
+                    try
+                    {
+                        if (_originalSnapSettings.HasValue)
+                        {
+                            window.SnapSettings = _originalSnapSettings.Value;
+                        }
+                    }
+                    catch { /* ignore */ }
+                }
+
+                page = app.ActivePage;
+                if (page != null && _originalLayoutStyle.HasValue)
+                {
+                    try
+                    {
+                        page.LayoutStyle = _originalLayoutStyle.Value;
+                    }
+                    catch { /* ignore */ }
+                }
+
+                try
+                {
+                    if (_originalEventsEnabled.HasValue)
+                    {
+                        app.EventsEnabled = _originalEventsEnabled.Value;
+                    }
+                }
+                catch { /* ignore */ }
+
+                try
+                {
+                    if (_originalUndoEnabled.HasValue)
+                    {
+                        app.UndoEnabled = _originalUndoEnabled.Value;
+                    }
+                }
+                catch { /* ignore */ }
+
+                try
+                {
+                    if (_originalDeferRecalc.HasValue)
+                    {
+                        app.DeferRecalc = _originalDeferRecalc.Value;
+                    }
+                }
+                catch { /* ignore */ }
+            }
+            finally
+            {
+                Com.Release(ref page);
+                Com.Release(ref window);
+                _plannerModeApplied = false;
+            }
         }
 
         public void EnsureDocumentAndPage()
@@ -70,6 +235,8 @@ namespace VDG.VisioRuntime.Services
                     if (app.ActiveWindow != null)
                         app.ActiveWindow.Page = page;
                 }
+
+                ApplyPlannerModeSafeguards();
             }
             finally
             {
@@ -77,6 +244,46 @@ namespace VDG.VisioRuntime.Services
                 Com.Release(ref pages);
                 Com.Release(ref doc);
                 Com.Release(ref docs);
+            }
+        }
+
+        private static void ApplyShapePlacementLocks(Visio.Shape shape)
+        {
+            if (shape == null)
+            {
+                return;
+            }
+
+            TrySetFormula(shape, "LockMoveX", "1");
+            TrySetFormula(shape, "LockMoveY", "1");
+            TrySetFormula(shape, "LockRotate", "1");
+        }
+
+        private static void ApplyConnectorGuards(Visio.Shape connector)
+        {
+            if (connector == null)
+            {
+                return;
+            }
+
+            TrySetFormula(connector, "Reroute", "0");
+        }
+
+        private static void TrySetFormula(Visio.Shape shape, string cellName, string formula)
+        {
+            Visio.Cell cell = null;
+            try
+            {
+                cell = shape.get_CellsU(cellName);
+                cell.FormulaU = formula;
+            }
+            catch
+            {
+                // Some masters or shapes may not expose the requested cell; ignore.
+            }
+            finally
+            {
+                Com.Release(ref cell);
             }
         }
 
@@ -119,6 +326,8 @@ namespace VDG.VisioRuntime.Services
 
                 if (!string.IsNullOrWhiteSpace(text))
                     shape.Text = text;
+
+                ApplyShapePlacementLocks(shape);
 
                 return shape.ID;
             }
@@ -174,6 +383,8 @@ namespace VDG.VisioRuntime.Services
                         // Default Visio routing is right-angle; nothing to do
                         break;
                 }
+
+                ApplyConnectorGuards(connector);
 
                 return connector.ID;
             }
@@ -267,6 +478,8 @@ namespace VDG.VisioRuntime.Services
                 {
                     shape.Text = text;
                 }
+
+                ApplyShapePlacementLocks(shape);
 
                 return shape.ID;
             }
@@ -378,6 +591,8 @@ namespace VDG.VisioRuntime.Services
 
         public void Dispose()
         {
+            RestorePlannerMode();
+
             // Release cached stencils
             foreach (var key in _stencilCache.Keys.ToList())
             {

@@ -1,6 +1,7 @@
 namespace VisioDiagramGenerator.Algorithms
 
 open System
+open System.Collections.Generic
 open VDG.Core.Models
 
 /// A point in two-dimensional space represented by single precision floats.
@@ -14,12 +15,209 @@ type NodeLayout =
       Position: PointF
       Size: Nullable<Size> }
 
+/// Describes a decoupled leader/label to accompany an edge.
+[<CLIMutable>]
+type EdgeCallout =
+    { StubStart: PointF
+      StubEnd: PointF
+      LabelCenter: PointF }
+
+[<CLIMutable>]
+type EdgeChannel =
+    { Key: string
+      Orientation: string
+      Center: float32
+      Offset: float32
+      BundleIndex: int
+      Spacing: float32
+      SourceModuleId: string
+      TargetModuleId: string
+      SourceSide: string
+      TargetSide: string }
+
+[<CLIMutable>]
+type ChannelLabel =
+    { PageIndex: int
+      Key: string
+      BundleIndex: int
+      Orientation: string
+      StubStart: PointF
+      StubEnd: PointF
+      LabelCenter: PointF
+      Lines: string array }
+
 /// Describes a polyline route for an edge. Points are expected to include
 /// at least a start and end point.
 [<CLIMutable>]
 type EdgeRoute =
     { Id: string
-      Points: PointF array }
+      Points: PointF array
+      Callout: EdgeCallout option
+      Channel: EdgeChannel option }
+
+[<CLIMutable>]
+type NodeModuleAssignment =
+    { NodeId: string
+      ModuleId: string }
+
+[<CLIMutable>]
+type PageLayoutInfo =
+    { PageIndex: int
+      Origin: PointF
+      Width: float32
+      Height: float32
+      BodyHeight: float32 }
+
+/// Axis-aligned rectangle helper used for container bounds.
+[<CLIMutable>]
+type RectangleF =
+    { Left: float32
+      Bottom: float32
+      Width: float32
+      Height: float32 }
+
+/// Captures visible container geometry emitted by the layout planner.
+[<CLIMutable>]
+type ContainerLayout =
+    { Id: string
+      Label: string
+      Tier: string
+      Bounds: RectangleF
+      VisibleNodes: int
+      OverflowCount: int }
+
+[<CLIMutable>]
+type RowLayout =
+    { PageIndex: int
+      Tier: string
+      RowIndex: int
+      TierRowIndex: int
+      Top: float32
+      Bottom: float32
+      Height: float32 }
+
+[<CLIMutable>]
+type LaneSegmentPlan =
+    { PageIndex: int
+      Tier: string
+      SegmentIndex: int
+      Modules: string array
+      NodeCount: int
+      ConnectorCount: int
+      HeatPercent: float
+      OverflowReason: string }
+
+[<CLIMutable>]
+type FlowBundlePlan =
+    { PageIndex: int
+      ChannelKey: string
+      Orientation: string
+      SourceTier: string
+      TargetTier: string
+      ConnectorCount: int
+      LabelPreview: string array
+      SampleEdges: string array }
+
+[<CLIMutable>]
+type PageContextPlan =
+    { PageIndex: int
+      Reason: string
+      TriggerModuleId: string
+      TriggerTier: string
+      Note: string
+      Modules: string array }
+
+[<CLIMutable>]
+type CycleClusterPlan =
+    { ClusterId: string
+      ModuleIds: string array
+      Size: int
+      Severity: string
+      Notes: string }
+
+/// Aggregated overflow metadata for nodes trimmed from a container/module.
+[<CLIMutable>]
+type LayoutOverflow =
+    { ContainerId: string
+      HiddenNodeCount: int }
+
+/// Aggregated statistics for a computed layout.
+[<CLIMutable>]
+type LayoutStats =
+    { NodeCount: int
+      ConnectorCount: int
+      ModuleCount: int
+      ContainerCount: int
+      ModuleIds: string array
+      Overflows: LayoutOverflow array }
+
+/// Planner output describing how modules map to a physical page.
+[<CLIMutable>]
+type PagePlan =
+    { PageIndex: int
+      Modules: string array
+      Connectors: int
+      Nodes: int
+      Occupancy: float }
+
+[<CLIMutable>]
+type LayerPlan =
+    { LayerIndex: int
+      Modules: string array
+      ShapeCount: int
+      ConnectorCount: int }
+
+[<CLIMutable>]
+type LayerBridge =
+    { BridgeId: string
+      SourceLayer: int
+      SourceNodeId: string
+      TargetLayer: int
+      TargetNodeId: string
+      ConnectorId: string
+      Metadata: IDictionary<string, string>
+      EntryAnchor: PointF
+      ExitAnchor: PointF }
+
+[<CLIMutable>]
+type PageBridge =
+    { BridgeId: string
+      SourcePage: int
+      TargetPage: int
+      SourceModuleId: string
+      TargetModuleId: string
+      SourceNodeId: string
+      TargetNodeId: string
+      ConnectorId: string
+      Metadata: IDictionary<string, string>
+      EntryAnchor: PointF
+      ExitAnchor: PointF }
+
+/// High-level layout plan returned by the algorithms layer.
+[<CLIMutable>]
+type LayoutPlan =
+    { OutputMode: string
+      CanvasWidth: float32
+      CanvasHeight: float32
+      PageHeight: float32
+      PageMargin: float32
+      TitleHeight: float32
+      Nodes: NodeLayout array
+      NodeModules: NodeModuleAssignment array
+      PageLayouts: PageLayoutInfo array
+      Containers: ContainerLayout array
+      RowLayouts: RowLayout array
+      LaneSegments: LaneSegmentPlan array
+      Edges: EdgeRoute array
+      FlowBundles: FlowBundlePlan array
+      PageContexts: PageContextPlan array
+      Pages: PagePlan array
+      Layers: LayerPlan array
+      ChannelLabels: ChannelLabel array
+      CycleClusters: CycleClusterPlan array
+      Bridges: LayerBridge array
+      PageBridges: PageBridge array
+      Stats: LayoutStats }
 
 /// The result of a layout operation, containing layouts for nodes and edges.
 [<CLIMutable>]

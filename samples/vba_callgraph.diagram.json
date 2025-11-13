@@ -1,0 +1,145 @@
+{
+  "schemaVersion": "1.2",
+  "metadata": {
+    "properties": {
+      "semantics.taxonomy.schema": "1.0",
+      "semantics.taxonomy.generatedAt": "2020-04-01T07:37:53.0000000\u002B00:00",
+      "semantics.flows.schema": "1.0",
+      "semantics.flows.generatedAt": "2020-04-01T07:37:53.0000000\u002B00:00",
+      "review.summary.json": "{\u0022modules\u0022:2,\u0022procedures\u0022:2,\u0022subsystems\u0022:[{\u0022key\u0022:\u0022Core.Modules\u0022,\u0022value\u0022:2}],\u0022roles\u0022:[{\u0022key\u0022:\u0022Utility\u0022,\u0022value\u0022:2}],\u0022warnings\u0022:[\u00222 module classification(s) below confidence threshold.\u0022],\u0022suggestions\u0022:[],\u0022info\u0022:[],\u0022residualFlows\u0022:0,\u0022notes\u0022:[\u00224 info-level item(s) suppressed by severity threshold \\u0027warning\\u0027.\u0022],\u0022settings\u0022:{\u0022minimumSeverity\u0022:\u0022warning\u0022,\u0022roleConfidenceCutoff\u0022:0.55,\u0022flowResidualCutoff\u0022:1600}}",
+      "review.settings.minimumSeverity": "warning",
+      "review.settings.roleConfidenceCutoff": "0.55",
+      "review.settings.flowResidualCutoff": "1600"
+    }
+  },
+  "layout": {
+    "outputMode": "view",
+    "tiers": [
+      "Forms",
+      "Sheets",
+      "Classes",
+      "Modules"
+    ],
+    "spacing": {
+      "horizontal": 1.2,
+      "vertical": 0.6
+    },
+    "page": {
+      "widthIn": 13,
+      "heightIn": 8.5,
+      "marginIn": 0.5,
+      "paginate": true,
+      "plan": {
+        "laneSplitAllowed": true,
+        "maxConnectors": 350,
+        "maxModulesPerPage": 10,
+        "heightSlackPercent": 0.2
+      }
+    },
+    "containers": {
+      "paddingIn": 0,
+      "cornerIn": 0.12
+    }
+  },
+  "nodes": [
+    {
+      "id": "Module1.Caller",
+      "label": "Module1.Caller",
+      "tier": "Modules",
+      "containerId": "Module1",
+      "metadata": {
+        "code.module": "Module1",
+        "code.proc": "Caller",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Module1.bas",
+        "code.locs.startLine": "4",
+        "code.locs.endLine": "6",
+        "code.source.file": "Module1.bas",
+        "code.source.module": "Module1",
+        "code.source.line": "4",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
+      }
+    },
+    {
+      "id": "Module2.Work",
+      "label": "Module2.Work",
+      "tier": "Modules",
+      "containerId": "Module2",
+      "metadata": {
+        "code.module": "Module2",
+        "code.proc": "Work",
+        "code.kind": "Sub",
+        "code.access": "Public",
+        "code.locs.file": "Module2.bas",
+        "code.locs.startLine": "4",
+        "code.locs.endLine": "6",
+        "code.source.file": "Module2.bas",
+        "code.source.module": "Module2",
+        "code.source.line": "4",
+        "code.metrics.lines": "3",
+        "code.metrics.sloc": "1",
+        "code.metrics.cyclomatic": "1",
+        "semantics.proc.role.primary": "Utility",
+        "semantics.proc.role.confidence": "0.45",
+        "semantics.proc.subsystem": "Core.Modules"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "sourceId": "Module1.Caller",
+      "targetId": "Module2.Work",
+      "label": "call",
+      "metadata": {
+        "code.edge": "call",
+        "code.site.module": "Module1",
+        "code.site.file": "Module1.bas",
+        "code.site.line": "5"
+      }
+    }
+  ],
+  "containers": [
+    {
+      "id": "Module1",
+      "label": "Module1",
+      "tier": "Modules",
+      "metadata": {
+        "code.module": "Module1",
+        "code.module.kind": "Module",
+        "code.file": "Module1.bas",
+        "code.source.file": "Module1.bas",
+        "code.source.module": "Module1",
+        "code.source.line": "1",
+        "code.metrics.lines": "7",
+        "code.metrics.sloc": "2",
+        "code.metrics.cyclomatic": "1",
+        "semantics.module.subsystem.primary": "Core.Modules",
+        "semantics.module.confidence": "0.35"
+      }
+    },
+    {
+      "id": "Module2",
+      "label": "Module2",
+      "tier": "Modules",
+      "metadata": {
+        "code.module": "Module2",
+        "code.module.kind": "Module",
+        "code.file": "Module2.bas",
+        "code.source.file": "Module2.bas",
+        "code.source.module": "Module2",
+        "code.source.line": "1",
+        "code.metrics.lines": "7",
+        "code.metrics.sloc": "1",
+        "code.metrics.cyclomatic": "1",
+        "semantics.module.subsystem.primary": "Core.Modules",
+        "semantics.module.confidence": "0.35"
+      }
+    }
+  ]
+}

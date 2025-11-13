@@ -1,8 +1,8 @@
 {
-  "irSchemaVersion": "0.1",
+  "irSchemaVersion": "0.2",
   "generator": {
     "name": "vba2json",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "project": {
     "name": "events_and_forms",
@@ -12,24 +12,37 @@
         "name": "Form1",
         "kind": "Form",
         "file": "Form1.frm",
+        "source": {
+          "file": "Form1.frm",
+          "module": "Form1",
+          "line": 1
+        },
+        "metrics": {
+          "cyclomatic": 1,
+          "lines": 11,
+          "sloc": 2
+        },
         "procedures": [
           {
             "id": "Form1.Command1_Click",
             "name": "Command1_Click",
             "kind": "Sub",
             "access": "Private",
-            "static": false,
-            "params": [],
             "locs": {
               "file": "Form1.frm",
               "startLine": 8,
               "endLine": 10
             },
-            "calls": [],
-            "metrics": {
-              "lines": 3
+            "source": {
+              "file": "Form1.frm",
+              "module": "Form1",
+              "line": 8
             },
-            "tags": []
+            "metrics": {
+              "cyclomatic": 1,
+              "lines": 3,
+              "sloc": 2
+            }
           }
         ]
       }

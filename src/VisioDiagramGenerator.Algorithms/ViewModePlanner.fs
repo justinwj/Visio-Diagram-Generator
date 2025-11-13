@@ -529,6 +529,15 @@ module ViewModePlanner =
                   ModuleIds = Array.empty
                   Overflows = Array.empty } }
         else
+            let paginateOverride = getMetadataBool model "layout.page.paginate"
+            let limitByPage =
+                match paginateOverride with
+                | Some flag -> flag
+                | None ->
+                    getMetadataBool model "layout.view.limitByPage"
+                    |> Option.defaultValue (not isViewModeOutput)
+            let viewModeSprawl = isViewModeOutput && not limitByPage
+
             let slotsPerRow =
                 getMetadataInt model "layout.view.slotsPerRow"
                 |> Option.filter (fun v -> v >= 1)
@@ -681,15 +690,6 @@ module ViewModePlanner =
                 let width =
                     baseNodeWidth + float32 (candidateChars - minNodeChars) * charWidth
                 width |> max baseNodeWidth |> min maxNodeWidth
-
-            let paginateOverride = getMetadataBool model "layout.page.paginate"
-            let limitByPage =
-                match paginateOverride with
-                | Some flag -> flag
-                | None ->
-                    getMetadataBool model "layout.view.limitByPage"
-                    |> Option.defaultValue (not isViewModeOutput)
-            let viewModeSprawl = isViewModeOutput && not limitByPage
 
             let preLayoutUsableHeight =
                 if limitByPage then computeUsableHeight model 0.f

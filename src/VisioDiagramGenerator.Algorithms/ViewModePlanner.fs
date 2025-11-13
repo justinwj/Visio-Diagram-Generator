@@ -2432,6 +2432,37 @@ module ViewModePlanner =
                               Channel = channel })
                     | _ -> ()
 
+            // Fallback: synthesize straight-line routes for any remaining edges
+            if not (isNull model.Edges) then
+                let existingRoutes = HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                for route in edgeRoutes do
+                    if not (isNull route) && not (String.IsNullOrWhiteSpace route.Id) then
+                        existingRoutes.Add(route.Id) |> ignore
+
+                let toRouteId (edge: Edge) =
+                    if String.IsNullOrWhiteSpace edge.Id then
+                        $"{edge.SourceId}->{edge.TargetId}"
+                    else
+                        edge.Id
+
+                for edge in model.Edges do
+                    if not (isNull edge)
+                       && not (String.IsNullOrWhiteSpace edge.SourceId)
+                       && not (String.IsNullOrWhiteSpace edge.TargetId) then
+                        match placementCenters.TryGetValue edge.SourceId, placementCenters.TryGetValue edge.TargetId with
+                        | (true, srcCenter), (true, dstCenter) ->
+                            let routeId = toRouteId edge
+                            if existingRoutes.Add routeId then
+                                let straightPoints =
+                                    [| point srcCenter.X srcCenter.Y
+                                       point dstCenter.X dstCenter.Y |]
+                                edgeRoutes.Add(
+                                    { Id = routeId
+                                      Points = straightPoints
+                                      Callout = None
+                                      Channel = None })
+                        | _ -> ()
+
             let nodesArray = nodeLayouts.ToArray()
             let containersArray = containerLayouts.ToArray()
             let edgesArray = edgeRoutes.ToArray()

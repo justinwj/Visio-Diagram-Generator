@@ -50,6 +50,11 @@ def main() -> None:
         "--slice-name",
         help="Metadata value for fixture.slice (defaults to --target-id).",
     )
+    parser.add_argument(
+        "--skip-lane-containers",
+        action="store_true",
+        help="Set layout.view.skipLaneContainers=true in the sliced fixture.",
+    )
     args = parser.parse_args()
 
     source_path = Path(args.source).expanduser().resolve()
@@ -95,6 +100,8 @@ def main() -> None:
     props["fixture.slice"] = args.slice_name or args.target_id
     props["fixture.generatedBy"] = "tools/slice_diagram_fixture.py"
     props["fixture.sourceDiagram"] = source_path.as_posix()
+    if args.skip_lane_containers:
+        props["layout.view.skipLaneContainers"] = "true"
 
     write_json(output_path, data)
     if final_path:

@@ -250,6 +250,29 @@ namespace VDG.CLI
             public List<DiagIssue> Issues { get; set; } = new List<DiagIssue>();
             public JsonNode? ReviewSummary { get; set; }
             public List<AdvancedPageSummary> AdvancedPages { get; set; } = new List<AdvancedPageSummary>();
+            public LayoutSnapshot? Layout { get; set; }
+        }
+
+        private sealed class LayoutSnapshot
+        {
+            public int NodeCount { get; set; }
+            public int EdgeCount { get; set; }
+            public List<LayoutEdgePreview> Edges { get; set; } = new List<LayoutEdgePreview>();
+        }
+
+        private sealed class LayoutEdgePreview
+        {
+            public string? Id { get; set; }
+            public int PointCount { get; set; }
+            public List<PointPreview>? Points { get; set; }
+            public string? ChannelKey { get; set; }
+            public string? ChannelOrientation { get; set; }
+        }
+
+        private sealed class PointPreview
+        {
+            public double X { get; set; }
+            public double Y { get; set; }
         }
 
         private static bool ParseBooleanOption(string value, string flagName)
@@ -2840,6 +2863,48 @@ namespace VDG.CLI
                         payload.Metrics.SkippedModules.AddRange(summary.SkippedModules);
                     }
 
+                    if (layout != null)
+                    {
+                        var snapshot = new LayoutSnapshot
+                        {
+                            NodeCount = layout.Nodes?.Length ?? 0,
+                            EdgeCount = layout.Edges?.Length ?? 0
+                        };
+
+                        if (layout.Edges != null && layout.Edges.Length > 0)
+                        {
+                            const int maxEdgeSamples = 64;
+                            const int maxPointSamples = 12;
+                            foreach (var edgeRoute in layout.Edges.Take(maxEdgeSamples))
+                            {
+                                var preview = new LayoutEdgePreview
+                                {
+                                    Id = edgeRoute?.Id,
+                                    PointCount = edgeRoute?.Points?.Length ?? 0
+                                };
+
+                                if (edgeRoute?.Channel != null && FSharpOption<EdgeChannel>.get_IsSome(edgeRoute.Channel))
+                                {
+                                    var channel = edgeRoute.Channel.Value;
+                                    preview.ChannelKey = channel.Key;
+                                    preview.ChannelOrientation = channel.Orientation;
+                                }
+
+                                if (edgeRoute?.Points != null && edgeRoute.Points.Length > 0)
+                                {
+                                    preview.Points = edgeRoute.Points
+                                        .Take(maxPointSamples)
+                                        .Select(p => new PointPreview { X = p.X, Y = p.Y })
+                                        .ToList();
+                                }
+
+                                snapshot.Edges.Add(preview);
+                            }
+                        }
+
+                        payload.Layout = snapshot;
+                    }
+
                     // Straight-line crossings
                     try
                     {
@@ -3480,10 +3545,12 @@ namespace VDG.CLI
         {
             if (string.Equals(GetOutputMode(model), "view", StringComparison.OrdinalIgnoreCase))
             {
-                return ComputeViewModeLayout(model);
+                var view = ComputeViewModeLayout(model);
+                return new LayoutComputation(EnsureLayoutEdges(model, view.Layout), view.Plan);
             }
 
             var layout = LayoutEngine.compute(model);
+            layout = EnsureLayoutEdges(model, layout);
             var plan = PrintPlanner.ComputeLayoutPlan(model, layout);
             return new LayoutComputation(layout, plan);
         }
@@ -3555,6 +3622,66 @@ namespace VDG.CLI
             };
 
             return new LayoutComputation(result, plan);
+        }
+
+        private static LayoutResult EnsureLayoutEdges(DiagramModel model, LayoutResult layout)
+        {
+            if (layout == null) return layout;
+            if (layout.Edges != null && layout.Edges.Length > 0) return layout;
+            if (layout.Nodes == null || layout.Nodes.Length == 0) return layout;
+
+            var nodeLookup = new Dictionary<string, NodeLayout>(StringComparer.OrdinalIgnoreCase);
+            foreach (var nodeLayout in layout.Nodes)
+            {
+                if (nodeLayout == null || string.IsNullOrWhiteSpace(nodeLayout.Id)) continue;
+                nodeLookup[nodeLayout.Id] = nodeLayout;
+            }
+
+            if (nodeLookup.Count == 0 || model.Edges == null || model.Edges.Count == 0) return layout;
+
+            var edgeRoutes = new List<EdgeRoute>(model.Edges.Count);
+            foreach (var edge in model.Edges)
+            {
+                if (edge == null) continue;
+                var edgeId = !string.IsNullOrWhiteSpace(edge.Id) ? edge.Id : $"{edge.SourceId}->{edge.TargetId}";
+                if (!nodeLookup.TryGetValue(edge.SourceId ?? string.Empty, out var sourceLayout)) continue;
+                if (!nodeLookup.TryGetValue(edge.TargetId ?? string.Empty, out var targetLayout)) continue;
+
+                var points = BuildStraightLinePoints(sourceLayout, targetLayout);
+                if (points.Length < 2) continue;
+
+                edgeRoutes.Add(new EdgeRoute(edgeId, points, FSharpOption<EdgeCallout>.None, FSharpOption<EdgeChannel>.None));
+            }
+
+            layout.Edges = edgeRoutes.ToArray();
+            return layout;
+        }
+
+        private static PointF[] BuildStraightLinePoints(NodeLayout source, NodeLayout target)
+        {
+            if (source == null || target == null) return Array.Empty<PointF>();
+
+            var (sx, sy) = GetNodeCenter(source);
+            var (tx, ty) = GetNodeCenter(target);
+            if (double.IsNaN(sx) || double.IsNaN(sy) || double.IsNaN(tx) || double.IsNaN(ty))
+            {
+                return Array.Empty<PointF>();
+            }
+
+            return new[]
+            {
+                new PointF { X = (float)sx, Y = (float)sy },
+                new PointF { X = (float)tx, Y = (float)ty }
+            };
+        }
+
+        private static (double x, double y) GetNodeCenter(NodeLayout node)
+        {
+            if (node == null) return (double.NaN, double.NaN);
+
+            var width = (node.Size.HasValue && node.Size.Value.Width > 0) ? node.Size.Value.Width : DefaultNodeWidth;
+            var height = (node.Size.HasValue && node.Size.Value.Height > 0) ? node.Size.Value.Height : DefaultNodeHeight;
+            return (node.Position.X + (width / 2.0), node.Position.Y + (height / 2.0));
         }
 
         private static void ApplyViewModeMetadata(DiagramModel model, LayoutPlan plan)
@@ -4929,6 +5056,7 @@ namespace VDG.CLI
             dynamic? pages = null;
             dynamic? page = null;
             VisioPageManager? pageManager = null;
+            VisioAutomationScope? automationScope = null;
 
             var placements = new Dictionary<string, NodePlacement>(StringComparer.OrdinalIgnoreCase);
 
@@ -4946,6 +5074,7 @@ namespace VDG.CLI
                 pageManager.SetPagePlans(pagePlans);
                 var firstPageInfo = pageManager.EnsurePage(0, "Layered 1");
                 page = firstPageInfo.Page;
+                automationScope = new VisioAutomationScope(app);
 
                 // Stamp document metadata (schema/generator/version/title)
                 StampDocumentMetadata(model, document);
@@ -4963,8 +5092,8 @@ namespace VDG.CLI
                 }
                 else
                 {
-                    ComputePlacements(model, layout, layoutPlan, placements, firstPageInfo, layerContext);
                     DrawLaneContainers(model, layout, layoutPlan, firstPageInfo.Page);
+                    ComputePlacements(model, layout, layoutPlan, placements, firstPageInfo, layerContext);
                     DrawConnectors(model, placements, firstPageInfo, pageManager, layout, layerContext, layoutPlan);
                 }
 
@@ -4974,6 +5103,8 @@ namespace VDG.CLI
             }
             finally
             {
+                automationScope?.Dispose();
+
                 var pageCom = (object?)page;
                 var pagesCom = (object?)pages;
                 var documentCom = (object?)document;
@@ -5383,6 +5514,9 @@ namespace VDG.CLI
                 dynamic shape = visioPage.DrawRectangle(left, bottom, right, top);
                 shape.Text = node.Label;
                 ApplyNodeStyle(node, shape);
+                TrySetFormula(shape, "LockMoveX", "1");
+                TrySetFormula(shape, "LockMoveY", "1");
+                TrySetFormula(shape, "LockAspect", "1");
 
                 if (layerIndex.HasValue)
                 {
@@ -5565,6 +5699,18 @@ namespace VDG.CLI
             }
         }
 
+        private static bool ReadBoolMetadata(IReadOnlyDictionary<string, string> metadata, string key, bool defaultValue = false)
+        {
+            if (!metadata.TryGetValue(key, out var raw) || string.IsNullOrWhiteSpace(raw))
+                return defaultValue;
+            return raw.Trim() switch
+            {
+                "1" => true,
+                "0" => false,
+                _ => bool.TryParse(raw, out var parsed) ? parsed : defaultValue
+            };
+        }
+
         private static void DrawLaneContainers(DiagramModel model, LayoutResult layout, LayoutPlan? layoutPlan, dynamic page)
         {
             dynamic visioPage = page ?? throw new COMException("Visio page was not created.");
@@ -5580,62 +5726,71 @@ namespace VDG.CLI
             var padding = GetContainerPadding(model);
             var corner = GetContainerCorner(model);
 
-            foreach (var tier in tiers)
+            var skipLaneContainers = ReadBoolMetadata(model.Metadata, "layout.view.skipLaneContainers");
+            if (!skipLaneContainers && string.Equals(GetOutputMode(model), "view", StringComparison.OrdinalIgnoreCase))
             {
-                double tMinL = double.MaxValue, tMinB = double.MaxValue, tMaxR = double.MinValue, tMaxT = double.MinValue;
+                skipLaneContainers = true;
+            }
 
-                foreach (var nl in layout.Nodes)
+            if (!skipLaneContainers)
+            {
+                foreach (var tier in tiers)
                 {
-                    if (!nodeMap.TryGetValue(nl.Id, out var node)) continue;
-                    var nodeTier = node.Tier;
-                    if (string.IsNullOrWhiteSpace(nodeTier) && node.Metadata.TryGetValue("tier", out var tMeta))
+                    double tMinL = double.MaxValue, tMinB = double.MaxValue, tMaxR = double.MinValue, tMaxT = double.MinValue;
+
+                    foreach (var nl in layout.Nodes)
                     {
-                        nodeTier = tMeta;
+                        if (!nodeMap.TryGetValue(nl.Id, out var node)) continue;
+                        var nodeTier = node.Tier;
+                        if (string.IsNullOrWhiteSpace(nodeTier) && node.Metadata.TryGetValue("tier", out var tMeta))
+                        {
+                            nodeTier = tMeta;
+                        }
+                        var tierKey = string.IsNullOrWhiteSpace(nodeTier) ? tiers.First() : nodeTier!;
+                        if (!tier.Equals(tierKey, StringComparison.OrdinalIgnoreCase)) continue;
+
+                        var w = nl.Size.HasValue && nl.Size.Value.Width > 0 ? nl.Size.Value.Width : (float)DefaultNodeWidth;
+                        var h = nl.Size.HasValue && nl.Size.Value.Height > 0 ? nl.Size.Value.Height : (float)DefaultNodeHeight;
+                        var l = nl.Position.X + offsetX;
+                        var b = nl.Position.Y + offsetY;
+
+                        tMinL = Math.Min(tMinL, l);
+                        tMinB = Math.Min(tMinB, b);
+                        tMaxR = Math.Max(tMaxR, l + w);
+                        tMaxT = Math.Max(tMaxT, b + h);
                     }
-                    var tierKey = string.IsNullOrWhiteSpace(nodeTier) ? tiers.First() : nodeTier!;
-                    if (!tier.Equals(tierKey, StringComparison.OrdinalIgnoreCase)) continue;
 
-                    var w = nl.Size.HasValue && nl.Size.Value.Width > 0 ? nl.Size.Value.Width : (float)DefaultNodeWidth;
-                    var h = nl.Size.HasValue && nl.Size.Value.Height > 0 ? nl.Size.Value.Height : (float)DefaultNodeHeight;
-                    var l = nl.Position.X + offsetX;
-                    var b = nl.Position.Y + offsetY;
-
-                    tMinL = Math.Min(tMinL, l);
-                    tMinB = Math.Min(tMinB, b);
-                    tMaxR = Math.Max(tMaxR, l + w);
-                    tMaxT = Math.Max(tMaxT, b + h);
-                }
-
-                if (double.IsInfinity(tMinL) || tMinL == double.MaxValue)
-                {
-                    continue; // no nodes in this tier
-                }
-
-                var left = tMinL - padding;
-                var bottom = tMinB - padding;
-                var right = tMaxR + padding;
-                var top = tMaxT + padding;
-
-                try
-                {
-                    dynamic lane = visioPage.DrawRectangle(left, bottom, right, top);
-                    lane.Text = tier;
-                    ApplyContainerStyle(model, lane);
-                    try { TrySetResult(lane.CellsU["Rounding"], corner); } catch { }
-                    try { lane.SendToBack(); } catch { }
-                    ReleaseCom(lane);
-                }
-                catch { }
-
-                if (layoutPlan?.LaneSegments != null)
-                {
-                    var laneSegments =
-                        layoutPlan.LaneSegments
-                            .Where(seg => seg != null && seg.PageIndex == 0 && seg.Tier != null && seg.Tier.Equals(tier, StringComparison.OrdinalIgnoreCase))
-                            .ToArray();
-                    if (laneSegments.Length > 0)
+                    if (double.IsInfinity(tMinL) || tMinL == double.MaxValue)
                     {
-                        DrawLaneHeatBands(visioPage, laneSegments, left, bottom, right, top);
+                        continue; // no nodes in this tier
+                    }
+
+                    var left = tMinL - padding;
+                    var bottom = tMinB - padding;
+                    var right = tMaxR + padding;
+                    var top = tMaxT + padding;
+
+                    try
+                    {
+                        dynamic lane = visioPage.DrawRectangle(left, bottom, right, top);
+                        lane.Text = tier;
+                        ApplyContainerStyle(model, lane);
+                        try { TrySetResult(lane.CellsU["Rounding"], corner); } catch { }
+                        try { lane.SendToBack(); } catch { }
+                        ReleaseCom(lane);
+                    }
+                    catch { }
+
+                    if (layoutPlan?.LaneSegments != null)
+                    {
+                        var laneSegments =
+                            layoutPlan.LaneSegments
+                                .Where(seg => seg != null && seg.PageIndex == 0 && seg.Tier != null && seg.Tier.Equals(tier, StringComparison.OrdinalIgnoreCase))
+                                .ToArray();
+                        if (laneSegments.Length > 0)
+                        {
+                            DrawLaneHeatBands(visioPage, laneSegments, left, bottom, right, top);
+                        }
                     }
                 }
             }
@@ -5686,6 +5841,82 @@ namespace VDG.CLI
                 }
             }
 
+            static string? InferSideFromVector(double dx, double dy)
+            {
+                if (Math.Abs(dx) >= Math.Abs(dy))
+                {
+                    return dx >= 0 ? "right" : "left";
+                }
+                return dy >= 0 ? "top" : "bottom";
+            }
+
+            static string? GetChannelSide(FSharpOption<EdgeChannel>? channelOpt, bool isSource)
+            {
+                if (channelOpt == null || !FSharpOption<EdgeChannel>.get_IsSome(channelOpt))
+                    return null;
+                var channel = channelOpt.Value;
+                return isSource ? channel.SourceSide : channel.TargetSide;
+            }
+
+            static void AdjustEndpoint(List<double> points, NodePlacement placement, string? sideHint, bool isSource)
+            {
+                if (placement == null || points.Count < 4) return;
+                var index = isSource ? 0 : points.Count - 2;
+                var neighborIndex = isSource ? 2 : points.Count - 4;
+                if (neighborIndex < 0 || neighborIndex >= points.Count) return;
+
+                var x = points[index];
+                var y = points[index + 1];
+                var nx = points[neighborIndex];
+                var ny = points[neighborIndex + 1];
+
+                var left = placement.Left;
+                var right = placement.Left + placement.Width;
+                var bottom = placement.Bottom;
+                var top = placement.Bottom + placement.Height;
+
+                static double Clamp(double value, double min, double max)
+                {
+                    if (value < min) return min;
+                    if (value > max) return max;
+                    return value;
+                }
+
+                var side = sideHint;
+                if (string.IsNullOrWhiteSpace(side))
+                {
+                    side = InferSideFromVector(nx - x, ny - y);
+                }
+                if (string.IsNullOrWhiteSpace(side)) return;
+
+                double anchorX = x;
+                double anchorY = y;
+                switch (side.Trim().ToLowerInvariant())
+                {
+                    case "left":
+                        anchorX = left;
+                        anchorY = Clamp(y, bottom, top);
+                        break;
+                    case "right":
+                        anchorX = right;
+                        anchorY = Clamp(y, bottom, top);
+                        break;
+                    case "top":
+                        anchorX = Clamp(x, left, right);
+                        anchorY = top;
+                        break;
+                    case "bottom":
+                        anchorX = Clamp(x, left, right);
+                        anchorY = bottom;
+                        break;
+                    default:
+                        return;
+                }
+
+                points[index] = anchorX;
+                points[index + 1] = anchorY;
+            }
+
             foreach (var edge in model.Edges)
             {
                 if (!placements.TryGetValue(edge.SourceId, out var source) || source == null ||
@@ -5711,6 +5942,10 @@ namespace VDG.CLI
                             pts.Add(pt.X);
                             pts.Add(pt.Y);
                         }
+                        var channelSideSrc = GetChannelSide(predefinedRoute.Channel, isSource: true);
+                        var channelSideDst = GetChannelSide(predefinedRoute.Channel, isSource: false);
+                        AdjustEndpoint(pts, sourcePlacement, channelSideSrc, isSource: true);
+                        AdjustEndpoint(pts, targetPlacement, channelSideDst, isSource: false);
                         dynamic line = visioPage.DrawPolyline(pts.ToArray(), 0);
                         var calloutPlaced = DrawConnectorCallout(visioPage, edge, predefinedRoute, 0.0, 0.0, layerContext, pageInfo, sourcePlacement, targetPlacement);
                         var hasChannel = predefinedRoute.Channel != null && FSharpOption<EdgeChannel>.get_IsSome(predefinedRoute.Channel);
@@ -5723,6 +5958,7 @@ namespace VDG.CLI
                             line.Text = string.Empty;
                         }
                         if (edge.Directed) TrySetFormula(line, "EndArrow", "5"); else TrySetFormula(line, "EndArrow", "0");
+                        ApplyConnectorGuards(line);
                         AssignConnectorToLayers(layerContext, pageInfo, line, sourcePlacement, targetPlacement);
                         ApplyEdgeStyle(edge, line); try { line.SendToBack(); } catch { }
                         ApplyChannelMetadata(line, predefinedRoute);
@@ -5797,6 +6033,7 @@ namespace VDG.CLI
                                     DrawLabelBox(visioPage, edge.Label!, mx, my, 0.0, off);
                                 }
                                 if (edge.Directed) TrySetFormula(pl, "EndArrow", "5"); else TrySetFormula(pl, "EndArrow", "0");
+                                ApplyConnectorGuards(pl);
                                 AssignConnectorToLayers(layerContext, pageInfo, pl, sourcePlacement, targetPlacement);
                                 ApplyEdgeStyle(edge, pl);
                                 try { pl.SendToBack(); } catch { }
@@ -5898,6 +6135,7 @@ namespace VDG.CLI
                                     DrawLabelBox(visioPage, edge.Label!, mx, my, 0.0, off);
                                 }
                                 if (edge.Directed) TrySetFormula(pl, "EndArrow", "5"); else TrySetFormula(pl, "EndArrow", "0");
+                                ApplyConnectorGuards(pl);
                                 ApplyEdgeStyle(edge, pl);
                                 try { pl.SendToBack(); } catch { }
                                 ReleaseCom(pl);
@@ -5930,6 +6168,7 @@ namespace VDG.CLI
                                     DrawLabelBox(visioPage, edge.Label!, mx, my, 0.0, 0.0);
                                 }
                                 if (edge.Directed) TrySetFormula(pl, "EndArrow", "5"); else TrySetFormula(pl, "EndArrow", "0");
+                                ApplyConnectorGuards(pl);
                                 AssignConnectorToLayers(layerContext, pageInfo, pl, sourcePlacement, targetPlacement);
                                 ApplyEdgeStyle(edge, pl);
                                 try { pl.SendToBack(); } catch { }
@@ -5951,6 +6190,7 @@ namespace VDG.CLI
                     dynamic line = visioPage.DrawLine(sourcePlacement.CenterX, sourcePlacement.CenterY, targetPlacement.CenterX, targetPlacement.CenterY);
                     if (!string.IsNullOrWhiteSpace(edge.Label)) line.Text = edge.Label;
                     if (edge.Directed) TrySetFormula(line, "EndArrow", "5"); else TrySetFormula(line, "EndArrow", "0");
+                    ApplyConnectorGuards(line);
                     AssignConnectorToLayers(layerContext, pageInfo, line, sourcePlacement, targetPlacement);
                     ApplyEdgeStyle(edge, line);
                     ReleaseCom(line);
@@ -6064,6 +6304,13 @@ namespace VDG.CLI
             TrySetFormula(shape, "Comment", $"\"{escaped}\"");
         }
 
+        private static void ApplyConnectorGuards(dynamic shape)
+        {
+            if (shape == null) return;
+            TrySetFormula(shape, "Reroute", "0");
+            TrySetFormula(shape, "BeginArrow", "0");
+        }
+
         private static void ReleaseCom(object? instance)
         {
             if (instance != null && Marshal.IsComObject(instance))
@@ -6166,6 +6413,151 @@ namespace VDG.CLI
             public int? LayerIndex { get; }
             public double CenterX => Left + (Width / 2.0);
             public double CenterY => Bottom + (Height / 2.0);
+        }
+
+        private sealed class VisioAutomationScope : IDisposable
+        {
+            private readonly dynamic _app;
+            private readonly short? _originalGlue;
+            private readonly short? _originalSnap;
+            private readonly short? _originalLayoutStyle;
+            private readonly short? _originalEventsEnabled;
+            private readonly short? _originalUndoEnabled;
+            private readonly bool? _originalDeferRecalc;
+            private bool _disposed;
+
+            public VisioAutomationScope(dynamic app)
+            {
+                _app = app ?? throw new ArgumentNullException(nameof(app));
+                dynamic? window = null;
+                dynamic? page = null;
+
+                try
+                {
+                    try
+                    {
+                        _originalEventsEnabled = app.EventsEnabled;
+                        app.EventsEnabled = unchecked((short)0);
+                    }
+                    catch { }
+
+                    try
+                    {
+                        _originalUndoEnabled = app.UndoEnabled;
+                        app.UndoEnabled = unchecked((short)0);
+                    }
+                    catch { }
+
+                    try
+                    {
+                        _originalDeferRecalc = app.DeferRecalc;
+                        app.DeferRecalc = true;
+                    }
+                    catch { }
+
+                    try { window = app.ActiveWindow; } catch { window = null; }
+                    if (window != null)
+                    {
+                        try
+                        {
+                            _originalGlue = window.GlueSettings;
+                            window.GlueSettings = 0;
+                        }
+                        catch { }
+
+                        try
+                        {
+                            _originalSnap = window.SnapSettings;
+                            window.SnapSettings = 0;
+                        }
+                        catch { }
+                    }
+
+                    try { page = app.ActivePage; } catch { page = null; }
+                    if (page != null)
+                    {
+                        try
+                        {
+                            _originalLayoutStyle = page.LayoutStyle;
+                            page.LayoutStyle = 0;
+                        }
+                        catch { }
+                    }
+                }
+                finally
+                {
+                    ReleaseCom(page);
+                    ReleaseCom(window);
+                }
+            }
+
+            public void Dispose()
+            {
+                if (_disposed) return;
+                _disposed = true;
+
+                dynamic app = _app;
+                dynamic? window = null;
+                dynamic? page = null;
+
+                try
+                {
+                    try { window = app.ActiveWindow; } catch { window = null; }
+                    if (window != null)
+                    {
+                        try
+                        {
+                            if (_originalGlue.HasValue) window.GlueSettings = _originalGlue.Value;
+                        }
+                        catch { }
+
+                        try
+                        {
+                            if (_originalSnap.HasValue) window.SnapSettings = _originalSnap.Value;
+                        }
+                        catch { }
+                    }
+
+                    try { page = app.ActivePage; } catch { page = null; }
+                    if (page != null && _originalLayoutStyle.HasValue)
+                    {
+                        try { page.LayoutStyle = _originalLayoutStyle.Value; }
+                        catch { }
+                    }
+
+                    try
+                    {
+                        if (_originalEventsEnabled.HasValue)
+                        {
+                            app.EventsEnabled = _originalEventsEnabled.Value;
+                        }
+                    }
+                    catch { }
+
+                    try
+                    {
+                        if (_originalUndoEnabled.HasValue)
+                        {
+                            app.UndoEnabled = _originalUndoEnabled.Value;
+                        }
+                    }
+                    catch { }
+
+                    try
+                    {
+                        if (_originalDeferRecalc.HasValue)
+                        {
+                            app.DeferRecalc = _originalDeferRecalc.Value;
+                        }
+                    }
+                    catch { }
+                }
+                finally
+                {
+                    ReleaseCom(page);
+                    ReleaseCom(window);
+                }
+            }
         }
 
         private sealed class DiagramEnvelope

@@ -12,7 +12,8 @@
       "review.settings.flowResidualCutoff": "1600",
       "fixture.slice": "invSys.AddGoodsReceived_Click",
       "fixture.generatedBy": "tools/slice_diagram_fixture.py",
-      "fixture.sourceDiagram": "C:/Users/justu/source/repos/Visio-Diagram-Generator/out/fixtures/invSys/callgraph/invSys.callgraph.diagram.json"
+      "fixture.sourceDiagram": "C:/Users/justu/source/repos/Visio-Diagram-Generator/out/fixtures/invSys/callgraph/invSys.callgraph.diagram.json",
+      "layout.view.skipLaneContainers": "true"
     }
   },
   "layout": {

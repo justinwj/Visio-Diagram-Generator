@@ -17,6 +17,7 @@ Private Sub UserForm_Initialize()
     ' Load roles into the dropdown
     modUserAuth.LoadRolesIntoComboBox Me.cmbRole
 End Sub
+
 Private Sub btnCreateUser_Click()
     Dim ws As Worksheet
     Dim tbl As ListObject
@@ -70,6 +71,7 @@ Private Sub btnCreateUser_Click()
     ' Confirmation message
     Me.lblMessage.Caption = "User created successfully!"
 End Sub
+
 Private Sub btnRandomPIN_Click()
     Dim randomPIN As String
     ' Generate a random 6-digit number
@@ -77,6 +79,7 @@ Private Sub btnRandomPIN_Click()
     ' Display the generated PIN in txtPIN
     Me.txtPIN.value = randomPIN
 End Sub
+    
 Private Sub btnDeleteUser_Click()
     Dim ws As Worksheet
     Dim tbl As ListObject

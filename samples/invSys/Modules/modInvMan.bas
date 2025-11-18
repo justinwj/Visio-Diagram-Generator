@@ -72,6 +72,7 @@ ErrorHandler:
     Call LogAndHandleError("AddGoodsReceived_Click")
     Resume Cleanup
 End Sub
+
 Public Sub DeductUsed_Click()
     Dim ws As Worksheet
     Dim tbl As ListObject
@@ -142,6 +143,7 @@ ErrorHandler:
     Call LogAndHandleError("DeductUsed_Click")
     Resume Cleanup
 End Sub
+
 Public Sub DeductShipments_Click()
     Dim ws As Worksheet
     Dim tbl As ListObject
@@ -212,6 +214,7 @@ ErrorHandler:
     Call LogAndHandleError("DeductShipments_Click")
     Resume Cleanup
 End Sub
+
 Public Sub Adjustments_Click()
     Dim ws As Worksheet
     Dim tbl As ListObject
@@ -282,6 +285,7 @@ ErrorHandler:
     Call LogAndHandleError("Adjustments_Click")
     Resume Cleanup
 End Sub
+    
 Public Sub AddMadeItems_Click()
     Dim ws As Worksheet
     Dim tbl As ListObject

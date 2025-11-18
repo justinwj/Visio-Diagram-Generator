@@ -22,6 +22,7 @@ Public Sub TrackChange( _
     PruneUndoStack 50
     Set RedoStack = New Collection
 End Sub
+
 Public Sub UndoLastAction()
     If UndoStack.count = 0 Then
         MsgBox "No actions to undo.", vbExclamation, "Undo"
@@ -41,6 +42,7 @@ Public Sub UndoLastAction()
     RedoStack.Add Action
     MsgBox "Undo successful.", vbInformation, "Undo"
 End Sub
+
 Public Sub RedoLastAction()
     If RedoStack.count = 0 Then
         MsgBox "No actions to redo.", vbExclamation, "Redo"
@@ -59,19 +61,23 @@ Public Sub RedoLastAction()
     UndoStack.Add Action
     MsgBox "Redo successful.", vbInformation, "Redo"
 End Sub
+
 Private Sub PruneUndoStack(ByVal MaxSize As Long)
     Do While UndoStack.count > MaxSize
         UndoStack.Remove 1
     Loop
 End Sub
+
 Public Sub AddToUndoStack(ByVal Action As clsUndoAction)
     UndoStack.Add Action
     PruneUndoStack 50
     Set RedoStack = New Collection
 End Sub
+
 Public Sub ClearRedoStack()
     Set RedoStack = New Collection
 End Sub
+    
 Public Function GetUndoStack() As Collection
     Set GetUndoStack = UndoStack
 End Function

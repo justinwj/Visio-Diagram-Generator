@@ -36,6 +36,7 @@ Public Sub TrackTransactionChange( _
     End With
     TransactionBuffer.Add Action
 End Sub
+
 Public Sub BeginTransaction()
     If InTransaction Then Exit Sub
     Set TransactionBuffer = New Collection
@@ -44,6 +45,7 @@ Public Sub BeginTransaction()
     PreTransactionSnapshotID = modUR_Snapshot.CaptureSnapshot()
     CurrentTransactionLogCount = 0
 End Sub
+
 Public Sub CommitTransaction()
     If Not InTransaction Then Exit Sub
     If TransactionBuffer Is Nothing Or TransactionBuffer.count = 0 Then Exit Sub
@@ -66,18 +68,22 @@ Public Sub CommitTransaction()
     Set TransactionBuffer = Nothing
     InTransaction = False
 End Sub
+
 ' (Other procedures remain unchanged.)
 Public Function IsInTransaction() As Boolean
     IsInTransaction = InTransaction
 End Function
+
 ' Expose the current transaction's SnapshotID for logging purposes.
 Public Function GetCurrentTransactionID() As String
     GetCurrentTransactionID = PreTransactionSnapshotID
 End Function
+
 ' Allow setting the log count from the calling routine.
 Public Sub SetCurrentTransactionLogCount(ByVal count As Long)
     CurrentTransactionLogCount = count
 End Sub
+    
 Public Sub RollbackTransaction()
     If Not InTransaction Then Exit Sub
     ' Optionally, you could restore the pre-transaction snapshot:

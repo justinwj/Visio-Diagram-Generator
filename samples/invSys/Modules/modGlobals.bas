@@ -14,6 +14,7 @@ Public gSelectedCell As Range
 Public Sub CommitSelectionAndCloseWrapper()
     frmItemSearch.CommitSelectionAndClose
 End Sub
+    
 ' Add this function to initialize global variables
 Public Sub InitializeGlobalVariables()
     ' Make sure the gSelectedCell variable is available
@@ -21,6 +22,7 @@ Public Sub InitializeGlobalVariables()
     Set gSelectedCell = Nothing
     On Error GoTo 0
 End Sub
+
 Public Function GetItemUOMByRowNum(rowNum As String, ItemCode As String, itemName As String) As String
     On Error GoTo ErrorHandler
     Dim ws As Worksheet
@@ -80,6 +82,7 @@ ErrorHandler:
     Debug.Print "Error in GetItemUOMByRowNum: " & Err.Description
     GetItemUOMByRowNum = "each"
 End Function
+
 Public Sub OpenItemSearchForCurrentCell()
     ' Store the active cell as the selected cell
     Set gSelectedCell = ActiveCell

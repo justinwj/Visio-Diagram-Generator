@@ -68,6 +68,7 @@ ErrorHandler:
     Debug.Print "LoadItemList: Error " & Err.Number & " - " & Err.Description
     LoadItemList = Empty
 End Function
+
 Public Sub GenerateRowNumbers()
     On Error GoTo ErrorHandler
     Dim ws As Worksheet
@@ -108,6 +109,7 @@ Public Sub GenerateRowNumbers()
 ErrorHandler:
     MsgBox "Error generating row numbers: " & Err.Description, vbExclamation
 End Sub
+
 Public Function IsInItemsColumn(Target As Range) As Boolean
     ' Initialize to false
     IsInItemsColumn = False
@@ -136,6 +138,7 @@ Public Function IsInItemsColumn(Target As Range) As Boolean
     End If
     On Error GoTo 0
 End Function
+
 ' Add this function since it's being called but not defined
 Public Sub ClearTableFilters()
     On Error Resume Next
@@ -159,6 +162,7 @@ Public Sub ClearTableFilters()
     End If
     On Error GoTo 0
 End Sub
+
 Public Sub AddBigSearchButton()
     On Error Resume Next
     ' Add to ShipmentsTally
@@ -194,6 +198,7 @@ Public Sub AddBigSearchButton()
         End With
     End If
 End Sub
+    
 Public Sub SetupAllHandlers()
     ' Clear table filters if needed
     ClearTableFilters

@@ -900,6 +900,7 @@ Private Sub TBoxScrollY(ByVal tbox As MSForms.TextBox _
         If Abs(currY - startY) < 2 Then ScrollY tbox.Parent, scrollAmount
     End If
 End Sub
+    
 Private Function GetParent(ByVal tbox As MSForms.TextBox) As Object
     Dim p As Object: Set p = tbox.Parent
     Dim o As Object

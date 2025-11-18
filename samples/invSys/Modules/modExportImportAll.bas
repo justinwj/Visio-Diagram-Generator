@@ -371,6 +371,7 @@ Sub ExportTablesHeadersAndControls()
     Close #Fnum
     MsgBox "Export complete:" & vbCrLf & outputPath, vbInformation
 End Sub
+    
 Sub ExportUserFormControls()
     Dim vbProj As VBIDE.VBProject
     Dim vbComp As VBIDE.VBComponent

@@ -71,6 +71,7 @@ Public Sub RestoreSnapshot(ByVal SnapshotID As String)
     Debug.Print "Snapshot restore completed."
     MsgBox "Snapshot restored successfully.", vbInformation, "Restore Snapshot"
 End Sub
+
 Private Function GetInventoryTable() As ListObject
     On Error Resume Next
     Set GetInventoryTable = ThisWorkbook.Sheets("INVENTORY MANAGEMENT").ListObjects("invSys")
@@ -79,6 +80,7 @@ Private Function GetInventoryTable() As ListObject
         Err.Clear
     End If
 End Function
+
 Public Function GenerateGUID() As String
     Dim i As Integer
     Dim GUID As String
@@ -90,6 +92,7 @@ Public Function GenerateGUID() As String
     Next i
     GenerateGUID = Left(GUID, 8) & "-" & Mid(GUID, 9, 4) & "-" & Mid(GUID, 13, 4) & "-" & Mid(GUID, 17, 4) & "-" & Right(GUID, 12)
 End Function
+    
 Private Function GetSchemaHash() As String
     Dim ws As Worksheet
     Dim tbl As ListObject

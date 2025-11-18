@@ -200,7 +200,7 @@ Public Sub ProcessShipmentsBatch()
     If Not tblDet.DataBodyRange Is Nothing Then tblDet .DataBodyRange.Delete
 End Sub
 
-    Public Function GetUOMFromDataTable(item As String, ItemCode As String, rowNum As String) As String
+Public Function GetUOMFromDataTable(item As String, ItemCode As String, rowNum As String) As String
     Dim ws  As Worksheet
     Dim tbl As ListObject
     Dim findCol As Long

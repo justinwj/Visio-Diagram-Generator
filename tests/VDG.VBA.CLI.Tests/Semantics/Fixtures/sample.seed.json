@@ -1,0 +1,35 @@
+{
+  "seedSchemaVersion": "1.0",
+  "modules": {
+    "frmLogin": {
+      "primarySubsystem": "UI.Forms",
+      "owner": "Forms Guild",
+      "tags": ["ui", "seeded"],
+      "confidence": 0.92,
+      "notes": "Manual override for login form",
+      "metadata": {
+        "laneHint": "Forms"
+      }
+    }
+  },
+  "procedures": {
+    "frmLogin.Submit_Click": {
+      "primaryRole": "Validator",
+      "owner": "Auth QA",
+      "tags": ["auth", "seed"],
+      "confidence": 0.91,
+      "notes": "Seed override",
+      "metadata": {
+        "alert": "Requires MFA"
+      }
+    }
+  },
+  "defaults": {
+    "subsystems": {
+      "Security.Auth": {
+        "owner": "Security Seed Owner",
+        "description": "Seeded security subsystem"
+      }
+    }
+  }
+}

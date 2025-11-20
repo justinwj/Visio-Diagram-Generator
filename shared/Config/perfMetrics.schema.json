@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://visio-diagram-generator/schema/perfMetrics.schema.json",
+  "title": "VDG Perf Smoke Metrics",
+  "type": "object",
+  "required": [ "timestampUtc", "input", "mode", "vba2json", "ir2diagram", "process" ],
+  "additionalProperties": false,
+  "properties": {
+    "timestampUtc": { "type": "string", "format": "date-time" },
+    "input": { "type": "string" },
+    "mode": { "type": "string" },
+    "includeUnknown": { "type": "boolean" },
+    "timeoutMs": { "type": ["integer", "null"], "minimum": 0 },
+    "vba2json": {
+      "type": "object",
+      "required": [ "ms", "exit", "outBytes" ],
+      "additionalProperties": false,
+      "properties": {
+        "ms": { "type": "integer", "minimum": 0 },
+        "exit": { "type": "integer", "minimum": 0 },
+        "outBytes": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "ir2diagram": {
+      "type": "object",
+      "required": [ "ms", "exit", "outBytes" ],
+      "additionalProperties": false,
+      "properties": {
+        "ms": { "type": "integer", "minimum": 0 },
+        "exit": { "type": "integer", "minimum": 0 },
+        "outBytes": { "type": "integer", "minimum": 0 },
+        "summary": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "properties": {
+            "modules": { "type": "integer", "minimum": 0 },
+            "procedures": { "type": "integer", "minimum": 0 },
+            "edges": { "type": "integer", "minimum": 0 },
+            "dynamicSkipped": { "type": "integer", "minimum": 0 },
+            "dynamicIncluded": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "counts": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "properties": {
+            "nodes": { "type": "integer", "minimum": 0 },
+            "edges": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "process": {
+      "type": "object",
+      "required": [ "pid", "workingSetBytes" ],
+      "additionalProperties": false,
+      "properties": {
+        "pid": { "type": "integer", "minimum": 1 },
+        "workingSetBytes": { "type": "integer", "minimum": 0 },
+        "machine": { "type": ["string", "null"] },
+        "os": { "type": ["string", "null"] },
+        "pwshVersion": { "type": ["string", "null"] }
+      }
+    }
+  }
+}
+

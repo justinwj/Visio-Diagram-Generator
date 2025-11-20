@@ -1,0 +1,239 @@
+{
+  "generatedAtUtc": "2025-11-11T22:21:15.8480439Z",
+  "commit": "c135b7f2ae5ee6975bdcea39d2a87e4910995a1a",
+  "note": "",
+  "fixtures": [
+    {
+      "name": "invSys",
+      "source": "samples/invSys",
+      "modes": [
+        {
+          "mode": "callgraph",
+          "hashes": {
+            "ir": "b8a6ed1a35633dff88062f484e0ea304356a4e915d21443a2f544fb1abbe3c00",
+            "diagram": "79b781a523482fa08155b49f86639f23aaed4cfeb9aa0a95d08e341f9f6eb281",
+            "diagnostics": "79809ee7e3f873ec0f535c009aac90d5c0cf1b99976dc61cd2fd588ab48bf8d6",
+            "vsdx": "3a92e6503f7afb7c5809ec31a0538e3f5da7dd998351ab88d5b34315f9a797d3",
+            "reviewJson": "c8b338b7fb5d897ed66e709508d572262830d9630a108c396e411b497d4edf78",
+            "reviewTxt": "541e8772efaa81ed6c2e252fab786a530fabfb34530180f67edd7c0f717dae9a"
+          },
+          "paths": {
+            "temp": {
+              "ir": "out\\fixtures\\invSys\\callgraph\\invSys.callgraph.ir.json",
+              "diagram": "out\\fixtures\\invSys\\callgraph\\invSys.callgraph.diagram.json",
+              "diagnostics": "out\\fixtures\\invSys\\callgraph\\invSys.callgraph.diagnostics.json",
+              "vsdx": "out\\fixtures\\invSys\\callgraph\\invSys.callgraph.vsdx",
+              "reviewJson": "out\\fixtures\\invSys\\callgraph\\invSys.callgraph.review.json",
+              "reviewTxt": "out\\fixtures\\invSys\\callgraph\\invSys.callgraph.review.txt"
+            },
+            "golden": {
+              "ir": "tests\\fixtures\\render\\invSys\\callgraph\\invSys.callgraph.ir.json",
+              "diagram": "tests\\fixtures\\render\\invSys\\callgraph\\invSys.callgraph.diagram.json",
+              "diagnostics": "tests\\fixtures\\render\\invSys\\callgraph\\invSys.callgraph.diagnostics.json",
+              "vsdx": "tests\\fixtures\\render\\invSys\\callgraph\\invSys.callgraph.vsdx",
+              "reviewJson": "tests\\fixtures\\render\\invSys\\callgraph\\invSys.callgraph.review.json",
+              "reviewTxt": "tests\\fixtures\\render\\invSys\\callgraph\\invSys.callgraph.review.txt"
+            }
+          },
+          "commands": [
+            {
+              "name": "vba2json",
+              "command": "dotnet run --project src/VDG.VBA.CLI -- vba2json --in samples\\invSys --out out\\fixtures\\invSys\\callgraph\\invSys.callgraph.ir.json --infer-metrics"
+            },
+            {
+              "name": "ir2diagram",
+              "command": "dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in out\\fixtures\\invSys\\callgraph\\invSys.callgraph.ir.json --out out\\fixtures\\invSys\\callgraph\\invSys.callgraph.diagram.json --mode callgraph --semantics-generated-at 2024-01-01T00:00:00Z"
+            },
+            {
+              "name": "render",
+              "command": "src\\VDG.CLI\\bin\\Release\\net48\\VDG.CLI.exe --diag-json out\\fixtures\\invSys\\callgraph\\invSys.callgraph.diagnostics.json out\\fixtures\\invSys\\callgraph\\invSys.callgraph.diagram.json out\\fixtures\\invSys\\callgraph\\invSys.callgraph.vsdx",
+              "environment": {
+                "VDG_SKIP_RUNNER": "1"
+              }
+            }
+          ]
+        },
+        {
+          "mode": "event-wiring",
+          "hashes": {
+            "ir": "9a85499cbbad835bdffe60660265a06c7b42d095127fdd833eab06f1678d59ca",
+            "diagram": "b7fcb0fc5da28800b11bf2bc32b6b88043f948948f4c57d953f0d9e53ec41d75",
+            "diagnostics": "da4cc14e6e5789fc769d83987d96a98f484fe8511e22c466ebc126f6c70fed51",
+            "vsdx": "44028c5b9a418abec5d0d9d79bb3c42aa4e6b434b781fa48f5b5945b582eea79",
+            "reviewJson": "c8b338b7fb5d897ed66e709508d572262830d9630a108c396e411b497d4edf78",
+            "reviewTxt": "541e8772efaa81ed6c2e252fab786a530fabfb34530180f67edd7c0f717dae9a"
+          },
+          "paths": {
+            "temp": {
+              "ir": "out\\fixtures\\invSys\\event-wiring\\invSys.event-wiring.ir.json",
+              "diagram": "out\\fixtures\\invSys\\event-wiring\\invSys.event-wiring.diagram.json",
+              "diagnostics": "out\\fixtures\\invSys\\event-wiring\\invSys.event-wiring.diagnostics.json",
+              "vsdx": "out\\fixtures\\invSys\\event-wiring\\invSys.event-wiring.vsdx",
+              "reviewJson": "out\\fixtures\\invSys\\event-wiring\\invSys.event-wiring.review.json",
+              "reviewTxt": "out\\fixtures\\invSys\\event-wiring\\invSys.event-wiring.review.txt"
+            },
+            "golden": {
+              "ir": "tests\\fixtures\\render\\invSys\\event-wiring\\invSys.event-wiring.ir.json",
+              "diagram": "tests\\fixtures\\render\\invSys\\event-wiring\\invSys.event-wiring.diagram.json",
+              "diagnostics": "tests\\fixtures\\render\\invSys\\event-wiring\\invSys.event-wiring.diagnostics.json",
+              "vsdx": "tests\\fixtures\\render\\invSys\\event-wiring\\invSys.event-wiring.vsdx",
+              "reviewJson": "tests\\fixtures\\render\\invSys\\event-wiring\\invSys.event-wiring.review.json",
+              "reviewTxt": "tests\\fixtures\\render\\invSys\\event-wiring\\invSys.event-wiring.review.txt"
+            }
+          },
+          "commands": [
+            {
+              "name": "vba2json",
+              "command": "dotnet run --project src/VDG.VBA.CLI -- vba2json --in samples\\invSys --out out\\fixtures\\invSys\\event-wiring\\invSys.event-wiring.ir.json --infer-metrics"
+            },
+            {
+              "name": "ir2diagram",
+              "command": "dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in out\\fixtures\\invSys\\event-wiring\\invSys.event-wiring.ir.json --out out\\fixtures\\invSys\\event-wiring\\invSys.event-wiring.diagram.json --mode event-wiring --semantics-generated-at 2024-01-01T00:00:00Z"
+            },
+            {
+              "name": "render",
+              "command": "src\\VDG.CLI\\bin\\Release\\net48\\VDG.CLI.exe --diag-json out\\fixtures\\invSys\\event-wiring\\invSys.event-wiring.diagnostics.json out\\fixtures\\invSys\\event-wiring\\invSys.event-wiring.diagram.json out\\fixtures\\invSys\\event-wiring\\invSys.event-wiring.vsdx",
+              "environment": {
+                "VDG_SKIP_RUNNER": "1"
+              }
+            }
+          ]
+        },
+        {
+          "mode": "module-structure",
+          "hashes": {
+            "ir": "9a85499cbbad835bdffe60660265a06c7b42d095127fdd833eab06f1678d59ca",
+            "diagram": "12285e0ad2942f3745e2bd7a8f1b9d5de239cfe2f98b83c92dc1779b7943177f",
+            "diagnostics": "f166455976424e28704bae4571f1e86cc3e023bd247b2b19bd0ee72380693c08",
+            "vsdx": "44028c5b9a418abec5d0d9d79bb3c42aa4e6b434b781fa48f5b5945b582eea79",
+            "reviewJson": "c8b338b7fb5d897ed66e709508d572262830d9630a108c396e411b497d4edf78",
+            "reviewTxt": "541e8772efaa81ed6c2e252fab786a530fabfb34530180f67edd7c0f717dae9a"
+          },
+          "paths": {
+            "temp": {
+              "ir": "out\\fixtures\\invSys\\module-structure\\invSys.module-structure.ir.json",
+              "diagram": "out\\fixtures\\invSys\\module-structure\\invSys.module-structure.diagram.json",
+              "diagnostics": "out\\fixtures\\invSys\\module-structure\\invSys.module-structure.diagnostics.json",
+              "vsdx": "out\\fixtures\\invSys\\module-structure\\invSys.module-structure.vsdx",
+              "reviewJson": "out\\fixtures\\invSys\\module-structure\\invSys.module-structure.review.json",
+              "reviewTxt": "out\\fixtures\\invSys\\module-structure\\invSys.module-structure.review.txt"
+            },
+            "golden": {
+              "ir": "tests\\fixtures\\render\\invSys\\module-structure\\invSys.module-structure.ir.json",
+              "diagram": "tests\\fixtures\\render\\invSys\\module-structure\\invSys.module-structure.diagram.json",
+              "diagnostics": "tests\\fixtures\\render\\invSys\\module-structure\\invSys.module-structure.diagnostics.json",
+              "vsdx": "tests\\fixtures\\render\\invSys\\module-structure\\invSys.module-structure.vsdx",
+              "reviewJson": "tests\\fixtures\\render\\invSys\\module-structure\\invSys.module-structure.review.json",
+              "reviewTxt": "tests\\fixtures\\render\\invSys\\module-structure\\invSys.module-structure.review.txt"
+            }
+          },
+          "commands": [
+            {
+              "name": "vba2json",
+              "command": "dotnet run --project src/VDG.VBA.CLI -- vba2json --in samples\\invSys --out out\\fixtures\\invSys\\module-structure\\invSys.module-structure.ir.json --infer-metrics"
+            },
+            {
+              "name": "ir2diagram",
+              "command": "dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in out\\fixtures\\invSys\\module-structure\\invSys.module-structure.ir.json --out out\\fixtures\\invSys\\module-structure\\invSys.module-structure.diagram.json --mode module-structure --semantics-generated-at 2024-01-01T00:00:00Z"
+            },
+            {
+              "name": "render",
+              "command": "src\\VDG.CLI\\bin\\Release\\net48\\VDG.CLI.exe --diag-json out\\fixtures\\invSys\\module-structure\\invSys.module-structure.diagnostics.json out\\fixtures\\invSys\\module-structure\\invSys.module-structure.diagram.json out\\fixtures\\invSys\\module-structure\\invSys.module-structure.vsdx",
+              "environment": {
+                "VDG_SKIP_RUNNER": "1"
+              }
+            }
+          ]
+        },
+        {
+          "mode": "proc-cfg",
+          "hashes": {
+            "ir": "9a85499cbbad835bdffe60660265a06c7b42d095127fdd833eab06f1678d59ca",
+            "diagram": "c77035e9c9b8a51a0256d43b1d3b4d73b72b13e5d2f4f45128cf1f49e3549921",
+            "diagnostics": "718d9b884f4dc48cd87c0cca0ac16a7352d6b1666766890759f5b5d9ec6b6b21",
+            "vsdx": "44028c5b9a418abec5d0d9d79bb3c42aa4e6b434b781fa48f5b5945b582eea79",
+            "reviewJson": "c8b338b7fb5d897ed66e709508d572262830d9630a108c396e411b497d4edf78",
+            "reviewTxt": "541e8772efaa81ed6c2e252fab786a530fabfb34530180f67edd7c0f717dae9a"
+          },
+          "paths": {
+            "temp": {
+              "ir": "out\\fixtures\\invSys\\proc-cfg\\invSys.proc-cfg.ir.json",
+              "diagram": "out\\fixtures\\invSys\\proc-cfg\\invSys.proc-cfg.diagram.json",
+              "diagnostics": "out\\fixtures\\invSys\\proc-cfg\\invSys.proc-cfg.diagnostics.json",
+              "vsdx": "out\\fixtures\\invSys\\proc-cfg\\invSys.proc-cfg.vsdx",
+              "reviewJson": "out\\fixtures\\invSys\\proc-cfg\\invSys.proc-cfg.review.json",
+              "reviewTxt": "out\\fixtures\\invSys\\proc-cfg\\invSys.proc-cfg.review.txt"
+            },
+            "golden": {
+              "ir": "tests\\fixtures\\render\\invSys\\proc-cfg\\invSys.proc-cfg.ir.json",
+              "diagram": "tests\\fixtures\\render\\invSys\\proc-cfg\\invSys.proc-cfg.diagram.json",
+              "diagnostics": "tests\\fixtures\\render\\invSys\\proc-cfg\\invSys.proc-cfg.diagnostics.json",
+              "vsdx": "tests\\fixtures\\render\\invSys\\proc-cfg\\invSys.proc-cfg.vsdx",
+              "reviewJson": "tests\\fixtures\\render\\invSys\\proc-cfg\\invSys.proc-cfg.review.json",
+              "reviewTxt": "tests\\fixtures\\render\\invSys\\proc-cfg\\invSys.proc-cfg.review.txt"
+            }
+          },
+          "commands": [
+            {
+              "name": "vba2json",
+              "command": "dotnet run --project src/VDG.VBA.CLI -- vba2json --in samples\\invSys --out out\\fixtures\\invSys\\proc-cfg\\invSys.proc-cfg.ir.json --infer-metrics"
+            },
+            {
+              "name": "ir2diagram",
+              "command": "dotnet run --project src/VDG.VBA.CLI -- ir2diagram --in out\\fixtures\\invSys\\proc-cfg\\invSys.proc-cfg.ir.json --out out\\fixtures\\invSys\\proc-cfg\\invSys.proc-cfg.diagram.json --mode proc-cfg --semantics-generated-at 2024-01-01T00:00:00Z"
+            },
+            {
+              "name": "render",
+              "command": "src\\VDG.CLI\\bin\\Release\\net48\\VDG.CLI.exe --diag-json out\\fixtures\\invSys\\proc-cfg\\invSys.proc-cfg.diagnostics.json out\\fixtures\\invSys\\proc-cfg\\invSys.proc-cfg.diagram.json out\\fixtures\\invSys\\proc-cfg\\invSys.proc-cfg.vsdx",
+              "environment": {
+                "VDG_SKIP_RUNNER": "1"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "invSys.AddGoodsReceived",
+      "source": "samples/invSys",
+      "note": "Manual slice focused on modInvMan.AddGoodsReceived_Click to keep Visio renders manageable while iterating on edge channels.",
+      "modes": [
+        {
+          "mode": "callgraph-slice",
+          "hashes": {
+            "ir": null,
+            "diagram": "8be6a4fac7fd4f7983b3cf0212a581f9696cfaebe82bfd6f84e4129eda096f45",
+            "diagnostics": null,
+            "vsdx": null,
+            "reviewJson": null,
+            "reviewTxt": null
+          },
+          "paths": {
+            "temp": {
+              "ir": null,
+              "diagram": "out\\fixtures\\invSys\\add-goods-received\\minimal_invSys_AddGoodsReceived.diagram.json",
+              "diagnostics": null,
+              "vsdx": null,
+              "reviewJson": null,
+              "reviewTxt": null
+            },
+            "golden": {
+              "ir": null,
+              "diagram": "fixtures\\minimal_invSys_AddGoodsReceived.diagram.json",
+              "diagnostics": null,
+              "vsdx": null,
+              "reviewJson": null,
+              "reviewTxt": null
+            }
+          },
+          "commands": [
+            {
+              "name": "slice-diagram",
+              "command": "python3 tools/slice_diagram_fixture.py --source out\\fixtures\\invSys\\callgraph\\invSys.callgraph.diagram.json --target-id modInvMan.AddGoodsReceived_Click --output out\\fixtures\\invSys\\add-goods-received\\minimal_invSys_AddGoodsReceived.diagram.json --final fixtures\\minimal_invSys_AddGoodsReceived.diagram.json --slice-name invSys.AddGoodsReceived_Click"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

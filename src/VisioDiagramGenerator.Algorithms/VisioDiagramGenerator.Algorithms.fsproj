@@ -11,7 +11,21 @@
   </ItemGroup>
   
   <ItemGroup>
+    <PackageReference Include="System.Text.Json" Version="6.0.10" />
+  </ItemGroup>
+  
+  <ItemGroup>
     <Compile Include="Types.fs" />
+    <Compile Include="PagingPlanner.fs" />
     <Compile Include="LayoutEngine.fs" />
+    <Compile Include="PrintPlanner.fs" />
+    <Compile Include="ViewModePlanner.fs" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Content Include="..\..\data\stencils\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>data\stencils\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Content>
   </ItemGroup>
 </Project>

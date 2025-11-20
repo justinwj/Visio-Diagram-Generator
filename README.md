@@ -2,7 +2,14 @@
 
 Generate Microsoft Visio diagrams from declarative JSON. The project ships with a Windows-only .NET Framework runner that drives Visio through COM automation, plus shared core libraries and layout helpers that can be reused by other front-ends.
 
-![.NET CI](https://github.com/justinwj/Visio-Diagram-Generator/actions/workflows/dotnet.yml/badge.svg)
+![.NET CI](https://github.com/justinwj/Visio-Diagram-Generator/actions/workflows/dotnet.yml/badge.svg) [![Perf Smoke](https://github.com/justinwj/Visio-Diagram-Generator/actions/workflows/dotnet.yml/badge.svg)](https://github.com/justinwj/Visio-Diagram-Generator/actions/workflows/dotnet.yml)
+
+CI Notes
+- The main workflow runs unit tests across projects and validates Diagram JSON against schema 1.2.
+- A validation matrix job runs `ir2diagram` in both default and `--strict-validate` modes to prevent regressions.
+- A perf-smoke job emits timing and counts for IR→Diagram conversions and uploads metrics (`out/perf/perf.json`).
+  - The perf-smoke job writes a Job Summary with key metrics (vba2json/ir2diagram ms, nodes, edges, dynamicSkipped/dynamicIncluded). Open any workflow run and click the “perf-smoke” job to view the summary and download artifacts.
+- Dedicated `render-fixtures` and `invsys-fixture` jobs run `tools/render-fixture.ps1` (full matrix and `-FixtureName invSys`, respectively) to guarantee fixture/diagnostics drift is caught before merge.
 
 ## What You Get
 - `VDG.CLI` – Windows CLI (`net48`) that opens Visio via COM and renders diagrams described in JSON.
@@ -63,15 +70,30 @@ Generate Microsoft Visio diagrams from declarative JSON. The project ships with 
      - `--diag-page-warn <0..1>` page/band occupancy warn ratio (default 0.90)
      - `--diag-cross-warn <n>` planned crossings warn threshold (default 200)
      - `--diag-cross-err <n>` planned crossings error threshold (default 400)
-     - `--diag-util-warn <0..100>` corridor utilization warn minimum percent (default 40)
-     - `--diag-json [path]` write structured diagnostics JSON (default `<output>.diagnostics.json`)
-   - `--spacing-h <inches>` horizontal spacing between columns
-   - `--spacing-v <inches>` vertical spacing between nodes
-   - `--page-width <inches>` / `--page-height <inches>` / `--page-margin <inches>`
-   - `--paginate <bool>` (reserved for future pagination)
+   - `--diag-util-warn <0..100>` corridor utilization warn minimum percent (default 40)
+   - `--diag-json [path]` write structured diagnostics JSON (default `<output>.diagnostics.json`)
+  - `--spacing-h <inches>` horizontal spacing between columns
+  - `--spacing-v <inches>` vertical spacing between nodes
+  - `--page-width <inches>` / `--page-height <inches>` / `--page-margin <inches>`
+  - `--paginate <bool>` (reserved for future pagination)
+  - Output mode:
+    - `--output-mode <view|print>` (default `view`) – dense view-mode auto-sizes the canvas, never paginates unless you explicitly set `layout.page.paginate=true`, and keeps every procedure visible; print mode retains fixed page heights and pagination heuristics for paper output.
+  - Filtering helpers for large renders:
+    - `--modules <id id ...>` include only the provided module identifiers (space or comma separated). Handy for debugging sub-systems without touching the source JSON. Prefix with `include` or `exclude` to be explicit (e.g. `--modules include Alpha Beta`, `--modules exclude LegacyModule`). Repeat the flag to mix include and exclude semantics.
+    - `--max-pages <n>` keep only the first `n` planned pages. The CLI trims segments beyond the limit, marks deferred modules in diagnostics, and re-runs pagination on the filtered dataset.
+
+   After layout, the CLI prints a planner summary that surfaces pagination health at a glance, followed by page-level annotations when degradation occurs. Example:
+   ```
+   info: planner summary modules=210 segments=248 delta=+38 splitModules=37 avgSegments/module=1.18 pages=238 avgModules/page=1.0 avgConnectors/page=9.2 maxOccupancy=250.0% maxConnectors=48 connectorOverLimitPages=2 truncatedNodes=3 skippedModules=1 partialRender=yes
+   warning: page 12 connectors=520 limit=500 over=+20 modules=7 laneWarnings=2 partial=yes
+   warning: skipped modules ModMega, ModLegacy (+3 more)
+   ```
+   The summary shows how many original modules were split into height-bounded segments, the resulting page count, the peak occupancy/connectors per page, and aggregate degradation (`connectorOverLimitPages`, `truncatedNodes`, `skippedModules`, `partialRender`). Page annotations drill into limit breaches so you can triage hotspot pages without opening diagnostics JSON.
 
    Diagnostics JSON contents (when enabled):
    - `metrics.connectorCount`, `metrics.straightLineCrossings`, `metrics.pageHeight`, `metrics.usableHeight`
+   - `metrics.moduleCount`, `metrics.segmentCount`, `metrics.segmentDelta`, `metrics.splitModuleCount`, `metrics.averageSegmentsPerModule`
+   - `metrics.plannerPageCount`, `metrics.plannerAverageModulesPerPage`, `metrics.plannerAverageConnectorsPerPage`, `metrics.plannerMaxOccupancyPercent`, `metrics.plannerMaxConnectorsPerPage`
    - `metrics.lanePages[] { tier, page, occupancyRatio, nodes }`
    - `metrics.containers[] { id, tier, page, occupancyRatio, nodes }` (when containers present and page height configured)
    - `issues[] { code, level, message, lane?, page? }` (respects `--diag-level`; includes `LaneCrowding`, `PageCrowding`, `PageOverflow`, `ContainerOverflow`, `ContainerCrowding`)
@@ -138,38 +160,16 @@ A minimal 1.2 envelope with lanes looks like this:
 - Additional document metadata and `diagramType` field.
 - Backward compatible with 1.0/1.1 inputs.
 
-Milestone 3 routing (alpha)
-- `layout.routing` (mode, bundling, channels, routeAroundContainers) and `node.ports` (inSide/outSide) are now parsed by the CLI.
-- Default routing mode is `orthogonal` using Visio Dynamic Connectors; set `--route-mode straight` to revert to straight lines.
-- Additional flags: `--bundle-by`, `--bundle-sep`, `--channel-gap`, `--route-around` are accepted and stored for future bundling/channel algorithms.
-- `edge.waypoints` and `edge.priority` are parsed and stored for future use.
-- Testing note: set `VDG_SKIP_RUNNER=1` to skip the Visio automation in `VDG.CLI` during tests/CI. The CLI will still parse input, emit diagnostics, and create a stub output file.
- - Labels: polylines (corridors/waypoints) use detached label boxes placed near the longest segment. Tune with `edge.metadata["edge.label.offsetIn"]` (inches).
- - Diagnostics: now include baseline crossings, planned route crossings, average path length, channel utilization, edges-with-waypoints count, and a bundle-separation effectiveness warning for tiny shapes.
-
-Milestone 4 containers (alpha)
-- `layout.containers` adds container rendering options: `paddingIn` (inches), `cornerIn` (inches), and optional `style` (fill/stroke/linePattern).
-- Optional top-level `containers[]` allows defining explicit sub-containers per tier. Nodes can opt-in via `containerId`.
-- CLI flags: `--container-padding <in>` and `--container-corner <in>` override JSON; `--route-around <true|false>` prefers paths that skirt container edges.
-- When `routeAroundContainers=true`, the CLI draws H–V–H polylines that hug lane container edges using roughly half the container padding, reducing overlap through container interiors.
-- Diagnostics: logs container count, padding/corner values, and warns if nodes reference unknown container IDs.
-- Sample: `samples/m4_containers_sample.json` (works with both Debug/Release builds).
-
-Exported properties (Visio DocumentSheet)
-- The CLI writes container metadata to the document’s ShapeSheet for downstream automation:
-  - `User.ContainerCount` (numeric)
-  - `User.ContainerIds` (CSV string)
-  - `User.ContainerLabels` (CSV string)
-  - `User.ContainerTiers` (CSV string)
-
-Notes and Future Integration
-- The layout model (nodes/edges + layout hints) is renderer-agnostic. While M1–M2 target Visio via COM, the same model can be exported to other formats (e.g., SVG, PPTX, PDF) in future milestones.
-
 ## Testing and Validation
 - Run unit tests: `dotnet test --configuration Release`
 - Rebuild after edits: `dotnet build -c Release`
 - To test the CLI without Visio COM automation, set `VDG_SKIP_RUNNER=1`.
 - For CLI smoke tests, re-run the command in the quick start section using your scenario-specific JSON.
+- End-to-end fixture validation (including `samples/invSys`): `pwsh ./tools/render-fixture.ps1 -FixtureName invSys -Update -Note "reason"` regenerates IR, Diagram JSON, diagnostics, and hashes, updates `plan docs/fixtures_log.md`, and rewrites `plan docs/fixtures_metadata.json`. Omit `-Update` for a read-only drift check.
+- Fixture-specific overrides: drop JSON patches under `tests/fixtures/config/<fixture>/<mode>.diagram.override.json` (e.g., to force `layout.page.plan.maxModulesPerPage=1` for `invSys/callgraph`). The render script merges these files automatically so view-mode and print-mode pagination scenarios stay reproducible in CI. See `docs/FixtureGuide.md` for examples.
+
+## Paging Planner Reference
+The pagination summary printed by the CLI and the associated diagnostics metrics are documented in `docs/PagingPlanner.md`. Review that guide when tuning thresholds, interpreting fixture output (`render-fixture.ps1`), or onboarding new team members to the segmentation heuristics.
 
 ## Samples
 - Corridor-aware routing sample: `samples/m3_dense_sample.json`
@@ -214,6 +214,8 @@ Notes and Future Integration
    - `--mode module-structure`: procedures grouped in module containers; no edges
    - `--mode module-callmap`: module-level call aggregation edges (N call(s))
    - `--mode event-wiring`: control events → handler procedures for Form modules
+ - Output options:
+   - `--output-mode <view|print>` (default `view`) – view mode captures full procedure-level detail for on-screen exploration and ignores page-size limits unless you explicitly opt into pagination; print mode keeps the legacy fixed-height pagination.
  - One-shot render convenience:
    - `dotnet run --project src/VDG.VBA.CLI -- render --in <folder> --out out/diagram.vsdx --mode callgraph`
    - The `render` command auto-discovers `VDG.CLI.exe` (or use `--cli` or `VDG_CLI` env).
@@ -221,17 +223,26 @@ Notes and Future Integration
 ## Repository Layout
 ```
 src/
-  VDG.CLI/                     // Windows CLI runner (Visio automation)
-  VisioDiagramGenerator.CliFs/ // F# CLI wrapper
-  VDG.Core*/                   // Core contracts and implementations
-samples/                       // Ready-to-run diagram JSON
-shared/Config/                 // JSON schema and configuration samples
-out/                           // Build + generated diagrams
+  DebugHarness/                      // Scratch runner for local experimentation
+  VDG.CLI/                           // Windows CLI that drives Visio via COM
+  VDG.VBA.CLI/                       // VBA export pipeline (vba2json / ir2diagram / render)
+  VDG.Core/                          // Core implementation shared across runners
+  VDG.Core.Contracts/                // Shared contracts/DTOs consumed by clients
+  VDG.VisioRuntime/                  // Visio automation helpers (shapes, masters, etc.)
+  VisioDiagramGenerator.Algorithms/  // Layout algorithms and routing helpers
+  VisioDiagramGenerator.CliFs/       // F# command-line wrapper
+docs/                                // Specs, governance, design notes
+samples/                             // Ready-to-run diagram JSON and VBA exports
+shared/Config/                       // JSON schema and default configuration snippets
+tests/                               // Unit, integration, and CLI smoke tests
+tools/                               // PowerShell helpers (fixtures, validation, perf smoke)
+out/                                 // Build + generated artifacts (gitignored)
 ```
 
-## Roadmap
-- Milestone 2 (current): tiered layout, spacing, pagination/banding, title banner, diagnostics. See `docs/VDG_MILESTONE_TWO.md`.
-- Milestone 3 (next): improved connector routing (orthogonal), bundling, and reserved channels to reduce overlap. Plan in `docs/VDG_MILESTONE_THREE.md`.
+## Upcoming Work
+- Continue refining routing and bundling behaviour (channels, reserved corridors, waypoint handling).
+- Expand reusable CLI tooling and summaries so downstream automation can validate hyperlinks and metrics without Visio.
+- Explore additional runners that do not require COM automation to broaden platform support.
 
 ## Contributing
 Issues and pull requests are welcome. Please run `dotnet test` before submitting and include reproduction steps for Visio automation issues. The automation layer is sensitive to environment differences, so details about Visio version and Windows build help significantly.
@@ -240,3 +251,6 @@ Issues and pull requests are welcome. Please run `dotnet test` before submitting
 1. Read the VBA IR specification in `docs/VBA_IR.md` to understand entities, schema shape, and examples.
 2. Follow the governance checklist and smoke workflow in `docs/IR_Governance.md` before proposing IR changes.
 3. Review the terminology in `docs/Glossary.md` so you recognise project-specific acronyms during reviews.
+
+> Automated guardrails: the **PR Checklist Enforcement** workflow blocks merges unless all IR Impact items are checked or a justified exception rationale is provided.
+

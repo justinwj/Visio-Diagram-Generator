@@ -1,8 +1,8 @@
 {
-  "irSchemaVersion": "0.1",
+  "irSchemaVersion": "0.2",
   "generator": {
     "name": "vba2json",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "project": {
     "name": "alias_and_chain",
@@ -12,43 +12,59 @@
         "name": "Helper",
         "kind": "Class",
         "file": "Helper.cls",
+        "source": {
+          "file": "Helper.cls",
+          "module": "Helper",
+          "line": 1
+        },
+        "metrics": {
+          "cyclomatic": 2,
+          "lines": 13,
+          "sloc": 3
+        },
         "procedures": [
           {
             "id": "Helper.RunAll",
             "name": "RunAll",
             "kind": "Sub",
             "access": "Public",
-            "static": false,
-            "params": [],
             "locs": {
               "file": "Helper.cls",
               "startLine": 8,
               "endLine": 9
             },
-            "calls": [],
-            "metrics": {
-              "lines": 2
+            "source": {
+              "file": "Helper.cls",
+              "module": "Helper",
+              "line": 8
             },
-            "tags": []
+            "metrics": {
+              "cyclomatic": 1,
+              "lines": 2,
+              "sloc": 1
+            }
           },
           {
             "id": "Helper.RunFactory",
             "name": "RunFactory",
             "kind": "Function",
             "access": "Public",
-            "static": false,
-            "params": [],
             "returns": "Helper",
             "locs": {
               "file": "Helper.cls",
               "startLine": 11,
               "endLine": 13
             },
-            "calls": [],
-            "metrics": {
-              "lines": 3
+            "source": {
+              "file": "Helper.cls",
+              "module": "Helper",
+              "line": 11
             },
-            "tags": []
+            "metrics": {
+              "cyclomatic": 1,
+              "lines": 3,
+              "sloc": 2
+            }
           }
         ]
       },
@@ -57,18 +73,31 @@
         "name": "ModuleAlias",
         "kind": "Module",
         "file": "ModuleAlias.bas",
+        "source": {
+          "file": "ModuleAlias.bas",
+          "module": "ModuleAlias",
+          "line": 1
+        },
+        "metrics": {
+          "cyclomatic": 1,
+          "lines": 25,
+          "sloc": 17
+        },
         "procedures": [
           {
             "id": "ModuleAlias.Caller",
             "name": "Caller",
             "kind": "Sub",
             "access": "Public",
-            "static": false,
-            "params": [],
             "locs": {
               "file": "ModuleAlias.bas",
               "startLine": 4,
               "endLine": 25
+            },
+            "source": {
+              "file": "ModuleAlias.bas",
+              "module": "ModuleAlias",
+              "line": 4
             },
             "calls": [
               {
@@ -163,9 +192,10 @@
               }
             ],
             "metrics": {
-              "lines": 22
-            },
-            "tags": []
+              "cyclomatic": 1,
+              "lines": 22,
+              "sloc": 17
+            }
           }
         ]
       },
@@ -174,31 +204,43 @@
         "name": "Worker",
         "kind": "Class",
         "file": "Worker.cls",
+        "source": {
+          "file": "Worker.cls",
+          "module": "Worker",
+          "line": 1
+        },
+        "metrics": {
+          "cyclomatic": 3,
+          "lines": 17,
+          "sloc": 5
+        },
         "procedures": [
           {
             "id": "Worker.DoWork",
             "name": "DoWork",
             "kind": "Sub",
             "access": "Public",
-            "static": false,
-            "params": [],
             "locs": {
               "file": "Worker.cls",
               "startLine": 8,
               "endLine": 9
             },
-            "calls": [],
-            "metrics": {
-              "lines": 2
+            "source": {
+              "file": "Worker.cls",
+              "module": "Worker",
+              "line": 8
             },
-            "tags": []
+            "metrics": {
+              "cyclomatic": 1,
+              "lines": 2,
+              "sloc": 1
+            }
           },
           {
             "id": "Worker.Factory",
             "name": "Factory",
             "kind": "Function",
             "access": "Public",
-            "static": false,
             "params": [
               {
                 "name": "count",
@@ -217,30 +259,38 @@
               "startLine": 11,
               "endLine": 13
             },
-            "calls": [],
-            "metrics": {
-              "lines": 3
+            "source": {
+              "file": "Worker.cls",
+              "module": "Worker",
+              "line": 11
             },
-            "tags": []
+            "metrics": {
+              "cyclomatic": 1,
+              "lines": 3,
+              "sloc": 2
+            }
           },
           {
             "id": "Worker.RunFactory",
             "name": "RunFactory",
             "kind": "Function",
             "access": "Public",
-            "static": false,
-            "params": [],
             "returns": "Helper",
             "locs": {
               "file": "Worker.cls",
               "startLine": 15,
               "endLine": 17
             },
-            "calls": [],
-            "metrics": {
-              "lines": 3
+            "source": {
+              "file": "Worker.cls",
+              "module": "Worker",
+              "line": 15
             },
-            "tags": []
+            "metrics": {
+              "cyclomatic": 1,
+              "lines": 3,
+              "sloc": 2
+            }
           }
         ]
       }

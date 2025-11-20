@@ -30,11 +30,22 @@ coverage/
 .coverage
 *.coverage
 *.coveragexml
+diag_cli*.txt
+
+# Generated fixture outputs
+plan docs/fixtures_metadata.json
+tests/fixtures/vsdx/
+out/fixtures/
+*.review.txt
+*.review.json
+!tests/fixtures/render/**/*.review.txt
+!tests/fixtures/render/**/*.review.json
 
 # Local config
 *.env
 local.settings.json
 appsettings.Development.json
+.dotnet-cli-home/
 
 # Archives / legacy (created by Convert-ToCLI)
 backlog/

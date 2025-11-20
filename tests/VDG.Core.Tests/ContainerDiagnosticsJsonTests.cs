@@ -36,6 +36,11 @@ public class ContainerDiagnosticsJsonTests
     {
         var json = "{\n" +
                    "  \"schemaVersion\": \"1.2\",\n" +
+                   "  \"metadata\": {\n" +
+                   "    \"properties\": {\n" +
+                   "      \"layout.outputMode\": \"print\"\n" +
+                   "    }\n" +
+                   "  },\n" +
                    "  \"layout\": {\n" +
                    "    \"tiers\": [\"Services\"],\n" +
                    "    \"page\": { \"heightIn\": 8.5, \"marginIn\": 0.5, \"paginate\": false }\n" +
@@ -71,6 +76,11 @@ public class ContainerDiagnosticsJsonTests
     {
         var json = "{\n" +
                    "  \"schemaVersion\": \"1.2\",\n" +
+                   "  \"metadata\": {\n" +
+                   "    \"properties\": {\n" +
+                   "      \"layout.outputMode\": \"print\"\n" +
+                   "    }\n" +
+                   "  },\n" +
                    "  \"layout\": {\n" +
                    "    \"tiers\": [\"Services\"],\n" +
                    "    \"spacing\": { \"vertical\": 0.6 },\n" +

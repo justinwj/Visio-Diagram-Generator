@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2020-04-01T07:37:53+00:00",
+  "project": {
+    "name": "cross_module_calls",
+    "sourceIr": "D:\\justinwj\\Solutions\\Visio Diagram Generator\\out\\tmp\\sample_callgraph.ir.json",
+    "generator": "VDG.VBA.CLI/ir2diagram"
+  },
+  "flows": [
+    {
+      "id": "Module1.Caller-\u003EModule2.Work",
+      "channel": "Core.Modules-\u003ECore.Modules",
+      "purpose": "Call sequence",
+      "source": {
+        "moduleId": "Module1",
+        "procedureId": "Module1.Caller",
+        "role": "Utility",
+        "subsystem": "Core.Modules"
+      },
+      "target": {
+        "moduleId": "Module2",
+        "procedureId": "Module2.Work",
+        "role": "Utility",
+        "subsystem": "Core.Modules"
+      },
+      "edgeCount": 1,
+      "sampleCalls": [
+        {
+          "from": "Module1.Caller",
+          "to": "Module2.Work",
+          "site": {
+            "file": "Module1.bas",
+            "line": 5
+          },
+          "metadata": {
+            "code.edge": "call",
+            "code.site.module": "Module1",
+            "code.site.file": "Module1.bas",
+            "code.site.line": "5"
+          }
+        }
+      ],
+      "sharedResources": [],
+      "confidence": 0.45,
+      "reasons": [
+        "source role=Utility",
+        "target role=Utility"
+      ]
+    }
+  ],
+  "residuals": []
+}

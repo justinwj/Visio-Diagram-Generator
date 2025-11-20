@@ -1,0 +1,92 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2025-01-01T00:00:00+00:00",
+  "project": {
+    "name": "SampleInventory",
+    "sourceIr": "tests/VDG.VBA.CLI.Tests/Semantics/Fixtures/sample.ir.json",
+    "generator": "VDG.VBA.CLI/ir2diagram"
+  },
+  "flows": [
+    {
+      "id": "frmLogin.Submit_Click-\u003EmodAuth.ValidateUser",
+      "channel": "UI.Forms-\u003ESecurity.Auth",
+      "purpose": "Validate upstream input",
+      "source": {
+        "moduleId": "frmLogin",
+        "procedureId": "frmLogin.Submit_Click",
+        "role": "EventHandler",
+        "subsystem": "UI.Forms"
+      },
+      "target": {
+        "moduleId": "modAuth",
+        "procedureId": "modAuth.ValidateUser",
+        "role": "Validator",
+        "subsystem": "Security.Auth"
+      },
+      "edgeCount": 1,
+      "sampleCalls": [
+        {
+          "from": "frmLogin.Submit_Click",
+          "to": "modAuth.ValidateUser",
+          "site": {
+            "file": "Forms/frmLogin.frm",
+            "line": 35
+          },
+          "metadata": {
+            "code.edge": "call",
+            "code.site.module": "frmLogin",
+            "code.site.file": "Forms/frmLogin.frm",
+            "code.site.line": "35"
+          }
+        }
+      ],
+      "sharedResources": [],
+      "confidence": 0.82,
+      "reasons": [
+        "source role=EventHandler",
+        "target role=Validator"
+      ]
+    },
+    {
+      "id": "modInvLog.SaveRecord-\u003EmodAuth.ValidateUser",
+      "channel": "Observability.Logging-\u003ESecurity.Auth",
+      "purpose": "Validate upstream input",
+      "source": {
+        "moduleId": "modInvLog",
+        "procedureId": "modInvLog.SaveRecord",
+        "role": "Persistence",
+        "subsystem": "Observability.Logging"
+      },
+      "target": {
+        "moduleId": "modAuth",
+        "procedureId": "modAuth.ValidateUser",
+        "role": "Validator",
+        "subsystem": "Security.Auth"
+      },
+      "edgeCount": 1,
+      "sampleCalls": [
+        {
+          "from": "modInvLog.SaveRecord",
+          "to": "modAuth.ValidateUser",
+          "site": {
+            "file": "Modules/modInvLog.bas",
+            "line": 50
+          },
+          "metadata": {
+            "code.edge": "call",
+            "code.site.module": "modInvLog",
+            "code.site.file": "Modules/modInvLog.bas",
+            "code.site.line": "50"
+          }
+        }
+      ],
+      "sharedResources": [],
+      "confidence": 0.8,
+      "reasons": [
+        "source role=Persistence",
+        "target role=Validator"
+      ]
+    }
+  ],
+  "residuals": []
+}

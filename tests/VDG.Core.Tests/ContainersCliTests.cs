@@ -47,6 +47,14 @@ public class ContainersCliTests
     {
         var json = "{\n" +
                    "  \"schemaVersion\": \"1.2\",\n" +
+                   "  \"metadata\": {\n" +
+                   "    \"properties\": {\n" +
+                   "      \"layout.outputMode\": \"view\",\n" +
+                   "      \"layout.containers.paddingIn\": \"0.4\",\n" +
+                   "      \"layout.containers.cornerIn\": \"0.2\",\n" +
+                   "      \"layout.containers.json\": \"[{\\\"Id\\\":\\\"C_EXT\\\",\\\"Tier\\\":\\\"External\\\"},{\\\"Id\\\":\\\"C_SVC\\\",\\\"Tier\\\":\\\"Services\\\"}]\"\n" +
+                   "    }\n" +
+                   "  },\n" +
                    "  \"layout\": {\n" +
                    "    \"tiers\": [\"External\", \"Services\"],\n" +
                    "    \"containers\": { \"paddingIn\": 0.4, \"cornerIn\": 0.2 }\n" +
@@ -81,6 +89,12 @@ public class ContainersCliTests
     {
         var json = "{\n" +
                    "  \"schemaVersion\": \"1.2\",\n" +
+                   "  \"metadata\": {\n" +
+                   "    \"properties\": {\n" +
+                   "      \"layout.outputMode\": \"view\",\n" +
+                   "      \"layout.containers.json\": \"[{\\\"Id\\\":\\\"C_EXT\\\",\\\"Tier\\\":\\\"External\\\"}]\"\n" +
+                   "    }\n" +
+                   "  },\n" +
                    "  \"layout\": { \"tiers\": [\"External\"] },\n" +
                    "  \"nodes\": [ { \"id\": \"E1\", \"label\": \"E1\", \"tier\": \"External\", \"containerId\": \"MISSING\" } ],\n" +
                    "  \"containers\": [ { \"id\": \"C_EXT\", \"label\": \"External Zone\", \"tier\": \"External\" } ]\n" +

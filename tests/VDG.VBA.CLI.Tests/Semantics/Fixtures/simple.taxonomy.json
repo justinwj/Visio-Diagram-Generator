@@ -1,0 +1,187 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2025-01-01T00:00:00+00:00",
+  "project": {
+    "name": "SampleInventory",
+    "sourceIr": "tests/VDG.VBA.CLI.Tests/Semantics/Fixtures/sample.ir.json",
+    "generator": "VDG.VBA.CLI/ir2diagram"
+  },
+  "legend": {
+    "subsystems": [
+      {
+        "id": "Observability.Logging",
+        "description": "Diagnostics, telemetry, and logging helpers."
+      },
+      {
+        "id": "Security.Auth",
+        "description": "Authentication and authorization helpers."
+      },
+      {
+        "id": "UI.Forms",
+        "description": "User-facing VBA forms and controls."
+      }
+    ],
+    "roles": [
+      {
+        "id": "EventHandler",
+        "description": "Responds directly to UI or workbook events."
+      },
+      {
+        "id": "Persistence",
+        "description": "Writes or persists data/state."
+      },
+      {
+        "id": "Validator",
+        "description": "Guards invariants or validates inputs."
+      }
+    ]
+  },
+  "modules": [
+    {
+      "id": "frmLogin",
+      "name": "frmLogin",
+      "kind": "Form",
+      "file": "Forms/frmLogin.frm",
+      "tier": "Forms",
+      "subsystem": {
+        "primary": "UI.Forms",
+        "secondary": [
+          "Observability.Logging",
+          "Security.Auth"
+        ],
+        "confidence": 0.9,
+        "reasons": [
+          "module.kind=Form",
+          "name/file contains \u0027Login\u0027",
+          "name/file contains \u0027Log\u0027",
+          "name/file contains \u0027Form\u0027"
+        ]
+      },
+      "ownership": {
+        "team": "UI"
+      },
+      "tags": [
+        "ui"
+      ],
+      "roles": [
+        "EventHandler"
+      ],
+      "procedures": [
+        {
+          "id": "frmLogin.Submit_Click",
+          "name": "Submit_Click",
+          "role": {
+            "primary": "EventHandler",
+            "secondary": [],
+            "confidence": 0.9,
+            "reasons": [
+              "name matches common event suffix"
+            ]
+          },
+          "capabilities": [
+            "UI.EventRouting"
+          ],
+          "resources": []
+        }
+      ],
+      "evidence": {
+        "path": "Forms/frmLogin.frm",
+        "metrics.lines": "250",
+        "metrics.cyclomatic": "5"
+      }
+    },
+    {
+      "id": "modAuth",
+      "name": "modAuth",
+      "kind": "Module",
+      "file": "Modules/modAuth.bas",
+      "tier": "Modules",
+      "subsystem": {
+        "primary": "Security.Auth",
+        "secondary": [],
+        "confidence": 0.7,
+        "reasons": [
+          "name/file contains \u0027Auth\u0027"
+        ]
+      },
+      "ownership": {
+        "team": "Security"
+      },
+      "tags": [
+        "security"
+      ],
+      "roles": [
+        "Validator"
+      ],
+      "procedures": [
+        {
+          "id": "modAuth.ValidateUser",
+          "name": "ValidateUser",
+          "role": {
+            "primary": "Validator",
+            "secondary": [],
+            "confidence": 0.82,
+            "reasons": [
+              "name contains validation keyword"
+            ]
+          },
+          "capabilities": [
+            "Auth.Login"
+          ],
+          "resources": []
+        }
+      ],
+      "evidence": {
+        "path": "Modules/modAuth.bas",
+        "metrics.lines": "180",
+        "metrics.cyclomatic": "9"
+      }
+    },
+    {
+      "id": "modInvLog",
+      "name": "modInvLog",
+      "kind": "Module",
+      "file": "Modules/modInvLog.bas",
+      "tier": "Modules",
+      "subsystem": {
+        "primary": "Observability.Logging",
+        "secondary": [],
+        "confidence": 0.7,
+        "reasons": [
+          "name/file contains \u0027Log\u0027"
+        ]
+      },
+      "ownership": {
+        "team": "Telemetry"
+      },
+      "tags": [
+        "telemetry"
+      ],
+      "roles": [
+        "Persistence"
+      ],
+      "procedures": [
+        {
+          "id": "modInvLog.SaveRecord",
+          "name": "SaveRecord",
+          "role": {
+            "primary": "Persistence",
+            "secondary": [],
+            "confidence": 0.8,
+            "reasons": [
+              "name contains persistence keyword"
+            ]
+          },
+          "capabilities": [],
+          "resources": []
+        }
+      ],
+      "evidence": {
+        "path": "Modules/modInvLog.bas",
+        "metrics.lines": "120",
+        "metrics.cyclomatic": "4"
+      }
+    }
+  ],
+  "unresolved": []
+}

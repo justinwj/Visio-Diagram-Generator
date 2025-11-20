@@ -1,5 +1,7 @@
 # Specialized View Pseudocode Prompts
 
+Applies to any solution where auxiliary data (perf, tests, releases) is available; invSys is just a sample fixture. Keep prompts domain-agnostic.
+
 These eight diagrams rely on auxiliary data (perf logs, tests, release notes). Pseudocode must state how we ingest external metrics and merge them into diagram metadata.
 
 ## Shared Inputs

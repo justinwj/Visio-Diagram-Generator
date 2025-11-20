@@ -1,5 +1,7 @@
 # Developer-Facing View Pseudocode Prompts
 
+Applies to any VBA-based (or future) codebase; invSys is only an example fixture. These prompts should stay language/domain-agnostic.
+
 These ten diagrams target engineers hunting for bugs, regressions, or code understanding. Pseudocode needs to describe filtering, metrics, and layout rules for each.
 
 ## Shared Requirements

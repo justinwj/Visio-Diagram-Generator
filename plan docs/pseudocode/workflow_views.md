@@ -1,6 +1,6 @@
 # Workflow / Process View Pseudocode Prompts
 
-Workflow diagrams focus on concrete business scenarios (Add Goods Received, Deduct Shipments, etc.). Because the set is open-ended, the pseudocode template must be reusable.
+Workflow diagrams focus on concrete business scenarios (Add Goods Received, Deduct Shipments, etc.) for any VBA-based solution; invSys remains a sample fixture only. Because the set is open-ended, the pseudocode template must be reusable.
 
 ## Template Questions (per workflow)
 1. **Entry point** – which procedure(s) start the flow? Are they worksheet events, form buttons, or macros?
@@ -24,7 +24,7 @@ Workflow diagrams focus on concrete business scenarios (Add Goods Received, Dedu
 For each workflow we need:
 - **Narrative summary** – what business question it answers.
 - **Trigger metadata** – control names, worksheet ranges, timer jobs.
-- **Success vs. failure paths** – how to highlight branching nodes, e.g., “Table invSys not found → Exit Sub”.
+- **Success vs. failure paths** – how to highlight branching nodes, e.g., “Table Inventory not found → Exit Sub”.
 - **Artifacts to reuse** – fixture slices, screenshots, diagnostics.
 
 ## Implementation Hooks

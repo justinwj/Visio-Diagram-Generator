@@ -1,6 +1,6 @@
 # Dataflow View Pseudocode Prompts
 
-Data-centric diagrams explain how information moves through invSys. Pseudocode must outline how datasets, operations, and edges are extracted.
+Data-centric diagrams explain how information moves through any VBA-based solution; invSys remains only an example fixture. Pseudocode must outline how datasets, operations, and edges are extracted.
 
 ## Shared Inputs
 - Named ranges, tables, and worksheet columns referenced in code.

@@ -1,5 +1,7 @@
 # Architectural View Pseudocode Prompts
 
+Applies to any VBA-based (or future language) solution; invSys is only a sample fixture for illustration. Use these prompts as a general template.
+
 These eight views explain how the VBA codebase is structured internally. Pseudocode must specify the extraction and aggregation steps before implementation begins.
 
 ## Shared Concerns

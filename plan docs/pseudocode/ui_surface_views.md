@@ -1,6 +1,6 @@
 # UI / Surface View Pseudocode Prompts
 
-These diagrams explain how users interact with invSys through forms and worksheets. Pseudocode must capture control hierarchies and event wiring.
+These diagrams explain how users interact with any VBA-driven solution through forms and worksheets; invSys is just a sample fixture. Pseudocode must capture control hierarchies and event wiring.
 
 ## Shared Metadata Needs
 - Inventory of UserForms and Worksheets (names, captions, roles).

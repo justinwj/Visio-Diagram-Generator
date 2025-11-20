@@ -1,9 +1,9 @@
 # System-Level View Pseudocode Prompts
 
-These five diagrams provide the “why” behind invSys. Each requires structured pseudocode so the planners know which nodes, edges, and metadata to emit.
+Applies to any VBA-based system (or future languages); invSys is only a sample fixture. Each view needs structured pseudocode so planners know which nodes, edges, and metadata to emit.
 
 ## Shared Questions
-- What are the canonical system/subsystem boundaries (Excel host, invSys workbook, integrations)?
+- What are the canonical system/subsystem boundaries (e.g., Excel host, workbook, external integrations)?
 - Which metadata fields expose external vs. internal modules?
 - How do we represent runtime environment (machines, users) that are not VBA modules?
 
@@ -18,7 +18,7 @@ These five diagrams provide the “why” behind invSys. Each requires structure
 - **Details needed:** dependency thresholding (avoid clutter), ordering by gate/priority, highlighting circular dependencies.
 
 ## 3. Deployment & Hosting View
-- **Goal:** describe where invSys code executes (Excel desktop, shared drives, databases).
+- **Goal:** describe where the solution executes (e.g., Excel desktop, shared drives, databases).
 - **Pseudocode:** list runtime hosts from config, attach modules to hosts, draw data paths between hosts and storage.
 - **Clarify:** how to detect data stores (Access, SQL, CSV), how to represent human operators vs. services.
 
